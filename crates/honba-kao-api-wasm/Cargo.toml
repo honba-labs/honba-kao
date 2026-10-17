@@ -8,6 +8,7 @@ rust-version.workspace = true
 description = "WASM compute surface for Honba frontend (wasm32-unknown-unknown)"
 
 [lib]
+name = "honba_api_wasm"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
