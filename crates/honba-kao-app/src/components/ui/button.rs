@@ -38,10 +38,8 @@ pub fn HfButton(
 
     let handle_click = move |ev: web_sys::MouseEvent| {
         ev.prevent_default();
-        if !disabled {
-            if let Some(cb) = on_click {
-                cb.run(());
-            }
+        if !disabled && let Some(cb) = on_click {
+            cb.run(());
         }
     };
 

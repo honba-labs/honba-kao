@@ -1,17 +1,18 @@
-//! Terminal components modeled after bfx-hf-ui-core.
+//! Domain + presentational components. Mirrors `web/src/components/`.
+//!
+//! * [`ui`] — framework-level primitives (buttons, panels, modals, …).
+//! * [`common`] — app chrome shared across screens (header, footer, overlays).
+//! * one module per domain: [`auth`], [`terminal`], [`trader`], [`charts`],
+//!   [`strategy`], [`planning`], [`modals`], [`faq`], [`landing`].
 
-pub mod decision_log;
-pub mod navbar;
-pub mod orders;
-pub mod positions;
-pub mod status_bar;
-pub mod theme_studio;
-pub mod traders;
-
-pub use decision_log::*;
-pub use navbar::*;
-pub use orders::*;
-pub use positions::*;
-pub use status_bar::*;
-pub use theme_studio::*;
-pub use traders::*;
+pub mod auth;
+pub mod charts;
+pub mod common;
+pub mod faq;
+pub mod landing;
+pub mod modals;
+pub mod planning;
+pub mod strategy;
+pub mod terminal;
+pub mod trader;
+pub mod ui;
