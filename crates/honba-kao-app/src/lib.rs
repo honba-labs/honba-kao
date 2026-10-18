@@ -1,73 +1,51 @@
 //! 本場・顔 honba-kao — Leptos SPA root.
-//! High-performance trading terminal modeled after bfx-hf-ui-core.
+//!
+//! The crate is laid out to mirror the `web/` app of `NoFxAiOS/nofx`
+//! (Vite + React + TS), translated to idiomatic Rust/Leptos:
+//!
+//! ```text
+//! web/src/            ->  crates/honba-kao-app/src/
+//!   App.tsx           ->    app.rs            (provider stack)
+//!   main.tsx          ->    lib.rs            (mount_to_body)
+//!   router/           ->    router/           (paths + AppRoutes + AppChrome)
+//!   pages/            ->    pages/            (top-level screens)
+//!   components/<dom>/ ->    components/<dom>/ (domain components)
+//!   components/ui/    ->    components/ui/    (primitives)
+//!   contexts/         ->    contexts/         (provide_context / expect_context)
+//!   stores/           ->    stores/           (reactive signals per store)
+//!   lib/api/          ->    api/              (namespaced client modules)
+//!   lib/*             ->    utils/            (format, indicators, text)
+//!   hooks/            ->    hooks/            (reusable reactive helpers)
+//!   types/            ->    types/
+//!   i18n/             ->    i18n/
+//!   constants/        ->    constants/
+//!   data/             ->    data/
+//!   styles/           ->    ../../style/      (Trunk-served CSS)
+//! ```
 
+pub mod api;
+pub mod app;
 pub mod components;
+pub mod constants;
+pub mod contexts;
+pub mod data;
+pub mod hooks;
+pub mod i18n;
+pub mod pages;
+pub mod router;
+pub mod stores;
 pub mod theme;
-pub mod ui;
+pub mod types;
+pub mod utils;
 
-use components::{
-    DecisionLogPanel, NavRoute, Navbar, OrdersTablePanel, PositionsTablePanel, StatusBar,
-    ThemeStudioModal, TradersOverviewPanel,
-};
-use leptos::mount::mount_to_body;
-use leptos::prelude::*;
-use theme::ThemeContext;
+pub use app::App;
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[component]
-pub fn App() -> impl IntoView {
-    // Initialize ThemeContext and provide to component tree
-    let theme_ctx = ThemeContext::new();
-    provide_context(theme_ctx);
-
-    let active_route = RwSignal::new(NavRoute::Dashboard);
-    let is_live_mode = RwSignal::new(false);
-    let is_palette_open = RwSignal::new(false);
-
-    let on_open_palette = Callback::new(move |_| {
-        is_palette_open.set(true);
-    });
-
-    view! {
-        <div class="hfui-app">
-            // Pinned Top Navigation Bar
-            <Navbar
-                active_route=active_route
-                is_live_mode=is_live_mode
-                on_open_palette=on_open_palette
-            />
-
-            // Terminal Multi-Panel Workspace Grid
-            <main class="hfui-workspace">
-                // Left Column: Traders Overview & Controls
-                <div class="hfui-workspace__col">
-                    <TradersOverviewPanel />
-                </div>
-
-                // Middle Column: Live Positions & Active Orders
-                <div class="hfui-workspace__col">
-                    <PositionsTablePanel />
-                    <OrdersTablePanel />
-                </div>
-
-                // Right Column: Decision Journal & Risk Gate Audit
-                <div class="hfui-workspace__col">
-                    <DecisionLogPanel />
-                </div>
-            </main>
-
-            // Pinned Bottom Status Bar
-            <StatusBar />
-
-            // 256-Color Palette Studio & Theme Inspector Modal
-            <ThemeStudioModal is_open=is_palette_open />
-        </div>
-    }
-}
-
+/// WASM entry point: wire panic/tracing and mount the app into `<body>`.
 #[wasm_bindgen(start)]
 pub fn start() {
     console_error_panic_hook::set_once();
     tracing_wasm::set_as_global_default();
-    mount_to_body(App);
+    leptos::mount::mount_to_body(App);
 }

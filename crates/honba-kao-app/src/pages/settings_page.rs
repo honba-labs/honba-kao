@@ -1,0 +1,79 @@
+//! Settings page. Mirrors `web/src/pages/SettingsPage.tsx`.
+
+use leptos::prelude::*;
+
+use crate::api;
+use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader};
+use crate::constants::branding;
+
+#[component]
+pub fn SettingsPage() -> impl IntoView {
+    let config = api::config::get_system_config();
+    let telegram = api::telegram::get_status();
+    let paper = RwSignal::new(config.paper_trading);
+    let notify = RwSignal::new(false);
+
+    view! {
+        <div class="console">
+            <PageHeader title="Settings" subtitle="Runtime, trading and notifications" />
+
+            <HfPanel>
+                <HfPanelHeader title="Runtime" />
+                <div class="hfui-panel__content">
+                    <div class="summary-row">
+                        <span>"Version"</span>
+                        <strong class="mono">{config.version}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>"Registration"</span>
+                        <strong>
+                            {if config.registration_enabled { "enabled" } else { "closed" }}
+                        </strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>"Telegram alerts"</span>
+                        <strong>
+                            {if telegram.configured { "configured" } else { "not configured" }}
+                        </strong>
+                    </div>
+                </div>
+            </HfPanel>
+
+            <HfPanel>
+                <HfPanelHeader title="Trading" />
+                <div class="hfui-panel__content toggle-list">
+                    <label class="toggle">
+                        <input
+                            type="checkbox"
+                            prop:checked=move || paper.get()
+                            on:change=move |_| paper.update(|v| *v = !*v)
+                        />
+                        <span>"Paper trading mode"</span>
+                    </label>
+                    <label class="toggle">
+                        <input
+                            type="checkbox"
+                            prop:checked=move || notify.get()
+                            on:change=move |_| notify.update(|v| *v = !*v)
+                        />
+                        <span>"Notify on every gate rejection"</span>
+                    </label>
+                </div>
+            </HfPanel>
+
+            <HfPanel>
+                <HfPanelHeader title="About" />
+                <div class="hfui-panel__content">
+                    <p class="muted small">
+                        {branding::APP_NAME}" · "{branding::APP_NAME_LATIN}" · v"{branding::VERSION}
+                    </p>
+                    <p class="muted small">
+                        "Frontend structure mirrors "
+                        <a href=branding::REPO_URL>"nofx/web"</a>
+                        ", rendered with Leptos."
+                    </p>
+                </div>
+            </HfPanel>
+        </div>
+    }
+}
