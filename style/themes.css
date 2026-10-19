@@ -38,6 +38,35 @@
   --chart-area-top: var(--primary-1);
   --chart-area-bottom: var(--primary-0);
 
+  /* noFX semantic aliases over the skin contract. The view layer ported from
+     nofx `web/src/styles/brand.css` styles against these names; every skin
+     resolves them automatically. */
+  --brand: var(--primary-8);
+  --brand-strong: var(--primary-9);
+  --brand-soft: var(--primary-0);
+  --brand-tint: var(--primary-1);
+  --brand-on: var(--on-accent);
+
+  --surface: var(--darker-background-color);
+  --surface-2: var(--background-color);
+  --surface-3: var(--lighter-background-color);
+  --canvas: var(--background-color);
+  --header-surface: var(--surface);
+
+  --ink: var(--shade-9);
+  --ink-2: var(--shade-7);
+  --ink-3: var(--shade-6);
+  --muted: var(--shade-5);
+  --faint: var(--shade-4);
+
+  --hair: var(--border-color);
+  --hair-accent: color-mix(in srgb, var(--primary-8) 50%, transparent);
+
+  /* Soft noFX shadows, derived from the skin's grey so dark skins stay quiet. */
+  --shadow-sm: 0 1px 3px color-mix(in srgb, var(--grayish-color) 22%, transparent);
+  --shadow-md: 0 4px 18px color-mix(in srgb, var(--grayish-color) 28%, transparent);
+  --shadow-lg: 0 16px 56px color-mix(in srgb, var(--grayish-color) 42%, transparent);
+
   /* Broker accents. Brand colours, so they stay constant across skins. */
   --broker-zerodha: #387ed1;
   --broker-dhan: #00a651;
@@ -53,6 +82,12 @@
 
 :root[data-mode="light"] {
   color-scheme: light;
+}
+
+/* noFX paper selection tint; --brand-tint tracks the skin's accent. */
+::selection {
+  background: var(--brand-tint);
+  color: var(--ink);
 }
 
 /* ========================================================================= */
