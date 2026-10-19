@@ -26,13 +26,13 @@ use std::fmt;
 
 use honba_entities::{ScreenerFilterGroup, ScreenerFilterPredicate};
 use honba_indicators::screener::{
-    evaluate_group, evaluate_predicate, group_metric_keys, latest_metrics, ScreenerError,
+    ScreenerError, evaluate_group, evaluate_predicate, group_metric_keys, latest_metrics,
 };
 use honba_messages::{
     Bar, BarAggregation, BarSpecification, BarType, ErrorCode, Exchange, InstrumentId, PriceType,
     UnixNanos,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Nanoseconds in one day; the bars carry a synthetic one-day-apart timestamp.
 const DAY_NANOS: u64 = 86_400_000_000_000;

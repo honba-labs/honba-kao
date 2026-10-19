@@ -1,6 +1,6 @@
 //! Flat series, minimal lengths and non-finite input, for every exposed indicator.
 
-use crate::indicators::{indicator_series, ohlc_indicator_series, IndicatorError};
+use crate::indicators::{IndicatorError, indicator_series, ohlc_indicator_series};
 
 const CLOSE_ONLY: [(&str, &str); 5] = [
     ("sma", r#"{"period":3}"#),

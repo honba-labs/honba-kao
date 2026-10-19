@@ -30,7 +30,7 @@ use std::io::BufReader;
 
 use honba_engine::{AuditKind, AuditLog, JournalHeader, JournalV1, ReplayState};
 use honba_messages::{OrderSide, TradingState};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Why a journal request was refused: a stable `reason` in a `reason: message` pair
 /// (ADR 0012 rule 4).

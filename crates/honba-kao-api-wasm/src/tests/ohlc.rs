@@ -1,4 +1,4 @@
-use crate::indicators::{list_indicators_json, ohlc_indicator_series, IndicatorError};
+use crate::indicators::{IndicatorError, list_indicators_json, ohlc_indicator_series};
 
 fn nan_mask(v: &[f64]) -> Vec<bool> {
     v.iter().map(|x| x.is_nan()).collect()

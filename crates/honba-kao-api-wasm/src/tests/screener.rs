@@ -161,15 +161,17 @@ fn malformed_json_is_refused_with_the_parser_message() {
 #[test]
 fn unsupported_metrics_are_errors_not_false() {
     let [o, h, l, c, v] = one_bar();
-    assert!(evaluate_predicate_json(
-        r#"{"key":"market_cap","op":"gt","value":1}"#,
-        &o,
-        &h,
-        &l,
-        &c,
-        &v
-    )
-    .is_err());
+    assert!(
+        evaluate_predicate_json(
+            r#"{"key":"market_cap","op":"gt","value":1}"#,
+            &o,
+            &h,
+            &l,
+            &c,
+            &v
+        )
+        .is_err()
+    );
     let err = evaluate_predicate_json(
         r#"{"key":"close","op":"gt","value":{"key":"ema20"}}"#,
         &o,

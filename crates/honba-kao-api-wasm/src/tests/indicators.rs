@@ -1,4 +1,4 @@
-use crate::indicators::{indicator_series, list_indicators_json, IndicatorError};
+use crate::indicators::{IndicatorError, indicator_series, list_indicators_json};
 
 fn nan_mask(v: &[f64]) -> Vec<bool> {
     v.iter().map(|x| x.is_nan()).collect()
@@ -62,9 +62,11 @@ fn macd_outputs_are_consistent_and_default_params_apply() {
 
 #[test]
 fn empty_input_gives_empty_output() {
-    assert!(indicator_series("sma", r#"{"period":3}"#, &[])
-        .unwrap()
-        .is_empty());
+    assert!(
+        indicator_series("sma", r#"{"period":3}"#, &[])
+            .unwrap()
+            .is_empty()
+    );
 }
 
 #[test]
