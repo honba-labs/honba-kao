@@ -40,6 +40,24 @@ extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setQuantity, catch)]
     pub(crate) fn js_set_quantity(id: f64, qty: f64) -> Result<JsValue, JsValue>;
 
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setSymbolContext, catch)]
+    pub(crate) fn js_set_symbol_context(id: f64, symbol: &str) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setDrawingTool, catch)]
+    pub(crate) fn js_set_drawing_tool(id: f64, tool: &str) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = drawingTool, catch)]
+    pub(crate) fn js_drawing_tool(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = undoDrawing, catch)]
+    pub(crate) fn js_undo_drawing(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = redoDrawing, catch)]
+    pub(crate) fn js_redo_drawing(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = clearDrawings, catch)]
+    pub(crate) fn js_clear_drawings(id: f64) -> Result<JsValue, JsValue>;
+
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = destroy, catch)]
     pub(crate) fn js_destroy(id: f64) -> Result<JsValue, JsValue>;
 
@@ -143,6 +161,40 @@ pub(crate) fn add_buy_sell_bubble(id: f64, quantity: i64, symbol: &str) {
 /// Keep the bubble's qty in step with the order ticket.
 pub(crate) fn set_bubble_quantity(id: f64, quantity: i64) {
     let _ = js_set_quantity(id, quantity as f64);
+}
+
+/// Publish the pane's instrument so drawings persist per symbol
+/// (`exchange:symbol` key in localStorage, re-loaded on every remount).
+pub(crate) fn set_symbol_context(id: f64, symbol: &str) {
+    let _ = js_set_symbol_context(id, symbol);
+}
+
+/// Arm a drawing tool (`""` = cursor), returning whether the engine took it.
+pub(crate) fn set_drawing_tool(id: f64, tool: &str) -> bool {
+    js_set_drawing_tool(id, tool)
+        .map(|ok| ok.as_bool().unwrap_or(false))
+        .unwrap_or(false)
+}
+
+/// The chart's active drawing tool id (`"cursor"` when none is armed).
+#[allow(dead_code)]
+pub(crate) fn drawing_tool(id: f64) -> String {
+    js_drawing_tool(id)
+        .ok()
+        .and_then(|value| value.as_string())
+        .unwrap_or_else(|| "cursor".to_string())
+}
+
+pub(crate) fn undo_drawing(id: f64) {
+    let _ = js_undo_drawing(id);
+}
+
+pub(crate) fn redo_drawing(id: f64) {
+    let _ = js_redo_drawing(id);
+}
+
+pub(crate) fn clear_drawings(id: f64) {
+    let _ = js_clear_drawings(id);
 }
 
 /// Destroy a mounted chart (idempotent — the bridge answers `false`).

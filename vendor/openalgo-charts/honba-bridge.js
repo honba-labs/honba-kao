@@ -22,6 +22,11 @@
  *   window.honbaCharts.addVolumeOverlay(id)
  *   window.honbaCharts.addBuySell(id, qty, symbol)  // 'trade' bubble
  *   window.honbaCharts.setQuantity(id, qty)         // ticket follow-up
+ *   window.honbaCharts.setSymbolContext(id, symbol) // drawings persist key
+ *   window.honbaCharts.setDrawingTool(id, tool)     // '' = cursor
+ *   window.honbaCharts.drawingTool(id)              -> string
+ *   window.honbaCharts.undoDrawing / redoDrawing(id)
+ *   window.honbaCharts.clearDrawings(id)
  *   window.honbaCharts.refreshThemeAll()
  *   window.honbaCharts.destroy(id)
  *   window.honbaCharts.indicatorCatalog()           -> JSON
@@ -33,7 +38,18 @@
 import { createChart, BuySellButtons, darkTheme, lightTheme } from './openalgo-charts.mjs';
 /* Side-effect tiers: 112 built-in indicators and the drawing toolkit. */
 import './openalgo-charts.draw.mjs';
+import {
+  DrawingController,
+  InstrumentDrawings,
+  instrumentDrawingsKey,
+  registerBuiltinDrawingTools,
+  webStorageDrawingStore,
+} from './openalgo-charts.draw.mjs';
 import { BUILTIN_INDICATORS } from './openalgo-charts.indicators.mjs';
+
+/* The draw tier ships tool implementations that must be registered once
+   (the function is internally idempotent). */
+registerBuiltinDrawingTools();
 
 const charts = new Map();
 let nextId = 1;
@@ -148,6 +164,29 @@ function mount(element) {
 
   const id = nextId++;
   charts.set(id, { chart, series: [], bars: [], volume: null, buySell: null, symbol: '', theme });
+
+  /* The drawing toolkit: one controller per chart, drawings persisted per
+     symbol in localStorage and re-loaded on every fresh mount. Tool changes
+     broadcast to the app so the drawing rail's pressed state follows the
+     engine (Esc after placing, cancel, …). */
+  try {
+    const draw = new DrawingController(chart, { historyLimit: 50 });
+    entry.drawings = draw;
+    entry.drawingsDoc = new InstrumentDrawings(chart, draw, {
+      store: webStorageDrawingStore(window.localStorage, 'honba:charts:drawings:'),
+      key: instrumentDrawingsKey,
+    });
+    chart.on('draw:tool', (what) => {
+      window.dispatchEvent(
+        new CustomEvent('honba-drawing-tool', {
+          detail: { chartId: id, tool: (what && what.tool) ?? null },
+        }),
+      );
+    });
+  } catch (error) {
+    console.warn('honbaCharts: drawing toolkit unavailable', error);
+  }
+
   return id;
 }
 
@@ -510,6 +549,88 @@ function setQuantity(id, qty) {
     }
     return false;
   } catch {
+    return false;
+  }
+}
+
+/* -- Drawing toolkit ------------------------------------------------------ */
+
+const CURSOR_ALIAS = ['', 'cursor', 'none', 'cross'];
+
+/** Arm (or clear) the active drawing tool on one chart. */
+function setDrawingTool(id, tool) {
+  const entry = charts.get(id);
+  if (!entry || !entry.drawings) return false;
+  try {
+    entry.drawings.setTool(CURSOR_ALIAS.includes(tool) ? null : tool);
+    return true;
+  } catch (error) {
+    console.warn('honbaCharts: setDrawingTool refused', tool, error);
+    return false;
+  }
+}
+
+/** The active drawing tool id, or 'cursor' when none is armed. */
+function drawingTool(id) {
+  const entry = charts.get(id);
+  if (!entry || !entry.drawings) return 'cursor';
+  try {
+    return entry.drawings.activeTool() ?? 'cursor';
+  } catch {
+    return 'cursor';
+  }
+}
+
+function undoDrawing(id) {
+  const entry = charts.get(id);
+  if (!entry || !entry.drawings) return false;
+  try {
+    return entry.drawings.undo();
+  } catch {
+    return false;
+  }
+}
+
+function redoDrawing(id) {
+  const entry = charts.get(id);
+  if (!entry || !entry.drawings) return false;
+  try {
+    return entry.drawings.redo();
+  } catch {
+    return false;
+  }
+}
+
+/** Remove every drawing on one chart (history keeps it undoable). */
+function clearDrawings(id) {
+  const entry = charts.get(id);
+  if (!entry || !entry.drawings) return false;
+  try {
+    const ids = entry.drawings.drawings().map((drawing) => drawing.id);
+    if (ids.length > 0) entry.drawings.removeMany(ids, { force: true });
+    return true;
+  } catch (error) {
+    console.warn('honbaCharts: clearDrawings failed', error);
+    return false;
+  }
+}
+
+/**
+ * Publish the pane's instrument so drawings persist per symbol: the engine's
+ * `InstrumentDrawings` listens for `data:context` and swaps its localStorage
+ * document on every key change (`exchange:symbol`).
+ */
+function setSymbolContext(id, symbol) {
+  const entry = charts.get(id);
+  if (!entry) return false;
+  const name = (symbol || '').trim().toUpperCase();
+  if (name === '') return false;
+  try {
+    entry.symbol = name;
+    entry.chart.setDataContext({ symbol: name, exchange: 'NSE' });
+    return true;
+  } catch (error) {
+    console.warn('honbaCharts: setDataContext failed', error);
     return false;
   }
 }
@@ -935,6 +1056,12 @@ window.honbaCharts = {
   addVolumeOverlay,
   addBuySell,
   setQuantity,
+  setDrawingTool,
+  drawingTool,
+  undoDrawing,
+  redoDrawing,
+  clearDrawings,
+  setSymbolContext,
   refreshThemeAll,
   destroy,
   indicatorCatalog,

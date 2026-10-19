@@ -16,6 +16,7 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 
 use super::dismiss_on_outside_click;
+use super::drawing_rail::DrawingRail;
 use super::layouts::{area_name, preset_for};
 use crate::components::charts::openalgo_chart as bridge;
 use crate::stores::workbench::{
@@ -88,9 +89,9 @@ fn PaneHeader(
                 </button>
             </div>
 
-            // One compact pill per unit group instead of 18 inline timeframes
-            // (real-estate: the header row stays one line at four panes).
-            <TimeframeMenu store=store index=index current=pane />
+            // TradingView-shaped interval chips: `1m 1d 1W 1M`, each opening
+            // its denomination's flyout (plus a `Custom…` input row).
+            <IntervalBar store=store index=index current=pane />
 
             <div class="wb-pane__modes">
                 {ChartMode::ALL
@@ -115,26 +116,89 @@ fn PaneHeader(
     }
 }
 
-/// The timeframe control: a single pill showing the active interval that
-/// opens the grouped menu (Minutes / Hours / Days / Weeks / Months).
+/// The interval control: four TradingView-style chips (`1m 1d 1W 1M`) whose
+/// labels snap to the active interval when it belongs to their group. One
+/// click on a chip opens that denomination's flyout — the root interval,
+/// its siblings, and a `Custom…` row accepting `7m` / `2h` / `3d` / a bare
+/// minute count.
 #[component]
-fn TimeframeMenu(
+fn IntervalBar(
     store: WorkbenchStore,
     index: usize,
     current: Memo<ChartPaneConfig>,
 ) -> impl IntoView {
+    view! {
+        <div class="wb-interval-bar">
+            {Timeframe::INTERVAL_GROUPS
+                .iter()
+                .map(|(name, root, items)| {
+                    view! {
+                        <IntervalChip
+                            store
+                            index
+                            current
+                            group_name=*name
+                            root=*root
+                            items=*items
+                        />
+                    }
+                })
+                .collect_view()}
+        </div>
+    }
+}
+
+/// One interval chip plus its flyout. The four chips are independent
+/// components with their own open state — the shared `dismiss_on_outside_click`
+/// keeps them mutually exclusive (a mousedown elsewhere closes the last one
+/// before the new chip's click lands).
+#[component]
+fn IntervalChip(
+    store: WorkbenchStore,
+    index: usize,
+    current: Memo<ChartPaneConfig>,
+    group_name: &'static str,
+    root: Timeframe,
+    items: &'static [Timeframe],
+) -> impl IntoView {
     let menu_open = RwSignal::new(false);
+    let custom_editing = RwSignal::new(false);
+    let custom_text = RwSignal::new(String::new());
     let menu_host = NodeRef::<leptos::html::Div>::new();
     dismiss_on_outside_click(menu_open, menu_host);
 
     let is_open = move || menu_open.get();
 
+    // The chip reads the active interval when it lives in this group's list,
+    // so an active `15m` shows under the `1m` chip and `3D` under `1d`.
+    let chip_label = move || {
+        let frame = current.get().timeframe;
+        if items.contains(&frame) || frame == root {
+            frame.label()
+        } else {
+            root.label()
+        }
+    };
+
+    let commit_custom = move || {
+        let text = custom_text.get_untracked();
+        if let Some(timeframe) = Timeframe::parse_custom(&text) {
+            custom_editing.set(false);
+            menu_open.set(false);
+            store.update_pane(index, PaneField::Timeframe(timeframe));
+        } else {
+            // The parse refused it; leave the field up so it can be edited.
+        }
+    };
+
     view! {
         <div class="wb-pmenu wb-pmenu--timeframe" node_ref=menu_host>
             <button
                 class=move || {
-                    if is_open() {
+                    if items.contains(&current.get().timeframe) {
                         "wb-pill wb-pill--on wb-pill--timeframe"
+                    } else if is_open() {
+                        "wb-pill wb-pill--open wb-pill--timeframe"
                     } else {
                         "wb-pill wb-pill--timeframe"
                     }
@@ -142,18 +206,16 @@ fn TimeframeMenu(
                 title="Interval"
                 on:click=move |_| menu_open.update(|open| *open = !*open)
             >
-                {move || current.get().timeframe.label()}
+                {chip_label}
                 <span class="wb-caret">"▾"</span>
             </button>
             <Show when=is_open>
                 <div class="wb-menu wb-menu--pane wb-menu--grouped" role="menu">
-                    {Timeframe::GROUPS
-                        .iter()
-                        .map(|(group, timeframes)| {
-                            let group = group.to_string();
-                            let items = timeframes.iter().map(|timeframe| {
-                                let timeframe = *timeframe;
-                                let active = move || current.get().timeframe == timeframe;
+                    <div class="wb-menu__group">
+                        <span class="wb-menu__group-label">{group_name}</span>
+                        <div class="wb-menu__group-items">
+                            {items.iter().map(|timeframe| {
+                                let active = move || current.get().timeframe == *timeframe;
                                 view! {
                                     <button
                                         class=move || {
@@ -167,22 +229,56 @@ fn TimeframeMenu(
                                         title=timeframe.full_label()
                                         on:click=move |_| {
                                             menu_open.set(false);
-                                            store.update_pane(index, PaneField::Timeframe(timeframe));
+                                            store.update_pane(index, PaneField::Timeframe(*timeframe));
                                         }
                                     >
                                         {timeframe.label()}
                                     </button>
                                 }
-                            }).collect_view();
-
+                            }).collect_view()}
+                        </div>
+                    </div>
+                    <Show
+                        when=move || custom_editing.get()
+                        fallback=move || {
                             view! {
-                                <div class="wb-menu__group">
-                                    <span class="wb-menu__group-label">{group}</span>
-                                    <div class="wb-menu__group-items">{items}</div>
-                                </div>
+                                <button
+                                    class="wb-menu__item wb-menu__custom-row"
+                                    role="menuitem"
+                                    title="Custom interval: 7m, 2h, 3d, 2w, 2M — a bare number counts minutes"
+                                    on:click=move |_| {
+                                        custom_text.set(String::new());
+                                        custom_editing.set(true);
+                                    }
+                                >
+                                    "Custom…"
+                                </button>
                             }
-                        })
-                        .collect_view()}
+                        }
+                    >
+                        <div class="wb-menu__custom-row">
+                            <input
+                                class="wb-menu__custom-input"
+                                type="text"
+                                placeholder="7m · 2h · 3d"
+                                prop:value=custom_text
+                                on:input=move |event| {
+                                    let input = event_target::<web_sys::HtmlInputElement>(&event);
+                                    custom_text.set(input.value());
+                                }
+                                on:keydown=move |event| {
+                                    if event.key() == "Enter" {
+                                        commit_custom();
+                                    } else if event.key() == "Escape" {
+                                        custom_editing.set(false);
+                                    }
+                                }
+                            />
+                            <button class="wb-menu__custom-apply" title="Apply interval" on:click=move |_| commit_custom()>
+                                "OK"
+                            </button>
+                        </div>
+                    </Show>
                 </div>
             </Show>
         </div>
@@ -381,6 +477,9 @@ fn PaneChart(
                 // the live 2s tick streamer seeded from the last bar.
                 bridge::add_volume_overlay(id);
                 bridge::add_buy_sell_bubble(id, store.ticket.get_untracked().quantity, &symbol);
+                // Drawing persistence publishes the instrument before any
+                // `data:context` reaches the engine's `InstrumentDrawings`.
+                bridge::set_symbol_context(id, &symbol);
                 let ticker = start_tick_streamer(
                     id,
                     &symbol,
@@ -438,7 +537,12 @@ fn PaneChart(
         }
     });
 
-    view! { <div class="wb-pane__chart-host" node_ref=host /> }
+    view! {
+        <div class="wb-pane__chart-wrap">
+            <div class="wb-pane__chart-host" node_ref=host />
+            <DrawingRail chart_handle=handle />
+        </div>
+    }
 }
 
 /// Map a pane's series mode onto `(addSeries kind, style JSON)`.

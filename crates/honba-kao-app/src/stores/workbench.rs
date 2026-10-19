@@ -88,6 +88,8 @@ pub enum Timeframe {
     Mo3,
     #[allow(non_camel_case_types)]
     Mo6,
+    /// A custom interval from the picker's `Custom…` row — seconds per bar.
+    Custom(i64),
 }
 
 impl Timeframe {
@@ -114,80 +116,108 @@ impl Timeframe {
         Timeframe::Mo6,
     ];
 
-    /// The grouped presentation (`INTERVAL_GROUPS` in the labs app, extended
-    /// to the day/week/month denominations the user asked for).
-    pub const GROUPS: [(&str, &[Timeframe]); 5] = [
+    /// The TradingView-shaped interval bar: four chips (`1m 1d 1W 1M`), each
+    /// opening its denomination's flyout. The chip's own interval doubles as
+    /// the smoke-test root row; `Custom…` covers everything else.
+    pub const INTERVAL_GROUPS: [(&str, Timeframe, &[Timeframe]); 4] = [
         (
             "Minutes",
+            Timeframe::M1,
             &[
                 Timeframe::M1,
                 Timeframe::M3,
                 Timeframe::M5,
                 Timeframe::M15,
-                Timeframe::M30,
                 Timeframe::M45,
             ],
         ),
         (
-            "Hours",
-            &[Timeframe::H1, Timeframe::H2, Timeframe::H3, Timeframe::H4],
+            "Day",
+            Timeframe::D1,
+            &[
+                Timeframe::H1,
+                Timeframe::H2,
+                Timeframe::H3,
+                Timeframe::H4,
+                Timeframe::D1,
+                Timeframe::D3,
+                Timeframe::D5,
+            ],
         ),
-        ("Days", &[Timeframe::D1, Timeframe::D3, Timeframe::D5]),
-        ("Weeks", &[Timeframe::W1, Timeframe::W3, Timeframe::W4]),
-        ("Months", &[Timeframe::Mo1, Timeframe::Mo3, Timeframe::Mo6]),
+        (
+            "Week",
+            Timeframe::W1,
+            &[Timeframe::W1, Timeframe::W3, Timeframe::W4],
+        ),
+        (
+            "Month",
+            Timeframe::Mo1,
+            &[Timeframe::Mo1, Timeframe::Mo3, Timeframe::Mo6],
+        ),
     ];
 
-    pub const fn label(self) -> &'static str {
+    /// Compact label. `Custom` renders its canonicalised id (`5 550s` →
+    /// `90m`, `86 400s` → `1D`), so `label → from_id` round-trips.
+    pub fn label(self) -> String {
         match self {
-            Timeframe::M1 => "1m",
-            Timeframe::M3 => "3m",
-            Timeframe::M5 => "5m",
-            Timeframe::M15 => "15m",
-            Timeframe::M30 => "30m",
-            Timeframe::M45 => "45m",
-            Timeframe::H1 => "1h",
-            Timeframe::H2 => "2h",
-            Timeframe::H3 => "3h",
-            Timeframe::H4 => "4h",
-            Timeframe::D1 => "1D",
-            Timeframe::D3 => "3D",
-            Timeframe::D5 => "5D",
-            Timeframe::W1 => "1W",
-            Timeframe::W3 => "3W",
-            Timeframe::W4 => "4W",
-            Timeframe::Mo1 => "1M",
-            Timeframe::Mo3 => "3M",
-            Timeframe::Mo6 => "6M",
+            Timeframe::Custom(seconds) => custom_label(seconds),
+            Timeframe::M1 => "1m".to_string(),
+            Timeframe::M3 => "3m".to_string(),
+            Timeframe::M5 => "5m".to_string(),
+            Timeframe::M15 => "15m".to_string(),
+            Timeframe::M30 => "30m".to_string(),
+            Timeframe::M45 => "45m".to_string(),
+            Timeframe::H1 => "1h".to_string(),
+            Timeframe::H2 => "2h".to_string(),
+            Timeframe::H3 => "3h".to_string(),
+            Timeframe::H4 => "4h".to_string(),
+            Timeframe::D1 => "1D".to_string(),
+            Timeframe::D3 => "3D".to_string(),
+            Timeframe::D5 => "5D".to_string(),
+            Timeframe::W1 => "1W".to_string(),
+            Timeframe::W3 => "3W".to_string(),
+            Timeframe::W4 => "4W".to_string(),
+            Timeframe::Mo1 => "1M".to_string(),
+            Timeframe::Mo3 => "3M".to_string(),
+            Timeframe::Mo6 => "6M".to_string(),
         }
     }
 
-    /// Long form for the dropdown row title (`15m` → `"15 Minute"`).
-    pub const fn full_label(self) -> &'static str {
+    /// Long form for the flyout row title (`15m` → `"15 Minute"`).
+    pub fn full_label(self) -> String {
         match self {
-            Timeframe::M1 => "1 Minute",
-            Timeframe::M3 => "3 Minute",
-            Timeframe::M5 => "5 Minute",
-            Timeframe::M15 => "15 Minute",
-            Timeframe::M30 => "30 Minute",
-            Timeframe::M45 => "45 Minute",
-            Timeframe::H1 => "1 Hour",
-            Timeframe::H2 => "2 Hour",
-            Timeframe::H3 => "3 Hour",
-            Timeframe::H4 => "4 Hour",
-            Timeframe::D1 => "1 Day",
-            Timeframe::D3 => "3 Day",
-            Timeframe::D5 => "5 Day",
-            Timeframe::W1 => "1 Week",
-            Timeframe::W3 => "3 Week",
-            Timeframe::W4 => "4 Week",
-            Timeframe::Mo1 => "1 Month",
-            Timeframe::Mo3 => "3 Month",
-            Timeframe::Mo6 => "6 Month",
+            Timeframe::Custom(_) => format!("Custom {} interval", self.label()),
+            Timeframe::M1 => "1 Minute".to_string(),
+            Timeframe::M3 => "3 Minute".to_string(),
+            Timeframe::M5 => "5 Minute".to_string(),
+            Timeframe::M15 => "15 Minute".to_string(),
+            Timeframe::M30 => "30 Minute".to_string(),
+            Timeframe::M45 => "45 Minute".to_string(),
+            Timeframe::H1 => "1 Hour".to_string(),
+            Timeframe::H2 => "2 Hour".to_string(),
+            Timeframe::H3 => "3 Hour".to_string(),
+            Timeframe::H4 => "4 Hour".to_string(),
+            Timeframe::D1 => "1 Day".to_string(),
+            Timeframe::D3 => "3 Day".to_string(),
+            Timeframe::D5 => "5 Day".to_string(),
+            Timeframe::W1 => "1 Week".to_string(),
+            Timeframe::W3 => "3 Week".to_string(),
+            Timeframe::W4 => "4 Week".to_string(),
+            Timeframe::Mo1 => "1 Month".to_string(),
+            Timeframe::Mo3 => "3 Month".to_string(),
+            Timeframe::Mo6 => "6 Month".to_string(),
         }
     }
 
     pub const fn interval_seconds(self) -> i64 {
         match self {
+            Timeframe::Custom(seconds) => {
+                if seconds < 1 {
+                    1
+                } else {
+                    seconds
+                }
+            }
             Timeframe::M1 => 60,
             Timeframe::M3 => 180,
             Timeframe::M5 => 300,
@@ -232,9 +262,61 @@ impl Timeframe {
             "1M" => Timeframe::Mo1,
             "3M" => Timeframe::Mo3,
             "6M" => Timeframe::Mo6,
-            _ => Timeframe::D1,
+            _ => Timeframe::parse_custom(id).unwrap_or(Timeframe::D1),
         }
     }
+
+    /// Parse a custom interval string: `30s`, `7m`, `2h`, `3d`, `2w`, `2M`
+    /// (case matters: `m` = minutes, `M` = months), or a bare number which
+    /// counts minutes (`875` → `14h35m`).
+    pub fn parse_custom(text: &str) -> Option<Timeframe> {
+        let text = text.trim();
+        if text.is_empty() {
+            return None;
+        }
+        let digits: String = text.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if digits.is_empty() {
+            return None;
+        }
+        let count: i64 = digits.parse().ok()?;
+        let seconds = match &text[digits.len()..] {
+            "s" => count,
+            "" | "m" => count.checked_mul(60)?,
+            "h" => count.checked_mul(3_600)?,
+            "d" | "D" => count.checked_mul(86_400)?,
+            "w" | "W" => count.checked_mul(604_800)?,
+            "M" => count.checked_mul(2_592_000)?,
+            _ => return None,
+        };
+        if (1..=63_072_000).contains(&seconds) {
+            Some(Timeframe::Custom(seconds))
+        } else {
+            None
+        }
+    }
+}
+
+/// Canonical id for a custom interval (seconds → the tightest exact unit).
+fn custom_label(seconds: i64) -> String {
+    if seconds < 1 {
+        return "custom".to_string();
+    }
+    if seconds % 2_592_000 == 0 {
+        return format!("{}M", seconds / 2_592_000);
+    }
+    if seconds % 604_800 == 0 {
+        return format!("{}W", seconds / 604_800);
+    }
+    if seconds % 86_400 == 0 {
+        return format!("{}D", seconds / 86_400);
+    }
+    if seconds % 3_600 == 0 {
+        return format!("{}h", seconds / 3_600);
+    }
+    if seconds % 60 == 0 {
+        return format!("{}m", seconds / 60);
+    }
+    format!("{}s", seconds)
 }
 
 /// Series renderer for a pane — the openalgo-charts `addSeries` kinds the

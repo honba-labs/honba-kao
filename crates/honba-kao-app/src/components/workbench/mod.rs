@@ -8,6 +8,7 @@
 //!   multi-chart-grid.tsx         ->  chart_grid.rs (grid + pane card)
 //!   chart-pane-card/openalgo     ->  pane_chart.rs (pane header + canvas)
 //!   order-ticket.tsx             ->  order_ticket.rs
+//!   drawing rail                 ->  drawing_rail.rs (engine DrawingController)
 //!   order-modal.tsx              ->  order_modal.rs
 //!   trading-drawer.tsx           ->  trading_drawer.rs
 //!   market-depth.tsx             ->  market_depth.rs
@@ -21,6 +22,7 @@
 use leptos::prelude::*;
 
 pub mod chart_grid;
+pub mod drawing_rail;
 pub mod indicator_picker;
 pub mod layouts;
 pub mod market_depth;
