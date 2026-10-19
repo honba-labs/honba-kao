@@ -28,6 +28,18 @@ extern "C" {
         bars: &str,
     ) -> Result<JsValue, JsValue>;
 
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = updateLast, catch)]
+    pub(crate) fn js_update_last(id: f64, bar: &str) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = addVolumeOverlay, catch)]
+    pub(crate) fn js_add_volume_overlay(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = addBuySell, catch)]
+    pub(crate) fn js_add_buy_sell(id: f64, qty: f64, symbol: &str) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setQuantity, catch)]
+    pub(crate) fn js_set_quantity(id: f64, qty: f64) -> Result<JsValue, JsValue>;
+
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = destroy, catch)]
     pub(crate) fn js_destroy(id: f64) -> Result<JsValue, JsValue>;
 
@@ -108,6 +120,29 @@ pub(crate) fn push_chart_series(
     bars: &str,
 ) -> Result<(), JsValue> {
     js_set_series(id, kind, style, bars).map(|_ok| ())
+}
+
+/// Update (or append) the in-flight bar of the live feed on a mounted chart.
+pub(crate) fn update_chart_last(id: f64, bar: &Bar) -> bool {
+    js_update_last(id, &serde_json::to_string(bar).unwrap_or_default())
+        .map(|ok| ok.as_bool().unwrap_or(false))
+        .unwrap_or(false)
+}
+
+/// Mount the volume histogram overlay in a chart's primary pane.
+pub(crate) fn add_volume_overlay(id: f64) {
+    let _ = js_add_volume_overlay(id);
+}
+
+/// Mount the corner Buy/Sell bubble; its clicks surface as
+/// `honba-order-click` DOM events (see `order_click_stream`).
+pub(crate) fn add_buy_sell_bubble(id: f64, quantity: i64, symbol: &str) {
+    let _ = js_add_buy_sell(id, quantity as f64, symbol);
+}
+
+/// Keep the bubble's qty in step with the order ticket.
+pub(crate) fn set_bubble_quantity(id: f64, quantity: i64) {
+    let _ = js_set_quantity(id, quantity as f64);
 }
 
 /// Destroy a mounted chart (idempotent — the bridge answers `false`).

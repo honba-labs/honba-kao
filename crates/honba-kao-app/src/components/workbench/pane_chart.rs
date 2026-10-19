@@ -11,7 +11,9 @@
 use core::time::Duration;
 
 use leptos::prelude::*;
+use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
+use wasm_bindgen::closure::Closure;
 
 use super::dismiss_on_outside_click;
 use super::layouts::{area_name, preset_for};
@@ -19,6 +21,7 @@ use crate::components::charts::openalgo_chart as bridge;
 use crate::stores::workbench::{
     AppliedIndicator, ChartMode, ChartPaneConfig, PaneField, Timeframe, WorkbenchStore, pane_bars,
 };
+use crate::types::Bar;
 
 // ---------------------------------------------------------------------------
 // Workspace panes
@@ -373,6 +376,22 @@ fn PaneChart(
         match bridge::mount_chart(&JsValue::from(element)) {
             Ok(id) => {
                 let _ = bridge::push_chart_series(id, &kind, &style, &bridge::encode_bars(&bars));
+                // The workbench extras ride every fresh chart: volume overlay
+                // (from the bars just pushed), the corner Buy/Sell bubble and
+                // the live 2s tick streamer seeded from the last bar.
+                bridge::add_volume_overlay(id);
+                bridge::add_buy_sell_bubble(id, store.ticket.get_untracked().quantity, &symbol);
+                let ticker = start_tick_streamer(
+                    id,
+                    &symbol,
+                    bars.last().cloned(),
+                    timeframe.interval_seconds(),
+                );
+                on_cleanup(move || {
+                    if let Some(id) = ticker {
+                        cancel_interval(id);
+                    }
+                });
                 handle.set(Some(id));
             }
             // The ESM module may still be loading; retry briefly, matching
@@ -402,6 +421,14 @@ fn PaneChart(
                     Some(&item.instance_id),
                 );
             }
+        }
+    });
+
+    // The bubble's qty label follows the order ticket.
+    Effect::new(move |_| {
+        let quantity = store.ticket.get().quantity;
+        if let Some(id) = handle.get_untracked() {
+            bridge::set_bubble_quantity(id, quantity);
         }
     });
 
@@ -459,4 +486,135 @@ pub(crate) fn chart_handle_for(pane_id: &str) -> RwSignal<Option<f64>> {
             handle
         }
     })
+}
+
+// ---------------------------------------------------------------------------
+// Live tick streamer (labs' `subscribeBars`, adapted)
+// ---------------------------------------------------------------------------
+
+/// Deterministic seeded PRNG (labs' mulberry32).
+struct TickRng(u32);
+
+impl TickRng {
+    fn next(&mut self) -> f64 {
+        self.0 = self.0.wrapping_add(0x6d2b79f5);
+        let s = self.0;
+        let mut t = (s ^ (s >> 15)).wrapping_mul(1 | s);
+        t = t.wrapping_add((t ^ (t >> 7)).wrapping_mul(61 | t)) ^ t;
+        ((t ^ (t >> 14)) as f64) / 4294967296.0
+    }
+}
+
+/// One pane's in-flight bar plus its pump state. Owned by the interval
+/// callback, cancelled with the returned handle on remount.
+struct Ticker {
+    chart_id: f64,
+    bar: Bar,
+    step: i64,
+    rng: TickRng,
+}
+
+impl Ticker {
+    fn new(chart_id: f64, bar: Bar, step: i64, seed: u32) -> Self {
+        Self {
+            chart_id,
+            bar,
+            step,
+            rng: TickRng(seed),
+        }
+    }
+
+    /// One pump tick: either update the in-flight bar in place or roll a
+    /// fresh one for the new interval bucket, then repaint the chart.
+    fn tick(&mut self) {
+        let now = (js_sys::Date::now() / 1000.0) as i64;
+        let bucket = now.div_euclid(self.step) * self.step;
+
+        if bucket > self.bar.time {
+            // Interval rolled over: start a new bar with continuous price.
+            let open = self.bar.close;
+            let delta = (self.rng.next() - 0.495) * (open * 0.0008);
+            let close = (open + delta).max(0.1);
+            let high = open.max(close).max(open + self.rng.next() * open * 0.0004);
+            let low = open.min(close).min(open - self.rng.next() * open * 0.0004);
+            let volume = 100.0 + (self.rng.next() * 500.0).floor();
+            self.bar = Bar::new(
+                bucket,
+                round2(open),
+                round2(high),
+                round2(low),
+                round2(close),
+                volume,
+            );
+        } else {
+            // Update the current in-flight candle with realistic micro-ticks.
+            let delta = (self.rng.next() - 0.495) * (self.bar.close * 0.0006);
+            let close = (self.bar.close + delta).max(0.1);
+            self.bar.close = close;
+            self.bar.high = self.bar.high.max(close);
+            self.bar.low = self.bar.low.min(close);
+            self.bar.volume += 10.0 + (self.rng.next() * 50.0).floor();
+        }
+
+        bridge::update_chart_last(self.chart_id, &self.bar);
+    }
+}
+
+/// labs' `hashString`, for a stable per-instrument stream seed.
+fn seed_for(symbol: &str, step: i64) -> u32 {
+    let mut hash: u32 = 0;
+    for byte in symbol.to_uppercase().bytes() {
+        hash = (hash << 5).wrapping_sub(hash).wrapping_add(byte as u32);
+    }
+    hash ^ (step as u32)
+}
+
+/// Start the 2s live pump for one freshly mounted chart (labs pumps every
+/// 2s regardless of the interval — bars bucket on `interval_seconds`).
+///
+/// Returns the interval id so the pane effect cancels it on remount.
+fn start_tick_streamer(
+    chart_id: f64,
+    symbol: &str,
+    seed: Option<Bar>,
+    step_seconds: i64,
+) -> Option<i32> {
+    let bar = seed?;
+    if step_seconds <= 0 {
+        return None;
+    }
+
+    let state = std::cell::RefCell::new(Ticker::new(
+        chart_id,
+        bar,
+        step_seconds,
+        seed_for(symbol, step_seconds),
+    ));
+
+    let callback = Closure::<dyn FnMut()>::new(move || state.borrow_mut().tick());
+
+    web_sys::window()
+        .and_then(|window| {
+            window
+                .set_interval_with_callback_and_timeout_and_arguments_0(
+                    callback.as_ref().unchecked_ref(),
+                    2_000,
+                )
+                .ok()
+        })
+        .map(|handle| {
+            std::mem::forget(callback); // the closure lives as long as the timer
+            handle
+        })
+}
+
+/// `window.clearInterval` for a handle [`start_tick_streamer`] returned.
+fn cancel_interval(id: i32) {
+    if let Some(window) = web_sys::window() {
+        let _ = window.clear_interval_with_handle(id);
+    }
+}
+
+fn round2(value: f64) -> f64 {
+    (value * 100.0).round() / 100.0
 }
