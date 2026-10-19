@@ -13,8 +13,8 @@ use crate::components::modals::SetupPage;
 use crate::components::trader::{AITradersPage, CompetitionPage, TraderLaunchGuestPage};
 use crate::contexts::use_auth;
 use crate::pages::{
-    BeginnerOnboardingPage, DataPage, FaqPage, LandingPage, PageNotFound, SettingsPage,
-    StrategyStudioPage, TraderDashboardPage, TradingPlanningPage,
+    BeginnerOnboardingPage, DataPage, FaqPage, LandingPage, PageNotFound, PortfolioPage,
+    SettingsPage, StrategyStudioPage, TraderDashboardPage, TradingPlanningPage,
 };
 use crate::router::app_chrome::AppChrome;
 use crate::router::paths::{Page, ROUTES};
@@ -90,6 +90,19 @@ pub fn AppRoutes() -> impl IntoView {
                         .into_any()
                 } else {
                     view! { <Redirect path=ROUTES::HOME /> }.into_any()
+                }
+            } />
+
+            <Route path=path!("/portfolio") view=move || {
+                if auth.is_authenticated() {
+                    view! {
+                        <AppChrome current_page=Page::Portfolio>
+                            <PortfolioPage />
+                        </AppChrome>
+                    }
+                        .into_any()
+                } else {
+                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
                 }
             } />
 

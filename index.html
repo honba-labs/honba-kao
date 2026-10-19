@@ -1,14 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light" data-mode="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>本場・顔 honba-kao</title>
+
+  <!-- noFX typography: Inter for UI, IBM Plex Mono for figures/code. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link data-trunk rel="css" href="style/palette_256.css" />
   <link data-trunk rel="css" href="style/main.css" />
+  <link data-trunk rel="css" href="style/themes.css" />
   <link data-trunk rel="css" href="style/app.css" />
   <link data-trunk rel="css" href="style/brand.css" />
-  <link data-trunk rel="rust" />
+
+  <!-- openalgo-charts: vendored ESM bundle + the Rust⇄JS bridge. Loaded
+       before the wasm module so window.honbaCharts exists on first mount. -->
+  <link data-trunk rel="copy-dir" href="vendor/openalgo-charts" />
+  <script type="module" src="/openalgo-charts/honba-bridge.js"></script>
+
+  <link data-trunk rel="rust" href="crates/honba-kao-app/Cargo.toml" />
 </head>
-<body class="Dark"></body>
+<body></body>
 </html>

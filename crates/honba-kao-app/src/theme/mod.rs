@@ -1,72 +1,155 @@
-//! Theme management: dark/light mode, synced to `<body>` and persisted.
+//! Theme registry: named skins, a system preference, and persistence.
+//!
+//! Every skin is a `:root[data-theme="<id>"]` block in `style/themes.css`
+//! defining one token contract, so switching a skin is a single dataset write
+//! on `<html>`. `data-mode` is derived from the skin and drives `color-scheme`
+//! plus the OpenAlgo chart palette, which reads the resolved tokens on demand.
 
 pub mod palette;
+mod store;
 
 use leptos::prelude::*;
+use wasm_bindgen::prelude::*;
 
-const STORAGE_KEY: &str = "honba-theme";
+pub use palette::{ColorToken, get_palette_256};
 
+/// Which side of the palette a skin belongs to.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Theme {
+pub enum Mode {
     Dark,
     Light,
 }
 
-impl Theme {
-    pub fn as_class(&self) -> &'static str {
+impl Mode {
+    pub const fn as_str(self) -> &'static str {
         match self {
-            Theme::Dark => "Dark",
-            Theme::Light => "Light",
+            Mode::Dark => "dark",
+            Mode::Light => "light",
         }
     }
+}
 
-    pub fn toggle(&self) -> Self {
-        match self {
-            Theme::Dark => Theme::Light,
-            Theme::Light => Theme::Dark,
-        }
-    }
+/// One shippable skin. `id` is the `data-theme` value in `style/themes.css`.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct ThemeSpec {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub mode: Mode,
+}
 
-    fn from_stored(value: &str) -> Option<Self> {
-        match value {
-            "Dark" => Some(Theme::Dark),
-            "Light" => Some(Theme::Light),
-            _ => None,
-        }
-    }
+/// The skins, dark first. Order is the picker order.
+pub const THEMES: &[ThemeSpec] = &[
+    ThemeSpec {
+        id: "dark",
+        label: "Honba Dark",
+        mode: Mode::Dark,
+    },
+    ThemeSpec {
+        id: "midnight",
+        label: "Midnight",
+        mode: Mode::Dark,
+    },
+    ThemeSpec {
+        id: "nord",
+        label: "Nord",
+        mode: Mode::Dark,
+    },
+    ThemeSpec {
+        id: "gruvbox-dark",
+        label: "Gruvbox Dark",
+        mode: Mode::Dark,
+    },
+    ThemeSpec {
+        id: "light",
+        label: "NOFX Light",
+        mode: Mode::Light,
+    },
+    ThemeSpec {
+        id: "github-light",
+        label: "GitHub Light",
+        mode: Mode::Light,
+    },
+    ThemeSpec {
+        id: "solarized-light",
+        label: "Solarized Light",
+        mode: Mode::Light,
+    },
+    ThemeSpec {
+        id: "catppuccin-latte",
+        label: "Catppuccin Latte",
+        mode: Mode::Light,
+    },
+];
+
+/// Skin shown on a first visit. noFX's palette is the house look.
+pub const DEFAULT_THEME: &str = "light";
+
+/// Defaults used when the preference is `System` or a stored id is unknown.
+pub const FALLBACK_DARK: &str = "dark";
+pub const FALLBACK_LIGHT: &str = "light";
+
+pub fn find_theme(id: &str) -> Option<&'static ThemeSpec> {
+    THEMES.iter().find(|theme| theme.id == id)
+}
+
+/// What the user picked in the theme menu.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Preference {
+    /// Follow `prefers-color-scheme`.
+    System,
+    /// A specific skin.
+    Theme(&'static str),
 }
 
 #[derive(Copy, Clone)]
 pub struct ThemeContext {
-    pub theme: RwSignal<Theme>,
+    pub preference: RwSignal<Preference>,
+    /// The skin that is actually applied, after resolving `System`.
+    pub resolved: Memo<&'static ThemeSpec>,
 }
 
 impl ThemeContext {
     pub fn new() -> Self {
-        let theme = RwSignal::new(read_stored_theme().unwrap_or(Theme::Dark));
+        let preference = RwSignal::new(store::load_preference());
+        let resolved = Memo::new(move |_| resolve(preference.get()));
 
-        // Sync the body class and persist the choice whenever the theme changes.
         Effect::new(move |_| {
-            let current = theme.get();
-            if let Some(window) = web_sys::window() {
-                if let Some(body) = window.document().and_then(|doc| doc.body()) {
-                    body.set_class_name(current.as_class());
-                }
-                if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage.set_item(STORAGE_KEY, current.as_class());
-                }
-            }
+            let theme = resolved.get();
+            apply(theme);
+            store::save_preference(preference.get_untracked());
         });
 
-        Self { theme }
+        Self {
+            preference,
+            resolved,
+        }
     }
 
-    pub fn toggle(&self) {
-        self.theme.update(|t| *t = t.toggle());
+    pub fn set(&self, preference: Preference) {
+        self.preference.set(preference);
+    }
+
+    pub fn current(&self) -> &'static ThemeSpec {
+        self.resolved.get()
+    }
+
+    pub fn mode(&self) -> Mode {
+        self.resolved.get().mode
     }
 
     pub fn is_dark(&self) -> bool {
-        self.theme.get() == Theme::Dark
+        self.mode() == Mode::Dark
+    }
+
+    /// Quick toggle for the header button: flip to the default skin of the
+    /// other mode. Named skins stay reachable from the picker.
+    pub fn toggle(&self) {
+        let next = if self.is_dark() {
+            FALLBACK_LIGHT
+        } else {
+            FALLBACK_DARK
+        };
+        self.set(Preference::Theme(next));
     }
 }
 
@@ -76,9 +159,57 @@ impl Default for ThemeContext {
     }
 }
 
-fn read_stored_theme() -> Option<Theme> {
-    let window = web_sys::window()?;
-    let storage = window.local_storage().ok()??;
-    let stored = storage.get_item(STORAGE_KEY).ok()??;
-    Theme::from_stored(&stored)
+fn resolve(preference: Preference) -> &'static ThemeSpec {
+    match preference {
+        Preference::Theme(id) => find_theme(id)
+            .or_else(|| find_theme(FALLBACK_DARK))
+            .expect("fallback theme must exist"),
+        Preference::System => {
+            let dark = store::prefers_dark().unwrap_or(true);
+            find_theme(if dark { FALLBACK_DARK } else { FALLBACK_LIGHT })
+                .expect("fallback theme must exist")
+        }
+    }
+}
+
+/// Write the skin to `<html>` and restyle live charts.
+fn apply(theme: &'static ThemeSpec) {
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Some(document) = window.document() else {
+        return;
+    };
+    let Some(root) = document.document_element() else {
+        return;
+    };
+
+    let _ = root.set_attribute("data-theme", theme.id);
+    let _ = root.set_attribute("data-mode", theme.mode.as_str());
+
+    // Kept for the handful of rules that still branch on the mode class.
+    if let Some(body) = document.body() {
+        body.set_class_name(match theme.mode {
+            Mode::Dark => "Dark",
+            Mode::Light => "Light",
+        });
+    }
+
+    refresh_charts();
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(
+        js_namespace = ["window", "honbaCharts"],
+        js_name = refreshThemeAll,
+        catch
+    )]
+    fn js_refresh_theme_all() -> Result<JsValue, JsValue>;
+}
+
+/// Ask the chart bridge to re-read the skin. A no-op when no chart is mounted
+/// or when the engine has not loaded yet.
+fn refresh_charts() {
+    let _ = js_refresh_theme_all();
 }

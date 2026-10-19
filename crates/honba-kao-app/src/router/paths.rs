@@ -17,6 +17,7 @@ pub mod routes {
     pub const COMPETITION: &str = "/competition";
     pub const TRADERS: &str = "/traders";
     pub const DASHBOARD: &str = "/dashboard";
+    pub const PORTFOLIO: &str = "/portfolio";
     pub const STRATEGY: &str = "/strategy";
     pub const STRATEGY_MARKET: &str = "/strategy-market";
     /// Trading planning ("frontier") — the reference app keeps both `/planning`
@@ -37,6 +38,7 @@ pub enum Page {
     Competition,
     Traders,
     Trader,
+    Portfolio,
     Strategy,
     StrategyMarket,
     Data,
@@ -54,6 +56,7 @@ impl Page {
             Page::Competition => "competition",
             Page::Traders => "traders",
             Page::Trader => "trader",
+            Page::Portfolio => "portfolio",
             Page::Strategy => "strategy",
             Page::StrategyMarket => "strategy-market",
             Page::Data => "data",
@@ -71,6 +74,7 @@ impl Page {
             Page::Competition => "Competition",
             Page::Traders => "Traders",
             Page::Trader => "Dashboard",
+            Page::Portfolio => "Portfolio",
             Page::Strategy => "Strategy",
             Page::StrategyMarket => "Strategy market",
             Page::Data => "Data",
@@ -88,6 +92,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::PLANNING || r == ROUTES::LEGACY_PLANNING => Some(Page::Planning),
         r if r == ROUTES::WELCOME || r == ROUTES::TRADERS => Some(Page::Traders),
         r if r == ROUTES::DASHBOARD => Some(Page::Trader),
+        r if r == ROUTES::PORTFOLIO => Some(Page::Portfolio),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::STRATEGY_MARKET => Some(Page::StrategyMarket),
         r if r == ROUTES::DATA => Some(Page::Data),

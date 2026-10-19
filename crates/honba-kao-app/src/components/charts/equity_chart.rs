@@ -2,14 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::components::charts::scale_points;
+use crate::components::charts::{ChartSeries, OpenAlgoChart};
 use crate::components::ui::{HfPanel, HfPanelHeader};
-use crate::data::demo_data::demo_price_series;
+use crate::data::demo_data::demo_ohlc_bars;
 
 #[component]
 pub fn EquityChart() -> impl IntoView {
-    let series = demo_price_series(1_820_000.0, 60);
-    let points = scale_points(&series, 100.0, 40.0);
+    let bars = demo_ohlc_bars(1_820_000.0, 60, 86_400);
 
     view! {
         <HfPanel>
@@ -18,20 +17,11 @@ pub fn EquityChart() -> impl IntoView {
             </HfPanelHeader>
 
             <div class="hfui-panel__content chart">
-                <svg
-                    class="spark"
-                    viewBox="0 0 100 40"
-                    preserveAspectRatio="none"
-                    role="img"
-                    aria-label="Equity curve"
-                >
-                    <polyline
-                        points=points
-                        fill="none"
-                        stroke="var(--primary-8)"
-                        stroke-width="0.8"
-                    />
-                </svg>
+                <OpenAlgoChart
+                    series=vec![ChartSeries::area(bars)]
+                    class="openalgo-chart"
+                    label="Equity curve"
+                />
             </div>
         </HfPanel>
     }

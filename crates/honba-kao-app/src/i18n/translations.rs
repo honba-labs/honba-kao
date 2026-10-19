@@ -34,6 +34,8 @@ pub fn t(key: &str, lang: Language) -> &'static str {
         ("nav.traders", Language::Ja) => "トレーダー",
         ("nav.dashboard", Language::En) => "Dashboard",
         ("nav.dashboard", Language::Ja) => "ダッシュボード",
+        ("nav.portfolio", Language::En) => "Portfolio",
+        ("nav.portfolio", Language::Ja) => "ポートフォリオ",
         ("nav.strategy", Language::En) => "Strategy",
         ("nav.strategy", Language::Ja) => "ストラテジー",
         ("nav.competition", Language::En) => "Competition",

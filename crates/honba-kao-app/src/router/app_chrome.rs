@@ -1,18 +1,17 @@
 //! Shared layout wrapper for authenticated/app screens. Mirrors the `AppChrome`
 //! component defined in `web/src/router/AppRoutes.tsx`.
 //!
-//! It renders the header bar, a `<main>` content region, the footer, and the
+//! It renders the header bar, a `<main>` content region, and the
 //! login-required overlay whose open state is owned here.
 
 use leptos::prelude::*;
 
-use crate::components::common::{HeaderBar, LoginRequiredOverlay, SiteFooter};
+use crate::components::common::{HeaderBar, LoginRequiredOverlay};
 use crate::router::paths::Page;
 
 #[component]
 pub fn AppChrome(
     #[prop(default = Page::Home)] current_page: Page,
-    #[prop(default = true)] show_footer: bool,
     children: Children,
 ) -> impl IntoView {
     let login_open = RwSignal::new(false);
@@ -26,7 +25,6 @@ pub fn AppChrome(
         <div class="app-shell">
             <HeaderBar current_page=current_page on_login_required=on_login_required />
             <main class="app-main">{children()}</main>
-            {show_footer.then(|| view! { <SiteFooter /> })}
             <LoginRequiredOverlay is_open=login_open feature=feature />
         </div>
     }

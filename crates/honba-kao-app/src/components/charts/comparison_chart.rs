@@ -3,16 +3,14 @@
 
 use leptos::prelude::*;
 
-use crate::components::charts::scale_points;
+use crate::components::charts::{ChartSeries, OpenAlgoChart};
 use crate::components::ui::{HfPanel, HfPanelHeader};
-use crate::data::demo_data::demo_price_series;
+use crate::data::demo_data::demo_ohlc_bars;
 
 #[component]
 pub fn ComparisonChart() -> impl IntoView {
-    let portfolio = demo_price_series(1_820_000.0, 60);
-    let benchmark = demo_price_series(1_780_000.0, 60);
-    let a = scale_points(&portfolio, 100.0, 40.0);
-    let b = scale_points(&benchmark, 100.0, 40.0);
+    let portfolio = demo_ohlc_bars(1_820_000.0, 60, 86_400);
+    let benchmark = demo_ohlc_bars(1_780_000.0, 60, 86_400);
 
     view! {
         <HfPanel>
@@ -24,16 +22,14 @@ pub fn ComparisonChart() -> impl IntoView {
             </HfPanelHeader>
 
             <div class="hfui-panel__content chart">
-                <svg
-                    class="spark"
-                    viewBox="0 0 100 40"
-                    preserveAspectRatio="none"
-                    role="img"
-                    aria-label="Portfolio versus benchmark"
-                >
-                    <polyline points=a fill="none" stroke="var(--primary-8)" stroke-width="0.8" />
-                    <polyline points=b fill="none" stroke="var(--shade-5)" stroke-width="0.8" stroke-dasharray="1.5 1" />
-                </svg>
+                <OpenAlgoChart
+                    series=vec![
+                        ChartSeries::line(portfolio, "--primary-8"),
+                        ChartSeries::line(benchmark, "--shade-5"),
+                    ]
+                    class="openalgo-chart"
+                    label="Portfolio versus benchmark"
+                />
             </div>
         </HfPanel>
     }

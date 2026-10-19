@@ -4,7 +4,7 @@
 use leptos::prelude::*;
 
 use crate::components::ui::{CircleStatus, HfStatusCircle};
-use crate::theme::{Theme, ThemeContext};
+use crate::theme::ThemeContext;
 
 #[component]
 pub fn StatusBar() -> impl IntoView {
@@ -35,10 +35,7 @@ pub fn StatusBar() -> impl IntoView {
                 <div class="hfui-statusbar__item">
                     <span>"THEME: "</span>
                     <strong style="color: var(--shade-8); margin-left: 4px;">
-                        {move || match theme.theme.get() {
-                            Theme::Dark => "DARK (BFX)",
-                            Theme::Light => "LIGHT",
-                        }}
+                        {move || theme.current().label.to_uppercase()}
                     </strong>
                 </div>
                 <div class="hfui-statusbar__divider" />

@@ -1,0 +1,369 @@
+/* ========================================================================= */
+/* honba-kao Theme Registry                                                   */
+/*                                                                            */
+/* Eight skins (4 dark / 4 light) as [data-theme] blocks on <html>. Every skin */
+/* defines the same token contract below, so no component stylesheet needs to */
+/* know which theme is active. `data-mode` is derived from the theme and       */
+/* drives native widgets (color-scheme) and the chart palette.                */
+/* ========================================================================= */
+
+/* ------------------------------------------------------------------------- */
+/* Token contract                                                             */
+/*                                                                            */
+/*   surfaces  --background-color  --darker-background-color                  */
+/*             --lighter-background-color  --grayish-color                    */
+/*   lines     --border-color                                                 */
+/*   text      --text-color  --on-accent                                      */
+/*             --shade-0 … --shade-9                                          */
+/*   accents   --primary-0 -1 -8 -9   --secondary-0 -8 -9                     */
+/*   state     --pnl-gain  --pnl-loss  --warning-color                        */
+/*             --button-green  --button-red  --button-blue                    */
+/*                                                                            */
+/* The shade ramp is ordered by contrast, not by lightness: shade-0 is the    */
+/* nearest surface tint to the background, shade-5/-6 carry muted/secondary   */
+/* text, shade-9 is maximum contrast. Dark skins run shade-0 light → shade-9  */
+/* white; light skins run shade-0 grey → shade-9 near-black. Both directions  */
+/* keep the same meaning, which is why components can use one ramp for both.  */
+/* ------------------------------------------------------------------------- */
+
+/* Chart tokens are indirections over the skin, so a new theme restyles the
+   OpenAlgo chart for free — the bridge reads these computed values. */
+:root {
+  --chart-background: var(--background-color);
+  --chart-grid: var(--border-color);
+  --chart-axis-text: var(--shade-6);
+  --chart-axis-line: var(--border-color);
+  --chart-pane-separator: var(--border-color);
+  --chart-crosshair: var(--shade-5);
+  --chart-area-top: var(--primary-1);
+  --chart-area-bottom: var(--primary-0);
+
+  /* Broker accents. Brand colours, so they stay constant across skins. */
+  --broker-zerodha: #387ed1;
+  --broker-dhan: #00a651;
+  --broker-upstox: #6c4bd4;
+  --broker-angel: #f58220;
+  --broker-fyers: #2fa8ff;
+  --broker-groww: #00b884;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+/* ========================================================================= */
+/* Dark skins                                                                 */
+/* ========================================================================= */
+
+/* honba — the original terminal teal. */
+[data-theme="dark"] {
+  --background-color: #172d3e;
+  --darker-background-color: #102331;
+  --lighter-background-color: #1d3548;
+  --grayish-color: #4f5a62;
+  --border-color: #243b4f;
+  --text-color: #bfc3c6;
+  --on-accent: #04110d;
+
+  --shade-0: #1b3346;
+  --shade-1: #243f54;
+  --shade-2: #2f4d65;
+  --shade-3: #3d5e78;
+  --shade-4: #4e708c;
+  --shade-5: #6586a3;
+  --shade-6: #809ebb;
+  --shade-7: #9fb7cf;
+  --shade-8: #c4d4e4;
+  --shade-9: #ffffff;
+
+  --primary-0: rgba(0, 224, 173, 0.12);
+  --primary-1: rgba(0, 224, 173, 0.25);
+  --primary-8: #00e0ad;
+  --primary-9: #00e0ad;
+
+  --secondary-0: rgba(0, 137, 255, 0.12);
+  --secondary-8: #0089ff;
+  --secondary-9: #0089ff;
+
+  --pnl-gain: #00e0ad;
+  --pnl-loss: #f05359;
+  --button-green: #00b38a;
+  --button-red: #d9383e;
+  --button-blue: #0073d9;
+  --warning-color: #fcd206;
+}
+
+/* midnight — OLED black with a cyan accent. */
+[data-theme="midnight"] {
+  --background-color: #06080c;
+  --darker-background-color: #000000;
+  --lighter-background-color: #10141b;
+  --grayish-color: #2a3040;
+  --border-color: #1b2130;
+  --text-color: #c9d1d9;
+  --on-accent: #04141a;
+
+  --shade-0: #0d1117;
+  --shade-1: #141a23;
+  --shade-2: #1c2531;
+  --shade-3: #26303f;
+  --shade-4: #333e50;
+  --shade-5: #4a566a;
+  --shade-6: #6a7789;
+  --shade-7: #8b98ab;
+  --shade-8: #b6c2d1;
+  --shade-9: #f0f6fc;
+
+  --primary-0: rgba(34, 211, 238, 0.12);
+  --primary-1: rgba(34, 211, 238, 0.25);
+  --primary-8: #22d3ee;
+  --primary-9: #22d3ee;
+
+  --secondary-0: rgba(124, 140, 255, 0.14);
+  --secondary-8: #7c8cff;
+  --secondary-9: #7c8cff;
+
+  --pnl-gain: #22c55e;
+  --pnl-loss: #ef4444;
+  --button-green: #34d399;
+  --button-red: #f87171;
+  --button-blue: #60a5fa;
+  --warning-color: #fbbf24;
+}
+
+/* nord — Nord (Polar Night / Frost / Aurora). */
+[data-theme="nord"] {
+  --background-color: #2e3440;
+  --darker-background-color: #242933;
+  --lighter-background-color: #3b4252;
+  --grayish-color: #4c566a;
+  --border-color: #434c5e;
+  --text-color: #d8dee9;
+  --on-accent: #2e3440;
+
+  --shade-0: #3b4252;
+  --shade-1: #434c5e;
+  --shade-2: #4c566a;
+  --shade-3: #5c6b80;
+  --shade-4: #74839a;
+  --shade-5: #8f9dae;
+  --shade-6: #aeb9c7;
+  --shade-7: #d8dee9;
+  --shade-8: #e5e9f0;
+  --shade-9: #eceff4;
+
+  --primary-0: rgba(136, 192, 208, 0.16);
+  --primary-1: rgba(136, 192, 208, 0.30);
+  --primary-8: #88c0d0;
+  --primary-9: #8fbcbb;
+
+  --secondary-0: rgba(129, 161, 193, 0.16);
+  --secondary-8: #81a1c1;
+  --secondary-9: #5e81ac;
+
+  --pnl-gain: #a3be8c;
+  --pnl-loss: #bf616a;
+  --button-green: #a3be8c;
+  --button-red: #bf616a;
+  --button-blue: #81a1c1;
+  --warning-color: #ebcb8b;
+}
+
+/* gruvbox-dark — Gruvbox dark, medium contrast. */
+[data-theme="gruvbox-dark"] {
+  --background-color: #282828;
+  --darker-background-color: #1d2021;
+  --lighter-background-color: #3c3836;
+  --grayish-color: #7c6f64;
+  --border-color: #504945;
+  --text-color: #d5c4a1;
+  --on-accent: #1d2021;
+
+  --shade-0: #32302f;
+  --shade-1: #3c3836;
+  --shade-2: #504945;
+  --shade-3: #665c54;
+  --shade-4: #7c6f64;
+  --shade-5: #928374;
+  --shade-6: #a89984;
+  --shade-7: #bdae93;
+  --shade-8: #d5c4a1;
+  --shade-9: #ebdbb2;
+
+  --primary-0: rgba(250, 189, 47, 0.14);
+  --primary-1: rgba(250, 189, 47, 0.28);
+  --primary-8: #fabd2f;
+  --primary-9: #d79921;
+
+  --secondary-0: rgba(131, 165, 152, 0.16);
+  --secondary-8: #83a598;
+  --secondary-9: #458588;
+
+  --pnl-gain: #b8bb26;
+  --pnl-loss: #fb4934;
+  --button-green: #b8bb26;
+  --button-red: #fb4934;
+  --button-blue: #83a598;
+  --warning-color: #fabd2f;
+}
+
+/* ========================================================================= */
+/* Light skins                                                                */
+/* ========================================================================= */
+
+/* honba light — the original light skin. */
+[data-theme="light"] {
+  /* noFX Flow palette (web/src/styles/brand.css + index.css). */
+  --background-color: #f6f8fc;
+  --darker-background-color: #ffffff;
+  --lighter-background-color: #edf1f7;
+  --grayish-color: #e3e8f1;
+  --border-color: #e3e8f1;
+  --text-color: #192434;
+  --on-accent: #ffffff;
+
+  --shade-0: #edf1f7;
+  --shade-1: #e3e8f1;
+  --shade-2: #d5dceb;
+  --shade-3: #c2cbdd;
+  --shade-4: #9aa7bd;
+  --shade-5: #707e92;
+  --shade-6: #637087;
+  --shade-7: #3f4c61;
+  --shade-8: #26313f;
+  --shade-9: #192434;
+
+  --primary-0: #edf2ff;
+  --primary-1: #dce7ff;
+  --primary-8: #295be8;
+  --primary-9: #204bc4;
+
+  --secondary-0: #edf2ff;
+  --secondary-8: #295be8;
+  --secondary-9: #204bc4;
+
+  --pnl-gain: #2e8b57;
+  --pnl-loss: #d6433a;
+  --button-green: #295be8;
+  --button-red: #d6433a;
+  --button-blue: #295be8;
+  --warning-color: #b7791f;
+}
+
+/* github-light — GitHub's light UI palette. */
+[data-theme="github-light"] {
+  --background-color: #ffffff;
+  --darker-background-color: #f6f8fa;
+  --lighter-background-color: #ffffff;
+  --grayish-color: #eaeef2;
+  --border-color: #d0d7de;
+  --text-color: #1f2328;
+  --on-accent: #ffffff;
+
+  --shade-0: #f6f8fa;
+  --shade-1: #eaeef2;
+  --shade-2: #d0d7de;
+  --shade-3: #afb8c1;
+  --shade-4: #8c959f;
+  --shade-5: #6e7781;
+  --shade-6: #57606a;
+  --shade-7: #424a53;
+  --shade-8: #24292f;
+  --shade-9: #1f2328;
+
+  --primary-0: rgba(9, 105, 218, 0.10);
+  --primary-1: rgba(9, 105, 218, 0.20);
+  --primary-8: #0969da;
+  --primary-9: #0550ae;
+
+  --secondary-0: rgba(130, 80, 223, 0.10);
+  --secondary-8: #8250df;
+  --secondary-9: #6639ba;
+
+  --pnl-gain: #1a7f37;
+  --pnl-loss: #cf222e;
+  --button-green: #1f883d;
+  --button-red: #cf222e;
+  --button-blue: #0969da;
+  --warning-color: #9a6700;
+}
+
+/* solarized-light — Solarized, light. */
+[data-theme="solarized-light"] {
+  --background-color: #fdf6e3;
+  --darker-background-color: #eee8d5;
+  --lighter-background-color: #f7f1de;
+  --grayish-color: #d9d2c1;
+  --border-color: #d9d2c1;
+  --text-color: #586e75;
+  --on-accent: #fdf6e3;
+
+  --shade-0: #f2ecda;
+  --shade-1: #e8e1cc;
+  --shade-2: #d9d2c1;
+  --shade-3: #c1bba9;
+  --shade-4: #a8a390;
+  --shade-5: #8f8a78;
+  --shade-6: #75705f;
+  --shade-7: #586e75;
+  --shade-8: #3f4d52;
+  --shade-9: #073642;
+
+  --primary-0: rgba(38, 139, 210, 0.12);
+  --primary-1: rgba(38, 139, 210, 0.24);
+  --primary-8: #268bd2;
+  --primary-9: #2076b0;
+
+  --secondary-0: rgba(108, 113, 196, 0.12);
+  --secondary-8: #6c71c4;
+  --secondary-9: #5a5fa8;
+
+  --pnl-gain: #859900;
+  --pnl-loss: #dc322f;
+  --button-green: #859900;
+  --button-red: #dc322f;
+  --button-blue: #268bd2;
+  --warning-color: #b58900;
+}
+
+/* catppuccin-latte — Catppuccin, light. */
+[data-theme="catppuccin-latte"] {
+  --background-color: #eff1f5;
+  --darker-background-color: #e6e9ef;
+  --lighter-background-color: #ffffff;
+  --grayish-color: #dce0e8;
+  --border-color: #ccd0da;
+  --text-color: #4c4f69;
+  --on-accent: #ffffff;
+
+  --shade-0: #e6e9ef;
+  --shade-1: #dce0e8;
+  --shade-2: #ccd0da;
+  --shade-3: #bcc0cc;
+  --shade-4: #acb0be;
+  --shade-5: #9ca0b0;
+  --shade-6: #8c8fa1;
+  --shade-7: #6c6f85;
+  --shade-8: #5c5f77;
+  --shade-9: #4c4f69;
+
+  --primary-0: rgba(30, 102, 245, 0.10);
+  --primary-1: rgba(30, 102, 245, 0.22);
+  --primary-8: #1e66f5;
+  --primary-9: #1a5ad9;
+
+  --secondary-0: rgba(136, 57, 239, 0.10);
+  --secondary-8: #8839ef;
+  --secondary-9: #7a2fe0;
+
+  --pnl-gain: #40a02b;
+  --pnl-loss: #d20f39;
+  --button-green: #40a02b;
+  --button-red: #d20f39;
+  --button-blue: #1e66f5;
+  --warning-color: #df8e1d;
+}

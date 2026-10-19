@@ -1,15 +1,19 @@
 //! Chart components. Mirrors `web/src/components/charts/`.
 //!
-//! Rendered as inline SVG (Rust-native) rather than a vendored JS charting
-//! library — see `components/terminal/candles.rs` for the rationale.
+//! Price, equity and comparison charts render through the vendored
+//! [openalgo-charts](https://github.com/marketcalls/openalgo-charts) engine via
+//! [`openalgo_chart::OpenAlgoChart`]. Small inline sparklines stay Rust-native
+//! SVG, where a canvas engine would cost more than it returns.
 
 pub mod advanced_chart;
 pub mod comparison_chart;
 pub mod equity_chart;
+pub mod openalgo_chart;
 
 pub use advanced_chart::AdvancedChart;
 pub use comparison_chart::ComparisonChart;
 pub use equity_chart::EquityChart;
+pub use openalgo_chart::{ChartSeries, OpenAlgoChart};
 
 /// Scale a series into an SVG `polyline`/`path` point string.
 pub fn scale_points(values: &[f64], width: f64, height: f64) -> String {

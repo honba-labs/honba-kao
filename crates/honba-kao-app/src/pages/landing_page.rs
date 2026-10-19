@@ -1,47 +1,30 @@
 //! Landing page. Mirrors `web/src/pages/LandingPage.tsx`.
 //!
-//! The landing page carries its own marketing nav (no app chrome).
+//! The marketing surface runs inside the normal app chrome, so the theme
+//! picker, language switch and sign-in entry work before authentication.
 
 use leptos::prelude::*;
-use leptos_router::components::A;
 
-use crate::components::common::{BrandLogo, SiteFooter};
-use crate::components::landing::{BrandFeatures, BrandHero, BrandStats};
-use crate::constants::branding;
-use crate::router::paths::ROUTES;
+use crate::components::common::{HeaderBar, LoginRequiredOverlay};
+use crate::components::landing::FlowLanding;
+use crate::router::paths::Page;
 
 #[component]
 pub fn LandingPage() -> impl IntoView {
+    let login_open = RwSignal::new(false);
+    let feature = RwSignal::new(String::new());
+    let on_login_required = Callback::new(move |requested: String| {
+        feature.set(requested);
+        login_open.set(true);
+    });
+
     view! {
-        <div class="landing">
-            <header class="landing__nav">
-                <div class="header-bar__brand">
-                    <BrandLogo />
-                    <div class="header-bar__brand-text">
-                        <span class="header-bar__brand-name">{branding::APP_NAME}</span>
-                        <span class="header-bar__brand-sub">{branding::APP_NAME_LATIN}</span>
-                    </div>
-                </div>
-
-                <nav class="landing__nav-links">
-                    <A href=ROUTES::FAQ>"FAQ"</A>
-                    <A href=ROUTES::DATA>"Data"</A>
-                </nav>
-
-                <div class="header-bar__spacer" />
-
-                <span class="header-bar__cta header-bar__cta--ghost">
-                    <A href=ROUTES::LOGIN>"Sign in"</A>
-                </span>
-                <span class="header-bar__cta">
-                    <A href=ROUTES::REGISTER>"Get started"</A>
-                </span>
-            </header>
-
-            <BrandHero />
-            <BrandStats />
-            <BrandFeatures />
-            <SiteFooter />
+        <div class="app-shell">
+            <HeaderBar current_page=Page::Home on_login_required=on_login_required />
+            <main class="app-main app-main--landing">
+                <FlowLanding />
+            </main>
+            <LoginRequiredOverlay is_open=login_open feature=feature />
         </div>
     }
 }

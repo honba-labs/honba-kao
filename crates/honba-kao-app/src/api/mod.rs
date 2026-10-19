@@ -7,9 +7,11 @@
 //! `honba-kao-client` crate, so swapping a namespace to the network is a
 //! per-function change.
 
+pub mod brokers;
 pub mod config;
 pub mod data;
 pub mod http;
+pub mod portfolio;
 pub mod strategies;
 pub mod telegram;
 pub mod traders;

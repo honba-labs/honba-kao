@@ -1,49 +1,27 @@
-//! Candle chart rendered as inline SVG.
+//! Price candles on the openalgo-charts engine.
 //!
-//! The reference app vendors TradingView's charting library; honba-kao keeps
-//! the chart Rust-native (no JS charting dependency) — a plain SVG built from
-//! the price series, which is enough for the scaffold and keeps the bundle
-//! small.
+//! The reference app vendors TradingView's charting library; honba-kao uses
+//! [openalgo-charts](https://github.com/marketcalls/openalgo-charts) instead —
+//! dependency-free, Apache-2.0, and it reads its palette from the app skin so
+//! candles follow the active theme.
 
 use leptos::prelude::*;
 
-use crate::data::demo_data::demo_price_series;
+use crate::components::charts::{ChartSeries, OpenAlgoChart};
+use crate::data::demo_data::demo_ohlc_bars;
 
 #[component]
-pub fn Candles(#[prop(default = 48usize)] count: usize) -> impl IntoView {
-    let series = demo_price_series(2884.0, count);
-    let (min, max) = series
-        .iter()
-        .fold((f64::MAX, f64::MIN), |(lo, hi), v| (lo.min(*v), hi.max(*v)));
-    let span = (max - min).max(1e-9);
+pub fn Candles(
+    #[prop(default = 48usize)] count: usize,
+    #[prop(default = 300i64)] interval_seconds: i64,
+) -> impl IntoView {
+    let bars = demo_ohlc_bars(2884.0, count, interval_seconds);
 
     view! {
-        <svg
-            class="candles"
-            viewBox=format!("0 0 {} 100", count * 4)
-            preserveAspectRatio="none"
-            role="img"
-            aria-label="Price candles"
-        >
-            {series
-                .iter()
-                .enumerate()
-                .map(|(i, value)| {
-                    let h = ((value - min) / span) * 90.0 + 5.0;
-                    let up = i == 0 || *value >= series[i - 1];
-                    let color = if up { "var(--pnl-gain)" } else { "var(--pnl-loss)" };
-                    view! {
-                        <rect
-                            x=(i * 4 + 1) as f64
-                            y=100.0 - h
-                            width=2.0
-                            height=h
-                            fill=color
-                            rx=0.6
-                        />
-                    }
-                })
-                .collect_view()}
-        </svg>
+        <OpenAlgoChart
+            series=vec![ChartSeries::candles(bars)]
+            class="openalgo-chart"
+            label="Price candles"
+        />
     }
 }

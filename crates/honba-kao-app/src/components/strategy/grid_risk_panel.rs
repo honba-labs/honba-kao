@@ -18,7 +18,7 @@ pub fn GridRiskPanel() -> impl IntoView {
         <HfPanel>
             <HfPanelHeader title="Grid & risk" />
 
-            <div class="hfui-panel__content form-grid">
+            <div class="hfui-panel__content hfui-panel__content--auto form-grid">
                 <label class="auth-field">
                     <span>"Grid levels"</span>
                     <input
@@ -49,16 +49,18 @@ pub fn GridRiskPanel() -> impl IntoView {
                 </label>
             </div>
 
-            <div class="hfui-panel__content summary-row">
-                <span>"Capital per level"</span>
-                <strong class="tnum">{move || currency(per_level())}</strong>
-            </div>
+            <div class="hfui-panel__content hfui-panel__content--auto">
+                <div class="summary-row">
+                    <span>"Capital per level"</span>
+                    <strong class="tnum">{move || currency(per_level())}</strong>
+                </div>
 
-            <div class="hfui-panel__content summary-row">
-                <span>"Max drawdown guard"</span>
-                <strong class="tnum">
-                    {move || currency(capital * (step_pct.get() * levels.get() as f64 / 100.0))}
-                </strong>
+                <div class="summary-row">
+                    <span>"Max drawdown guard"</span>
+                    <strong class="tnum">
+                        {move || currency(capital * (step_pct.get() * levels.get() as f64 / 100.0))}
+                    </strong>
+                </div>
             </div>
         </HfPanel>
     }
