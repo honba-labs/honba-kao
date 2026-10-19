@@ -18,13 +18,98 @@ use crate::types::{Bar, SeriesKind};
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = mount, catch)]
-    fn js_mount(element: &JsValue) -> Result<JsValue, JsValue>;
+    pub(crate) fn js_mount(element: &JsValue) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setSeries, catch)]
-    fn js_set_series(id: f64, kind: &str, style: &str, bars: &str) -> Result<JsValue, JsValue>;
+    pub(crate) fn js_set_series(
+        id: f64,
+        kind: &str,
+        style: &str,
+        bars: &str,
+    ) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = destroy, catch)]
-    fn js_destroy(id: f64) -> Result<JsValue, JsValue>;
+    pub(crate) fn js_destroy(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = indicatorCatalog, catch)]
+    pub(crate) fn js_indicator_catalog() -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = chartIndicators, catch)]
+    pub(crate) fn js_chart_indicators(id: f64) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = addIndicator, catch)]
+    pub(crate) fn js_add_indicator(
+        id: f64,
+        indicator_id: &str,
+        settings_json: &str,
+        instance_id: &str,
+    ) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = removeIndicator, catch)]
+    pub(crate) fn js_remove_indicator(id: f64, instance_id: &str) -> Result<JsValue, JsValue>;
+}
+
+/// The full registry of built-in indicators, as decoded [`IndicatorDef`]s.
+///
+/// Shared with the workbench indicator picker (fetched once per session).
+pub(crate) fn indicator_catalog() -> Result<Vec<IndicatorDef>, JsValue> {
+    let json = js_indicator_catalog()?;
+    serde_json::from_str::<Vec<IndicatorDef>>(json.as_string().unwrap_or_default().as_str())
+        .map_err(|error| JsValue::from_str(&format!("indicator catalog: {error}")))
+}
+
+/// Live indicator instances currently running on one chart.
+#[allow(dead_code)] // kept for console debugging / future diffing
+pub(crate) fn chart_indicators(id: f64) -> Result<Vec<LiveIndicator>, JsValue> {
+    let json = js_chart_indicators(id)?;
+    serde_json::from_str::<Vec<LiveIndicator>>(json.as_string().unwrap_or_default().as_str())
+        .map_err(|error| JsValue::from_str(&format!("live indicators: {error}")))
+}
+
+/// Add one built-in indicator to a chart, returning the live instance id.
+pub(crate) fn add_indicator(
+    id: f64,
+    indicator_id: &str,
+    settings: &serde_json::Value,
+    instance_id: Option<&str>,
+) -> Result<LiveIndicator, JsValue> {
+    let settings_json = if settings.is_object() && !settings.as_object().is_some_and(|map| map.is_empty()) {
+        settings.to_string()
+    } else {
+        String::new()
+    };
+    let json = js_add_indicator(id, indicator_id, &settings_json, instance_id.unwrap_or(""))?;
+    json.as_string()
+        .ok_or_else(|| JsValue::from_str("engine refused the indicator"))
+        .and_then(|raw| serde_json::from_str(&raw).map_err(|error| JsValue::from_str(&format!("{error}"))))
+}
+
+/// Remove one live indicator instance (idempotent).
+pub(crate) fn remove_indicator(id: f64, instance_id: &str) {
+    let _ = js_remove_indicator(id, instance_id);
+}
+
+/// Mount a chart host in the bridge, returning a numeric handle.
+///
+/// Shared with the workbench pane chart, which must remount charts as pane
+/// symbol/timeframe/mode change (the engine has no clear-series call).
+pub(crate) fn mount_chart(element: &JsValue) -> Result<f64, JsValue> {
+    js_mount(element).and_then(|id| id.as_f64().ok_or_else(JsValue::undefined))
+}
+
+/// Push one series onto a mounted chart.
+pub(crate) fn push_chart_series(
+    id: f64,
+    kind: &str,
+    style: &str,
+    bars: &str,
+) -> Result<(), JsValue> {
+    js_set_series(id, kind, style, bars).map(|_ok| ())
+}
+
+/// Destroy a mounted chart (idempotent — the bridge answers `false`).
+pub(crate) fn destroy_chart(id: f64) {
+    let _ = js_destroy(id);
 }
 
 /// One series to draw, with the data the bridge should hand the engine.
@@ -65,6 +150,65 @@ impl ChartSeries {
             bars,
         }
     }
+}
+
+/// One tunable input of a built-in indicator (mirrors the engine's input spec).
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IndicatorInput {
+    pub key: String,
+    #[serde(rename = "type")]
+    pub input_type: String,
+    pub label: String,
+    /// Literal default (`f64` / `bool` / `string` depending on `input_type`).
+    #[serde(default)]
+    pub default: serde_json::Value,
+    #[serde(default)]
+    pub min: Option<f64>,
+    #[serde(default)]
+    pub max: Option<f64>,
+    #[serde(default)]
+    pub step: Option<f64>,
+    #[serde(default)]
+    pub options: Vec<SelectOption>,
+    #[serde(default)]
+    pub group: Option<String>,
+}
+
+/// Options of a `select` input.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+pub struct SelectOption {
+    pub label: String,
+    pub value: serde_json::Value,
+}
+
+/// One row of the built-in indicator registry.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IndicatorDef {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub category: String,
+    /// `onchart` overlays share the price scale; `pane` get their own pane.
+    #[serde(default)]
+    pub placement: String,
+    #[serde(default)]
+    pub inputs: Vec<IndicatorInput>,
+}
+
+/// One live indicator instance running on a chart.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LiveIndicator {
+    /// The instance id the engine minted (also what `removeIndicator` wants).
+    pub instance_id: String,
+    /// The registry id (`sma`, `rsi`, …).
+    #[serde(default)]
+    pub indicator_id: String,
+    /// Human name for the pane header chip.
+    #[serde(default)]
+    pub name: String,
 }
 
 /// An openalgo-charts canvas bound to a `<div>`.
@@ -129,16 +273,21 @@ pub fn OpenAlgoChart(
 }
 
 fn serialize_series(series: &[ChartSeries]) -> Vec<(String, String, String)> {
-    series
-        .iter()
-        .map(|series| {
-            let style = serde_json::json!({
-                "color": series.color,
-                "lineWidth": series.line_width,
-            });
-            let bars = serde_json::to_string(&series.bars).unwrap_or_else(|_| "[]".to_string());
+    series.iter().map(encode_series).collect()
+}
 
-            (series.kind.as_str().to_string(), style.to_string(), bars)
-        })
-        .collect()
+/// Encode one series into the `(kind, style, bars)` JSON triple the bridge's
+/// `setSeries` accepts. Shared with the workbench pane chart.
+pub(crate) fn encode_series(series: &ChartSeries) -> (String, String, String) {
+    let style = serde_json::json!({
+        "color": series.color,
+        "lineWidth": series.line_width,
+    });
+    (series.kind.as_str().to_string(), style.to_string(), encode_bars(&series.bars))
+}
+
+/// Encode just the OHLCV bars (the workbench builds kind/style itself so all
+/// thirteen engine chart kinds are reachable).
+pub(crate) fn encode_bars(bars: &[Bar]) -> String {
+    serde_json::to_string(bars).unwrap_or_else(|_| "[]".to_string())
 }

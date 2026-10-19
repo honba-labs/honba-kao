@@ -1,0 +1,33 @@
+/* ========================================================================= */
+/* honba-kao screener — ported from the labs screener                        */
+/* (filter bar · table + header menus · heatmap · modals · drawers).         */
+/*                                                                           */
+/* Same rules as workbench.css: 256-token contract only                      */
+/* (--shade-0..9, --primary-*, --pnl-gain/loss, --text-color-*, --warning),   */
+/* page prefix `sc-`. The screener is a full-height view like the workbench. */
+/* ========================================================================= */
+
+/* --- Full-view viewport inside the noFX shell ------------------------------ */
+.app-main:has(> .sc-view) {
+  padding: 0;
+  max-width: none;
+  height: calc(100vh - 72px);
+  overflow: hidden;
+}
+
+.sc-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--canvas);
+}
+
+.sc-view__body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}

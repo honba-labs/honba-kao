@@ -16,12 +16,16 @@
  *   window.honbaCharts.setSeries(id, type, style, bars)
  *   window.honbaCharts.refreshThemeAll()
  *   window.honbaCharts.destroy(id)
+ *   window.honbaCharts.indicatorCatalog()          -> JSON
+ *   window.honbaCharts.chartIndicators(id)         -> JSON
+ *   window.honbaCharts.addIndicator(id, indId, settingsJson, instanceId)
+ *   window.honbaCharts.removeIndicator(id, instanceId)
  * ========================================================================== */
 
 import { createChart, darkTheme, lightTheme } from './openalgo-charts.mjs';
 /* Side-effect tiers: 112 built-in indicators and the drawing toolkit. */
-import './openalgo-charts.indicators.mjs';
 import './openalgo-charts.draw.mjs';
+import { BUILTIN_INDICATORS } from './openalgo-charts.indicators.mjs';
 
 const charts = new Map();
 let nextId = 1;
@@ -96,6 +100,8 @@ function seriesStyle(kind, style, theme) {
     case 'candlestick':
     case 'bar':
     case 'hollow-candle':
+    case 'volume-candle':
+    case 'high-low':
       return {
         upColor: theme.upColor,
         downColor: theme.downColor,
@@ -106,6 +112,7 @@ function seriesStyle(kind, style, theme) {
       };
     case 'area':
     case 'baseline':
+    case 'hlc-area':
       return {
         lineColor: override || theme.lineColor,
         topColor: theme.areaTopColor,
@@ -173,12 +180,91 @@ function destroy(id) {
   return true;
 }
 
+/* -- Indicator API ------------------------------------------------------- */
+
+/** One catalog row for Rust: inputs mirror the engine's setting definitions. */
+function catalogEntry(definition) {
+  return {
+    id: definition.id,
+    name: definition.name,
+    category: definition.category || 'Other',
+    placement: definition.placement === 'pane' ? 'pane' : 'onchart',
+    inputs: definition.inputs || [],
+  };
+}
+
+/** The full registry of built-in indicators as JSON. */
+function indicatorCatalog() {
+  return JSON.stringify(BUILTIN_INDICATORS.map(catalogEntry));
+}
+
+/** Live indicator instances on one chart as JSON. */
+function chartIndicators(id) {
+  const entry = charts.get(id);
+  if (!entry) return '[]';
+  try {
+    return JSON.stringify(entry.chart.indicators().map((instance) => ({
+      instanceId: instance.id,
+      indicatorId: instance.indicatorId ?? instance.id,
+      name: instance.name ?? instance.indicatorId ?? instance.id,
+    })));
+  } catch {
+    return '[]';
+  }
+}
+
+/**
+ * Add one built-in indicator to a chart.
+ * Returns the live instance JSON (or null when the engine refuses the id).
+ */
+function addIndicator(id, indicatorId, settingsJson, instanceId) {
+  const entry = charts.get(id);
+  if (!entry) return null;
+
+  try {
+    let settings;
+    if (settingsJson) {
+      const parsed = JSON.parse(settingsJson);
+      if (parsed && Object.keys(parsed).length > 0) settings = parsed;
+    }
+    const options = instanceId ? { instanceId } : {};
+    entry.chart.addIndicator(indicatorId, settings, options);
+
+    const instances = entry.chart.indicators();
+    const live = instances
+      .filter((instance) => (instance.indicatorId ?? instance.id) === indicatorId)
+      .find((instance) => !instanceId || instance.id === instanceId) ?? instances.at(-1);
+    if (!live) return null;
+    return JSON.stringify({ instanceId: live.id, indicatorId, name: live.name ?? indicatorId });
+  } catch {
+    return null;
+  }
+}
+
+/** Remove one live indicator instance (idempotent). */
+function removeIndicator(id, instanceId) {
+  const entry = charts.get(id);
+  if (!entry) return false;
+  try {
+    const live = entry.chart.indicators().find((instance) => instance.id === instanceId);
+    if (!live) return false;
+    live.remove();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 window.honbaCharts = {
   version: '2.6.7',
   mount,
   setSeries,
   refreshThemeAll,
   destroy,
+  indicatorCatalog,
+  chartIndicators,
+  addIndicator,
+  removeIndicator,
 };
 
 /* Let the Rust side know the engine is live even if it beat the module. */
