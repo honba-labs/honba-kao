@@ -1,6 +1,6 @@
 //! Typed HTTP client for honba-ya-api.
 //!
-//! In dev, the base URL is "/api" and Trunk proxies to :3000.
+//! In dev, the base URL is "/api" and Trunk proxies to :8000.
 //! In prod, set it to your API origin, e.g. "https://api.honba.in".
 //!
 //! Wire types come straight from `honba-kokoro-messages` (the envelope, the

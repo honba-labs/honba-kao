@@ -6,7 +6,7 @@ use serde::de::DeserializeOwned;
 
 pub use honba_kao_client::ClientError as HttpError;
 
-/// Base URL of the honba-ya API. Trunk proxies `/api` to `:3000` in dev; set a
+/// Base URL of the honba-ya API. Trunk proxies `/api` to `:8000` in dev; set a
 /// real origin for production.
 pub fn base_url() -> String {
     crate::constants::branding::API_BASE_URL.to_string()
