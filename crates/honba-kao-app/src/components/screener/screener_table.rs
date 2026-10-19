@@ -13,8 +13,8 @@ use leptos::prelude::*;
 use crate::components::workbench::dismiss_on_outside_click;
 use crate::data::instruments::Instrument;
 use crate::stores::screener::{
-    static_cagr3y, static_cagr5y, AdvancedFilters, ColumnDef, DetailTab, ScreenerStore,
-    ScreenerType, SortDirection,
+    AdvancedFilters, ColumnDef, DetailTab, ScreenerStore, ScreenerType, SortDirection,
+    static_cagr3y, static_cagr5y,
 };
 use crate::utils::currency;
 
@@ -590,7 +590,7 @@ pub fn ScreenerTable() -> impl IntoView {
         if size == 0 {
             1
         } else {
-            (total_items.get() + size - 1) / size
+            total_items.get().div_ceil(size)
         }
     });
     let valid_page = Memo::new(move |_| store.page.get().min(max_page.get().max(1)));

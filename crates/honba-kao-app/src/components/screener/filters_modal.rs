@@ -9,8 +9,8 @@
 
 use leptos::prelude::*;
 
-use crate::data::indices::{indices_for_market, IndexItem};
-use crate::stores::screener::{count_active_filters, AdvancedFilters, ScreenerStore};
+use crate::data::indices::{IndexItem, indices_for_market};
+use crate::stores::screener::{AdvancedFilters, ScreenerStore, count_active_filters};
 use crate::utils::percent;
 
 /// Sidebar sections in the labs order.
@@ -242,7 +242,7 @@ pub fn FiltersModal() -> impl IntoView {
                                             {market_indices.get().iter().map(|index| {
                                                 let code = index.code.to_string();
                                                 let code_toggle = code.clone();
-                                                let on = move || draft.get().indices.iter().any(|entry| *entry == code);
+                                                let on = move || draft.get().indices.contains(&code);
                                                 view! {
                                                     <button
                                                         class=move || {

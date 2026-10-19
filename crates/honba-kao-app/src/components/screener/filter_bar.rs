@@ -6,8 +6,9 @@
 
 use leptos::prelude::*;
 
+use crate::components::screener::drawers::IndexDrawer;
 use crate::stores::screener::{
-    count_active_filters, ScreenerStore, ScreenerType, ViewMode, ALL_SCREENER_TYPES, QUICK_PRESETS,
+    ALL_SCREENER_TYPES, QUICK_PRESETS, ScreenerStore, ScreenerType, ViewMode, count_active_filters,
 };
 
 /// Pill label per asset class.
@@ -28,6 +29,11 @@ pub fn FilterBar() -> impl IntoView {
     let filtered = store.filtered();
     let filtered_len = Memo::new(move |_| filtered.get().len());
     let filter_count = Memo::new(move |_| count_active_filters(&store.advanced_filters.get()));
+
+    // Index pill (labs `IndexDrawer` trigger) + selected count badge.
+    let index_open = RwSignal::new(false);
+    let index_host = NodeRef::<leptos::html::Div>::new();
+    let index_count = Memo::new(move |_| store.advanced_filters.get().indices.len());
 
     let market_tabs: [&'static str; 2] = ["IN", "US"];
 
@@ -181,6 +187,25 @@ pub fn FilterBar() -> impl IntoView {
                         }
                     })
                     .collect_view()}
+
+                // Index multi-select dropdown (labs IndexDrawer).
+                <div class="sc-filter-bar__index-anchor" node_ref=index_host>
+                    <button
+                        class=move || {
+                            if index_open.get() || index_count.get() > 0 {
+                                "sc-filter-bar__market sc-filter-bar__market--on"
+                            } else {
+                                "sc-filter-bar__market"
+                            }
+                        }
+                        title="Filter instruments by benchmark or sectoral index"
+                        on:click=move |_| index_open.update(|open| *open = !*open)
+                    >
+                        "Index"
+                        <span class="sc-filter-bar__badge">{move || index_count.get()}</span>
+                    </button>
+                    <IndexDrawer open=index_open host=index_host />
+                </div>
 
                 <button
                     class=move || {

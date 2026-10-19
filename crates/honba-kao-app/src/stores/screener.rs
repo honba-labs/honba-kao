@@ -10,8 +10,8 @@ use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 
-use crate::data::instruments::{self, Instrument};
 use crate::data::indices::instrument_belongs_to_index;
+use crate::data::instruments::{self, Instrument};
 
 // ---------------------------------------------------------------------------
 // Screener asset classes
@@ -27,8 +27,12 @@ pub enum ScreenerType {
     Mf,
 }
 
-pub const ALL_SCREENER_TYPES: [ScreenerType; 4] =
-    [ScreenerType::Stocks, ScreenerType::Etf, ScreenerType::Bonds, ScreenerType::Mf];
+pub const ALL_SCREENER_TYPES: [ScreenerType; 4] = [
+    ScreenerType::Stocks,
+    ScreenerType::Etf,
+    ScreenerType::Bonds,
+    ScreenerType::Mf,
+];
 
 impl ScreenerType {
     pub const fn as_id(self) -> &'static str {
@@ -252,10 +256,12 @@ pub struct AdvancedFilters {
 
 const ALL: &str = "all";
 
+#[allow(dead_code)]
 fn d_all() -> String {
     ALL.to_string()
 }
 
+#[allow(dead_code)]
 fn d_indices() -> Vec<String> {
     Vec::new()
 }
@@ -376,44 +382,120 @@ impl Default for AdvancedFilters {
 /// `countActiveFilters`.
 pub fn count_active_filters(f: &AdvancedFilters) -> usize {
     let mut count = 0usize;
-    if f.sector != ALL { count += 1; }
-    if f.market_cap_tier != ALL { count += 1; }
-    if f.exchange != ALL { count += 1; }
-    if !f.indices.is_empty() { count += 1; }
-    if f.min_price.is_some() || f.max_price.is_some() { count += 1; }
-    if f.min_change_percent.is_some() { count += 1; }
-    if f.max_change_percent.is_some() { count += 1; }
-    if f.min_volume.is_some() { count += 1; }
-    if f.pe_min.is_some() || f.pe_max.is_some() { count += 1; }
-    if f.min_dividend_yield.is_some() { count += 1; }
-    if f.min_roce.is_some() { count += 1; }
-    if f.min_net_margin.is_some() { count += 1; }
-    if f.technical_rating != ALL { count += 1; }
-    if f.rsi_min.is_some() || f.rsi_max.is_some() { count += 1; }
-    if f.price_above_200_sma { count += 1; }
-    if f.price_above_50_sma { count += 1; }
-    if f.near_52_week_high { count += 1; }
-    if f.asset_class != ALL { count += 1; }
-    if f.focus != ALL { count += 1; }
-    if f.brand != ALL { count += 1; }
-    if f.min_aum.is_some() { count += 1; }
-    if f.max_expense_ratio.is_some() { count += 1; }
-    if f.min_nav_return.is_some() { count += 1; }
-    if f.issuer_type != ALL { count += 1; }
-    if f.issuer != ALL { count += 1; }
-    if f.min_ytw.is_some() { count += 1; }
-    if f.min_coupon.is_some() { count += 1; }
-    if f.coupon_type != ALL { count += 1; }
-    if f.credit_rating != ALL { count += 1; }
-    if f.mf_category != ALL { count += 1; }
-    if f.mf_scheme_type != ALL { count += 1; }
-    if f.min_cagr3y.is_some() { count += 1; }
-    if f.min_cagr5y.is_some() { count += 1; }
-    if f.base_expense_ratio.is_some() { count += 1; }
-    if f.total_expense_ratio.is_some() { count += 1; }
-    if f.min_sharpe_ratio.is_some() { count += 1; }
-    if f.riskometer != ALL { count += 1; }
-    if f.plan_type != ALL { count += 1; }
+    if f.sector != ALL {
+        count += 1;
+    }
+    if f.market_cap_tier != ALL {
+        count += 1;
+    }
+    if f.exchange != ALL {
+        count += 1;
+    }
+    if !f.indices.is_empty() {
+        count += 1;
+    }
+    if f.min_price.is_some() || f.max_price.is_some() {
+        count += 1;
+    }
+    if f.min_change_percent.is_some() {
+        count += 1;
+    }
+    if f.max_change_percent.is_some() {
+        count += 1;
+    }
+    if f.min_volume.is_some() {
+        count += 1;
+    }
+    if f.pe_min.is_some() || f.pe_max.is_some() {
+        count += 1;
+    }
+    if f.min_dividend_yield.is_some() {
+        count += 1;
+    }
+    if f.min_roce.is_some() {
+        count += 1;
+    }
+    if f.min_net_margin.is_some() {
+        count += 1;
+    }
+    if f.technical_rating != ALL {
+        count += 1;
+    }
+    if f.rsi_min.is_some() || f.rsi_max.is_some() {
+        count += 1;
+    }
+    if f.price_above_200_sma {
+        count += 1;
+    }
+    if f.price_above_50_sma {
+        count += 1;
+    }
+    if f.near_52_week_high {
+        count += 1;
+    }
+    if f.asset_class != ALL {
+        count += 1;
+    }
+    if f.focus != ALL {
+        count += 1;
+    }
+    if f.brand != ALL {
+        count += 1;
+    }
+    if f.min_aum.is_some() {
+        count += 1;
+    }
+    if f.max_expense_ratio.is_some() {
+        count += 1;
+    }
+    if f.min_nav_return.is_some() {
+        count += 1;
+    }
+    if f.issuer_type != ALL {
+        count += 1;
+    }
+    if f.issuer != ALL {
+        count += 1;
+    }
+    if f.min_ytw.is_some() {
+        count += 1;
+    }
+    if f.min_coupon.is_some() {
+        count += 1;
+    }
+    if f.coupon_type != ALL {
+        count += 1;
+    }
+    if f.credit_rating != ALL {
+        count += 1;
+    }
+    if f.mf_category != ALL {
+        count += 1;
+    }
+    if f.mf_scheme_type != ALL {
+        count += 1;
+    }
+    if f.min_cagr3y.is_some() {
+        count += 1;
+    }
+    if f.min_cagr5y.is_some() {
+        count += 1;
+    }
+    if f.base_expense_ratio.is_some() {
+        count += 1;
+    }
+    if f.total_expense_ratio.is_some() {
+        count += 1;
+    }
+    if f.min_sharpe_ratio.is_some() {
+        count += 1;
+    }
+    if f.riskometer != ALL {
+        count += 1;
+    }
+    if f.plan_type != ALL {
+        count += 1;
+    }
     count
 }
 
@@ -436,10 +518,12 @@ pub struct ScreenDefinition {
     pub sort_direction: SortDirection,
 }
 
+#[allow(dead_code)]
 fn d_quick_preset() -> String {
     "all".to_string()
 }
 
+#[allow(dead_code)]
 fn d_sort_field() -> String {
     "marketCap".to_string()
 }
@@ -521,85 +605,297 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
 
     vec![
         // ===== Stocks =====
-        screen!("stock_all", "All stocks", Stocks, "popular",
-            "Complete list of stocks by market cap", none.clone(), "all", "marketCap", SortDirection::Desc),
-        screen!("stock_most_capitalized", "Most capitalized", Stocks, "popular",
+        screen!(
+            "stock_all",
+            "All stocks",
+            Stocks,
+            "popular",
+            "Complete list of stocks by market cap",
+            none.clone(),
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_most_capitalized",
+            "Most capitalized",
+            Stocks,
+            "popular",
             "Largest companies by market cap",
-            AdvancedFilters { market_cap_tier: "mega".into(), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("stock_highest_net_income", "Highest net income", Stocks, "popular",
+            AdvancedFilters {
+                market_cap_tier: "mega".into(),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_highest_net_income",
+            "Highest net income",
+            Stocks,
+            "popular",
             "Stocks raking in the cash with strong net margins",
-            AdvancedFilters { min_net_margin: Some(15.0), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("stock_highest_cash", "Highest cash", Stocks, "popular",
+            AdvancedFilters {
+                min_net_margin: Some(15.0),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_highest_cash",
+            "Highest cash",
+            Stocks,
+            "popular",
             "Companies with industry-leading balance sheet resilience",
-            AdvancedFilters { min_roce: Some(18.0), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("stock_close_to_high_undervalued", "Close to new-high and undervalued", Stocks, "popular",
+            AdvancedFilters {
+                min_roce: Some(18.0),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_close_to_high_undervalued",
+            "Close to new-high and undervalued",
+            Stocks,
+            "popular",
             "Stocks breaking new local high backed by attractive valuation",
-            AdvancedFilters { near_52_week_high: true, pe_max: Some(25.0), ..none.clone() },
-            "all", "changePercent", SortDirection::Desc),
-        screen!("stock_healthy_growth_tech", "Healthy growth technology stocks", Stocks, "fundamental",
+            AdvancedFilters {
+                near_52_week_high: true,
+                pe_max: Some(25.0),
+                ..none.clone()
+            },
+            "all",
+            "changePercent",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_healthy_growth_tech",
+            "Healthy growth technology stocks",
+            Stocks,
+            "fundamental",
             "Tech stocks growing quickly and not fueled by cash burning",
-            AdvancedFilters { sector: "Technology".into(), min_net_margin: Some(12.0), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("stock_high_capital_efficiency", "High capital efficiency stocks", Stocks, "fundamental",
+            AdvancedFilters {
+                sector: "Technology".into(),
+                min_net_margin: Some(12.0),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_high_capital_efficiency",
+            "High capital efficiency stocks",
+            Stocks,
+            "fundamental",
             "Stocks with industry-high ROCE and capital efficiency ratios",
-            AdvancedFilters { min_roce: Some(22.0), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("stock_strong_small_caps", "Strong performance small caps", Stocks, "fundamental",
+            AdvancedFilters {
+                min_roce: Some(22.0),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_strong_small_caps",
+            "Strong performance small caps",
+            Stocks,
+            "fundamental",
             "Small-cap stocks with strong fundamentals and high momentum",
-            AdvancedFilters { market_cap_tier: "small".into(), technical_rating: "Buy".into(), ..none.clone() },
-            "all", "changePercent", SortDirection::Desc),
-        screen!("stock_dividend_kings", "Dividend kings", Stocks, "valuation",
+            AdvancedFilters {
+                market_cap_tier: "small".into(),
+                technical_rating: "Buy".into(),
+                ..none.clone()
+            },
+            "all",
+            "changePercent",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_dividend_kings",
+            "Dividend kings",
+            Stocks,
+            "valuation",
             "Predictable and high dividend yield stocks for resilient portfolios",
-            AdvancedFilters { min_dividend_yield: Some(2.5), ..none.clone() },
-            "dividend", "dividendYield", SortDirection::Desc),
-        screen!("stock_bullish_undervalued", "Bullish and undervalued", Stocks, "technical",
+            AdvancedFilters {
+                min_dividend_yield: Some(2.5),
+                ..none.clone()
+            },
+            "dividend",
+            "dividendYield",
+            SortDirection::Desc
+        ),
+        screen!(
+            "stock_bullish_undervalued",
+            "Bullish and undervalued",
+            Stocks,
+            "technical",
             "Technically strong buy candidates trading below reasonable multiples",
-            AdvancedFilters { technical_rating: "Buy".into(), pe_max: Some(22.0), ..none.clone() },
-            "momentum", "changePercent", SortDirection::Desc),
+            AdvancedFilters {
+                technical_rating: "Buy".into(),
+                pe_max: Some(22.0),
+                ..none.clone()
+            },
+            "momentum",
+            "changePercent",
+            SortDirection::Desc
+        ),
         // ===== ETF =====
-        screen!("etf_vault", "ETF vault", Etf, "popular",
-            "All exchange-traded funds ranked by assets under management", none.clone(), "all", "marketCap", SortDirection::Desc),
-        screen!("etf_lowest_expense", "Ultra-low cost index ETFs", Etf, "popular",
+        screen!(
+            "etf_vault",
+            "ETF vault",
+            Etf,
+            "popular",
+            "All exchange-traded funds ranked by assets under management",
+            none.clone(),
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "etf_lowest_expense",
+            "Ultra-low cost index ETFs",
+            Etf,
+            "popular",
             "Institutional-grade ETFs with minimal expense ratios (<0.20%)",
-            AdvancedFilters { max_expense_ratio: Some(0.20), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
-        screen!("etf_tech_growth", "Technology & innovation ETFs", Etf, "fundamental",
+            AdvancedFilters {
+                max_expense_ratio: Some(0.20),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "etf_tech_growth",
+            "Technology & innovation ETFs",
+            Etf,
+            "fundamental",
             "Funds tracking semiconductors, cloud, AI, and digital ecosystems",
-            AdvancedFilters { focus: "Technology".into(), ..none.clone() },
-            "all", "changePercent", SortDirection::Desc),
-        screen!("etf_dividend_income", "High yield dividend ETFs", Etf, "valuation",
+            AdvancedFilters {
+                focus: "Technology".into(),
+                ..none.clone()
+            },
+            "all",
+            "changePercent",
+            SortDirection::Desc
+        ),
+        screen!(
+            "etf_dividend_income",
+            "High yield dividend ETFs",
+            Etf,
+            "valuation",
             "Exchange-traded funds optimized for quarterly cash distributions",
-            AdvancedFilters { min_dividend_yield: Some(3.0), ..none.clone() },
-            "all", "dividendYield", SortDirection::Desc),
-        screen!("etf_commodity_gold", "Gold & precious metals trackers", Etf, "popular",
+            AdvancedFilters {
+                min_dividend_yield: Some(3.0),
+                ..none.clone()
+            },
+            "all",
+            "dividendYield",
+            SortDirection::Desc
+        ),
+        screen!(
+            "etf_commodity_gold",
+            "Gold & precious metals trackers",
+            Etf,
+            "popular",
             "Physical and synthetic bullion ETFs protecting purchasing power",
-            AdvancedFilters { asset_class: "Commodity".into(), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
+            AdvancedFilters {
+                asset_class: "Commodity".into(),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
         // ===== Bonds =====
-        screen!("bond_all", "All bonds", Bonds, "popular",
-            "Fixed income instruments and debt securities", none.clone(), "all", "pe", SortDirection::Desc),
-        screen!("bond_sovereign", "Sovereign & benchmark gilts", Bonds, "popular",
+        screen!(
+            "bond_all",
+            "All bonds",
+            Bonds,
+            "popular",
+            "Fixed income instruments and debt securities",
+            none.clone(),
+            "all",
+            "pe",
+            SortDirection::Desc
+        ),
+        screen!(
+            "bond_sovereign",
+            "Sovereign & benchmark gilts",
+            Bonds,
+            "popular",
             "Government backed risk-free treasury debt across 5Y, 10Y, and 30Y tenors",
-            AdvancedFilters { issuer_type: "Sovereign".into(), ..none.clone() },
-            "all", "pe", SortDirection::Desc),
-        screen!("bond_aaa_corporate", "AAA prime corporate bonds", Bonds, "fundamental",
+            AdvancedFilters {
+                issuer_type: "Sovereign".into(),
+                ..none.clone()
+            },
+            "all",
+            "pe",
+            SortDirection::Desc
+        ),
+        screen!(
+            "bond_aaa_corporate",
+            "AAA prime corporate bonds",
+            Bonds,
+            "fundamental",
             "Highest credit rating corporate paper with attractive spread over G-Sec",
-            AdvancedFilters { credit_rating: "AAA".into(), ..none.clone() },
-            "all", "pe", SortDirection::Desc),
+            AdvancedFilters {
+                credit_rating: "AAA".into(),
+                ..none.clone()
+            },
+            "all",
+            "pe",
+            SortDirection::Desc
+        ),
         // ===== MF =====
-        screen!("mf_all", "All mutual funds", Mf, "popular",
-            "Comprehensive directory of equity, debt, and hybrid mutual fund schemes", none.clone(), "all", "marketCap", SortDirection::Desc),
-        screen!("mf_consistent_large_cap", "Top 5Y CAGR large cap funds", Mf, "fundamental",
+        screen!(
+            "mf_all",
+            "All mutual funds",
+            Mf,
+            "popular",
+            "Comprehensive directory of equity, debt, and hybrid mutual fund schemes",
+            none.clone(),
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
+        screen!(
+            "mf_consistent_large_cap",
+            "Top 5Y CAGR large cap funds",
+            Mf,
+            "fundamental",
             "Consistently outperforming tier-1 funds with >15% annualized 5Y CAGR",
-            AdvancedFilters { mf_category: "Equity Large Cap".into(), min_cagr5y: Some(15.0), ..none.clone() },
-            "all", "changePercent", SortDirection::Desc),
-        screen!("mf_direct_low_cost", "Direct low-cost growth schemes", Mf, "valuation",
+            AdvancedFilters {
+                mf_category: "Equity Large Cap".into(),
+                min_cagr5y: Some(15.0),
+                ..none.clone()
+            },
+            "all",
+            "changePercent",
+            SortDirection::Desc
+        ),
+        screen!(
+            "mf_direct_low_cost",
+            "Direct low-cost growth schemes",
+            Mf,
+            "valuation",
             "Direct plan mutual funds delivering maximum alpha via rock-bottom TER",
-            AdvancedFilters { plan_type: "Direct".into(), max_expense_ratio: Some(0.75), ..none.clone() },
-            "all", "marketCap", SortDirection::Desc),
+            AdvancedFilters {
+                plan_type: "Direct".into(),
+                max_expense_ratio: Some(0.75),
+                ..none.clone()
+            },
+            "all",
+            "marketCap",
+            SortDirection::Desc
+        ),
     ]
 }
 
@@ -667,7 +963,7 @@ pub fn filter_instruments(
                 "momentum"
                     if inst.technical_rating != "Strong Buy" && inst.technical_rating != "Buy" =>
                 {
-                    return false
+                    return false;
                 }
                 _ => {}
             }
@@ -681,7 +977,10 @@ pub fn filter_instruments(
             }
 
             if !filters.indices.is_empty()
-                && !filters.indices.iter().any(|code| instrument_belongs_to_index(inst, code))
+                && !filters
+                    .indices
+                    .iter()
+                    .any(|code| instrument_belongs_to_index(inst, code))
             {
                 return false;
             }
@@ -706,19 +1005,31 @@ pub fn filter_instruments(
             if filters.max_price.is_some_and(|max| inst.price > max) {
                 return false;
             }
-            if filters.min_change_percent.is_some_and(|min| inst.change_percent < min) {
+            if filters
+                .min_change_percent
+                .is_some_and(|min| inst.change_percent < min)
+            {
                 return false;
             }
-            if filters.max_change_percent.is_some_and(|max| inst.change_percent > max) {
+            if filters
+                .max_change_percent
+                .is_some_and(|max| inst.change_percent > max)
+            {
                 return false;
             }
             if filters.min_volume.is_some_and(|min| inst.volume < min) {
                 return false;
             }
-            if filters.pe_min.is_some_and(|min| !(inst.pe > 0.0) || inst.pe < min) {
+            if filters
+                .pe_min
+                .is_some_and(|min| !(inst.pe > 0.0) || inst.pe < min)
+            {
                 return false;
             }
-            if filters.pe_max.is_some_and(|max| !(inst.pe > 0.0) || inst.pe > max) {
+            if filters
+                .pe_max
+                .is_some_and(|max| !(inst.pe > 0.0) || inst.pe > max)
+            {
                 return false;
             }
             if filters
@@ -727,7 +1038,10 @@ pub fn filter_instruments(
             {
                 return false;
             }
-            if filters.min_roce.is_some_and(|min| !(inst.roce > 0.0) || inst.roce < min) {
+            if filters
+                .min_roce
+                .is_some_and(|min| !(inst.roce > 0.0) || inst.roce < min)
+            {
                 return false;
             }
             if filters
@@ -739,7 +1053,9 @@ pub fn filter_instruments(
 
             if filters.technical_rating != ALL {
                 let keep = match filters.technical_rating.as_str() {
-                    "Buy" => inst.technical_rating == "Buy" || inst.technical_rating == "Strong Buy",
+                    "Buy" => {
+                        inst.technical_rating == "Buy" || inst.technical_rating == "Strong Buy"
+                    }
                     "Sell" => {
                         inst.technical_rating == "Sell" || inst.technical_rating == "Strong Sell"
                     }
@@ -783,9 +1099,7 @@ pub fn filter_instruments(
             if filters.issuer_type != ALL && inst.sector != filters.issuer_type {
                 return false;
             }
-            if filters.credit_rating != ALL
-                && inst.technical_rating != filters.credit_rating
-            {
+            if filters.credit_rating != ALL && inst.technical_rating != filters.credit_rating {
                 return false;
             }
 
@@ -799,10 +1113,16 @@ pub fn filter_instruments(
             if filters.mf_scheme_type != ALL && inst.industry != filters.mf_scheme_type {
                 return false;
             }
-            if filters.min_cagr3y.is_some_and(|min| static_cagr3y(inst) < min) {
+            if filters
+                .min_cagr3y
+                .is_some_and(|min| static_cagr3y(inst) < min)
+            {
                 return false;
             }
-            if filters.min_cagr5y.is_some_and(|min| static_cagr5y(inst) < min) {
+            if filters
+                .min_cagr5y
+                .is_some_and(|min| static_cagr5y(inst) < min)
+            {
                 return false;
             }
 
@@ -877,11 +1197,18 @@ fn rating_rank(rating: &str) -> i32 {
 }
 
 fn sort_field_is_string(field: &str) -> bool {
-    matches!(field, "analystRating" | "technicalRating" | "symbol" | "name")
+    matches!(
+        field,
+        "analystRating" | "technicalRating" | "symbol" | "name"
+    )
 }
 
 /// Stable sort with tie-breaking on symbol.
-pub fn sort_instruments(rows: &mut Vec<&'static Instrument>, field: &str, direction: SortDirection) {
+pub fn sort_instruments(
+    rows: &mut Vec<&'static Instrument>,
+    field: &str,
+    direction: SortDirection,
+) {
     let invert = direction == SortDirection::Desc;
 
     rows.sort_by(|a, b| {
@@ -897,11 +1224,7 @@ pub fn sort_instruments(rows: &mut Vec<&'static Instrument>, field: &str, direct
         } else {
             let (va, vb) = (sort_value(a, field), sort_value(b, field));
             let cmp = compare_f64(va, vb);
-            if invert {
-                cmp.reverse()
-            } else {
-                cmp
-            }
+            if invert { cmp.reverse() } else { cmp }
         };
         if ordering == std::cmp::Ordering::Equal {
             ordering = a.symbol.cmp(&b.symbol);
@@ -928,7 +1251,8 @@ pub enum SortState {
 
 /// Build the screener CSV (the labs `handleExportCSV`).
 pub fn build_csv(rows: &[&'static Instrument]) -> String {
-    let mut lines = vec!["Symbol,Name,Exchange,Price,Change%,Volume,MarketCap,PE,RSI14,Rating".to_string()];
+    let mut lines =
+        vec!["Symbol,Name,Exchange,Price,Change%,Volume,MarketCap,PE,RSI14,Rating".to_string()];
     for inst in rows {
         lines.push(format!(
             "{},{},{},{},{},{},{},{},{},\"{}\"",
@@ -939,7 +1263,11 @@ pub fn build_csv(rows: &[&'static Instrument]) -> String {
             inst.change_percent,
             inst.volume,
             inst.market_cap,
-            if inst.pe > 0.0 { format!("{}", inst.pe) } else { String::new() },
+            if inst.pe > 0.0 {
+                format!("{}", inst.pe)
+            } else {
+                String::new()
+            },
             inst.rsi14,
             inst.technical_rating,
         ));
@@ -1060,41 +1388,251 @@ const ETFS_ONLY: &[ScreenerType] = &[TEtf];
 /// The structural column registry core (`ALL_COLUMNS`); the debt/fund
 /// addendum lives in `columns_registry()`.
 pub const ALL_COLUMNS: [ColumnDef; 35] = [
-    ColumnDef { id: "symbol", label: "Symbol", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Left },
-    ColumnDef { id: "exchange", label: "Exchange", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Center },
-    ColumnDef { id: "country", label: "Country", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Center },
-    ColumnDef { id: "price", label: "Price", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "changePercent", label: "Chg %", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "change", label: "Change (Pts)", category: ColumnCategory::Performance, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "volume", label: "Vol", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "relVol", label: "Rel Vol", category: ColumnCategory::Overview, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "perf1W", label: "Perf 1W %", category: ColumnCategory::Performance, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "perf1M", label: "Perf 1M %", category: ColumnCategory::Performance, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "perf3M", label: "Perf 3M %", category: ColumnCategory::Performance, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "perf1Y", label: "Perf 1Y %", category: ColumnCategory::Performance, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "technicalRating", label: "Technical Rating", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Center },
-    ColumnDef { id: "rsi14", label: "RSI (14)", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "range52", label: "52W Range Bar", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Left },
-    ColumnDef { id: "sma200", label: "200 SMA", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "sparkline", label: "7D Trend", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Left },
-    ColumnDef { id: "high52", label: "52W High", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "low52", label: "52W Low", category: ColumnCategory::Technicals, applicable: None, align: ColumnAlign::Right },
-    ColumnDef { id: "marketCap", label: "Mkt Cap", category: ColumnCategory::Overview, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "pe", label: "P/E", category: ColumnCategory::Overview, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "forwardPe", label: "Forward P/E", category: ColumnCategory::Valuation, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "pb", label: "Price to Book", category: ColumnCategory::Valuation, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "eps", label: "EPS Dil TTM", category: ColumnCategory::Overview, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "epsGrowth", label: "EPS Dil Growth", category: ColumnCategory::Overview, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "dividendYield", label: "Div Yield %", category: ColumnCategory::Overview, applicable: Some(STOCKS_ETFS), align: ColumnAlign::Right },
-    ColumnDef { id: "sector", label: "Sector", category: ColumnCategory::Overview, applicable: Some(ALL_ASSETS), align: ColumnAlign::Left },
-    ColumnDef { id: "analystRating", label: "Analyst Rating", category: ColumnCategory::Overview, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Center },
-    ColumnDef { id: "netMargin", label: "Net Margin %", category: ColumnCategory::Fundamentals, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "roce", label: "ROCE %", category: ColumnCategory::Fundamentals, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "roe", label: "ROE %", category: ColumnCategory::Fundamentals, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "debtToEquity", label: "Debt / Equity", category: ColumnCategory::Fundamentals, applicable: Some(STOCKS_ONLY), align: ColumnAlign::Right },
-    ColumnDef { id: "aum", label: "AUM", category: ColumnCategory::Funds, applicable: Some(ETFS_MFS_BONDS), align: ColumnAlign::Right },
-    ColumnDef { id: "expenseRatio", label: "Exp Ratio %", category: ColumnCategory::Funds, applicable: Some(ETFS_MFS), align: ColumnAlign::Right },
-    ColumnDef { id: "sharpeRatio", label: "Sharpe Ratio", category: ColumnCategory::Funds, applicable: Some(ETFS_MFS), align: ColumnAlign::Right },
+    ColumnDef {
+        id: "symbol",
+        label: "Symbol",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Left,
+    },
+    ColumnDef {
+        id: "exchange",
+        label: "Exchange",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Center,
+    },
+    ColumnDef {
+        id: "country",
+        label: "Country",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Center,
+    },
+    ColumnDef {
+        id: "price",
+        label: "Price",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "changePercent",
+        label: "Chg %",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "change",
+        label: "Change (Pts)",
+        category: ColumnCategory::Performance,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "volume",
+        label: "Vol",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "relVol",
+        label: "Rel Vol",
+        category: ColumnCategory::Overview,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "perf1W",
+        label: "Perf 1W %",
+        category: ColumnCategory::Performance,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "perf1M",
+        label: "Perf 1M %",
+        category: ColumnCategory::Performance,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "perf3M",
+        label: "Perf 3M %",
+        category: ColumnCategory::Performance,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "perf1Y",
+        label: "Perf 1Y %",
+        category: ColumnCategory::Performance,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "technicalRating",
+        label: "Technical Rating",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Center,
+    },
+    ColumnDef {
+        id: "rsi14",
+        label: "RSI (14)",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "range52",
+        label: "52W Range Bar",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Left,
+    },
+    ColumnDef {
+        id: "sma200",
+        label: "200 SMA",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "sparkline",
+        label: "7D Trend",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Left,
+    },
+    ColumnDef {
+        id: "high52",
+        label: "52W High",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "low52",
+        label: "52W Low",
+        category: ColumnCategory::Technicals,
+        applicable: None,
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "marketCap",
+        label: "Mkt Cap",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "pe",
+        label: "P/E",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "forwardPe",
+        label: "Forward P/E",
+        category: ColumnCategory::Valuation,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "pb",
+        label: "Price to Book",
+        category: ColumnCategory::Valuation,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "eps",
+        label: "EPS Dil TTM",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "epsGrowth",
+        label: "EPS Dil Growth",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "dividendYield",
+        label: "Div Yield %",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ETFS),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "sector",
+        label: "Sector",
+        category: ColumnCategory::Overview,
+        applicable: Some(ALL_ASSETS),
+        align: ColumnAlign::Left,
+    },
+    ColumnDef {
+        id: "analystRating",
+        label: "Analyst Rating",
+        category: ColumnCategory::Overview,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Center,
+    },
+    ColumnDef {
+        id: "netMargin",
+        label: "Net Margin %",
+        category: ColumnCategory::Fundamentals,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "roce",
+        label: "ROCE %",
+        category: ColumnCategory::Fundamentals,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "roe",
+        label: "ROE %",
+        category: ColumnCategory::Fundamentals,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "debtToEquity",
+        label: "Debt / Equity",
+        category: ColumnCategory::Fundamentals,
+        applicable: Some(STOCKS_ONLY),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "aum",
+        label: "AUM",
+        category: ColumnCategory::Funds,
+        applicable: Some(ETFS_MFS_BONDS),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "expenseRatio",
+        label: "Exp Ratio %",
+        category: ColumnCategory::Funds,
+        applicable: Some(ETFS_MFS),
+        align: ColumnAlign::Right,
+    },
+    ColumnDef {
+        id: "sharpeRatio",
+        label: "Sharpe Ratio",
+        category: ColumnCategory::Funds,
+        applicable: Some(ETFS_MFS),
+        align: ColumnAlign::Right,
+    },
 ];
 
 /// The 35th column, kept separately as a const because the array literal
@@ -1105,23 +1643,125 @@ pub fn columns_registry() -> &'static [ColumnDef] {
         let mut registry = ALL_COLUMNS.to_vec();
         // Debt / fund columns referenced by the bond and MF tab presets.
         registry.extend_from_slice(&[
-            ColumnDef { id: "cagr3y", label: "3Y Return %", category: ColumnCategory::Performance, applicable: Some(ETFS_MFS), align: ColumnAlign::Right },
-            ColumnDef { id: "cagr5y", label: "5Y Return %", category: ColumnCategory::Performance, applicable: Some(ETFS_MFS), align: ColumnAlign::Right },
-            ColumnDef { id: "ytw", label: "YTW %", category: ColumnCategory::Bonds, applicable: Some(BONDS_ONLY), align: ColumnAlign::Right },
-            ColumnDef { id: "coupon", label: "Coupon %", category: ColumnCategory::Bonds, applicable: Some(BONDS_ONLY), align: ColumnAlign::Right },
-            ColumnDef { id: "couponType", label: "Coupon type", category: ColumnCategory::Bonds, applicable: Some(BONDS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "maturityYear", label: "Maturity", category: ColumnCategory::Bonds, applicable: Some(BONDS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "creditRating", label: "Credit rating", category: ColumnCategory::Bonds, applicable: Some(BONDS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "schemeType", label: "Type", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "totalExpenseRatio", label: "Exp ratio (total) %", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Right },
-            ColumnDef { id: "catSharpeRatio", label: "Cat. Sharpe", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Right },
-            ColumnDef { id: "catTotalExpenseRatio", label: "Cat. TER %", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Right },
-            ColumnDef { id: "planType", label: "Plan", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "riskometer", label: "Riskometer", category: ColumnCategory::Funds, applicable: Some(MFS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "assetClass", label: "Asset class", category: ColumnCategory::Funds, applicable: Some(ETFS_ONLY), align: ColumnAlign::Center },
-            ColumnDef { id: "focus", label: "Focus", category: ColumnCategory::Funds, applicable: Some(ETFS_ONLY), align: ColumnAlign::Left },
-            ColumnDef { id: "brand", label: "Brand / AMC", category: ColumnCategory::Funds, applicable: Some(ETFS_MFS), align: ColumnAlign::Left },
-            ColumnDef { id: "navReturn", label: "NAV return %", category: ColumnCategory::Funds, applicable: Some(ETFS_ONLY), align: ColumnAlign::Right },
+            ColumnDef {
+                id: "cagr3y",
+                label: "3Y Return %",
+                category: ColumnCategory::Performance,
+                applicable: Some(ETFS_MFS),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "cagr5y",
+                label: "5Y Return %",
+                category: ColumnCategory::Performance,
+                applicable: Some(ETFS_MFS),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "ytw",
+                label: "YTW %",
+                category: ColumnCategory::Bonds,
+                applicable: Some(BONDS_ONLY),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "coupon",
+                label: "Coupon %",
+                category: ColumnCategory::Bonds,
+                applicable: Some(BONDS_ONLY),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "couponType",
+                label: "Coupon type",
+                category: ColumnCategory::Bonds,
+                applicable: Some(BONDS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "maturityYear",
+                label: "Maturity",
+                category: ColumnCategory::Bonds,
+                applicable: Some(BONDS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "creditRating",
+                label: "Credit rating",
+                category: ColumnCategory::Bonds,
+                applicable: Some(BONDS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "schemeType",
+                label: "Type",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "totalExpenseRatio",
+                label: "Exp ratio (total) %",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "catSharpeRatio",
+                label: "Cat. Sharpe",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "catTotalExpenseRatio",
+                label: "Cat. TER %",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Right,
+            },
+            ColumnDef {
+                id: "planType",
+                label: "Plan",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "riskometer",
+                label: "Riskometer",
+                category: ColumnCategory::Funds,
+                applicable: Some(MFS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "assetClass",
+                label: "Asset class",
+                category: ColumnCategory::Funds,
+                applicable: Some(ETFS_ONLY),
+                align: ColumnAlign::Center,
+            },
+            ColumnDef {
+                id: "focus",
+                label: "Focus",
+                category: ColumnCategory::Funds,
+                applicable: Some(ETFS_ONLY),
+                align: ColumnAlign::Left,
+            },
+            ColumnDef {
+                id: "brand",
+                label: "Brand / AMC",
+                category: ColumnCategory::Funds,
+                applicable: Some(ETFS_MFS),
+                align: ColumnAlign::Left,
+            },
+            ColumnDef {
+                id: "navReturn",
+                label: "NAV return %",
+                category: ColumnCategory::Funds,
+                applicable: Some(ETFS_ONLY),
+                align: ColumnAlign::Right,
+            },
         ]);
         registry
     })
@@ -1143,9 +1783,9 @@ pub fn columns_for_screener(screener_type: ScreenerType) -> Vec<ColumnDef> {
 /// `TAB_COLUMN_PRESETS` + `getPresetForScreenerTab`.
 pub fn preset_for_tab(screener_type: ScreenerType, tab_id: &str) -> Option<Vec<&'static str>> {
     let overview = |etf: &'static [&'static str],
-     bonds: &'static [&'static str],
-     mf: &'static [&'static str],
-     stocks: &'static [&'static str]|
+                    bonds: &'static [&'static str],
+                    mf: &'static [&'static str],
+                    stocks: &'static [&'static str]|
      -> Vec<&'static str> {
         match screener_type {
             ScreenerType::Etf => etf.to_vec(),
@@ -1157,40 +1797,234 @@ pub fn preset_for_tab(screener_type: ScreenerType, tab_id: &str) -> Option<Vec<&
 
     Some(match (screener_type, tab_id) {
         (_, "overview") => overview(
-            &["symbol", "price", "changePercent", "volume", "aum", "expenseRatio", "dividendYield", "sector", "technicalRating"],
-            &["symbol", "price", "changePercent", "ytw", "coupon", "creditRating", "marketCap", "volume"],
-            &["symbol", "price", "changePercent", "aum", "schemeType", "expenseRatio", "cagr3y", "cagr5y", "sharpeRatio", "technicalRating"],
-            &["symbol", "price", "changePercent", "volume", "relVol", "marketCap", "pe", "eps", "epsGrowth", "dividendYield", "sector", "analystRating"],
+            &[
+                "symbol",
+                "price",
+                "changePercent",
+                "volume",
+                "aum",
+                "expenseRatio",
+                "dividendYield",
+                "sector",
+                "technicalRating",
+            ],
+            &[
+                "symbol",
+                "price",
+                "changePercent",
+                "ytw",
+                "coupon",
+                "creditRating",
+                "marketCap",
+                "volume",
+            ],
+            &[
+                "symbol",
+                "price",
+                "changePercent",
+                "aum",
+                "schemeType",
+                "expenseRatio",
+                "cagr3y",
+                "cagr5y",
+                "sharpeRatio",
+                "technicalRating",
+            ],
+            &[
+                "symbol",
+                "price",
+                "changePercent",
+                "volume",
+                "relVol",
+                "marketCap",
+                "pe",
+                "eps",
+                "epsGrowth",
+                "dividendYield",
+                "sector",
+                "analystRating",
+            ],
         ),
-        (_, "performance") => vec!["symbol", "price", "changePercent", "change", "perf1W", "perf1M", "perf1Y", "volume", "relVol", "high52", "low52"],
-        (_, "technicals") => vec!["symbol", "price", "changePercent", "technicalRating", "rsi14", "sma200", "range52", "sparkline"],
-        (_, "valuation") => vec!["symbol", "price", "marketCap", "pe", "forwardPe", "pb", "eps", "dividendYield", "revenueGrowth"],
-        (_, "dividends") => vec!["symbol", "price", "dividendYield", "eps", "pe", "marketCap", "sector"],
-        (_, "margins") => vec!["symbol", "price", "netMargin", "roce", "debtToEquity", "revenueGrowth", "sector"],
+        (_, "performance") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "change",
+            "perf1W",
+            "perf1M",
+            "perf1Y",
+            "volume",
+            "relVol",
+            "high52",
+            "low52",
+        ],
+        (_, "technicals") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "technicalRating",
+            "rsi14",
+            "sma200",
+            "range52",
+            "sparkline",
+        ],
+        (_, "valuation") => vec![
+            "symbol",
+            "price",
+            "marketCap",
+            "pe",
+            "forwardPe",
+            "pb",
+            "eps",
+            "dividendYield",
+            "revenueGrowth",
+        ],
+        (_, "dividends") => vec![
+            "symbol",
+            "price",
+            "dividendYield",
+            "eps",
+            "pe",
+            "marketCap",
+            "sector",
+        ],
+        (_, "margins") => vec![
+            "symbol",
+            "price",
+            "netMargin",
+            "roce",
+            "debtToEquity",
+            "revenueGrowth",
+            "sector",
+        ],
         (_, "extended_hours") => vec!["symbol", "price", "changePercent", "volume", "marketCap"],
-        (_, "forecasts") => vec!["symbol", "price", "pe", "forwardPe", "eps", "revenueGrowth", "analystRating"],
-        (_, "profitability") => vec!["symbol", "price", "netMargin", "roce", "roe", "debtToEquity", "revenueGrowth"],
-        (_, "income_statement") => vec!["symbol", "price", "eps", "epsGrowth", "revenueGrowth", "netMargin"],
+        (_, "forecasts") => vec![
+            "symbol",
+            "price",
+            "pe",
+            "forwardPe",
+            "eps",
+            "revenueGrowth",
+            "analystRating",
+        ],
+        (_, "profitability") => vec![
+            "symbol",
+            "price",
+            "netMargin",
+            "roce",
+            "roe",
+            "debtToEquity",
+            "revenueGrowth",
+        ],
+        (_, "income_statement") => vec![
+            "symbol",
+            "price",
+            "eps",
+            "epsGrowth",
+            "revenueGrowth",
+            "netMargin",
+        ],
         (_, "balance_sheet") => vec!["symbol", "price", "marketCap", "debtToEquity", "roce", "pb"],
         (_, "cash_flow") => vec!["symbol", "price", "netMargin", "roce", "dividendYield"],
         (_, "per_share") => vec!["symbol", "price", "eps", "pb", "dividendYield"],
         // ETF tabs
-        (ScreenerType::Etf, "fund_flows") => vec!["symbol", "price", "changePercent", "volume", "aum", "perf1W", "perf1M", "perf1Y"],
-        (ScreenerType::Etf, "nav_performance") => vec!["symbol", "price", "changePercent", "perf1M", "perf1Y", "cagr3y", "aum", "expenseRatio"],
-        (ScreenerType::Etf, "holdings") => vec!["symbol", "price", "changePercent", "sector", "aum", "expenseRatio", "dividendYield"],
-        (ScreenerType::Etf, "risk") => vec!["symbol", "price", "rsi14", "sma200", "sharpeRatio", "range52", "technicalRating"],
+        (ScreenerType::Etf, "fund_flows") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "volume",
+            "aum",
+            "perf1W",
+            "perf1M",
+            "perf1Y",
+        ],
+        (ScreenerType::Etf, "nav_performance") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "perf1M",
+            "perf1Y",
+            "cagr3y",
+            "aum",
+            "expenseRatio",
+        ],
+        (ScreenerType::Etf, "holdings") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "sector",
+            "aum",
+            "expenseRatio",
+            "dividendYield",
+        ],
+        (ScreenerType::Etf, "risk") => vec![
+            "symbol",
+            "price",
+            "rsi14",
+            "sma200",
+            "sharpeRatio",
+            "range52",
+            "technicalRating",
+        ],
         // Bond tabs
-        (ScreenerType::Bonds, "security_info") => vec!["symbol", "price", "ytw", "coupon", "creditRating", "sector", "volume"],
-        (ScreenerType::Bonds, "interest_rate_risk") => vec!["symbol", "price", "ytw", "coupon", "sma200", "creditRating"],
-        (ScreenerType::Bonds, "spreads") => vec!["symbol", "price", "ytw", "coupon", "creditRating"],
+        (ScreenerType::Bonds, "security_info") => vec![
+            "symbol",
+            "price",
+            "ytw",
+            "coupon",
+            "creditRating",
+            "sector",
+            "volume",
+        ],
+        (ScreenerType::Bonds, "interest_rate_risk") => {
+            vec!["symbol", "price", "ytw", "coupon", "sma200", "creditRating"]
+        }
+        (ScreenerType::Bonds, "spreads") => {
+            vec!["symbol", "price", "ytw", "coupon", "creditRating"]
+        }
         (ScreenerType::Bonds, "amounts") => vec!["symbol", "price", "volume", "marketCap", "aum"],
-        (ScreenerType::Bonds, "bond_features") => vec!["symbol", "price", "coupon", "ytw", "creditRating", "sector"],
+        (ScreenerType::Bonds, "bond_features") => {
+            vec!["symbol", "price", "coupon", "ytw", "creditRating", "sector"]
+        }
         // MF tabs
-        (ScreenerType::Mf, "returns_cagr") => vec!["symbol", "price", "changePercent", "cagr3y", "cagr5y", "perf1M", "perf1Y", "aum"],
-        (ScreenerType::Mf, "portfolio_holdings") => vec!["symbol", "price", "changePercent", "sector", "schemeType", "aum"],
-        (ScreenerType::Mf, "sector_allocation") => vec!["symbol", "price", "sector", "aum", "schemeType"],
-        (ScreenerType::Mf, "risk_ratios") => vec!["symbol", "price", "sharpeRatio", "catSharpeRatio", "rsi14", "technicalRating"],
-        (ScreenerType::Mf, "fees_loads") => vec!["symbol", "price", "expenseRatio", "totalExpenseRatio", "catTotalExpenseRatio", "schemeType", "aum"],
+        (ScreenerType::Mf, "returns_cagr") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "cagr3y",
+            "cagr5y",
+            "perf1M",
+            "perf1Y",
+            "aum",
+        ],
+        (ScreenerType::Mf, "portfolio_holdings") => vec![
+            "symbol",
+            "price",
+            "changePercent",
+            "sector",
+            "schemeType",
+            "aum",
+        ],
+        (ScreenerType::Mf, "sector_allocation") => {
+            vec!["symbol", "price", "sector", "aum", "schemeType"]
+        }
+        (ScreenerType::Mf, "risk_ratios") => vec![
+            "symbol",
+            "price",
+            "sharpeRatio",
+            "catSharpeRatio",
+            "rsi14",
+            "technicalRating",
+        ],
+        (ScreenerType::Mf, "fees_loads") => vec![
+            "symbol",
+            "price",
+            "expenseRatio",
+            "totalExpenseRatio",
+            "catTotalExpenseRatio",
+            "schemeType",
+            "aum",
+        ],
         // Tabs without a dedicated preset fall through to the overview.
         _ => return None,
     })
@@ -1296,13 +2130,15 @@ impl ScreenerStore {
     /// The filtered rows (search + quick preset + advanced filters).
     pub fn filtered(&self) -> Memo<Vec<&'static Instrument>> {
         let store = *self;
-        Memo::new(move |_| filter_instruments(
-            &store.universe(),
-            &store.search_query.get(),
-            &store.quick_preset.get(),
-            &store.advanced_filters.get(),
-            &store.shortlist.get(),
-        ))
+        Memo::new(move |_| {
+            filter_instruments(
+                &store.universe(),
+                &store.search_query.get(),
+                &store.quick_preset.get(),
+                &store.advanced_filters.get(),
+                &store.shortlist.get(),
+            )
+        })
     }
 
     /// Filtered + sorted, without pagination (the canonical row order).
@@ -1348,17 +2184,23 @@ impl ScreenerStore {
         let config_tabs = screener_type.tabs();
         let tab = config_tabs.first().map_or("overview", |(id, _)| *id);
         let preset: Vec<String> = preset_for_tab(screener_type, tab)
-            .unwrap_or_else(|| screener_type.tabs().first().map_or(Vec::new(), |_| Vec::new()))
+            .unwrap_or_else(|| {
+                screener_type
+                    .tabs()
+                    .first()
+                    .map_or(Vec::new(), |_| Vec::new())
+            })
             .into_iter()
             .map(str::to_string)
             .collect();
 
         self.screener_type.set(screener_type);
-        self.screen_title.set(screener_type.default_title().to_string());
-        self.screen_id
-            .set(format!("{}_all", screener_type.as_id()));
+        self.screen_title
+            .set(screener_type.default_title().to_string());
+        self.screen_id.set(format!("{}_all", screener_type.as_id()));
         self.quick_preset.set("all".to_string());
-        self.advanced_filters.set(AdvancedFilters::default_filters());
+        self.advanced_filters
+            .set(AdvancedFilters::default_filters());
         self.active_tab.set(tab);
         self.visible_columns.set(preset);
         let (field, direction) = screener_type.default_sort();
@@ -1386,9 +2228,9 @@ impl ScreenerStore {
 
     pub fn set_quick_preset(&self, preset: &str) {
         let screener_type = self.screener_type.get_untracked();
-        let matching = builtin_screens_registry().iter().find(|screen| {
-            screen.screener_type == screener_type && screen.quick_preset == preset
-        });
+        let matching = builtin_screens_registry()
+            .iter()
+            .find(|screen| screen.screener_type == screener_type && screen.quick_preset == preset);
         self.quick_preset.set(preset.to_string());
         self.page.set(1);
         if let Some(screen) = matching {
@@ -1404,10 +2246,15 @@ impl ScreenerStore {
 
     pub fn reset_filters(&self) {
         self.quick_preset.set("all".to_string());
-        self.screen_title
-            .set(self.screener_type.get_untracked().default_title().to_string());
+        self.screen_title.set(
+            self.screener_type
+                .get_untracked()
+                .default_title()
+                .to_string(),
+        );
         self.search_query.set(String::new());
-        self.advanced_filters.set(AdvancedFilters::default_filters());
+        self.advanced_filters
+            .set(AdvancedFilters::default_filters());
         self.page.set(1);
     }
 
@@ -1469,7 +2316,8 @@ impl ScreenerStore {
         self.screen_title.set(screen.name.clone());
         self.screen_id.set(screen.id.clone());
         self.quick_preset.set(screen.quick_preset.clone());
-        self.advanced_filters.set(normalize_filters(&screen.filters));
+        self.advanced_filters
+            .set(normalize_filters(&screen.filters));
         self.sort_field.set(screen.sort_field.clone());
         self.sort_order.set(Some(screen.sort_direction));
         self.open_screen_modal.set(false);
@@ -1481,7 +2329,11 @@ impl ScreenerStore {
         let id = format!("custom_{}", web_time_now());
         let screen = ScreenDefinition {
             id,
-            name: if name.trim().is_empty() { "Untitled Screen".to_string() } else { name.trim().to_string() },
+            name: if name.trim().is_empty() {
+                "Untitled Screen".to_string()
+            } else {
+                name.trim().to_string()
+            },
             screener_type: self.screener_type.get_untracked(),
             category: "custom".to_string(),
             description: "User customized screen".to_string(),
@@ -1489,9 +2341,13 @@ impl ScreenerStore {
             filters: self.advanced_filters.get_untracked(),
             quick_preset: self.quick_preset.get_untracked(),
             sort_field: self.sort_field.get_untracked(),
-            sort_direction: self.sort_order.get_untracked().unwrap_or(SortDirection::Desc),
+            sort_direction: self
+                .sort_order
+                .get_untracked()
+                .unwrap_or(SortDirection::Desc),
         };
-        self.custom_screens.update(|screens| screens.insert(0, screen.clone()));
+        self.custom_screens
+            .update(|screens| screens.insert(0, screen.clone()));
         save_custom_screens(&self.custom_screens.get_untracked());
         self.screen_title.set(screen.name.clone());
         self.screen_id.set(screen.id.clone());
@@ -1503,8 +2359,12 @@ impl ScreenerStore {
         });
         save_custom_screens(&self.custom_screens.get_untracked());
         if self.screen_id.get_untracked() == screen_id {
-            self.screen_title
-                .set(self.screener_type.get_untracked().default_title().to_string());
+            self.screen_title.set(
+                self.screener_type
+                    .get_untracked()
+                    .default_title()
+                    .to_string(),
+            );
         }
     }
 
@@ -1574,9 +2434,15 @@ impl Default for ScreenerStore {
 /// like `{ ...DEFAULT_ADVANCED_FILTERS, ...screen.filters }`.
 pub fn normalize_filters(filters: &AdvancedFilters) -> AdvancedFilters {
     let mut merged = AdvancedFilters::default();
-    if filters.sector != ALL { merged.sector = filters.sector.clone(); }
-    if filters.market_cap_tier != ALL { merged.market_cap_tier = filters.market_cap_tier.clone(); }
-    if filters.exchange != ALL { merged.exchange = filters.exchange.clone(); }
+    if filters.sector != ALL {
+        merged.sector = filters.sector.clone();
+    }
+    if filters.market_cap_tier != ALL {
+        merged.market_cap_tier = filters.market_cap_tier.clone();
+    }
+    if filters.exchange != ALL {
+        merged.exchange = filters.exchange.clone();
+    }
     merged.indices = filters.indices.clone();
     merged.min_price = filters.min_price;
     merged.max_price = filters.max_price;
@@ -1588,30 +2454,50 @@ pub fn normalize_filters(filters: &AdvancedFilters) -> AdvancedFilters {
     merged.min_dividend_yield = filters.min_dividend_yield;
     merged.min_roce = filters.min_roce;
     merged.min_net_margin = filters.min_net_margin;
-    if filters.technical_rating != ALL { merged.technical_rating = filters.technical_rating.clone(); }
+    if filters.technical_rating != ALL {
+        merged.technical_rating = filters.technical_rating.clone();
+    }
     merged.rsi_min = filters.rsi_min;
     merged.rsi_max = filters.rsi_max;
     merged.price_above_200_sma = filters.price_above_200_sma;
     merged.price_above_50_sma = filters.price_above_50_sma;
     merged.near_52_week_high = filters.near_52_week_high;
-    if filters.asset_class != ALL { merged.asset_class = filters.asset_class.clone(); }
-    if filters.focus != ALL { merged.focus = filters.focus.clone(); }
-    if filters.brand != ALL { merged.brand = filters.brand.clone(); }
+    if filters.asset_class != ALL {
+        merged.asset_class = filters.asset_class.clone();
+    }
+    if filters.focus != ALL {
+        merged.focus = filters.focus.clone();
+    }
+    if filters.brand != ALL {
+        merged.brand = filters.brand.clone();
+    }
     merged.min_aum = filters.min_aum;
     merged.max_aum = filters.max_aum;
     merged.max_expense_ratio = filters.max_expense_ratio;
     merged.min_nav_return = filters.min_nav_return;
-    if filters.issuer_type != ALL { merged.issuer_type = filters.issuer_type.clone(); }
-    if filters.issuer != ALL { merged.issuer = filters.issuer.clone(); }
+    if filters.issuer_type != ALL {
+        merged.issuer_type = filters.issuer_type.clone();
+    }
+    if filters.issuer != ALL {
+        merged.issuer = filters.issuer.clone();
+    }
     merged.min_ytw = filters.min_ytw;
     merged.max_ytw = filters.max_ytw;
     merged.min_coupon = filters.min_coupon;
     merged.max_coupon = filters.max_coupon;
-    if filters.coupon_type != ALL { merged.coupon_type = filters.coupon_type.clone(); }
+    if filters.coupon_type != ALL {
+        merged.coupon_type = filters.coupon_type.clone();
+    }
     merged.maturity_year = filters.maturity_year;
-    if filters.credit_rating != ALL { merged.credit_rating = filters.credit_rating.clone(); }
-    if filters.mf_category != ALL { merged.mf_category = filters.mf_category.clone(); }
-    if filters.mf_scheme_type != ALL { merged.mf_scheme_type = filters.mf_scheme_type.clone(); }
+    if filters.credit_rating != ALL {
+        merged.credit_rating = filters.credit_rating.clone();
+    }
+    if filters.mf_category != ALL {
+        merged.mf_category = filters.mf_category.clone();
+    }
+    if filters.mf_scheme_type != ALL {
+        merged.mf_scheme_type = filters.mf_scheme_type.clone();
+    }
     merged.min_cagr3y = filters.min_cagr3y;
     merged.min_cagr5y = filters.min_cagr5y;
     merged.base_expense_ratio = filters.base_expense_ratio;
@@ -1619,8 +2505,12 @@ pub fn normalize_filters(filters: &AdvancedFilters) -> AdvancedFilters {
     merged.cat_total_expense_ratio = filters.cat_total_expense_ratio;
     merged.min_sharpe_ratio = filters.min_sharpe_ratio;
     merged.cat_sharpe_ratio = filters.cat_sharpe_ratio;
-    if filters.riskometer != ALL { merged.riskometer = filters.riskometer.clone(); }
-    if filters.plan_type != ALL { merged.plan_type = filters.plan_type.clone(); }
+    if filters.riskometer != ALL {
+        merged.riskometer = filters.riskometer.clone();
+    }
+    if filters.plan_type != ALL {
+        merged.plan_type = filters.plan_type.clone();
+    }
     merged
 }
 
@@ -1629,7 +2519,22 @@ fn percent_encode(raw: &str) -> String {
     let mut encoded = String::with_capacity(raw.len());
     for byte in raw.as_bytes() {
         match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' | b',' | b'\n' | b'\r' | b'(' | b')' | b'!' | b'$' | b'*' | b'\'' => {
+            b'A'..=b'Z'
+            | b'a'..=b'z'
+            | b'0'..=b'9'
+            | b'-'
+            | b'.'
+            | b'_'
+            | b'~'
+            | b','
+            | b'\n'
+            | b'\r'
+            | b'('
+            | b')'
+            | b'!'
+            | b'$'
+            | b'*'
+            | b'\'' => {
                 encoded.push(*byte as char);
             }
             other => encoded.push_str(&format!("%{other:02X}")),
@@ -1663,7 +2568,11 @@ mod tests {
             &normalize_filters(&builtin_screens_registry()[4].filters),
             &[],
         );
-        assert!(overvalued.iter().all(|inst| inst.pe > 0.0 && inst.pe <= 25.0));
+        assert!(
+            overvalued
+                .iter()
+                .all(|inst| inst.pe > 0.0 && inst.pe <= 25.0)
+        );
     }
 
     #[test]
@@ -1679,13 +2588,15 @@ mod tests {
     fn sorting_special_cases_use_the_labs_columns() {
         let mut rows = instruments::universe_for_screener("IN", "stocks");
         sort_instruments(&mut rows, "relVol", SortDirection::Desc);
-        assert!(rows
-            .windows(2)
-            .all(|pair| pair[0].rel_vol() >= pair[1].rel_vol()));
+        assert!(
+            rows.windows(2)
+                .all(|pair| pair[0].rel_vol() >= pair[1].rel_vol())
+        );
         sort_instruments(&mut rows, "marketCap", SortDirection::Desc);
-        assert!(rows
-            .windows(2)
-            .all(|pair| pair[0].market_cap >= pair[1].market_cap));
+        assert!(
+            rows.windows(2)
+                .all(|pair| pair[0].market_cap >= pair[1].market_cap)
+        );
     }
 
     #[test]

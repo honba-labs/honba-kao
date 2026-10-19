@@ -11,7 +11,9 @@
 //! * [`drawers`] — index drawer + symbol detail drawer.
 
 pub mod column_modal;
+pub mod drawers;
 pub mod filter_bar;
 pub mod filters_modal;
 pub mod heatmap;
+pub mod open_screen_modal;
 pub mod screener_table;

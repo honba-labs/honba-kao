@@ -10,7 +10,7 @@
 use leptos::prelude::*;
 
 use crate::stores::screener::{
-    columns_for_screener, preset_for_tab, ColumnCategory, ScreenerStore, ScreenerType,
+    ColumnCategory, ScreenerStore, ScreenerType, columns_for_screener, preset_for_tab,
 };
 
 /// Canonical category order for the tab strip (`ColumnCategory` display
@@ -55,7 +55,7 @@ pub fn ColumnModal() -> impl IntoView {
         all_columns
             .get()
             .into_iter()
-            .filter(|column| tab.map_or(true, |category| column.category == category))
+            .filter(|column| tab.is_none_or(|category| column.category == category))
             .collect::<Vec<_>>()
     });
 
