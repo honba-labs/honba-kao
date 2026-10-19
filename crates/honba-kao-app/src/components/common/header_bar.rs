@@ -1,11 +1,10 @@
-//! Top navigation bar, shaped after WunderUI's Navbar:
-//! brand → links → spacer → actions → avatar menu.
+//! Top application bar: brand → spacer → actions → avatar menu.
+//! Navigation lives in the side icon rail (`nav_rail.rs`), so the bar only
+//! carries the brand block, the theme/language controls and account actions.
 //!
 //! Behaviours:
 //!   * sticky, and it lifts with a soft shadow once the page scrolls;
 //!   * transparent over the landing hero, solid once scrolled;
-//!   * the current link is marked by `<A>`'s `aria-current="page"`;
-//!   * below 1080px the links collapse into a drawer;
 //!   * account actions live in one avatar menu instead of separate buttons.
 
 use leptos::prelude::*;
@@ -15,63 +14,18 @@ use wasm_bindgen::JsCast;
 
 use crate::components::common::BrandLogo;
 use crate::components::modals::PaletteStudio;
-use crate::constants::branding;
 use crate::contexts::{use_auth, use_language};
 use crate::router::paths::{Page, ROUTES};
 use crate::theme::{Mode, Preference, THEMES, ThemeContext};
 
-struct NavItem {
-    href: &'static str,
-    key: &'static str,
-}
-
-const NAV_ITEMS: &[NavItem] = &[
-    NavItem {
-        href: ROUTES::TRADERS,
-        key: "nav.traders",
-    },
-    NavItem {
-        href: ROUTES::PORTFOLIO,
-        key: "nav.portfolio",
-    },
-    NavItem {
-        href: ROUTES::DASHBOARD,
-        key: "nav.dashboard",
-    },
-    NavItem {
-        href: ROUTES::STRATEGY,
-        key: "nav.strategy",
-    },
-    NavItem {
-        href: ROUTES::COMPETITION,
-        key: "nav.competition",
-    },
-    NavItem {
-        href: ROUTES::PLANNING,
-        key: "nav.planning",
-    },
-    NavItem {
-        href: ROUTES::DATA,
-        key: "nav.data",
-    },
-    NavItem {
-        href: ROUTES::FAQ,
-        key: "nav.faq",
-    },
-];
-
 #[component]
-pub fn HeaderBar(
-    #[prop(default = Page::Home)] current_page: Page,
-    on_login_required: Callback<String>,
-) -> impl IntoView {
+pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoView {
     let auth = use_auth();
     let language = use_language();
     let theme = expect_context::<ThemeContext>();
 
     let is_theme_open = RwSignal::new(false);
     let is_palette_open = RwSignal::new(false);
-    let is_drawer_open = RwSignal::new(false);
     let scrolled = RwSignal::new(false);
 
     install_scroll_listener(scrolled);
@@ -89,20 +43,15 @@ pub fn HeaderBar(
                 <A href=ROUTES::HOME>
                     <BrandLogo />
                     <span class="header-bar__brand-text">
-                        <span class="header-bar__brand-name">{branding::APP_NAME}</span>
-                        <span class="header-bar__brand-sub">{branding::APP_NAME_LATIN}</span>
+                        <span class="header-bar__brand-name">
+                            {crate::constants::branding::APP_NAME_LATIN}
+                        </span>
+                        <span class="header-bar__brand-sub">
+                            {crate::constants::branding::APP_NAME}
+                        </span>
                     </span>
                 </A>
             </div>
-
-            <nav class="header-bar__nav" aria-label="Primary">
-                {NAV_ITEMS
-                    .iter()
-                    .map(|item| {
-                        view! { <A href=item.href>{move || language.t(item.key)}</A> }
-                    })
-                    .collect_view()}
-            </nav>
 
             <div class="header-bar__spacer" />
 
@@ -238,65 +187,13 @@ pub fn HeaderBar(
                     view! { <UserMenu palette_open=is_palette_open /> }.into_any()
                 } else {
                     view! {
-                        <button
-                            class="hfui-button ghost header-bar__get-started"
-                            on:click=move |_| on_login_required.run("Console".to_string())
-                        >
-                            "Get started"
-                        </button>
                         <span class="header-bar__cta">
                             <A href=ROUTES::LOGIN>{move || language.t("auth.sign_in")}</A>
                         </span>
                     }
                         .into_any()
                 }}
-
-                <button
-                    class="icon-button header-bar__menu"
-                    title="Menu"
-                    aria-label="Menu"
-                    aria-expanded=move || is_drawer_open.get().to_string()
-                    on:click=move |_| is_drawer_open.update(|open| *open = !*open)
-                >
-                    <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
             </div>
-
-            {move || {
-                is_drawer_open
-                    .get()
-                    .then(|| {
-                        view! {
-                            <div class="header-drawer" role="dialog" aria-label="Menu">
-                                <nav
-                                    class="header-drawer__nav"
-                                    aria-label="Primary"
-                                    on:click=move |_| is_drawer_open.set(false)
-                                >
-                                    {NAV_ITEMS
-                                        .iter()
-                                        .map(|item| {
-                                            view! {
-                                                <A href=item.href>{move || language.t(item.key)}</A>
-                                            }
-                                        })
-                                        .collect_view()}
-                                </nav>
-                            </div>
-                        }
-                    })
-            }}
 
             <PaletteStudio is_open=is_palette_open />
         </header>

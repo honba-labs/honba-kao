@@ -13,14 +13,10 @@ use crate::router::paths::Page;
 pub fn LandingPage() -> impl IntoView {
     let login_open = RwSignal::new(false);
     let feature = RwSignal::new(String::new());
-    let on_login_required = Callback::new(move |requested: String| {
-        feature.set(requested);
-        login_open.set(true);
-    });
 
     view! {
-        <div class="app-shell">
-            <HeaderBar current_page=Page::Home on_login_required=on_login_required />
+        <div class="app-shell app-shell--no-rail">
+            <HeaderBar current_page=Page::Home />
             <main class="app-main app-main--landing">
                 <FlowLanding />
             </main>

@@ -44,8 +44,8 @@ fn FlowHero() -> impl IntoView {
 
                 <div class="flow-hero-actions">
                     <span class="flow-primary">
-                        <A href=ROUTES::PLANNING>
-                            "Open Frontier"
+                        <A href=ROUTES::PORTFOLIO>
+                            "Open your portfolio"
                             <svg
                                 width="18"
                                 height="18"
@@ -63,7 +63,7 @@ fn FlowHero() -> impl IntoView {
                     </span>
 
                     <span class="flow-secondary">
-                        <A href=ROUTES::TRADERS>
+                        <A href=ROUTES::REGISTER>
                             "Set up your workspace"
                             <svg
                                 width="16"
@@ -245,8 +245,8 @@ fn FlowFeatures() -> impl IntoView {
                 <p>
                     "Compare market, limit, ladder and TWAP plans. See entries, size and exits before committing."
                 </p>
-                <A href=ROUTES::PLANNING>
-                    "Explore Frontier"
+                <A href=ROUTES::PORTFOLIO>
+                    "One portfolio for everything"
                     <ArrowUpRight />
                 </A>
             </article>

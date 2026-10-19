@@ -4,50 +4,232 @@
 /* Landing-page marketing styles live in brand.css.                          */
 /* ========================================================================= */
 
-/* --- App shell ----------------------------------------------------------- */
+/* --- App shell ------------------------------------------------------------ */
+/* noFX paper shell with honba's side icon rail: a slim top bar spans the
+   full width, the icon rail owns the left column, content fills the rest. */
 .app-shell {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--background-color);
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "topbar topbar"
+    "rail main";
+  background: var(--canvas);
+}
+
+/* Landing (and any chrome without the rail) spans the full width. */
+.app-shell--no-rail {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "topbar"
+    "main";
 }
 
 .app-main {
-  flex: 1;
+  grid-area: main;
+  min-width: 0;
   width: 100%;
-  max-width: 1560px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 22px 26px 48px;
+  padding: 28px 32px 64px;
 }
 
-/* --- Header bar (WunderUI navbar) ---------------------------------------- */
+.app-shell--no-rail .app-main {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* --- Side icon rail -------------------------------------------------------- */
+/* The navbar stays a left-hand column of icons — icon-only buttons with hover
+   labels, the active route lit in brand-soft. */
+.nav-rail {
+  grid-area: rail;
+  position: sticky;
+  top: 71px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: calc(100vh - 71px);
+  padding: 14px 0 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--hair);
+}
+
+.nav-rail__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+/* Router links are wrapped in the cell; the anchor itself must fill it. */
+.nav-rail__item > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav-rail__item:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.nav-rail__item[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+/* The active highlight for router links rides on the wrapper cell, driven by
+   the anchor's own aria-current. */
+.nav-rail__item:has(> a[aria-current="page"]) {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.nav-rail__item:focus-visible {
+  outline: 2px solid var(--brand-tint);
+  outline-offset: 2px;
+}
+
+.nav-rail__item svg {
+  flex: 0 0 auto;
+}
+
+/* Hover label — nofx-style floating tag, revealed on hover/focus. */
+.nav-rail__item::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  translate: 0 -50%;
+  padding: 5px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease 60ms, translate 120ms ease 60ms;
+  z-index: 80;
+  box-shadow: var(--shadow-md);
+}
+
+.nav-rail__item:hover::after,
+.nav-rail__item:focus-visible::after {
+  opacity: 1;
+}
+
+.nav-rail__spacer {
+  flex: 1;
+}
+
+/* --- Rail user cluster ---------------------------------------------------- */
+/* The User icon pinned at the rail bottom; its popover opens upward so the
+   panel belongs to the rail column, not the rail cell. */
+.nav-rail__user {
+  position: relative;
+  display: inline-flex;
+}
+
+.rail-user-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: calc(100% + 10px);
+  z-index: 80;
+  min-width: 176px;
+  padding: 6px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.rail-user-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rail-user-menu button:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.rail-user-menu__sep {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--hair);
+}
+
+.rail-user-menu .rail-user-menu__item--danger {
+  color: var(--pnl-loss);
+}
+
+.rail-user-menu .rail-user-menu__item--danger:hover {
+  background: color-mix(in srgb, var(--pnl-loss) 8%, transparent);
+  color: var(--pnl-loss);
+}
+
+/* --- Top bar (noFX header, no nav links — the rail owns navigation) -------- */
 .header-bar {
+  grid-area: topbar;
   position: sticky;
   top: 0;
   z-index: 40;
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 64px;
-  padding: 0 24px;
-  background: var(--darker-background-color);
-  border-bottom: 1px solid var(--border-color);
-  transition: box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
+  height: 72px;
+  padding: 0 28px;
+  background: var(--header-surface);
+  border-bottom: 1px solid var(--hair);
 }
 
 .header-bar--scrolled {
-  box-shadow: 0 4px 18px rgba(25, 36, 52, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Over the landing hero the bar is a translucent layer, not an opaque strip. */
 .header-bar--transparent {
-  background: transparent;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
   border-bottom-color: transparent;
 }
 
 .header-bar--transparent.header-bar--scrolled {
-  background: var(--darker-background-color);
-  border-bottom-color: var(--border-color);
+  background: var(--header-surface);
+  border-bottom-color: var(--hair);
 }
 
 .header-bar__brand {
@@ -57,7 +239,7 @@
 .header-bar__brand a {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   border-radius: 8px;
   color: inherit;
   text-decoration: none;
@@ -69,19 +251,21 @@
   line-height: 1.12;
 }
 
+/* noFX `.nofx-wordmark` — 32px, weight 800, −1.8px tracking. */
 .header-bar__brand-name {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--shade-9);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1.8px;
+  line-height: 1;
+  color: var(--ink);
 }
 
 .header-bar__brand-sub {
   font-size: 9.5px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--shade-5);
+  color: var(--muted);
 }
 
 .brand-logo {
@@ -95,37 +279,6 @@
   font-size: 16px;
   font-weight: 700;
   flex-shrink: 0;
-}
-
-.header-bar__nav {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: 18px;
-}
-
-.header-bar__nav a {
-  display: inline-flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--shade-6);
-  text-decoration: none;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.header-bar__nav a:hover {
-  background: var(--shade-0);
-  color: var(--shade-9);
-}
-
-.header-bar__nav a[aria-current="page"] {
-  background: var(--primary-0);
-  color: var(--primary-8);
-  font-weight: 600;
 }
 
 .header-bar__spacer {
@@ -384,66 +537,31 @@
   flex: 1;
 }
 
-/* --- Mobile drawer ------------------------------------------------------- */
-.header-bar__menu {
-  display: none;
-}
-
-.header-drawer {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
-  padding: 10px 16px 16px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--darker-background-color);
-  box-shadow: 0 16px 56px rgba(25, 36, 52, 0.12);
-}
-
-.header-drawer__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.header-drawer__nav a {
-  display: flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 8px;
-  color: var(--shade-7);
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.header-drawer__nav a:hover {
-  background: var(--shade-0);
-  color: var(--shade-9);
-}
-
-.header-drawer__nav a[aria-current="page"] {
-  background: var(--primary-0);
-  color: var(--primary-8);
-  font-weight: 600;
-}
-
+/* Narrow screens: the rail stays — the shell just tightens. */
 @media (max-width: 1080px) {
   .header-bar {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
-  .header-bar__nav {
-    display: none;
+  .app-main {
+    padding: 22px 18px 56px;
   }
 
-  .header-bar__menu {
-    display: inline-flex;
+  .app-shell--no-rail .app-main {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 }
 
 @media (max-width: 720px) {
+  .nav-rail {
+    width: 52px;
+  }
+
+  .app-shell {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
   .header-bar__get-started {
     display: none;
   }
@@ -466,7 +584,7 @@
 
 .mono {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .muted {
@@ -505,19 +623,21 @@
 
 .status-chip.ok {
   color: var(--pnl-gain);
-  background: rgba(0, 224, 173, 0.1);
+  background: color-mix(in srgb, var(--pnl-gain) 10%, transparent);
 }
 
 .status-chip.warn {
   color: var(--warning-color);
-  background: rgba(252, 210, 6, 0.12);
+  background: color-mix(in srgb, var(--warning-color) 12%, transparent);
 }
 
-/* --- Console layout ------------------------------------------------------ */
+/* --- Console layout (noFX paper page) ------------------------------------- */
+/* Page headings, metric cards and panels follow the noFX shell look: big
+   semibold headings, white bordered cards with soft shadows, hairline rules. */
 .console {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
 .page-header {
@@ -526,21 +646,22 @@
   justify-content: space-between;
   gap: 18px;
   flex-wrap: wrap;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 
+/* noFX page h1: ~28px, weight 600, tight tracking. */
 .page-header__title {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--shade-9);
-  letter-spacing: -0.01em;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.8px;
 }
 
 .page-header__sub {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   font-size: 13px;
-  color: var(--shade-6);
+  color: var(--muted);
 }
 
 .page-header__actions {
@@ -549,6 +670,8 @@
   gap: 10px;
 }
 
+/* noFX dashboard metrics: roomy paper cells, smallcaps labels, large
+   tabular values. */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -558,24 +681,28 @@
 .kpi {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--darker-background-color);
-  border: 1px solid var(--border-color);
+  gap: 8px;
+  padding: 22px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-sm);
 }
 
 .kpi__label {
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--shade-5);
+  letter-spacing: 0.09em;
+  color: var(--muted);
 }
 
 .kpi__value {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--shade-9);
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .kpi__delta {
@@ -604,9 +731,6 @@
   }
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .header-bar__nav {
-    display: none;
   }
 }
 
@@ -830,22 +954,22 @@
 
 .sig-strong-up {
   color: var(--pnl-gain);
-  background: rgba(0, 224, 173, 0.14);
+  background: color-mix(in srgb, var(--pnl-gain) 14%, transparent);
 }
 
 .sig-up {
   color: var(--pnl-gain);
-  background: rgba(0, 224, 173, 0.07);
+  background: color-mix(in srgb, var(--pnl-gain) 7%, transparent);
 }
 
 .sig-down {
   color: var(--pnl-loss);
-  background: rgba(240, 83, 89, 0.07);
+  background: color-mix(in srgb, var(--pnl-loss) 7%, transparent);
 }
 
 .sig-strong-down {
   color: var(--pnl-loss);
-  background: rgba(240, 83, 89, 0.14);
+  background: color-mix(in srgb, var(--pnl-loss) 14%, transparent);
 }
 
 /* --- Decision log -------------------------------------------------------- */
@@ -883,12 +1007,12 @@
 
 .decision__badge.ok {
   color: var(--pnl-gain);
-  background: rgba(0, 224, 173, 0.12);
+  background: color-mix(in srgb, var(--pnl-gain) 12%, transparent);
 }
 
 .decision__badge.reject {
   color: var(--pnl-loss);
-  background: rgba(240, 83, 89, 0.12);
+  background: color-mix(in srgb, var(--pnl-loss) 12%, transparent);
 }
 
 .decision__body {
@@ -921,9 +1045,10 @@
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  border-radius: 12px;
-  background: var(--shade-0);
-  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-sm);
 }
 
 .trader-card__head {
@@ -972,9 +1097,10 @@
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  background: var(--shade-0);
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .strategy-card__head {
@@ -1049,9 +1175,10 @@
 
 .step {
   padding: 14px;
-  border-radius: 12px;
-  background: var(--shade-0);
-  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-sm);
 }
 
 .step strong {
@@ -1072,7 +1199,7 @@
   padding: 12px 16px;
   border-radius: 12px;
   background: var(--secondary-0);
-  border: 1px solid rgba(0, 137, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--secondary-8) 28%, transparent);
   font-size: 13px;
   color: var(--shade-8);
 }
@@ -1163,12 +1290,12 @@
 
 .mode-pill.sandbox {
   color: var(--pnl-gain);
-  background: rgba(0, 224, 173, 0.12);
+  background: color-mix(in srgb, var(--pnl-gain) 12%, transparent);
 }
 
 .mode-pill.live {
   color: var(--warning-color);
-  background: rgba(252, 210, 6, 0.12);
+  background: color-mix(in srgb, var(--warning-color) 12%, transparent);
 }
 
 /* --- Auth ---------------------------------------------------------------- */
@@ -1521,8 +1648,8 @@
   height: 42px;
   padding: 0 14px;
   border-radius: 10px;
-  border: 1px solid var(--border-color);
-  background: var(--darker-background-color);
+  border: 1px solid var(--hair);
+  background: var(--surface);
   color: var(--shade-9);
   font-size: 13px;
 }
@@ -1534,10 +1661,11 @@
 }
 
 .faq-entry {
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  background: var(--darker-background-color);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--surface);
   padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
 }
 
 .faq-entry summary {
@@ -1647,10 +1775,11 @@
   flex-direction: column;
   gap: 11px;
   padding: 13px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  border: 1px solid var(--hair);
   border-top: 2px solid transparent;
-  background: var(--darker-background-color);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .broker-card--connected {
@@ -1894,3 +2023,57 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* --- Site footer (noFX .nofx-site-footer) --------------------------------- */
+.nofx-site-footer {
+  /* Grid shell: the footer belongs to the content column, not the rail. */
+  grid-column: 2;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 18px 32px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--hair);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nofx-site-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.nofx-site-footer__tag {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.nofx-site-footer__links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nofx-site-footer__links a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.nofx-site-footer__links a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+@media (max-width: 1080px) {
+  .nofx-site-footer {
+    padding: 16px 18px 22px;
+  }
+}
+

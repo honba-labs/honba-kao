@@ -10,7 +10,6 @@ use leptos_router::components::Router;
 
 use crate::contexts::{AuthContext, ConfirmDialogContext, ConfirmDialogHost, LanguageContext};
 use crate::router::AppRoutes;
-use crate::stores::{TradersConfigStore, TradersModalStore};
 use crate::theme::ThemeContext;
 
 #[component]
@@ -20,10 +19,6 @@ pub fn App() -> impl IntoView {
     provide_context(LanguageContext::new());
     provide_context(AuthContext::new());
     provide_context(ConfirmDialogContext::new());
-
-    // Stores (≈ Zustand stores).
-    provide_context(TradersConfigStore::new());
-    provide_context(TradersModalStore::new());
 
     view! {
         <Router>

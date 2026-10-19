@@ -26,6 +26,7 @@ primitives, over contexts/stores/api) is kept while the runtime gets faster.
 | `main.tsx`                       | `lib.rs`                                            | `mount_to_body(App)` |
 | `router/paths.ts`                | `router/paths.rs`                                   | `ROUTES` constants + `Page` enum |
 | `router/AppRoutes.tsx`           | `router/app_routes.rs`, `router/app_chrome.rs`      | route table + `AppChrome` layout |
+| `components/common/HeaderBar.tsx` | `components/common/header_bar.rs` + `common/nav_rail.rs` | top bar + **iconized side rail** (nofx uses a top nav; honba keeps the navbar as a left icon rail) |
 | `pages/`                         | `pages/`                                            | top-level screens |
 | `components/<domain>/`           | `components/<domain>/`                              | `auth`, `terminal`, `trader`, `charts`, `strategy`, `planning`, `modals`, `faq`, `landing` |
 | `components/ui/`                 | `components/ui/`                                    | primitives (bfx-hf-ui-core design language) |

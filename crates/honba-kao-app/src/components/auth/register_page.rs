@@ -22,7 +22,7 @@ pub fn RegisterPage() -> impl IntoView {
     let submit = move || match auth.register(&name.get(), &email.get(), &password.get()) {
         Ok(()) => {
             error.set(None);
-            navigate(ROUTES::WELCOME, Default::default());
+            navigate(ROUTES::PORTFOLIO, Default::default());
         }
         Err(message) => error.set(Some(message)),
     };

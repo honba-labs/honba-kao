@@ -33,7 +33,6 @@ pub mod hooks;
 pub mod i18n;
 pub mod pages;
 pub mod router;
-pub mod stores;
 pub mod theme;
 pub mod types;
 pub mod utils;

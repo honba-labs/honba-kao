@@ -1,26 +1,38 @@
-//! Top-level screens. Mirrors `web/src/pages/`.
+//! Top-level screens.
 //!
-//! Pages compose domain components from [`crate::components`]; anything that is
-//! reused across pages lives under `components/<domain>/`.
+//! The navigation-to-pagename mapping is:
+//!
+//! ```text
+//!   nav rail            page module
+//!   Portfolio           portfolio_page
+//!   Screener            screener_page
+//!   Workbench           workbench_page
+//!   Strategy            strategy_studio_page
+//!   Simulator           simulator_page
+//!   Tradebook           tradebook_page
+//!   User → Settings     settings_page
+//!   User → Funds        funds_page
+//! ```
+//!
+//! Pages compose domain components from [`crate::components`]; anything that
+//! is reused across pages lives under `components/<domain>/`.
 
-pub mod beginner_onboarding_page;
-pub mod data_page;
-pub mod faq_page;
+pub mod funds_page;
 pub mod landing_page;
-pub mod page_not_found;
 pub mod portfolio_page;
+pub mod screener_page;
 pub mod settings_page;
+pub mod simulator_page;
 pub mod strategy_studio_page;
-pub mod trader_dashboard_page;
-pub mod trading_planning_page;
+pub mod tradebook_page;
+pub mod workbench_page;
 
-pub use beginner_onboarding_page::BeginnerOnboardingPage;
-pub use data_page::DataPage;
-pub use faq_page::FaqPage;
+pub use funds_page::FundsPage;
 pub use landing_page::LandingPage;
-pub use page_not_found::PageNotFound;
 pub use portfolio_page::PortfolioPage;
+pub use screener_page::ScreenerPage;
 pub use settings_page::SettingsPage;
+pub use simulator_page::SimulatorPage;
 pub use strategy_studio_page::StrategyStudioPage;
-pub use trader_dashboard_page::TraderDashboardPage;
-pub use trading_planning_page::TradingPlanningPage;
+pub use tradebook_page::TradebookPage;
+pub use workbench_page::WorkbenchPage;

@@ -5,12 +5,10 @@
 //! [`openalgo_chart::OpenAlgoChart`]. Small inline sparklines stay Rust-native
 //! SVG, where a canvas engine would cost more than it returns.
 
-pub mod advanced_chart;
 pub mod comparison_chart;
 pub mod equity_chart;
 pub mod openalgo_chart;
 
-pub use advanced_chart::AdvancedChart;
 pub use comparison_chart::ComparisonChart;
 pub use equity_chart::EquityChart;
 pub use openalgo_chart::{ChartSeries, OpenAlgoChart};

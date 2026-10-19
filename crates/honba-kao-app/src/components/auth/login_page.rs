@@ -26,7 +26,7 @@ pub fn LoginPage() -> impl IntoView {
     let submit = move || match auth.sign_in(&email.get(), &password.get()) {
         Ok(()) => {
             error.set(None);
-            navigate(ROUTES::TRADERS, Default::default());
+            navigate(ROUTES::PORTFOLIO, Default::default());
         }
         Err(message) => error.set(Some(message)),
     };

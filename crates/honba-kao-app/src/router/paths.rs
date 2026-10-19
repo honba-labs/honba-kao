@@ -1,32 +1,37 @@
-//! Single source of truth for route paths. Mirrors `web/src/router/paths.ts`.
+//! Single source of truth for route paths. Previously mirrored
+//! `web/src/router/paths.ts`; the console now owns its own IA:
+//!
+//! ```text
+//!   /portfolio   <- default landing after sign-in
+//!   /screener    <- market view / screener
+//!   /workbench   <- charting, buy/sell, analysis
+//!   /strategy    <- AI-native strategy builder
+//!   /simulator   <- strategy runner / backtester
+//!   /tradebook   <- past analysis, session/month/year-wise
+//!   /settings, /funds  <- user cluster
+//! ```
 //!
 //! Everything that links to a route should reference these constants rather
 //! than hard-coding strings, so a path rename is a one-line change.
 
-/// Route path constants (the `ROUTES` object of the reference app).
+/// Route path constants (the `ROUTES` object).
 pub mod routes {
     pub const HOME: &str = "/";
     pub const LOGIN: &str = "/login";
     pub const REGISTER: &str = "/register";
     pub const RESET_PASSWORD: &str = "/reset-password";
     pub const SETUP: &str = "/setup";
-    pub const WELCOME: &str = "/welcome";
-    pub const FAQ: &str = "/faq";
-    pub const SETTINGS: &str = "/settings";
-    pub const DATA: &str = "/data";
-    pub const COMPETITION: &str = "/competition";
-    pub const TRADERS: &str = "/traders";
-    pub const DASHBOARD: &str = "/dashboard";
     pub const PORTFOLIO: &str = "/portfolio";
+    pub const SCREENER: &str = "/screener";
+    pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
-    pub const STRATEGY_MARKET: &str = "/strategy-market";
-    /// Trading planning ("frontier") — the reference app keeps both `/planning`
-    /// (legacy) and `/frontier`, redirecting the former to the latter.
-    pub const PLANNING: &str = "/frontier";
-    pub const LEGACY_PLANNING: &str = "/planning";
+    pub const SIMULATOR: &str = "/simulator";
+    pub const TRADEBOOK: &str = "/tradebook";
+    pub const SETTINGS: &str = "/settings";
+    pub const FUNDS: &str = "/funds";
 }
 
-/// Alias so call sites read `ROUTES::DASHBOARD`.
+/// Alias so call sites read `ROUTES::PORTFOLIO`.
 pub use routes as ROUTES;
 
 /// The set of pages the header can highlight.
@@ -34,15 +39,14 @@ pub use routes as ROUTES;
 pub enum Page {
     /// Landing / no specific page (default for the header breadcrumb).
     Home,
-    Planning,
-    Competition,
-    Traders,
-    Trader,
     Portfolio,
+    Screener,
+    Workbench,
     Strategy,
-    StrategyMarket,
-    Data,
-    Faq,
+    Simulator,
+    Tradebook,
+    Settings,
+    Funds,
     Login,
     Register,
 }
@@ -52,15 +56,14 @@ impl Page {
     pub fn as_id(&self) -> &'static str {
         match self {
             Page::Home => "home",
-            Page::Planning => "planning",
-            Page::Competition => "competition",
-            Page::Traders => "traders",
-            Page::Trader => "trader",
             Page::Portfolio => "portfolio",
+            Page::Screener => "screener",
+            Page::Workbench => "workbench",
             Page::Strategy => "strategy",
-            Page::StrategyMarket => "strategy-market",
-            Page::Data => "data",
-            Page::Faq => "faq",
+            Page::Simulator => "simulator",
+            Page::Tradebook => "tradebook",
+            Page::Settings => "settings",
+            Page::Funds => "funds",
             Page::Login => "login",
             Page::Register => "register",
         }
@@ -70,15 +73,14 @@ impl Page {
     pub fn label(&self) -> &'static str {
         match self {
             Page::Home => "Home",
-            Page::Planning => "Planning",
-            Page::Competition => "Competition",
-            Page::Traders => "Traders",
-            Page::Trader => "Dashboard",
             Page::Portfolio => "Portfolio",
+            Page::Screener => "Screener",
+            Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
-            Page::StrategyMarket => "Strategy market",
-            Page::Data => "Data",
-            Page::Faq => "FAQ",
+            Page::Simulator => "Simulator",
+            Page::Tradebook => "Tradebook",
+            Page::Settings => "Settings",
+            Page::Funds => "Funds",
             Page::Login => "Sign in",
             Page::Register => "Register",
         }
@@ -89,38 +91,16 @@ impl Page {
 pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
     match pathname {
         r if r == ROUTES::HOME => Some(Page::Home),
-        r if r == ROUTES::PLANNING || r == ROUTES::LEGACY_PLANNING => Some(Page::Planning),
-        r if r == ROUTES::WELCOME || r == ROUTES::TRADERS => Some(Page::Traders),
-        r if r == ROUTES::DASHBOARD => Some(Page::Trader),
         r if r == ROUTES::PORTFOLIO => Some(Page::Portfolio),
+        r if r == ROUTES::SCREENER => Some(Page::Screener),
+        r if r == ROUTES::WORKBENCH => Some(Page::Workbench),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
-        r if r == ROUTES::STRATEGY_MARKET => Some(Page::StrategyMarket),
-        r if r == ROUTES::DATA => Some(Page::Data),
-        r if r == ROUTES::FAQ => Some(Page::Faq),
+        r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
+        r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
+        r if r == ROUTES::SETTINGS => Some(Page::Settings),
+        r if r == ROUTES::FUNDS => Some(Page::Funds),
         r if r == ROUTES::LOGIN => Some(Page::Login),
         r if r == ROUTES::REGISTER => Some(Page::Register),
-        r if r == ROUTES::COMPETITION => Some(Page::Competition),
-        _ => None,
-    }
-}
-
-/// Build a dashboard URL, optionally deep-linking a trader by slug.
-pub fn build_dashboard_path(trader_slug: Option<&str>) -> String {
-    match trader_slug {
-        None => ROUTES::DASHBOARD.to_string(),
-        Some(slug) => format!("{}?trader={}", ROUTES::DASHBOARD, slug),
-    }
-}
-
-/// Legacy hash routes retained for deep links (`#traders` etc.).
-pub fn legacy_hash_route(hash: &str) -> Option<&'static str> {
-    match hash {
-        "competition" => Some(ROUTES::COMPETITION),
-        "traders" => Some(ROUTES::TRADERS),
-        "trader" | "details" => Some(ROUTES::DASHBOARD),
-        "strategy" => Some(ROUTES::STRATEGY),
-        "strategy-market" => Some(ROUTES::STRATEGY_MARKET),
-        "data" => Some(ROUTES::DATA),
         _ => None,
     }
 }

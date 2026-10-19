@@ -21,7 +21,7 @@ pub fn SetupPage() -> impl IntoView {
     let error = RwSignal::new(None::<String>);
 
     let submit = move || match auth.register(&name.get(), &email.get(), &password.get()) {
-        Ok(()) => navigate(ROUTES::TRADERS, Default::default()),
+        Ok(()) => navigate(ROUTES::PORTFOLIO, Default::default()),
         Err(message) => error.set(Some(message)),
     };
 

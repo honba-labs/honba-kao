@@ -10,4 +10,4 @@ pub mod paths;
 
 pub use app_chrome::AppChrome;
 pub use app_routes::AppRoutes;
-pub use paths::{Page, ROUTES, build_dashboard_path, get_current_page_for_path};
+pub use paths::{Page, ROUTES, get_current_page_for_path};
