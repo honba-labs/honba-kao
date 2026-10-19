@@ -42,7 +42,15 @@ impl<'de> Deserialize<'de> for BhavcopyRow {
                 let price = seq.next_element()?.unwrap_or_default();
                 let change = seq.next_element()?.unwrap_or_default();
                 let change_percent = seq.next_element()?.unwrap_or_default();
-                Ok(BhavcopyRow { symbol, name, exchange, badge, price, change, change_percent })
+                Ok(BhavcopyRow {
+                    symbol,
+                    name,
+                    exchange,
+                    badge,
+                    price,
+                    change,
+                    change_percent,
+                })
             }
         }
 

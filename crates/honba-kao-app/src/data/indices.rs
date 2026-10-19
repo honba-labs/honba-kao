@@ -1,7 +1,7 @@
 //! Market indices registry — the port of the labs app's `core/indices.ts`
 //! (`MARKET_INDICES` + `instrumentBelongsToIndex` heuristics).
 
-use crate::data::instruments::{by_symbol, Instrument};
+use crate::data::instruments::{Instrument, by_symbol};
 
 /// One index definition (`Nifty 50`, `S&P 500`, …).
 #[derive(Clone, Copy, Debug, PartialEq)]

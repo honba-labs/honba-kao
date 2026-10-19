@@ -53,7 +53,9 @@ impl Tab {
     pub fn label(self) -> String {
         match self {
             Tab::All => "All".to_string(),
-            Tab::Category(index) => CATEGORIES.get(index).map_or_else(|| "Other".to_string(), |c| (*c).to_string()),
+            Tab::Category(index) => CATEGORIES
+                .get(index)
+                .map_or_else(|| "Other".to_string(), |c| (*c).to_string()),
             Tab::Active => "Active".to_string(),
             Tab::Favourites => "Favourites".to_string(),
         }
@@ -98,7 +100,8 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
         defs.iter()
             .filter(|definition| match &wants {
                 Some(category) => {
-                    CATEGORIES.contains(&definition.category.as_str()) && &definition.category == category
+                    CATEGORIES.contains(&definition.category.as_str())
+                        && &definition.category == category
                 }
                 None => true,
             })
@@ -123,10 +126,12 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
     // `picker_target` signal, so the header count stays honest).
     let applied = Memo::new(move |_| {
         let pane_id = format!("pane-{}", store.picker_target.get());
-        store.applied_indicators.get().iter().find(|(id, _)| *id == pane_id).map_or_else(
-            Vec::new,
-            |(_, list)| list.clone(),
-        )
+        store
+            .applied_indicators
+            .get()
+            .iter()
+            .find(|(id, _)| *id == pane_id)
+            .map_or_else(Vec::new, |(_, list)| list.clone())
     });
     let applied_def_ids = Memo::new(move |_| {
         applied

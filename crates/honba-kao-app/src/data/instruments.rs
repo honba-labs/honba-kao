@@ -153,7 +153,9 @@ pub fn universe_for_screener(country: &str, screener_type: &str) -> Vec<&'static
     };
     universe()
         .iter()
-        .filter(|instrument| instrument.country == country && want.iter().any(|t| instrument.asset_type == *t))
+        .filter(|instrument| {
+            instrument.country == country && want.iter().any(|t| instrument.asset_type == *t)
+        })
         .collect()
 }
 
@@ -183,7 +185,10 @@ pub fn sectors_for(country: &str) -> Vec<String> {
         if instrument.is_index() || instrument.asset_type == "bonds" {
             continue;
         }
-        match counts.iter_mut().find(|(sector, _)| *sector == instrument.sector) {
+        match counts
+            .iter_mut()
+            .find(|(sector, _)| *sector == instrument.sector)
+        {
             Some((_, count)) => *count += 1,
             None => counts.push((instrument.sector.clone(), 1)),
         }
@@ -212,7 +217,10 @@ mod tests {
     fn universe_has_the_labs_rows() {
         assert_eq!(universe().len(), 304);
         assert!(by_symbol("RELIANCE").is_some());
-        assert!(by_symbol("reliance").is_some(), "lookup is case-insensitive");
+        assert!(
+            by_symbol("reliance").is_some(),
+            "lookup is case-insensitive"
+        );
     }
 
     #[test]
@@ -228,6 +236,10 @@ mod tests {
         let etf = universe_for_screener("IN", "etf");
         assert!(etf.iter().all(|instrument| instrument.asset_type == "etf"));
         let stocks = universe_for_screener("IN", "stocks");
-        assert!(stocks.iter().all(|instrument| instrument.asset_type == "stocks"));
+        assert!(
+            stocks
+                .iter()
+                .all(|instrument| instrument.asset_type == "stocks")
+        );
     }
 }

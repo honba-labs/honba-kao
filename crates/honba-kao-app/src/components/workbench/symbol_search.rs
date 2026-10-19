@@ -18,7 +18,8 @@ pub fn SymbolSearchModal() -> impl IntoView {
     let active_category = RwSignal::new(SymbolCategory::All);
 
     // Results recompute on every keystroke / tab flip (sync pool, ~4k rows).
-    let results = Memo::new(move |_| symbol_search::search(&query.get(), active_category.get(), 50));
+    let results =
+        Memo::new(move |_| symbol_search::search(&query.get(), active_category.get(), 50));
     let first_result = Memo::new(move |_| results.get().first().map(|item| item.symbol.clone()));
 
     // Esc closes; Enter picks the top row. The listener installs while open.

@@ -73,15 +73,18 @@ pub(crate) fn add_indicator(
     settings: &serde_json::Value,
     instance_id: Option<&str>,
 ) -> Result<LiveIndicator, JsValue> {
-    let settings_json = if settings.is_object() && !settings.as_object().is_some_and(|map| map.is_empty()) {
-        settings.to_string()
-    } else {
-        String::new()
-    };
+    let settings_json =
+        if settings.is_object() && !settings.as_object().is_some_and(|map| map.is_empty()) {
+            settings.to_string()
+        } else {
+            String::new()
+        };
     let json = js_add_indicator(id, indicator_id, &settings_json, instance_id.unwrap_or(""))?;
     json.as_string()
         .ok_or_else(|| JsValue::from_str("engine refused the indicator"))
-        .and_then(|raw| serde_json::from_str(&raw).map_err(|error| JsValue::from_str(&format!("{error}"))))
+        .and_then(|raw| {
+            serde_json::from_str(&raw).map_err(|error| JsValue::from_str(&format!("{error}")))
+        })
 }
 
 /// Remove one live indicator instance (idempotent).
@@ -283,7 +286,11 @@ pub(crate) fn encode_series(series: &ChartSeries) -> (String, String, String) {
         "color": series.color,
         "lineWidth": series.line_width,
     });
-    (series.kind.as_str().to_string(), style.to_string(), encode_bars(&series.bars))
+    (
+        series.kind.as_str().to_string(),
+        style.to_string(),
+        encode_bars(&series.bars),
+    )
 }
 
 /// Encode just the OHLCV bars (the workbench builds kind/style itself so all

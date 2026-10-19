@@ -255,10 +255,7 @@ fn UserCluster(#[prop(into)] on_login_required: Callback<String>) -> impl IntoVi
 
 /// The popover itself: Settings, Funds, sign out.
 #[component]
-fn RailUserMenu(
-    on_close: Callback<()>,
-    on_sign_out: Callback<()>,
-) -> impl IntoView {
+fn RailUserMenu(on_close: Callback<()>, on_sign_out: Callback<()>) -> impl IntoView {
     let navigate = StoredValue::new(use_navigate());
 
     let go = move |route: &'static str| {

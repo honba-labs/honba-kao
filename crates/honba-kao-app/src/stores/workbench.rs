@@ -110,8 +110,21 @@ impl Timeframe {
     /// The grouped presentation (`INTERVAL_GROUPS` in the labs app, extended
     /// to the day/week/month denominations the user asked for).
     pub const GROUPS: [(&str, &[Timeframe]); 5] = [
-        ("Minutes", &[Timeframe::M1, Timeframe::M3, Timeframe::M5, Timeframe::M15, Timeframe::M30, Timeframe::M45]),
-        ("Hours", &[Timeframe::H1, Timeframe::H2, Timeframe::H3, Timeframe::H4]),
+        (
+            "Minutes",
+            &[
+                Timeframe::M1,
+                Timeframe::M3,
+                Timeframe::M5,
+                Timeframe::M15,
+                Timeframe::M30,
+                Timeframe::M45,
+            ],
+        ),
+        (
+            "Hours",
+            &[Timeframe::H1, Timeframe::H2, Timeframe::H3, Timeframe::H4],
+        ),
         ("Days", &[Timeframe::D1, Timeframe::D3, Timeframe::D5]),
         ("Weeks", &[Timeframe::W1, Timeframe::W3, Timeframe::W4]),
         ("Months", &[Timeframe::Mo1, Timeframe::Mo3, Timeframe::Mo6]),
@@ -309,11 +322,11 @@ impl ChartMode {
         }
     }
 
-/// Quick chart-mode pills; everything else lives in the Type menu to keep
-/// the pane header on one line (real-estate).
-pub const fn is_pane_pill(self) -> bool {
-    matches!(self, ChartMode::Candles | ChartMode::Bar | ChartMode::Area)
-}
+    /// Quick chart-mode pills; everything else lives in the Type menu to keep
+    /// the pane header on one line (real-estate).
+    pub const fn is_pane_pill(self) -> bool {
+        matches!(self, ChartMode::Candles | ChartMode::Bar | ChartMode::Area)
+    }
 }
 
 /// One workspace pane.
@@ -921,7 +934,8 @@ impl WorkbenchStore {
         if let Some(index) = target {
             self.search_target.set(Some(index));
         } else {
-            self.search_target.set(Some(self.active_pane.get_untracked()));
+            self.search_target
+                .set(Some(self.active_pane.get_untracked()));
         }
         self.search_open.set(true);
     }

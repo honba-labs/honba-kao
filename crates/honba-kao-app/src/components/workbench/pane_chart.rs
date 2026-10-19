@@ -115,7 +115,11 @@ fn PaneHeader(
 /// The timeframe control: a single pill showing the active interval that
 /// opens the grouped menu (Minutes / Hours / Days / Weeks / Months).
 #[component]
-fn TimeframeMenu(store: WorkbenchStore, index: usize, current: Memo<ChartPaneConfig>) -> impl IntoView {
+fn TimeframeMenu(
+    store: WorkbenchStore,
+    index: usize,
+    current: Memo<ChartPaneConfig>,
+) -> impl IntoView {
     let menu_open = RwSignal::new(false);
     let menu_host = NodeRef::<leptos::html::Div>::new();
     dismiss_on_outside_click(menu_open, menu_host);
@@ -218,7 +222,11 @@ fn short_mode(mode: ChartMode) -> &'static str {
 
 /// The "chart type" dropdown exposing every engine series kind.
 #[component]
-fn ChartTypeMenu(store: WorkbenchStore, index: usize, current: Memo<ChartPaneConfig>) -> impl IntoView {
+fn ChartTypeMenu(
+    store: WorkbenchStore,
+    index: usize,
+    current: Memo<ChartPaneConfig>,
+) -> impl IntoView {
     let menu_open = RwSignal::new(false);
     let menu_host = NodeRef::<leptos::html::Div>::new();
     dismiss_on_outside_click(menu_open, menu_host);

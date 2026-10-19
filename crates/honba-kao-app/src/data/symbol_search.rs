@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use super::bhavcopy_pool;
-use super::instruments;
 use super::indices::{self, is_index_symbol};
+use super::instruments;
 
 /// Results grouped by segment, like `getCategoryOf`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -92,7 +92,10 @@ fn category_of(exchange: &str, symbol: &str) -> SymbolCategory {
 
     if ex.ends_with("_INDEX")
         || ex == "INDEX"
-        || matches!(sym.as_str(), "NIFTY" | "BANKNIFTY" | "SENSEX" | "FINNIFTY" | "MIDCPNIFTY" | "INDIAVIX")
+        || matches!(
+            sym.as_str(),
+            "NIFTY" | "BANKNIFTY" | "SENSEX" | "FINNIFTY" | "MIDCPNIFTY" | "INDIAVIX"
+        )
         || is_index_symbol(&sym)
     {
         SymbolCategory::Index
@@ -102,7 +105,16 @@ fn category_of(exchange: &str, symbol: &str) -> SymbolCategory {
         || ex == "NCDEX"
         || matches!(
             sym.as_str(),
-            "GOLD" | "GOLDM" | "SILVER" | "SILVERM" | "CRUDEOIL" | "NATURALGAS" | "COPPER" | "ZINC" | "ALUMINIUM" | "LEAD"
+            "GOLD"
+                | "GOLDM"
+                | "SILVER"
+                | "SILVERM"
+                | "CRUDEOIL"
+                | "NATURALGAS"
+                | "COPPER"
+                | "ZINC"
+                | "ALUMINIUM"
+                | "LEAD"
         )
     {
         SymbolCategory::Commodity
@@ -125,13 +137,21 @@ fn ends_with_option_digits(symbol: &str) -> bool {
     (tail == b"CE" || tail == b"PE") && digits.iter().all(|b| b.is_ascii_digit())
 }
 
-fn type_badge(symbol: &str, exchange: &str, raw_badge: Option<&str>, asset_type: Option<&str>) -> String {
+fn type_badge(
+    symbol: &str,
+    exchange: &str,
+    raw_badge: Option<&str>,
+    asset_type: Option<&str>,
+) -> String {
     let sym = symbol.to_uppercase();
     let ex = exchange.to_uppercase();
 
     if ex.ends_with("_INDEX")
         || ex == "INDEX"
-        || matches!(sym.as_str(), "NIFTY" | "BANKNIFTY" | "SENSEX" | "FINNIFTY" | "MIDCPNIFTY" | "INDIAVIX")
+        || matches!(
+            sym.as_str(),
+            "NIFTY" | "BANKNIFTY" | "SENSEX" | "FINNIFTY" | "MIDCPNIFTY" | "INDIAVIX"
+        )
         || is_index_symbol(&sym)
         || asset_type == Some("index")
     {
@@ -171,16 +191,38 @@ fn type_badge(symbol: &str, exchange: &str, raw_badge: Option<&str>, asset_type:
 
 /// The authoritative index prices from the labs app (`KNOWN_INDEX_PRICES`).
 const KNOWN_INDEX_PRICES: &[(&str, f64)] = &[
-    ("NIFTY", 24_850.0), ("SENSEX", 81_650.0), ("BANKNIFTY", 51_800.0),
-    ("FINNIFTY", 23_600.0), ("MIDCPNIFTY", 12_950.0), ("INDIAVIX", 13.5),
-    ("CNXFINANCE", 23_600.0), ("CNX500", 22_940.0), ("NIFTYJR", 73_420.0),
-    ("CNXAUTO", 25_840.0), ("CNXPHARMA", 22_910.0), ("CNXPSUBANK", 6_780.0),
-    ("CNXIT", 42_150.0), ("CNXMETAL", 9_640.0), ("CNXFMCG", 61_820.0),
-    ("CNXREALTY", 1_045.0), ("NIFTYFINSRV25_50", 24_890.0),
-    ("SPX", 5_840.0), ("NDX", 20_350.0), ("DJI", 43_050.0), ("RUT", 2_245.0),
-    ("SOX", 5_280.0), ("XLK", 232.0), ("XLF", 47.2), ("XLE", 91.5), ("XLV", 152.8),
-    ("N225", 39_600.0), ("TOPIX", 2_735.0), ("JPX400", 24_850.0),
-    ("FTSE100", 8_290.0), ("FTSE250", 20_980.0), ("FTSEALL", 4_520.0),
+    ("NIFTY", 24_850.0),
+    ("SENSEX", 81_650.0),
+    ("BANKNIFTY", 51_800.0),
+    ("FINNIFTY", 23_600.0),
+    ("MIDCPNIFTY", 12_950.0),
+    ("INDIAVIX", 13.5),
+    ("CNXFINANCE", 23_600.0),
+    ("CNX500", 22_940.0),
+    ("NIFTYJR", 73_420.0),
+    ("CNXAUTO", 25_840.0),
+    ("CNXPHARMA", 22_910.0),
+    ("CNXPSUBANK", 6_780.0),
+    ("CNXIT", 42_150.0),
+    ("CNXMETAL", 9_640.0),
+    ("CNXFMCG", 61_820.0),
+    ("CNXREALTY", 1_045.0),
+    ("NIFTYFINSRV25_50", 24_890.0),
+    ("SPX", 5_840.0),
+    ("NDX", 20_350.0),
+    ("DJI", 43_050.0),
+    ("RUT", 2_245.0),
+    ("SOX", 5_280.0),
+    ("XLK", 232.0),
+    ("XLF", 47.2),
+    ("XLE", 91.5),
+    ("XLV", 152.8),
+    ("N225", 39_600.0),
+    ("TOPIX", 2_735.0),
+    ("JPX400", 24_850.0),
+    ("FTSE100", 8_290.0),
+    ("FTSE250", 20_980.0),
+    ("FTSEALL", 4_520.0),
 ];
 
 fn known_index_price(symbol: &str) -> f64 {
@@ -204,7 +246,10 @@ fn build_pool() -> Pool {
     let mut by_symbol: HashMap<String, usize> = HashMap::new();
     let mut order = 0usize;
 
-    let push = |list: &mut Vec<SearchItem>, by_symbol: &mut HashMap<String, usize>, item: SearchItem, order: &mut usize| {
+    let push = |list: &mut Vec<SearchItem>,
+                by_symbol: &mut HashMap<String, usize>,
+                item: SearchItem,
+                order: &mut usize| {
         let upper = item.symbol.trim().to_uppercase();
         if upper.is_empty() {
             return;
@@ -223,7 +268,11 @@ fn build_pool() -> Pool {
     // 1. The MARKET_INDICES registry across all four markets.
     for index in indices::MARKET_INDICES {
         let sym = index.code.trim().to_uppercase();
-        let ex = if sym == "SENSEX" { "BSE_INDEX" } else { index_exchange_for(index.country) };
+        let ex = if sym == "SENSEX" {
+            "BSE_INDEX"
+        } else {
+            index_exchange_for(index.country)
+        };
         let price = known_index_price(index.code);
         push(
             &mut list,
@@ -247,11 +296,20 @@ fn build_pool() -> Pool {
     // 2. Rich instruments from the bundled universe (registry index entries win).
     for instrument in instruments::universe() {
         let sym = instrument.symbol.trim().to_uppercase();
-        if sym.is_empty() || by_symbol.get(&sym).map_or(false, |&pos| list[pos].category == SymbolCategory::Index) {
+        if sym.is_empty()
+            || by_symbol
+                .get(&sym)
+                .map_or(false, |&pos| list[pos].category == SymbolCategory::Index)
+        {
             continue;
         }
         let category = category_of(&instrument.exchange, &sym);
-        let badge = type_badge(&sym, &instrument.exchange, None, Some(&instrument.asset_type));
+        let badge = type_badge(
+            &sym,
+            &instrument.exchange,
+            None,
+            Some(&instrument.asset_type),
+        );
         let is_priority = category == SymbolCategory::Index
             || instrument.market_cap_tier == "mega"
             || instrument.market_cap_tier == "large";
@@ -260,7 +318,11 @@ fn build_pool() -> Pool {
             &mut by_symbol,
             SearchItem {
                 symbol: instrument.symbol.clone(),
-                name: if instrument.name.is_empty() { instrument.symbol.clone() } else { instrument.name.clone() },
+                name: if instrument.name.is_empty() {
+                    instrument.symbol.clone()
+                } else {
+                    instrument.name.clone()
+                },
                 exchange: instrument.exchange.clone(),
                 category,
                 type_badge: badge,
@@ -354,7 +416,12 @@ pub fn resolve_symbol_price(symbol: &str) -> f64 {
 
 /// Look up metadata for one pool symbol.
 pub fn metadata(symbol: &str) -> Option<&'static SearchItem> {
-    let clean = symbol.split(':').last().unwrap_or(symbol).trim().to_uppercase();
+    let clean = symbol
+        .split(':')
+        .last()
+        .unwrap_or(symbol)
+        .trim()
+        .to_uppercase();
     ensure_pool()
         .by_symbol
         .get(&clean)
@@ -371,10 +438,7 @@ pub fn search(query: &str, category: SymbolCategory, limit: usize) -> Vec<Search
         None => (String::new(), q.clone()),
     };
 
-    let tokens: Vec<String> = clean_q
-        .split_whitespace()
-        .map(str::to_string)
-        .collect();
+    let tokens: Vec<String> = clean_q.split_whitespace().map(str::to_string).collect();
 
     let mut matched: Vec<&SearchItem> = ensure_pool()
         .list
@@ -383,23 +447,24 @@ pub fn search(query: &str, category: SymbolCategory, limit: usize) -> Vec<Search
             if category != SymbolCategory::All && entry.category != category {
                 return false;
             }
-            if !exchange_filter.is_empty() && !entry.exchange.to_uppercase().starts_with(&exchange_filter) {
+            if !exchange_filter.is_empty()
+                && !entry.exchange.to_uppercase().starts_with(&exchange_filter)
+            {
                 return false;
             }
-            let exact = entry.symbol.to_uppercase() == clean_q
-                || clean_q.is_empty()
-                || {
-                    let sym = entry.symbol.to_uppercase();
-                    let name = entry.name.to_uppercase();
-                    sym.starts_with(&clean_q)
-                        || name.starts_with(&clean_q)
-                        || sym.contains(&clean_q)
-                        || name.contains(&clean_q)
-                        || (tokens.len() > 1
-                            && tokens.iter().all(|token| {
-                                entry.symbol.to_uppercase().contains(token) || entry.name.to_uppercase().contains(token)
-                            }))
-                };
+            let exact = entry.symbol.to_uppercase() == clean_q || clean_q.is_empty() || {
+                let sym = entry.symbol.to_uppercase();
+                let name = entry.name.to_uppercase();
+                sym.starts_with(&clean_q)
+                    || name.starts_with(&clean_q)
+                    || sym.contains(&clean_q)
+                    || name.contains(&clean_q)
+                    || (tokens.len() > 1
+                        && tokens.iter().all(|token| {
+                            entry.symbol.to_uppercase().contains(token)
+                                || entry.name.to_uppercase().contains(token)
+                        }))
+            };
             exact
         })
         .collect();
@@ -446,13 +511,15 @@ pub fn search(query: &str, category: SymbolCategory, limit: usize) -> Vec<Search
                     a.symbol.cmp(&b.symbol)
                 }
             })
-            .then_with(|| b.price.partial_cmp(&a.price).unwrap_or(std::cmp::Ordering::Equal))
+            .then_with(|| {
+                b.price
+                    .partial_cmp(&a.price)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
     });
 
     matched.truncate(limit);
-    let custom_item = if !clean_q.is_empty()
-        && !ensure_pool().by_symbol.contains_key(&clean_q)
-    {
+    let custom_item = if !clean_q.is_empty() && !ensure_pool().by_symbol.contains_key(&clean_q) {
         Some(custom_entry(raw_query))
     } else {
         None
@@ -478,7 +545,12 @@ fn custom_entry(query: &str) -> SearchItem {
         .unwrap_or(query)
         .trim()
         .to_uppercase();
-    let ex = query.split(':').next().unwrap_or("NSE").trim().to_uppercase();
+    let ex = query
+        .split(':')
+        .next()
+        .unwrap_or("NSE")
+        .trim()
+        .to_uppercase();
     let price = resolve_symbol_price(&clean);
     SearchItem {
         symbol: clean.clone(),
@@ -523,6 +595,10 @@ mod tests {
         let all = search("", SymbolCategory::All, 1_000_000);
         let indices = search("", SymbolCategory::Index, 1_000_000);
         assert!(indices.len() < all.len());
-        assert!(indices.iter().all(|item| item.category == SymbolCategory::Index));
+        assert!(
+            indices
+                .iter()
+                .all(|item| item.category == SymbolCategory::Index)
+        );
     }
 }

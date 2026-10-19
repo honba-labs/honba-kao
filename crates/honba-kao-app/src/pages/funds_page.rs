@@ -9,7 +9,11 @@ use crate::utils::currency;
 #[component]
 pub fn FundsPage() -> impl IntoView {
     let account = api::wallet::get_account();
-    let day_class = if account.day_pnl >= 0.0 { "positive" } else { "negative" };
+    let day_class = if account.day_pnl >= 0.0 {
+        "positive"
+    } else {
+        "negative"
+    };
 
     view! {
         <div class="console">

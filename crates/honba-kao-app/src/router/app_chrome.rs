@@ -16,9 +16,11 @@ pub fn AppChrome(
     #[prop(default = Page::Home)] current_page: Page,
     /// The side icon rail is shared by the workspace screens; marketing
     /// surfaces (landing) opt out.
-    #[prop(default = true)] show_rail: bool,
+    #[prop(default = true)]
+    show_rail: bool,
     /// noFX shows `SiteFooter` on chrome pages except full-bleed workspaces.
-    #[prop(default = false)] show_footer: bool,
+    #[prop(default = false)]
+    show_footer: bool,
     children: Children,
 ) -> impl IntoView {
     let login_open = RwSignal::new(false);
