@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 leptos.workspace = true
 leptos_router.workspace = true
 wasm-bindgen.workspace = true
+js-sys.workspace = true
 console_error_panic_hook.workspace = true
 tracing.workspace = true
 tracing-wasm.workspace = true

@@ -7,7 +7,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use leptos::prelude::*;
+use leptos::task::spawn_local_scoped;
 
+use honba_kao_client::wire::{
+    InstrumentId, OrdersRequest, PortfolioPosition, PositionSide, WireExchange, WireOrder,
+    WireOrderSide, WireOrderStatus, WireOrderType, WireProduct, WireTimeInForce, WireTradingState,
+};
+
+use crate::api::http::client;
 use crate::components::charts::openalgo_chart::IndicatorDef;
 use crate::data::demo_data;
 use crate::data::symbol_search;
@@ -611,11 +618,19 @@ pub enum Status {
 // Sequencing + pricing helpers
 // ---------------------------------------------------------------------------
 
-static ORDER_SEQ: AtomicU64 = AtomicU64::new(10_928);
+/// Sequential component of demo book ids (`ORD-…-1`, `ORD-…-2`, …).
+static ORDER_SEQ: AtomicU64 = AtomicU64::new(1);
 
-/// Sequential demo book ids (`ORD-10929`, …) standing in for backend ids.
-fn next_order_id() -> String {
-    format!("ORD-{}", ORDER_SEQ.fetch_add(1, Ordering::Relaxed) + 1)
+/// A session-unique book id: `ORD-<unix-ms>-<n>`.
+///
+/// The same string rides the wire as `client_order_id`, ADR 0019's
+/// idempotency key, so a double-clicked submit records exactly one row.
+/// The wall-clock prefix is what makes it survive page reloads (a bare
+/// counter would start again at 1 and replay an old ledger row as a no-op).
+pub fn next_order_id() -> String {
+    let seq = ORDER_SEQ.fetch_add(1, Ordering::Relaxed) + 1;
+    let ms = js_sys::Date::now() as u64;
+    format!("ORD-{ms}-{seq}")
 }
 
 /// LTP used to seed the ticket and depth: the bundled universe (the search
@@ -1139,7 +1154,9 @@ impl WorkbenchStore {
     // -- The local (optimistic) trading book ---------------------------------
 
     /// Submit the ticket: market orders fill into a trade + position; limit /
-    /// stop orders land in the open-orders list as `accepted`.
+    /// stop orders land in the open-orders list as `accepted`. The UI updates
+    /// immediately; a background `POST /orders` records the same request on
+    /// the honba-ya ledger (`fetch_state` resyncs the book once it answers).
     pub fn place_order(&self) {
         if self.trading_state.get_untracked() == TradingState::Halted {
             self.status.set(Some(Status::Error(
@@ -1149,6 +1166,7 @@ impl WorkbenchStore {
         }
 
         let ticket = self.ticket.get_untracked();
+        // Session-unique; doubles as the backend idempotency key (ADR 0019).
         let order_id = next_order_id();
         let price = if ticket.order_type == OrderType::Market {
             instrument_price(&ticket.symbol)
@@ -1189,6 +1207,29 @@ impl WorkbenchStore {
                 order_id, ticket.quantity, ticket.symbol, price
             ))));
         }
+
+        // Record the same request on the ledger. The local intent (limit /
+        // stop shapes the server does not parse today) is already on screen;
+        // a backend rejection only drags an error line, like the labs app.
+        let request = OrdersRequest {
+            instrument_id: Some(InstrumentId::new(
+                ticket.symbol.clone(),
+                WireExchange::new("NSE"),
+            )),
+            side: Some(ticket.side.as_id().to_string()),
+            order_type: Some(ticket.order_type.as_id().to_string()),
+            qty: Some(ticket.quantity as f64),
+            price: Some(price),
+            tif: Some(ticket.tif.as_id().to_string()),
+            client_order_id: Some(order_id.clone()),
+        };
+        let store = *self;
+        spawn_local_scoped(async move {
+            match client().post_orders(&request).await {
+                Ok(_) => store.refresh_book_after(Duration::from_millis(600)),
+                Err(error) => store.report_api_error("placing the order", error),
+            }
+        });
     }
 
     /// Buy/sell aggregate into the position book (average-price naive, like
@@ -1236,6 +1277,18 @@ impl WorkbenchStore {
         });
         self.status
             .set(Some(Status::Info(format!("Order {order_id} cancelled"))));
+
+        // The route answers a plain ack; refresh the book so the cancelled
+        // ledger row (the server marks it, it never deletes) shows up as
+        // `cancelled` and the rest of history stays aligned.
+        let store = *self;
+        let id = order_id.to_string();
+        spawn_local_scoped(async move {
+            match client().cancel_order(&id).await {
+                Ok(_) => store.refresh_book_after(Duration::from_millis(300)),
+                Err(error) => store.report_api_error("cancelling the order", error),
+            }
+        });
     }
 
     pub fn close_position(&self, symbol: &str) {
@@ -1244,6 +1297,7 @@ impl WorkbenchStore {
         });
         self.status
             .set(Some(Status::Info(format!("Closed position for {symbol}"))));
+        self.request_backend_close();
     }
 
     pub fn close_all_positions(&self) {
@@ -1251,18 +1305,49 @@ impl WorkbenchStore {
         self.status.set(Some(Status::Info(
             "All open positions have been closed".to_string(),
         )));
+        self.request_backend_close();
+    }
+
+    /// Fire the bodyless `POST /positions/close` (the only close route the
+    /// backend exposes — it squares off every ledger position at once) and
+    /// resync the drawer once the reducing fills land.
+    fn request_backend_close(&self) {
+        let store = *self;
+        spawn_local_scoped(async move {
+            match client().close_all_positions().await {
+                Ok(_) => store.refresh_book_after(Duration::from_millis(800)),
+                Err(error) => store.report_api_error("closing positions", error),
+            }
+        });
     }
 
     /// Operator state change. `reason` is the operator-log text the backend
-    /// records with the transition (`PUT /trading-state`); it stays advisory
-    /// locally.
+    /// records with the transition (`PUT /trading-state`). Optimistic like
+    /// the rest of the book: the badge moves at once and rolls back if the
+    /// backend refuses the transition.
     pub fn set_trading_state(&self, state: TradingState, reason: Option<&str>) {
-        let _ = reason; // recorded with the backend transition (workbench wire-up)
+        let previous = self.trading_state.get_untracked();
         self.trading_state.set(state);
         self.status.set(Some(Status::Info(format!(
             "Trading state transitioned to {}",
             state.as_id().to_uppercase()
         ))));
+
+        let store = *self;
+        let wire_state = to_wire_trading_state(state);
+        let reason = reason.map(str::to_string);
+        spawn_local_scoped(async move {
+            match client()
+                .put_trading_state(wire_state, reason.as_deref())
+                .await
+            {
+                Ok(change) => store.trading_state.set(wire_trading_state(change.state)),
+                Err(error) => {
+                    store.trading_state.set(previous);
+                    store.report_api_error("changing the trading state", error);
+                }
+            }
+        });
     }
 
     /// Toolbar kill switch: halt ↔ resume.
@@ -1278,6 +1363,93 @@ impl WorkbenchStore {
                 _ => "Toolbar kill switch toggle",
             }),
         );
+    }
+
+    // -- Backend wiring ------------------------------------------------------
+
+    /// Pull the live book from the honba-ya backend — page mount time, and
+    /// again whenever a write succeeds far enough to be worth resyncing.
+    /// Each success overwrites the demo seeds for its slice; a slice that
+    /// fails leaves its seeds in place (dev without a server) and logs one
+    /// warning, so the workbench still demos offline.
+    pub fn fetch_state(&self) {
+        let store = *self;
+        spawn_local_scoped(async move {
+            match client().get_trading_state().await {
+                Ok(state) => store.trading_state.set(wire_trading_state(state)),
+                Err(error) => {
+                    tracing::warn!("workbench: trading-state fetch failed: {error}")
+                }
+            }
+            store.fetch_book();
+        });
+    }
+
+    /// Orders + positions + the derived trade book (one round trip each).
+    fn fetch_book(&self) {
+        let store = *self;
+        spawn_local_scoped(async move {
+            match client().get_orders(None, None).await {
+                Ok(orders) => {
+                    let book = orders
+                        .iter()
+                        .map(|row| wire_order(row.clone()))
+                        .collect::<Vec<_>>();
+                    store.orders.set(book);
+
+                    // The trade book is the ledger's filled rows — fills
+                    // carry their venue price in `avg_fill_price`.
+                    let trades = orders
+                        .iter()
+                        .filter(|row| {
+                            row.status() == WireOrderStatus::Filled && row.filled_qty() > 0.0
+                        })
+                        .map(|row| WbTrade {
+                            order_id: row.order_id().to_string(),
+                            symbol: row.instrument_id().symbol().to_uppercase(),
+                            side: if row.side() == WireOrderSide::Sell {
+                                OrderSide::Sell
+                            } else {
+                                OrderSide::Buy
+                            },
+                            price: row.avg_fill_price().unwrap_or(0.0),
+                            quantity: row.filled_qty().round() as i64,
+                            costs: 0.0,
+                        })
+                        .collect::<Vec<_>>();
+                    store.trades.set(trades);
+                }
+                Err(error) => tracing::warn!("workbench: orders fetch failed: {error}"),
+            }
+
+            match client().get_positions().await {
+                Ok(positions) => store.positions.set(
+                    positions
+                        .iter()
+                        .map(|position| wire_position(position.clone()))
+                        .collect(),
+                ),
+                Err(error) => tracing::warn!("workbench: positions fetch failed: {error}"),
+            }
+        });
+    }
+
+    /// Recount the book shortly after a backend write (fills arrive a beat
+    /// after `POST /orders` and `POST /positions/close` answer).
+    fn refresh_book_after(&self, delay: Duration) {
+        let store = *self;
+        set_timeout(move || store.fetch_book(), delay);
+    }
+
+    /// Surface a failed backend write as the ticket-style error banner.
+    fn report_api_error(&self, doing: &str, error: honba_kao_client::ClientError) {
+        let hint = error
+            .retryable()
+            .then(|| " (transient — try again)")
+            .unwrap_or("");
+        self.status.set(Some(Status::Error(format!(
+            "Error while {doing}: {error}{hint}"
+        ))));
     }
 
     // -- Drawer + status -----------------------------------------------------
@@ -1298,6 +1470,94 @@ impl WorkbenchStore {
 impl Default for WorkbenchStore {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Wire mapping — honba-ya rows into view models
+// ---------------------------------------------------------------------------
+
+fn wire_trading_state(state: WireTradingState) -> TradingState {
+    match state {
+        WireTradingState::Reducing => TradingState::Reducing,
+        WireTradingState::Halted => TradingState::Halted,
+        _ => TradingState::Active,
+    }
+}
+
+fn to_wire_trading_state(state: TradingState) -> WireTradingState {
+    match state {
+        TradingState::Reducing => WireTradingState::Reducing,
+        TradingState::Halted => WireTradingState::Halted,
+        TradingState::Active => WireTradingState::Active,
+    }
+}
+
+fn wire_order(row: WireOrder) -> WbOrder {
+    WbOrder {
+        order_id: row.order_id().to_string(),
+        symbol: row.instrument_id().symbol().to_uppercase(),
+        order_type: wire_order_type(row.order_type()),
+        side: if row.side() == WireOrderSide::Sell {
+            OrderSide::Sell
+        } else {
+            OrderSide::Buy
+        },
+        quantity: row.quantity().round() as i64,
+        price: row.avg_fill_price().or(row.price()).unwrap_or(0.0),
+        status: wire_status_text(row.status()),
+        product: row
+            .product()
+            .map(|product| match product {
+                WireProduct::Delivery => Product::Delivery,
+                _ => Product::Intraday,
+            })
+            .unwrap_or(Product::Intraday),
+        tif: if row.time_in_force() == WireTimeInForce::Ioc {
+            TimeInForce::Ioc
+        } else {
+            TimeInForce::Day
+        },
+    }
+}
+
+fn wire_order_type(order_type: WireOrderType) -> OrderType {
+    match order_type {
+        WireOrderType::Market => OrderType::Market,
+        WireOrderType::StopMarket | WireOrderType::TrailingStop => OrderType::StopMarket,
+        WireOrderType::StopLimit => OrderType::StopLimit,
+        _ => OrderType::Limit,
+    }
+}
+
+fn wire_status_text(status: WireOrderStatus) -> String {
+    match status {
+        WireOrderStatus::Initialized => "initialized",
+        WireOrderStatus::Submitted => "submitted",
+        WireOrderStatus::Accepted => "accepted",
+        WireOrderStatus::PartiallyFilled => "partially_filled",
+        WireOrderStatus::Filled => "filled",
+        WireOrderStatus::Cancelled => "cancelled",
+        WireOrderStatus::Rejected => "rejected",
+        WireOrderStatus::Expired => "expired",
+        _ => "unknown",
+    }
+    .to_string()
+}
+
+fn wire_position(position: PortfolioPosition) -> WbPosition {
+    WbPosition {
+        symbol: position.instrument_id.symbol().to_uppercase(),
+        side: if position.side == PositionSide::Short {
+            OrderSide::Sell
+        } else {
+            OrderSide::Buy
+        },
+        quantity: position.quantity.round() as i64,
+        avg_price: position.avg_price,
+        ltp: position.mark,
+        realized_pnl: position.realized_pnl.to_major_f64(),
+        unrealized_pnl: position.unrealized_pnl.to_major_f64(),
     }
 }
 

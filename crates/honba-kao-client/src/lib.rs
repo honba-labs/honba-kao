@@ -2,18 +2,81 @@
 //!
 //! In dev, the base URL is "/api" and Trunk proxies to :3000.
 //! In prod, set it to your API origin, e.g. "https://api.honba.in".
-use gloo_net::http::Request;
+//!
+//! Wire types come straight from `honba-kokoro-messages` (the envelope, the
+//! order book) and `honba-ya-api` (the request/response DTOs) — the same
+//! crates the server serializes with, so there is no client-side mirror to
+//! drift. Every response is enveloped (`honba_messages::ResponseEnvelope`;
+//! API `1.0.0`, schema `4`), and an unknown version axis is rejected here
+//! rather than decoded with the wrong shape.
+use gloo_net::http::{Request, RequestBuilder};
+use honba_api::{
+    DepthResponse, OrdersRequest, OrdersResponse, PortfolioPositionsResponse, QuotesResponse,
+    TradingStateChange, TradingStateRequest, TradingStateResponse,
+};
+use honba_entities::PortfolioPosition;
+use honba_messages::{Order, QuoteTick, ResponseEnvelope, TradingState};
 use serde::de::DeserializeOwned;
 use thiserror::Error;
+
+/// Re-exports of the wire types this client speaks, so consumers can map
+/// responses into view models without taking the schema crates themselves.
+pub mod wire {
+    pub use crate::StatusAck;
+    pub use honba_api::{OrdersRequest, OrdersResponse};
+    pub use honba_entities::{PortfolioPosition, PositionSide};
+    pub use honba_messages::{
+        Exchange as WireExchange, InstrumentId, Order as WireOrder, OrderSide as WireOrderSide,
+        OrderStatus as WireOrderStatus, OrderStatus, OrderType as WireOrderType, OrderType,
+        Product as WireProduct, TimeInForce as WireTimeInForce, TradingState as WireTradingState,
+    };
+}
+
+/// Semantic version of the API surface the client decodes.
+pub const API_VERSION: &str = honba_messages::API_VERSION;
+/// Integer version of the wire shape the client decodes.
+pub const SCHEMA_VERSION: u32 = honba_messages::SCHEMA_VERSION;
+
+/// The `{"status": "..."}` ack body the write routes answer with
+/// (`DELETE /orders/{id}`, `POST /positions/close`).
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct StatusAck {
+    /// Short past-tense status word (`cancelled`, `closing`).
+    pub status: String,
+}
 
 #[derive(Debug, Error)]
 pub enum ClientError {
     #[error("network: {0}")]
     Network(String),
+
     #[error("decode: {0}")]
     Decode(String),
+
     #[error("status {0}")]
     Status(u16),
+
+    /// The server answered with a failure envelope.
+    #[error("api: {code}: {message}")]
+    Api {
+        /// The stable machine-readable code (snake_case).
+        code: String,
+        /// Human-readable description.
+        message: String,
+        /// Whether repeating the identical request is safe.
+        retryable: bool,
+    },
+}
+
+impl ClientError {
+    /// Whether re-issuing the identical request can plausibly succeed.
+    pub fn retryable(&self) -> bool {
+        matches!(self, ClientError::Network(_) | ClientError::Status(_))
+            || match self {
+                ClientError::Api { retryable, .. } => *retryable,
+                _ => false,
+            }
+    }
 }
 
 #[derive(Clone)]
@@ -28,9 +91,12 @@ impl ApiClient {
         }
     }
 
+    // -- Transport -----------------------------------------------------------
+
+    /// Plain JSON GET (no envelope unwrap) — legacy helper for namespaces
+    /// that read non-honba endpoints.
     pub async fn get_json<T: DeserializeOwned>(&self, path: &str) -> Result<T, ClientError> {
-        let url = format!("{}{}", self.base_url, path);
-        let resp = Request::get(&url)
+        let resp = Request::get(&format!("{}{}", self.base_url, path))
             .send()
             .await
             .map_err(|e| ClientError::Network(e.to_string()))?;
@@ -40,5 +106,235 @@ impl ApiClient {
         resp.json::<T>()
             .await
             .map_err(|e| ClientError::Decode(e.to_string()))
+    }
+
+    /// Send one request and unwrap the response envelope into `T`.
+    async fn send<T: DeserializeOwned>(
+        &self,
+        build: impl FnOnce(&str) -> RequestBuilder,
+        path: &str,
+        body: Option<String>,
+    ) -> Result<T, ClientError> {
+        let url = format!("{}{}", self.base_url, path);
+        let request = build(&url);
+        let request = match body {
+            Some(body) => request
+                .header("content-type", "application/json")
+                .body(body)
+                .map_err(|e| ClientError::Network(e.to_string()))?,
+            None => request
+                .build()
+                .map_err(|e| ClientError::Network(e.to_string()))?,
+        };
+        let resp = request
+            .send()
+            .await
+            .map_err(|e| ClientError::Network(e.to_string()))?;
+
+        if !resp.ok() && resp.status() >= 500 {
+            return Err(ClientError::Status(resp.status()));
+        }
+
+        let text = resp
+            .text()
+            .await
+            .map_err(|e| ClientError::Network(e.to_string()))?;
+
+        let envelope = serde_json::from_str::<ResponseEnvelope<T>>(&text)
+            .map_err(|e| ClientError::Decode(format!("envelope: {e}")))?;
+
+        check_versions(&envelope)?;
+
+        envelope.into_result().map_err(|detail| ClientError::Api {
+            code: crate::error_code_str(&detail.code),
+            message: detail.message,
+            retryable: detail.retryable,
+        })
+    }
+
+    // -- Orders --------------------------------------------------------------
+
+    /// `GET /orders` — the order book (optionally filtered).
+    pub async fn get_orders(
+        &self,
+        exchange: Option<&str>,
+        symbol: Option<&str>,
+    ) -> Result<Vec<Order>, ClientError> {
+        let mut path = "/orders".to_string();
+        let mut first = true;
+        for (key, value) in [("exchange", exchange), ("symbol", symbol)] {
+            if let Some(value) = value {
+                path.push(if first { '?' } else { '&' });
+                path.push_str(key);
+                path.push('=');
+                path.push_str(&crate::encode_query(value));
+                first = false;
+            }
+        }
+        let response: OrdersResponse = self.send(Request::get, &path, None).await?;
+        Ok(response.orders)
+    }
+
+    /// `POST /orders` — place an order; answers the recorded row(s).
+    pub async fn post_orders(&self, request: &OrdersRequest) -> Result<Order, ClientError> {
+        let body =
+            serde_json::to_string(request).map_err(|e| ClientError::Decode(e.to_string()))?;
+        let response: Order = self.send(Request::post, "/orders", Some(body)).await?;
+        Ok(response)
+    }
+
+    /// `DELETE /orders/{id}` — cancel one order. The route answers a status
+    /// ack (and is a no-op on terminal or unknown rows), never the full book.
+    pub async fn cancel_order(&self, id: &str) -> Result<StatusAck, ClientError> {
+        let path = format!("/orders/{}", crate::encode_query(id));
+        self.send(Request::delete, &path, None).await
+    }
+
+    // -- Trading state -------------------------------------------------------
+
+    /// `GET /trading-state` — the operator state write routes evaluate against.
+    pub async fn get_trading_state(&self) -> Result<TradingState, ClientError> {
+        let response: TradingStateResponse =
+            self.send(Request::get, "/trading-state", None).await?;
+        Ok(response.state)
+    }
+
+    /// `PUT /trading-state` — move the operator state; every transition is
+    /// allowed and `reason` is logged with it.
+    pub async fn put_trading_state(
+        &self,
+        state: TradingState,
+        reason: Option<&str>,
+    ) -> Result<TradingStateChange, ClientError> {
+        let body = serde_json::to_string(&TradingStateRequest {
+            state,
+            reason: reason.map(str::to_string),
+        })
+        .map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::put, "/trading-state", Some(body)).await
+    }
+
+    // -- Positions -----------------------------------------------------------
+
+    /// `GET /portfolio/positions` — valued open positions across accounts.
+    pub async fn get_positions(&self) -> Result<Vec<PortfolioPosition>, ClientError> {
+        let response: PortfolioPositionsResponse = self
+            .send(Request::get, "/portfolio/positions", None)
+            .await?;
+        Ok(response.positions)
+    }
+
+    /// `POST /positions/close` — closes ALL positions (the endpoint is
+    /// bodyless and unscoped; ADR-consistent server behavior). It fires the
+    /// reducing market orders and answers immediately with a status ack; the
+    /// ledger settles a moment later.
+    pub async fn close_all_positions(&self) -> Result<StatusAck, ClientError> {
+        self.send(Request::post, "/positions/close", None).await
+    }
+
+    // -- Market data ---------------------------------------------------------
+
+    /// `GET /quotes` — latest top-of-book for the requested symbols.
+    pub async fn get_quotes(
+        &self,
+        symbols: &[&str],
+        venue: Option<&str>,
+    ) -> Result<Vec<QuoteTick>, ClientError> {
+        let mut path = "/quotes".to_string();
+        let mut first = true;
+        if !symbols.is_empty() {
+            path.push_str("?symbols=");
+            path.push_str(&crate::encode_query(&symbols.join(",")));
+            first = false;
+        }
+        if let Some(venue) = venue {
+            path.push(if first { '?' } else { '&' });
+            path.push_str("venue=");
+            path.push_str(&crate::encode_query(venue));
+        }
+        let response: QuotesResponse = self.send(Request::get, &path, None).await?;
+        Ok(response.quotes)
+    }
+
+    /// `GET /depth/{id}` — the order book for one instrument.
+    pub async fn get_depth(
+        &self,
+        id: &str,
+        levels: Option<u32>,
+    ) -> Result<DepthResponse, ClientError> {
+        let mut path = format!("/depth/{}", crate::encode_query(id));
+        if let Some(levels) = levels {
+            path.push_str(&format!("?depth={levels}"));
+        }
+        self.send(Request::get, &path, None).await
+    }
+}
+
+/// Reject an envelope that does not speak the client's wire shape.
+fn check_versions<T>(envelope: &ResponseEnvelope<T>) -> Result<(), ClientError> {
+    if envelope.api_version.as_str() != API_VERSION {
+        return Err(ClientError::Decode(format!(
+            "api version mismatch: client {API_VERSION}, server {}",
+            envelope.api_version.as_str(),
+        )));
+    }
+    if envelope.schema_version != SCHEMA_VERSION {
+        return Err(ClientError::Decode(format!(
+            "schema version mismatch: client {SCHEMA_VERSION}, server {}",
+            envelope.schema_version
+        )));
+    }
+    Ok(())
+}
+
+/// Percent-encode a query/path value the way `encodeURIComponent` does.
+///
+/// Used for symbols and order ids — strict alphanumerics plus the few
+/// characters instrument ids legitimately carry.
+fn encode_query(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for byte in value.as_bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(*byte as char)
+            }
+            otherwise => out.extend(format!("%{otherwise:02X}").chars()),
+        }
+    }
+    out
+}
+
+/// The stable snake_case code of an [`honba_messages::ErrorCode`].
+fn error_code_str(code: &honba_messages::ErrorCode) -> String {
+    let Ok(json) = serde_json::to_string(code) else {
+        return "unknown".to_string();
+    };
+    json.trim_matches('"').to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encodes_query_values() {
+        assert_eq!(encode_query("NIFTY50"), "NIFTY50");
+        assert_eq!(encode_query("O-1"), "O-1");
+        assert_eq!(encode_query("a b&c"), "a%20b%26c");
+    }
+
+    #[test]
+    fn api_errors_are_not_marked_retryable_by_construction() {
+        let detail = honba_messages::ErrorDetail::new(
+            honba_messages::ErrorCode::OrderRejected,
+            "no_position",
+        );
+        let error = ClientError::Api {
+            code: crate::error_code_str(&detail.code),
+            message: detail.message.clone(),
+            retryable: detail.retryable,
+        };
+        assert_eq!(error.to_string(), "api: order_rejected: no_position");
+        assert!(!error.retryable());
     }
 }

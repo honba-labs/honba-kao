@@ -22,6 +22,10 @@ pub fn WorkbenchPage() -> impl IntoView {
     let store = WorkbenchStore::new();
     store.provide();
 
+    // Demo seeds live until the backend answers — `fetch_state` overwrites
+    // the slices it can reach and leaves the rest in place offline.
+    store.fetch_state();
+
     view! {
         <div class="wb-view">
             <WorkbenchToolbar />

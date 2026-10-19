@@ -9,4 +9,6 @@ gloo-net.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-honba-kokoro-types.workspace = true
+honba-messages.workspace = true
+honba-entities.workspace = true
+honba-api.workspace = true
