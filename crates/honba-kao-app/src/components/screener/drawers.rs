@@ -576,7 +576,7 @@ pub fn SymbolDetailDrawer() -> impl IntoView {
                                 <div class="sc-drawer__quote-sub">
                                     <span>{format!("Vol {}", compact(inst.volume))}</span>
                                     <span>"•"</span>
-                                    <span>{format!("Day ₹{:.2} – ₹{:.2}", inst.low52.min(inst.price * 0.99), inst.high52.max(inst.price * 1.01))}</span>
+                                    <span>{format!("52W ₹{:.2} – ₹{:.2}", inst.low52, inst.high52)}</span>
                                 </div>
                             </div>
 

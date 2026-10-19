@@ -59,37 +59,20 @@ pub fn ColumnModal() -> impl IntoView {
             .collect::<Vec<_>>()
     });
 
-    // Visible-count badge per tab.
-    let visible_ids = Memo::new(move |_| {
-        store
-            .columns()
-            .get()
-            .into_iter()
-            .filter(|(_, visible)| *visible)
-            .map(|(column, _)| column.id.to_string())
-            .collect::<Vec<String>>()
-    });
+    // Live selection read straight off the draft, so the checkbox grid
+    // and the footer count track edits before Apply commits them.
+    let visible_ids = Memo::new(move |_| draft.get());
 
-    // Re-seed the draft each time the modal opens.
+    // Re-seed the draft from the committed columns each time the modal
+    // opens (custom selections survive open/close; `Reset` is what
+    // restores the tab preset).
     Effect::new(move |_| {
         if store.column_modal.get() {
-            let mut preset: Vec<String> = preset_for_tab(
-                store.screener_type.get_untracked(),
-                store.active_tab.get_untracked(),
-            )
-            .unwrap_or_else(|| {
-                columns_for_screener(store.screener_type.get_untracked())
-                    .into_iter()
-                    .map(|column| column.id)
-                    .collect()
-            })
-            .into_iter()
-            .map(str::to_string)
-            .collect();
-            if !preset.iter().any(|id| id == "symbol") {
-                preset.insert(0, "symbol".to_string());
+            let mut ids = store.visible_columns.get_untracked().clone();
+            if !ids.iter().any(|id| id == "symbol") {
+                ids.insert(0, "symbol".to_string());
             }
-            draft.set(preset);
+            draft.set(ids);
             active_tab.set(None);
         }
     });

@@ -774,14 +774,11 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
         ),
         screen!(
             "etf_tech_growth",
-            "Technology & innovation ETFs",
+            "Broad-market & sectoral ETF trackers",
             Etf,
             "fundamental",
-            "Funds tracking semiconductors, cloud, AI, and digital ecosystems",
-            AdvancedFilters {
-                focus: "Technology".into(),
-                ..none.clone()
-            },
+            "Wide-coverage listed trackers: index funds, commodity ETFs and diversified schemes",
+            AdvancedFilters { ..none.clone() },
             "all",
             "changePercent",
             SortDirection::Desc
@@ -807,7 +804,7 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
             "popular",
             "Physical and synthetic bullion ETFs protecting purchasing power",
             AdvancedFilters {
-                asset_class: "Commodity".into(),
+                asset_class: "Commodities".into(),
                 ..none.clone()
             },
             "all",
@@ -833,7 +830,7 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
             "popular",
             "Government backed risk-free treasury debt across 5Y, 10Y, and 30Y tenors",
             AdvancedFilters {
-                issuer_type: "Sovereign".into(),
+                issuer_type: "Government Bonds".into(),
                 ..none.clone()
             },
             "all",
@@ -873,7 +870,7 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
             "fundamental",
             "Consistently outperforming tier-1 funds with >15% annualized 5Y CAGR",
             AdvancedFilters {
-                mf_category: "Equity Large Cap".into(),
+                mf_category: "Equity: Large Cap".into(),
                 min_cagr5y: Some(15.0),
                 ..none.clone()
             },
@@ -882,14 +879,13 @@ fn builtin_screens() -> Vec<ScreenDefinition> {
             SortDirection::Desc
         ),
         screen!(
-            "mf_direct_low_cost",
-            "Direct low-cost growth schemes",
+            "mf_consistent_cagr",
+            "High 3Y CAGR schemes",
             Mf,
-            "valuation",
-            "Direct plan mutual funds delivering maximum alpha via rock-bottom TER",
+            "fundamental",
+            "Funds whose 3-year CAGR clearance (a proxy from 1Y return) lifts them above the pack",
             AdvancedFilters {
-                plan_type: "Direct".into(),
-                max_expense_ratio: Some(0.75),
+                min_cagr3y: Some(12.0),
                 ..none.clone()
             },
             "all",
@@ -1083,6 +1079,9 @@ pub fn filter_instruments(
             }
 
             // 4. ETF specific.
+            if filters.asset_class != ALL && inst.sector != filters.asset_class {
+                return false;
+            }
             if filters.focus != ALL && inst.industry != filters.focus {
                 return false;
             }
@@ -1099,8 +1098,18 @@ pub fn filter_instruments(
             if filters.issuer_type != ALL && inst.sector != filters.issuer_type {
                 return false;
             }
-            if filters.credit_rating != ALL && inst.technical_rating != filters.credit_rating {
-                return false;
+            if filters.credit_rating != ALL {
+                // The bundled universe carries no instrument credit rating;
+                // the closest wire signal is the issuer family in
+                // `industry` (`AAA PSU Bond`), so AAA matches those rows.
+                let keep = inst.technical_rating == filters.credit_rating
+                    || inst
+                        .industry
+                        .to_lowercase()
+                        .contains(&filters.credit_rating.to_lowercase());
+                if !keep {
+                    return false;
+                }
             }
 
             // 6. Mutual-fund specific.
@@ -1213,14 +1222,17 @@ pub fn sort_instruments(
 
     rows.sort_by(|a, b| {
         let mut ordering = if sort_field_is_string(field) {
-            match field {
+            let raw = match field {
                 "analystRating" | "technicalRating" => {
                     rating_rank(&a.technical_rating).cmp(&rating_rank(&b.technical_rating))
                 }
                 "symbol" => a.symbol.cmp(&b.symbol),
                 "name" => a.name.cmp(&b.name),
                 _ => std::cmp::Ordering::Equal,
-            }
+            };
+            // String sorts honour the direction too (`Desc` was dropped here,
+            // so A→Z showed while the header arrow pointed ↓).
+            if invert { raw.reverse() } else { raw }
         } else {
             let (va, vb) = (sort_value(a, field), sort_value(b, field));
             let cmp = compare_f64(va, vb);
@@ -2320,6 +2332,20 @@ impl ScreenerStore {
             .set(normalize_filters(&screen.filters));
         self.sort_field.set(screen.sort_field.clone());
         self.sort_order.set(Some(screen.sort_direction));
+        // A screen may jump asset classes: its old class' columns and tab do
+        // not exist on the new table, so reseed both from the class defaults.
+        let tab = screen
+            .screener_type
+            .tabs()
+            .first()
+            .map_or("overview", |(id, _)| *id);
+        self.active_tab.set(tab);
+        let preset = preset_for_tab(screen.screener_type, tab)
+            .unwrap_or_default()
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        self.visible_columns.set(preset);
         self.open_screen_modal.set(false);
         self.page.set(1);
     }

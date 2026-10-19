@@ -618,7 +618,7 @@ pub fn ScreenerTable() -> impl IntoView {
                 <thead>
                     <tr>
                         {move || {
-                            let is_filtered_by = store.advanced_filters.get_untracked();
+                            let is_filtered_by = store.advanced_filters.get();
                             visible_columns.get().into_iter().map(|col| {
                                 let filtered = is_column_filtered(col.id, &is_filtered_by);
 
