@@ -1253,7 +1253,11 @@ impl WorkbenchStore {
         )));
     }
 
-    pub fn set_trading_state(&self, state: TradingState) {
+    /// Operator state change. `reason` is the operator-log text the backend
+    /// records with the transition (`PUT /trading-state`); it stays advisory
+    /// locally.
+    pub fn set_trading_state(&self, state: TradingState, reason: Option<&str>) {
+        let _ = reason; // recorded with the backend transition (workbench wire-up)
         self.trading_state.set(state);
         self.status.set(Some(Status::Info(format!(
             "Trading state transitioned to {}",
@@ -1267,7 +1271,13 @@ impl WorkbenchStore {
             TradingState::Halted => TradingState::Active,
             _ => TradingState::Halted,
         };
-        self.set_trading_state(next);
+        self.set_trading_state(
+            next,
+            Some(match next {
+                TradingState::Active => "Resume from the toolbar kill switch",
+                _ => "Toolbar kill switch toggle",
+            }),
+        );
     }
 
     // -- Drawer + status -----------------------------------------------------

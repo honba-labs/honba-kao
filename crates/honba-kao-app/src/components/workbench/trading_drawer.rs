@@ -254,11 +254,25 @@ fn PositionsTable() -> impl IntoView {
 fn OrdersTable() -> impl IntoView {
     let store = WorkbenchStore::take();
     view! {
+        <table class="hfui-table wb-drawer-table">
+            <thead>
+                <tr>
+                    <th>"Order ID"</th>
+                    <th>"Symbol"</th>
+                    <th>"Side"</th>
+                    <th>"Type"</th>
+                    <th class="num">"Price"</th>
+                    <th class="num">"Qty"</th>
+                    <th>"Status"</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
         {move || {
             let orders = store.orders.get();
             if orders.is_empty() {
                 return view! {
-                    <div class="wb-drawer__empty">"No open orders."</div>
+                    <tr><td class="wb-drawer__empty" colspan=8>"No open orders."</td></tr>
                 }
                     .into_any();
             }
@@ -291,6 +305,8 @@ fn OrdersTable() -> impl IntoView {
                 .collect_view()
                 .into_any()
         }}
+            </tbody>
+        </table>
     }
 }
 
@@ -299,24 +315,35 @@ fn OrdersTable() -> impl IntoView {
 fn TradesTable() -> impl IntoView {
     let store = WorkbenchStore::take();
     view! {
+        <table class="hfui-table wb-drawer-table">
+            <thead>
+                <tr>
+                    <th>"Order ID"</th>
+                    <th>"Symbol"</th>
+                    <th>"Side"</th>
+                    <th class="num">"Exec Price"</th>
+                    <th class="num">"Qty"</th>
+                    <th class="num">"Costs"</th>
+                </tr>
+            </thead>
+            <tbody>
         {move || {
             let trades = store.trades.get();
             if trades.is_empty() {
                 return view! {
-                    <div class="wb-drawer__empty">"No executions in this session."</div>
+                    <tr><td class="wb-drawer__empty" colspan=6>"No executions in this session."</td></tr>
                 }
                     .into_any();
             }
             trades
                 .into_iter()
                 .map(|trade| {
-                    let pnl = trade.price;
                     view! {
                         <tr>
                             <td class="wb-drawer-table__muted">{trade.order_id.clone()}</td>
                             <td><strong>{trade.symbol.clone()}</strong></td>
                             <td>{trade.side.label()}</td>
-                            <td class="num tnum">{format!("{:.2}", pnl)}</td>
+                            <td class="num tnum">{format!("{:.2}", trade.price)}</td>
                             <td class="num tnum">{quantity(trade.quantity)}</td>
                             <td class="num tnum wb-drawer-table__muted">{format!("{:.2}", trade.costs)}</td>
                         </tr>
@@ -325,6 +352,8 @@ fn TradesTable() -> impl IntoView {
                 .collect_view()
                 .into_any()
         }}
+            </tbody>
+        </table>
     }
 }
 

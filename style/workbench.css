@@ -77,6 +77,14 @@
   position: relative;
 }
 
+/* Menus opened from the right cluster open leftwards to stay on screen. */
+.wb-menu--right {
+  left: auto;
+  right: 0;
+  flex-direction: column;
+  min-width: 230px;
+}
+
 /* --- Shared buttons ---------------------------------------------------------*/
 .wb-btn,
 .wb-chip,
@@ -199,6 +207,26 @@
   color: var(--pnl-loss);
   background: color-mix(in srgb, var(--pnl-loss) 16%, transparent);
 }
+
+/* The badge doubles as the state-menu trigger: inherit the widget chrome. */
+button.wb-engine {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+button.wb-engine .wb-caret {
+  font-size: 8px;
+  opacity: 0.7;
+}
+
+.wb-engine--state-menu-label {
+  background: none;
+  padding: 0;
+}
+
 
 .wb-btn--buy {
   background: var(--button-green);

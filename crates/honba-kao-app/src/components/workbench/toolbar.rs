@@ -16,6 +16,10 @@ pub fn WorkbenchToolbar() -> impl IntoView {
     let grid_menu_host = NodeRef::<leptos::html::Div>::new();
     dismiss_on_outside_click(grid_menu_open, grid_menu_host);
 
+    let state_menu_open = RwSignal::new(false);
+    let state_menu_host = NodeRef::<leptos::html::Div>::new();
+    dismiss_on_outside_click(state_menu_open, state_menu_host);
+
     view! {
         <div class="wb-toolbar">
             // -- Left: workspace grid picker --------------------------------
@@ -89,9 +93,56 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                     None => ().into_any(),
                 }}
 
-                <span class=move || format!("wb-engine wb-engine--{}", store.trading_state.get().as_id())>
-                    {move || format!("Engine: {}", store.trading_state.get().as_id())}
-                </span>
+                // Engine-state menu: the badge opens the three operator states
+                // (`PUT /trading-state` accepts any transition), so Reducing is
+                // reachable without leaving the toolbar.
+                <div class="wb-toolbar__menu" node_ref=state_menu_host>
+                    <button
+                        class=move || format!("wb-engine wb-engine--{}", store.trading_state.get().as_id())
+                        title="Trading state (click to change)"
+                        aria-haspopup="menu"
+                        on:click=move |_| state_menu_open.update(|open| *open = !*open)
+                    >
+                        {move || format!("Engine: {}", store.trading_state.get().as_id())}
+                        <span class="wb-caret">"▾"</span>
+                    </button>
+                    <Show when=move || state_menu_open.get()>
+                        <div class="wb-menu wb-menu--right" role="menu">
+                            {[
+                                (TradingState::Active, "Active — full execution"),
+                                (TradingState::Reducing, "Reducing — exits only"),
+                                (TradingState::Halted, "Halted — no orders"),
+                            ]
+                                .into_iter()
+                                .map(|(state, label)| {
+                                    let selected = move || store.trading_state.get() == state;
+                                    view! {
+                                        <button
+                                            class=move || {
+                                                if selected() {
+                                                    "wb-menu__item wb-menu__item--selected"
+                                                } else {
+                                                    "wb-menu__item"
+                                                }
+                                            }
+                                            role="menuitem"
+                                            title=label
+                                            on:click=move |_| {
+                                                store.set_trading_state(state, None);
+                                                state_menu_open.set(false);
+                                            }
+                                        >
+                                            <span class="wb-engine wb-engine--state-menu-label">
+                                                {state.as_id()}
+                                            </span>
+                                            <span class="wb-menu__hint">{label}</span>
+                                        </button>
+                                    }
+                                })
+                                .collect_view()}
+                        </div>
+                    </Show>
+                </div>
 
                 {move || {
                     let halted = store.trading_state.get() == TradingState::Halted;

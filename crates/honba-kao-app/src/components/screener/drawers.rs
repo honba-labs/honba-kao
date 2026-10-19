@@ -531,7 +531,7 @@ pub fn SymbolDetailDrawer() -> impl IntoView {
                                     title="Open in the workbench terminal"
                                     on:click=move |_| {
                                         if let Some(window) = web_sys::window() {
-                                            let url = format!("/?workbench={}", symbol_for_open.to_lowercase());
+                                            let url = format!("/workbench?symbol={}", symbol_for_open.to_lowercase());
                                             let _ = window.open_with_url_and_target(&url, "_self");
                                         }
                                     }

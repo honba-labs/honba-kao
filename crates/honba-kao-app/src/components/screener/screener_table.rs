@@ -606,7 +606,7 @@ pub fn ScreenerTable() -> impl IntoView {
         store.set_symbol(symbol);
     };
     let row_double_click = move |symbol: String| {
-        let url = format!("/?symbol={}", symbol.to_lowercase());
+        let url = format!("/workbench?symbol={}", symbol.to_lowercase());
         if let Some(window) = web_sys::window() {
             let _ = window.open_with_url_and_target(&url, "_blank");
         }
