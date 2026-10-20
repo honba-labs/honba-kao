@@ -58,13 +58,23 @@ impl HfButtonSize {
 /// `active` and `disabled` take anything `Into<Signal<bool>>` (a plain
 /// `bool`, a `Signal`/`Memo`/`RwSignal`, or `Signal::derive(move || ...)`),
 /// so toggle/pill/segmented usages stay reactive without rebuilding the
-/// button on every tick.
+/// button on every tick. `aria-pressed` is only emitted when `active` is
+/// passed, so plain action buttons are not announced as toggles.
+///
+/// The rendered `type` defaults to `"button"`; pass `button_type="submit"`
+/// for a form's primary action so Enter-to-submit keeps working.
 ///
 /// ```rust
-/// view! {
-///     <HfButton variant=HfButtonVariant::Green on_click=|_| {}>
-///         "Buy"
-///     </HfButton>
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::{HfButton, HfButtonVariant};
+///
+/// #[component]
+/// fn BuyButton() -> impl IntoView {
+///     view! {
+///         <HfButton variant=HfButtonVariant::Green on_click=Callback::new(|_| {})>
+///             "Buy"
+///         </HfButton>
+///     }
 /// }
 /// ```
 #[component]
@@ -78,7 +88,7 @@ pub fn HfButton(
     /// Toggle/pressed state — reflected as `aria-pressed` and styled via the
     /// `.hf-button[aria-pressed="true"]` rule, no extra class bookkeeping.
     #[prop(optional, into)]
-    active: Signal<bool>,
+    active: Option<Signal<bool>>,
     #[prop(optional)]
     loading: Option<bool>,
     #[prop(optional)]
@@ -91,6 +101,14 @@ pub fn HfButton(
     /// inside a dropdown menu.
     #[prop(optional, into)]
     role: String,
+    /// The `type` attribute: `"button"` (default), `"submit"` or `"reset"`.
+    #[prop(optional)]
+    button_type: Option<&'static str>,
+    /// Omit the `hf-button*` token classes so `class` alone owns the look,
+    /// for surfaces styled by an existing class family (`.wb-btn`,
+    /// `.hfui-button`, …). Behaviour and ARIA are unchanged.
+    #[prop(optional)]
+    unstyled: bool,
     children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfButtonVariant::Default);
@@ -111,16 +129,17 @@ pub fn HfButton(
         HfButtonSize::Large => "hf-button--lg",
     };
 
-    let full_class = move || {
-        let mut classes = vec!["hf-button", variant_class, size_class];
+    let mut classes = Vec::new();
+    if !unstyled {
+        classes.extend(["hf-button", variant_class, size_class]);
         if loading {
             classes.push("hf-button--loading");
         }
-        if !class.is_empty() {
-            classes.push(&class);
-        }
-        classes.join(" ")
-    };
+    }
+    if !class.is_empty() {
+        classes.push(&class);
+    }
+    let full_class = (!classes.is_empty()).then(|| classes.join(" "));
 
     let content = if loading {
         view! { <span class="hf-button__loader" /> }.into_any()
@@ -129,12 +148,14 @@ pub fn HfButton(
     };
 
     let role = (!role.is_empty()).then_some(role);
+    let title = (!title.is_empty()).then_some(title);
 
     view! {
         <button
             class=full_class
+            type=button_type.unwrap_or("button")
             disabled=move || disabled.get()
-            aria-pressed=move || active.get().to_string()
+            aria-pressed=move || active.map(|signal| signal.get().to_string())
             title=title
             role=role
             on:click=move |ev| {
@@ -150,13 +171,19 @@ pub fn HfButton(
     }
 }
 
-/// HfIconButton — icon-only button for toolbars and secondary actions.
+/// HfIconButton — icon-only button for toolbars, close and search-clear
+/// actions. `title` doubles as the `aria-label`, so always pass one.
 ///
 /// ```rust
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::HfIconButton;
 /// use honba_kao_ui_core::icons::outline::settings;
 ///
-/// view! {
-///     <HfIconButton icon=settings() size=16 />
+/// #[component]
+/// fn SettingsButton() -> impl IntoView {
+///     view! {
+///         <HfIconButton icon=settings() size=16 title="Settings" />
+///     }
 /// }
 /// ```
 #[component]
@@ -170,9 +197,9 @@ pub fn HfIconButton(
     size: Option<u32>,
     #[prop(optional, into)]
     disabled: Signal<bool>,
-    /// Pressed/open state — reflected as `aria-pressed`.
+    /// Pressed/open state — reflected as `aria-pressed` (only when passed).
     #[prop(optional, into)]
-    active: Signal<bool>,
+    active: Option<Signal<bool>>,
     /// Set when this button opens a menu/popover (`aria-haspopup` + `aria-expanded`).
     #[prop(optional, into)]
     aria_expanded: Option<Signal<bool>>,
@@ -180,8 +207,13 @@ pub fn HfIconButton(
     on_click: Option<Callback<web_sys::MouseEvent>>,
     #[prop(optional, into)]
     class: String,
+    /// Tooltip and accessible name (`aria-label`).
     #[prop(optional, into)]
     title: String,
+    /// Omit the `hf-icon-button*` token classes so `class` alone owns the
+    /// look (e.g. `.hfui-panel__icon-button`). Behaviour and ARIA are unchanged.
+    #[prop(optional)]
+    unstyled: bool,
 ) -> impl IntoView {
     let size_px = size.unwrap_or(20);
     let size_class = match size {
@@ -190,19 +222,24 @@ pub fn HfIconButton(
         _ => "hf-icon-button--default",
     };
 
-    let full_class = format!("hf-icon-button {size_class} {class}").trim().to_string();
-    let has_popup = aria_expanded.is_some();
+    let full_class = if unstyled {
+        class
+    } else {
+        format!("hf-icon-button {size_class} {class}").trim().to_string()
+    };
+    let has_popup = aria_expanded.is_some().then_some("menu");
     let aria_label = title.clone();
 
     view! {
         <button
             class=full_class
+            type="button"
             disabled=move || disabled.get()
             title=title
             aria-label=aria_label
-            aria-pressed=move || active.get().to_string()
-            aria-haspopup=move || if has_popup { "menu" } else { "false" }
-            aria-expanded=move || aria_expanded.map(|signal| signal.get()).unwrap_or(false).to_string()
+            aria-pressed=move || active.map(|signal| signal.get().to_string())
+            aria-haspopup=has_popup
+            aria-expanded=move || aria_expanded.map(|signal| signal.get().to_string())
             on:click=move |ev| {
                 if !disabled.get() {
                     if let Some(cb) = on_click {
@@ -219,6 +256,7 @@ pub fn HfIconButton(
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 class="hf-icon-button__icon"
+                aria-hidden="true"
                 width=size_px.to_string()
                 height=size_px.to_string()
             >

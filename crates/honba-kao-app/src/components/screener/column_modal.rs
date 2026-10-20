@@ -9,6 +9,9 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::icons::outline::x_close;
+use honba_kao_ui_core::{HfButton, HfIconButton};
+
 use crate::stores::columns::{ColumnCategory, ScreenerType, columns_for_screener, preset_for_tab};
 use crate::stores::screener_store::ScreenerStore;
 
@@ -125,9 +128,14 @@ pub fn ColumnModal() -> impl IntoView {
                                 {move || screener_kind_label(store.screener_type.get())}
                             </span>
                         </div>
-                        <button class="hfui-panel__icon-button" title="Close" on:click=close>
-                            "×"
-                        </button>
+                        <HfIconButton
+                            icon=x_close()
+                            size=14
+                            unstyled=true
+                            class="hfui-panel__icon-button"
+                            title="Close"
+                            on_click=Callback::new(close)
+                        />
                     </div>
 
                     <div class="hfui-modal__body">
@@ -211,15 +219,15 @@ pub fn ColumnModal() -> impl IntoView {
                             }}
                         </span>
                         <span class="sc-col-modal__actions">
-                            <button class="wb-btn" on:click=reset_defaults>
+                            <HfButton unstyled=true class="wb-btn" on_click=Callback::new(reset_defaults)>
                                 "Reset"
-                            </button>
-                            <button class="wb-btn wb-btn--solid" on:click=apply>
+                            </HfButton>
+                            <HfButton unstyled=true class="wb-btn wb-btn--solid" on_click=Callback::new(apply)>
                                 "Apply"
-                            </button>
-                            <button class="wb-btn" on:click=close>
+                            </HfButton>
+                            <HfButton unstyled=true class="wb-btn" on_click=Callback::new(close)>
                                 "Cancel"
-                            </button>
+                            </HfButton>
                         </span>
                     </div>
                 </div>

@@ -12,8 +12,12 @@ use leptos::prelude::*;
 /// Mirrors bfx-hf-ui-core `.hfui-plnumber`.
 ///
 /// ```rust
-/// view! {
-///     <HfPLNumber value=1250.50 format=HfPLNumberFormat::Currency />
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::{HfPLNumber, HfPLNumberFormat};
+///
+/// #[component]
+/// fn DayPnl() -> impl IntoView {
+///     view! { <HfPLNumber value=1250.50 format=HfPLNumberFormat::Currency /> }
 /// }
 /// ```
 #[component]
@@ -98,8 +102,12 @@ pub enum HfPLNumberFormat {
 /// site.
 ///
 /// ```rust
-/// view! {
-///     <HfStatusCircle status=HfStatus::Connected />
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::{HfStatus, HfStatusCircle};
+///
+/// #[component]
+/// fn FeedStatus() -> impl IntoView {
+///     view! { <HfStatusCircle status=HfStatus::Connected /> }
 /// }
 /// ```
 #[component]

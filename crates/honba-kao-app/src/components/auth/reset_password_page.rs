@@ -5,6 +5,8 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 
+use honba_kao_ui_core::HfButton;
+
 use crate::components::auth::{AuthField, AuthShell};
 use crate::router::paths::ROUTES;
 
@@ -34,9 +36,9 @@ pub fn ResetPasswordPage() -> impl IntoView {
                     autofocus=true
                 />
 
-                <button class="hfui-button green block" type="submit">
+                <HfButton unstyled=true class="hfui-button green block" button_type="submit">
                     "Send reset link"
-                </button>
+                </HfButton>
             </form>
 
             {move || {

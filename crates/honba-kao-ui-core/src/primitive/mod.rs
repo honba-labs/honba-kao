@@ -16,5 +16,6 @@ pub mod placeholder;
 pub mod card;
 pub mod kpi;
 pub mod badge;
+pub mod segmented;
 
 // Icons are at the crate root level (icons/), re-exported via lib.rs

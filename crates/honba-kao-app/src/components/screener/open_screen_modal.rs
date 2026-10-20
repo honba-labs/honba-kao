@@ -7,6 +7,9 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::HfIconButton;
+use honba_kao_ui_core::icons::outline::x_close;
+
 use crate::stores::screener_store::{ScreenDefinition, ScreenerStore, builtin_screens_registry};
 
 /// The category tabs (`cat.id` + labels of the labs modal).
@@ -118,9 +121,14 @@ pub fn OpenScreenModal() -> impl IntoView {
                                 {move || store.screener_type.get().default_title()}
                             </span>
                         </div>
-                        <button class="hfui-panel__icon-button" title="Close menu (Esc)" on:click=close>
-                            "×"
-                        </button>
+                        <HfIconButton
+                            icon=x_close()
+                            size=14
+                            unstyled=true
+                            class="hfui-panel__icon-button"
+                            title="Close menu (Esc)"
+                            on_click=Callback::new(close)
+                        />
                     </div>
 
                     // Search.
@@ -138,9 +146,14 @@ pub fn OpenScreenModal() -> impl IntoView {
                             }
                         />
                         <Show when=move || !search.get().is_empty()>
-                            <button class="sc-screen-modal__search-clear" on:click=move |_| search.set(String::new())>
-                                "×"
-                            </button>
+                            <HfIconButton
+                                icon=x_close()
+                                size=14
+                                unstyled=true
+                                class="sc-screen-modal__search-clear"
+                                title="Clear search"
+                                on_click=Callback::new(move |_| search.set(String::new()))
+                            />
                         </Show>
                     </div>
 

@@ -7,10 +7,13 @@ use core::time::Duration;
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::icons::outline::x_close;
+use honba_kao_ui_core::{HfButton, HfIconButton, HfSegmentedControl};
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
+use super::order_ticket::side_segments;
 use crate::stores::book_store::TradingState;
-use crate::stores::order_draft_store::{OrderSide, OrderType, Product, TicketField, TimeInForce};
+use crate::stores::order_draft_store::{OrderType, Product, TicketField, TimeInForce};
 use crate::stores::workbench_store::WorkbenchStore;
 use crate::utils::currency;
 
@@ -75,9 +78,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                             {move || store.draft.ticket.get().symbol.clone()}
                             <span class="wb-order-modal__venue">"NSE EQ"</span>
                         </div>
-                        <button class="hfui-panel__icon-button" title="Close" on:click=close>
-                            "✕"
-                        </button>
+                        <HfIconButton
+                            icon=x_close()
+                            size=14
+                            unstyled=true
+                            class="hfui-panel__icon-button"
+                            title="Close"
+                            on_click=Callback::new(close)
+                        />
                     </div>
 
                     <div class="hfui-modal__body">
@@ -114,10 +122,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                         </Show>
 
                         // -- Side toggle ------------------------------------------
-                        <div class="wb-toggle-grid wb-toggle-grid--modal">
-                            <ModalSideButton store=store side=OrderSide::Buy />
-                            <ModalSideButton store=store side=OrderSide::Sell />
-                        </div>
+                        <HfSegmentedControl
+                            class="wb-toggle-grid wb-toggle-grid--modal"
+                            active_class="wb-side--on"
+                            aria_label="Order side"
+                            value=Signal::derive(move || store.draft.ticket.get().side)
+                            on_change=Callback::new(move |side| store.draft.set_ticket_field(TicketField::Side(side)))
+                            options=side_segments(|side| format!("⚡ {}", side.label()))
+                        />
 
                         // -- Product cards ------------------------------------------
                         <div class="wb-field">
@@ -334,9 +346,9 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     <span class="wb-order-modal__margin-value tnum">{currency(margin)}</span>
                                 </div>
                                 <div class="wb-order-modal__actions">
-                                    <button class="wb-btn wb-btn--chrome" on:click=close>
+                                    <HfButton unstyled=true class="wb-btn wb-btn--chrome" on_click=Callback::new(close)>
                                         "Cancel"
-                                    </button>
+                                    </HfButton>
                                     {move || {
                                         let ticket = store.draft.ticket.get();
                                         let halted = store.book.trading_state.get() == TradingState::Halted;
@@ -365,23 +377,6 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                 </div>
             </div>
         </Show>
-    }
-}
-
-#[component]
-fn ModalSideButton(store: WorkbenchStore, side: OrderSide) -> impl IntoView {
-    let selected = move || store.draft.ticket.get().side == side;
-    view! {
-        <button
-            class=move || {
-                let base = if side.is_buy() { "wb-side wb-side--buy" } else { "wb-side wb-side--sell" };
-                if selected() { format!("{base} wb-side--on") } else { base.to_string() }
-            }
-            on:click=move |_| store.draft.set_ticket_field(TicketField::Side(side))
-        >
-            "⚡ "
-            {side.label()}
-        </button>
     }
 }
 

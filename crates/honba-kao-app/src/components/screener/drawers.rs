@@ -12,6 +12,9 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::HfIconButton;
+use honba_kao_ui_core::icons::outline::x_close;
+
 use crate::data::indices::{IndexItem, indices_for_market};
 use crate::data::instruments::{Instrument, by_symbol};
 use crate::stores::screener_store::{DetailTab, ScreenerStore};
@@ -159,9 +162,14 @@ pub fn IndexDrawer(
                         }
                     />
                     <Show when=move || !query.get().is_empty()>
-                        <button class="sc-index-drawer__search-clear" on:click=move |_| query.set(String::new())>
-                            "×"
-                        </button>
+                        <HfIconButton
+                            icon=x_close()
+                            size=12
+                            unstyled=true
+                            class="sc-index-drawer__search-clear"
+                            title="Clear search"
+                            on_click=Callback::new(move |_| query.set(String::new()))
+                        />
                     </Show>
                 </div>
 

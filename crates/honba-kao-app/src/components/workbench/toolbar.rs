@@ -4,7 +4,7 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::dismiss_on_outside_click;
+use honba_kao_ui_core::{HfButton, dismiss_on_outside_click};
 use super::layouts::{LAYOUT_PRESETS, LayoutIcon, preset_for};
 use crate::stores::book_store::TradingState;
 use crate::stores::workbench_store::WorkbenchStore;
@@ -85,9 +85,14 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                     Some(status) => {
                         let text = status.text().to_string();
                         view! {
-                            <button class=status.as_class() title="Dismiss" on:click=move |_| store.book.dismiss_status()>
+                            <HfButton
+                                unstyled=true
+                                class=status.as_class()
+                                title="Dismiss"
+                                on_click=Callback::new(move |_| store.book.dismiss_status())
+                            >
                                 {text}
-                            </button>
+                            </HfButton>
                         }
                             .into_any()
                     }

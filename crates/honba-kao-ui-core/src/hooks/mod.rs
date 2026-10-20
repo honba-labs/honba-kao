@@ -10,12 +10,16 @@ use wasm_bindgen::JsCast;
 /// before the effect reruns and when the calling owner is cleaned up.
 ///
 /// ```rust
+/// use leptos::prelude::*;
 /// use honba_kao_ui_core::hooks::use_click_outside;
 ///
-/// let (show, set_show) = create_signal(false);
-/// let menu_ref = NodeRef::<leptos::html::Div>::new();
-///
-/// use_click_outside(menu_ref, move |_| set_show(false));
+/// #[component]
+/// fn Menu() -> impl IntoView {
+///     let show = RwSignal::new(true);
+///     let menu_ref = NodeRef::<leptos::html::Div>::new();
+///     use_click_outside(menu_ref, move || show.set(false));
+///     view! { <div node_ref=menu_ref>"Menu"</div> }
+/// }
 /// ```
 pub fn use_click_outside(
     node_ref: NodeRef<leptos::html::Div>,

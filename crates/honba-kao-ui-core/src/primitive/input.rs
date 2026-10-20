@@ -5,11 +5,18 @@ use leptos::prelude::*;
 /// HfInput — text input with focus states and validation styling.
 ///
 /// ```rust
-/// view! {
-///     <HfInput
-///         placeholder="Enter symbol..."
-///         bind:value=symbol
-///     />
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::HfInput;
+///
+/// #[component]
+/// fn SymbolInput() -> impl IntoView {
+///     let symbol = RwSignal::new(String::new());
+///     view! {
+///         <HfInput
+///             placeholder="Enter symbol..."
+///             on_input=Callback::new(move |ev| symbol.set(event_target_value(&ev)))
+///         />
+///     }
 /// }
 /// ```
 #[component]

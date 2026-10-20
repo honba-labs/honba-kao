@@ -9,6 +9,8 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 
+use honba_kao_ui_core::HfButton;
+
 use crate::components::auth::{AuthField, AuthShell};
 use crate::constants::auth as creds;
 use crate::contexts::use_auth;
@@ -74,17 +76,17 @@ pub fn LoginPage() -> impl IntoView {
                         })
                 }}
 
-                <button class="hfui-button green block" type="submit">
+                <HfButton unstyled=true class="hfui-button green block" button_type="submit">
                     "Sign in"
-                </button>
+                </HfButton>
             </form>
 
-            <button class="auth-demo" type="button" on:click=move |_| fill_demo()>
+            <HfButton unstyled=true class="auth-demo" on_click=Callback::new(move |_| fill_demo())>
                 <span class="auth-demo__label">"Use the demo account"</span>
                 <code class="auth-demo__creds">
                     {creds::DEMO_EMAIL}" / "{creds::DEMO_PASSWORD}
                 </code>
-            </button>
+            </HfButton>
 
             <div class="auth-card__links">
                 <A href=ROUTES::REGISTER>"Create an account"</A>

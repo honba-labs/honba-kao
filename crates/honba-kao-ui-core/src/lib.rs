@@ -39,3 +39,4 @@ pub use primitive::placeholder::*;
 pub use primitive::card::*;
 pub use primitive::kpi::*;
 pub use primitive::badge::*;
+pub use primitive::segmented::*;

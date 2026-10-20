@@ -4,6 +4,7 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::{HfSegment, HfSegmentedControl};
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
 use crate::stores::book_store::TradingState;
@@ -67,10 +68,14 @@ pub fn OrderTicketPanel() -> impl IntoView {
             </Show>
 
             // -- Buy / Sell -------------------------------------------------
-            <div class="wb-toggle-grid">
-                <SideButton store=store side=OrderSide::Buy />
-                <SideButton store=store side=OrderSide::Sell />
-            </div>
+            <HfSegmentedControl
+                class="wb-toggle-grid"
+                active_class="wb-side--on"
+                aria_label="Order side"
+                value=Signal::derive(move || store.draft.ticket.get().side)
+                on_change=Callback::new(move |side| store.draft.set_ticket_field(TicketField::Side(side)))
+                options=side_segments(|side| side.label().to_string())
+            />
 
             // -- Product ----------------------------------------------------
             <div class="wb-field">
@@ -224,27 +229,16 @@ fn TicketDepth() -> impl IntoView {
     }
 }
 
-#[component]
-fn SideButton(store: WorkbenchStore, side: OrderSide) -> impl IntoView {
-    let selected = move || store.draft.ticket.get().side == side;
-    let class = move || {
-        let base = if side.is_buy() {
-            "wb-side wb-side--buy"
-        } else {
-            "wb-side wb-side--sell"
-        };
-        if selected() {
-            format!("{base} wb-side--on")
-        } else {
-            base.to_string()
-        }
-    };
-
-    view! {
-        <button class=class on:click=move |_| store.draft.set_ticket_field(TicketField::Side(side))>
-            {side.label()}
-        </button>
-    }
+/// Buy / sell pills for the side toggle (shared with the order modal);
+/// `label` renders each side's caption.
+pub(super) fn side_segments(label: impl Fn(OrderSide) -> String) -> Vec<HfSegment<OrderSide>> {
+    [OrderSide::Buy, OrderSide::Sell]
+        .into_iter()
+        .map(|side| {
+            let class = if side.is_buy() { "wb-side wb-side--buy" } else { "wb-side wb-side--sell" };
+            HfSegment::new(side, label(side)).with_class(class)
+        })
+        .collect()
 }
 
 #[component]

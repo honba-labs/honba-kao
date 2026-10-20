@@ -22,6 +22,7 @@ use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 
 use honba_kao_ui_core::icons::outline::{self, SvgIcon};
+use honba_kao_ui_core::HfButton;
 use honba_kao_ui_core::hooks::use_click_outside;
 
 use crate::contexts::{use_auth, use_language};
@@ -288,9 +289,9 @@ fn RailMenuItem(
     on_click: Callback<()>,
 ) -> impl IntoView {
     view! {
-        <button role="menuitem" on:click=move |_| on_click.run(())>
+        <HfButton unstyled=true role="menuitem" on_click=Callback::new(move |_| on_click.run(()))>
             <SvgIcon path=glyph size=15 />
             {label}
-        </button>
+        </HfButton>
     }
 }

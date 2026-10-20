@@ -9,6 +9,9 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::icons::outline::x_close;
+use honba_kao_ui_core::{HfButton, HfIconButton};
+
 use crate::data::indices::{IndexItem, indices_for_market};
 use crate::stores::filter_engine::{AdvancedFilters, count_active_filters};
 use crate::stores::screener_store::ScreenerStore;
@@ -138,9 +141,14 @@ pub fn FiltersModal() -> impl IntoView {
                                 {move || format!("{} filters active", active_count.get())}
                             </span>
                         </div>
-                        <button class="hfui-panel__icon-button" title="Close" on:click=move |_| store.filter_modal.set(false)>
-                            "×"
-                        </button>
+                        <HfIconButton
+                            icon=x_close()
+                            size=14
+                            unstyled=true
+                            class="hfui-panel__icon-button"
+                            title="Close"
+                            on_click=Callback::new(move |_| store.filter_modal.set(false))
+                        />
                     </div>
 
                     <div class="hfui-modal__body sc-filters__body">
@@ -439,15 +447,19 @@ pub fn FiltersModal() -> impl IntoView {
                             {move || format!("{} filters active", active_count.get())}
                         </span>
                         <span class="sc-filters__actions">
-                            <button class="wb-btn" on:click=reset_all>
+                            <HfButton unstyled=true class="wb-btn" on_click=Callback::new(reset_all)>
                                 "Reset all"
-                            </button>
-                            <button class="wb-btn wb-btn--solid" on:click=apply>
+                            </HfButton>
+                            <HfButton unstyled=true class="wb-btn wb-btn--solid" on_click=Callback::new(apply)>
                                 "Apply filters"
-                            </button>
-                            <button class="wb-btn" on:click=move |_| store.filter_modal.set(false)>
+                            </HfButton>
+                            <HfButton
+                                unstyled=true
+                                class="wb-btn"
+                                on_click=Callback::new(move |_| store.filter_modal.set(false))
+                            >
                                 "Close"
-                            </button>
+                            </HfButton>
                         </span>
                     </div>
                 </div>

@@ -4,6 +4,8 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 
+use honba_kao_ui_core::HfButton;
+
 use crate::components::auth::{AuthField, AuthShell};
 use crate::constants::auth as creds;
 use crate::contexts::use_auth;
@@ -73,9 +75,9 @@ pub fn RegisterPage() -> impl IntoView {
                         })
                 }}
 
-                <button class="hfui-button green block" type="submit">
+                <HfButton unstyled=true class="hfui-button green block" button_type="submit">
                     "Create account"
-                </button>
+                </HfButton>
             </form>
 
             <p class="auth-card__note">

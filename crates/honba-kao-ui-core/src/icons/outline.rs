@@ -11,10 +11,12 @@ use leptos::prelude::*;
 /// Renders an outline icon given path data.
 ///
 /// ```rust
+/// use leptos::prelude::*;
 /// use honba_kao_ui_core::icons::outline::{chart, SvgIcon};
 ///
-/// view! {
-///     <SvgIcon path=chart() size=16 />
+/// #[component]
+/// fn ChartGlyph() -> impl IntoView {
+///     view! { <SvgIcon path=chart() size=16 /> }
 /// }
 /// ```
 #[component]
@@ -57,11 +59,12 @@ pub fn SvgIcon(
 /// HfIcon wrapper — convenience component around `SvgIcon`.
 ///
 /// ```rust
-/// use honba_kao_ui_core::primitive::icons::HfIcon;
-/// use honba_kao_ui_core::icons::outline::chart;
+/// use leptos::prelude::*;
+/// use honba_kao_ui_core::icons::outline::{chart, HfIcon};
 ///
-/// view! {
-///     <HfIcon icon=chart() size=16 />
+/// #[component]
+/// fn ChartGlyph() -> impl IntoView {
+///     view! { <HfIcon path=chart() size=16 /> }
 /// }
 /// ```
 #[component]
