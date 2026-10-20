@@ -13,7 +13,7 @@
 //! effect in P6 via the typed client); this module holds the pure fold from
 //! client outcome to [`BarsState`], which is what the vitest suite exercised.
 
-use honba_kao_client::wire::Bar as WireBar;
+use honba_kao_client::wire::{Bar as WireBar, BarsResponse};
 use honba_kao_client::ClientError;
 
 use crate::sim::chart_data::{preview_bars, to_chart_bars, ChartBar, PreviewBarsRequest};
@@ -42,7 +42,24 @@ pub enum BarsStatus {
     Error,
 }
 
-/// The chart's bar state (`BarsState`).
+/// The bar-fetch seam the chart surface needs (fe's `BenchmarkBarsClient` /
+/// the chart container's store access): `GET /bars/{id}` through the typed
+/// client. Narrowed like [`crate::sim::run::RunClient`] so mocks stay
+/// trivial; the real impl lives next to the store's other ApiClient impls.
+pub trait BarsSeam {
+    fn get_bars<'a>(
+        &'a self,
+        id: &'a str,
+        tf: Option<&'a str>,
+        from: Option<&'a str>,
+        to: Option<&'a str>,
+    ) -> crate::sim::run::ClientFut<'a, Result<BarsResponse, ClientError>>;
+}
+
+/// The chart's bar state (`BarsState`). Carries `Clone` so the reactive
+/// store can hold it; never fabricated — `source` labels where bars came
+/// from.
+#[derive(Clone, Debug)]
 pub struct BarsState {
     /// Lifecycle status.
     pub status: BarsStatus,

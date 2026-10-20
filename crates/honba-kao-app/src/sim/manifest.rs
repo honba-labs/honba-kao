@@ -57,6 +57,11 @@ pub fn strategy_manifest_value(graph: &StrategyGraphShape) -> Value {
             "aggregation": graph.driving_aggregation,
         },
         "warmup_bars": graph.warmup_bars,
+        // fe's `toManifest` passes `nodes`/`edges` through verbatim (algodesigner
+        // `manifest.ts`); the folded graph now carries them so the backend sees
+        // the same manifest shape both ports write.
+        "nodes": serde_json::to_value(&graph.nodes).unwrap_or_default(),
+        "edges": serde_json::to_value(&graph.edges).unwrap_or_default(),
     })
 }
 

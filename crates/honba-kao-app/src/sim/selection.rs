@@ -13,6 +13,8 @@
 //! library strategy named by the `?strategy=` slug, then the first saved
 //! strategy, then a built-in template.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 /// Where the selected strategy came from (`SelectionOrigin`).
@@ -55,14 +57,52 @@ impl SelectionOrigin {
     }
 }
 
+/// One strategy-graph node (fe `GraphNode`, algodesigner `nodes/types.ts`).
+///
+/// Carried from P6 onward: the chart bridge maps indicator nodes onto the
+/// chart's indicator registry (`sim/chart_series.rs`), so the shape now
+/// reads the same `nodes`/`edges` arrays fe's hand-off JSON writes. P7's
+/// replay evaluator consumes condition/logic nodes, and P8's studio port
+/// writes the same document without touching this struct.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct StrategyGraphNode {
+    /// Stable node id (`f`, `s`, …) — also the chart indicator instance key.
+    pub id: String,
+    /// Node family (fe `NodeType`): `universe | indicator | transform |
+    /// condition | logic | sizing | risk | order | schedule | benchmark`.
+    #[serde(rename = "type")]
+    pub node_type: String,
+    /// Optional presentation label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    /// Node parameters, keyed by the graph catalogue's spelling (`period`, …).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub params: BTreeMap<String, serde_json::Value>,
+    /// For indicator nodes: the graph catalogue kind (`sma`, `rsi`, …).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub indicator: Option<String>,
+}
+
+/// One strategy-graph edge (fe `GraphEdge`, field names already snake_case).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct StrategyGraphEdge {
+    pub id: String,
+    pub from_node: String,
+    pub from_port: String,
+    pub to_node: String,
+    pub to_port: String,
+}
+
 /// The minimal strategy graph shape the simulator needs before the strategy
 /// studio exists on kao (§6 risk row "strategy graph source absent").
 ///
 /// Field names match fe's `StrategyGraphShape` hand-off JSON so a future
-/// studio port writes the same document without touching this struct. fe's
-/// `nodes`/`edges`/`schema_version` are not carried yet — nothing consumes
-/// them until the studio lands (P8), and the verifier behind
-/// [`graph_is_runnable`]'s fe counterpart stays deferred with it.
+/// studio port writes the same document without touching this struct. The
+/// `nodes`/`edges` arrays are carried since P6 (chart indicator bridge);
+/// `schema_version` stays omitted — the sim's manifest pins
+/// [`crate::sim::manifest::STRATEGY_API_VERSION`] instead — and the
+/// verifier behind [`graph_is_runnable`]'s fe counterpart stays deferred
+/// with the studio port.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct StrategyGraphShape {
     /// Node name (presentation only today).
@@ -79,6 +119,12 @@ pub struct StrategyGraphShape {
     /// Bars required before the first decision (fe `warmup_bars`), echoed
     /// verbatim into the compile manifest.
     pub warmup_bars: u32,
+    /// Graph nodes (fe `nodes`), same JSON field names as the hand-off.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub nodes: Vec<StrategyGraphNode>,
+    /// Graph edges (fe `edges`), same JSON field names as the hand-off.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edges: Vec<StrategyGraphEdge>,
 }
 
 /// The handoff record fe's algodesigner stashes for the simulator.
@@ -97,12 +143,44 @@ pub fn graph_is_runnable(graph: Option<&StrategyGraphShape>) -> bool {
     graph.is_some()
 }
 
-/// The built-in template the simulator always falls back to: one tiny
-/// SMA-cross style graph (single driving timeframe, TCS/NSE so the default
-/// panel is immediately valid). `warmup_bars` mirrors fe's `sma_cross`
-/// template, the same template name fe's first `STRATEGY_TEMPLATES` entry
-/// carries; the node-level checks land with the studio port.
+/// The built-in template the simulator always falls back to: fe's first
+/// `STRATEGY_TEMPLATES` entry (`sma_cross`, algodesigner
+/// `strategy-templates.ts`) — single driving timeframe, TCS/NSE so the
+/// default panel is immediately valid, plus the same `nodes`/`edges` the
+/// template ships so the chart bridge has two SMA indicator nodes to draw.
+/// The node-level verifier checks land with the studio port.
 pub fn builtin_template() -> (StrategyGraphShape, &'static str) {
+    let node = |id: &str, node_type: &str, label: &str| StrategyGraphNode {
+        id: id.to_string(),
+        node_type: node_type.to_string(),
+        label: (!label.is_empty()).then(|| label.to_string()),
+        params: BTreeMap::new(),
+        indicator: None,
+    };
+    let mut fast = node("f", "indicator", "Fast SMA");
+    fast.params.insert("period".to_string(), 5.into());
+    fast.indicator = Some("sma".to_string());
+    let mut slow = node("s", "indicator", "Slow SMA");
+    slow.params.insert("period".to_string(), 20.into());
+    slow.indicator = Some("sma".to_string());
+    let mut cross = node("c", "condition", "Cross");
+    cross
+        .params
+        .insert("op".to_string(), "crosses_above".to_string().into());
+    let mut entry = node("o", "order", "Entry Long");
+    let mut params: BTreeMap<String, serde_json::Value> = BTreeMap::new();
+    params.insert("side".to_string(), "buy".to_string().into());
+    params.insert("quantity".to_string(), 1.into());
+    entry.params = params;
+    let edge = |id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str| {
+        StrategyGraphEdge {
+            id: id.to_string(),
+            from_node: from_node.to_string(),
+            from_port: from_port.to_string(),
+            to_node: to_node.to_string(),
+            to_port: to_port.to_string(),
+        }
+    };
     let graph = StrategyGraphShape {
         name: "SMA Cross".to_string(),
         universe_named: String::new(),
@@ -110,6 +188,14 @@ pub fn builtin_template() -> (StrategyGraphShape, &'static str) {
         driving_interval: 5,
         driving_aggregation: "minute".to_string(),
         warmup_bars: 2,
+        nodes: vec![node("n1", "universe", "Universe"), fast, slow, cross, entry],
+        edges: vec![
+            edge("e1", "n1", "bars", "f", "input"),
+            edge("e2", "n1", "bars", "s", "input"),
+            edge("e3", "f", "value", "c", "left"),
+            edge("e4", "s", "value", "c", "right"),
+            edge("e5", "c", "signal", "o", "signal"),
+        ],
     };
     (graph, "SMA Cross")
 }

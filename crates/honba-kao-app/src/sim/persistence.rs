@@ -16,8 +16,10 @@ use crate::sim::selection::SelectionOrigin;
 /// spelling).
 pub const SIMULATOR_STORAGE_KEY: &str = "honba.simulator.selection";
 
-/// A [`LayoutStorage`] implementation the tests can fake.
-pub trait LayoutStorage {
+/// A [`LayoutStorage`] implementation the tests can fake. `Send + Sync` so a
+/// cloned store handle can travel with DOM event closures (wasm-boundgen
+/// handlers are parked on any thread).
+pub trait LayoutStorage: Send + Sync {
     /// Reads one key.
     fn get_item(&self, key: &str) -> Option<String>;
     /// Writes one key.
@@ -181,17 +183,18 @@ mod tests {
     /// In-memory stand-in for `window.localStorage` (fe's test double).
     #[derive(Default)]
     struct FakeStorage {
-        items: std::cell::RefCell<std::collections::HashMap<String, String>>,
+        items: std::sync::Mutex<std::collections::HashMap<String, String>>,
     }
 
     impl LayoutStorage for FakeStorage {
         fn get_item(&self, key: &str) -> Option<String> {
-            self.items.borrow().get(key).cloned()
+            self.items.lock().expect("fake storage lock").get(key).cloned()
         }
 
         fn set_item(&self, key: &str, value: &str) {
             self.items
-                .borrow_mut()
+                .lock()
+                .expect("fake storage lock")
                 .insert(key.to_string(), value.to_string());
         }
     }
