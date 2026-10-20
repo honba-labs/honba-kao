@@ -335,8 +335,18 @@
 }
 
 .sc-tr {
+  /* Fixed row height: the virtualized body (ROW_HEIGHT_PX in
+     screener_table.rs) positions rows by this exact value. */
+  height: 39px;
   cursor: pointer;
   transition: background 0.1s ease;
+}
+
+/* Spacer rows standing in for the unmounted rows above / below the
+   virtualized window. */
+.sc-table tbody .sc-tr-spacer td {
+  padding: 0;
+  border: 0;
 }
 
 .sc-tr:hover {

@@ -264,3 +264,189 @@ pub fn use_trading_state() -> leptos::prelude::RwSignal<String> {
     let state = leptos::prelude::RwSignal::new("Active".to_string());
     state
 }
+/// The rendered slice `[start, end)` of a fixed-row-height virtual list.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct VirtualRange {
+    pub start: usize,
+    pub end: usize,
+}
+
+impl VirtualRange {
+    /// Rows intersecting `[scroll_top, scroll_top + viewport_height)` plus
+    /// `overscan` rows on either side, clamped to `[0, total)`.
+    ///
+    /// A scroll offset past the end of the list (possible for one frame
+    /// after the list shrinks, before the browser clamps `scrollTop`)
+    /// yields the tail of the list rather than an empty window.
+    pub fn compute(
+        scroll_top: f64,
+        viewport_height: f64,
+        row_height: f64,
+        total: usize,
+        overscan: usize,
+    ) -> Self {
+        if total == 0 || row_height <= 0.0 {
+            return Self::default();
+        }
+        let top = scroll_top.max(0.0);
+        let first = (top / row_height).floor() as usize;
+        let last = ((top + viewport_height.max(0.0)) / row_height).ceil() as usize;
+        let end = last.saturating_add(overscan).min(total);
+        let start = first
+            .saturating_sub(overscan)
+            .min(end.saturating_sub(last - first + overscan));
+        Self { start, end }
+    }
+}
+
+/// Viewport state of a virtualized list; see [`use_virtual_rows`].
+#[derive(Clone, Copy)]
+pub struct VirtualRows {
+    /// The rows to render.
+    pub range: Memo<VirtualRange>,
+    container: NodeRef<leptos::html::Div>,
+    scroll_top: RwSignal<f64>,
+    viewport_height: RwSignal<f64>,
+    total: Signal<usize>,
+    row_height: f64,
+}
+
+impl VirtualRows {
+    /// Re-read the container's scroll offset and height. Bind it to the
+    /// container's `on:scroll`.
+    pub fn sync(&self) {
+        let Some(element) = self.container.get_untracked() else {
+            return;
+        };
+        let top = f64::from(element.scroll_top());
+        let height = f64::from(element.client_height());
+        if self.scroll_top.get_untracked() != top {
+            self.scroll_top.set(top);
+        }
+        if self.viewport_height.get_untracked() != height {
+            self.viewport_height.set(height);
+        }
+    }
+
+    /// Height in px of the unrendered rows above the window.
+    pub fn space_before(&self) -> f64 {
+        self.range.get().start as f64 * self.row_height
+    }
+
+    /// Height in px of the unrendered rows below the window.
+    pub fn space_after(&self) -> f64 {
+        let end = self.range.get().end;
+        self.total.get().saturating_sub(end) as f64 * self.row_height
+    }
+}
+
+/// Viewport virtualization for a scroll container holding `total` rows of
+/// exactly `row_height` px each.
+///
+/// The caller binds [`VirtualRows::sync`] to the container's `on:scroll`
+/// (tied to the element's lifetime, so nothing leaks), renders only
+/// `range` and pads the skipped rows with [`VirtualRows::space_before`] /
+/// [`VirtualRows::space_after`] so the scrollbar reflects the full list.
+/// A `ResizeObserver` on the container keeps the viewport height current
+/// (window resizes, sibling layout changes) and is disconnected on cleanup;
+/// the offset is also re-read whenever `total` changes, since the browser
+/// clamps `scrollTop` when the list shrinks.
+pub fn use_virtual_rows(
+    container: NodeRef<leptos::html::Div>,
+    total: Signal<usize>,
+    row_height: f64,
+    overscan: usize,
+) -> VirtualRows {
+    // Until the container is measured, assume it is at most window-tall so
+    // the first paint already fills the viewport.
+    let initial_height = web_sys::window()
+        .and_then(|window| window.inner_height().ok())
+        .and_then(|height| height.as_f64())
+        .unwrap_or(0.0);
+    let scroll_top = RwSignal::new(0.0);
+    let viewport_height = RwSignal::new(initial_height);
+    let range = Memo::new(move |_| {
+        VirtualRange::compute(
+            scroll_top.get(),
+            viewport_height.get(),
+            row_height,
+            total.get(),
+            overscan,
+        )
+    });
+    let rows = VirtualRows {
+        range,
+        container,
+        scroll_top,
+        viewport_height,
+        total,
+        row_height,
+    };
+
+    Effect::new(move |_| {
+        total.track();
+        rows.sync();
+    });
+
+    Effect::new(move |_| {
+        let Some(element) = container.get() else {
+            return;
+        };
+        let callback =
+            wasm_bindgen::closure::Closure::<dyn FnMut()>::new(move || rows.sync());
+        let Ok(observer) = web_sys::ResizeObserver::new(callback.as_ref().unchecked_ref()) else {
+            return;
+        };
+        observer.observe(&element);
+        let stored = StoredValue::new_local((observer, callback));
+        on_cleanup(move || {
+            stored.with_value(|(observer, _)| observer.disconnect());
+            stored.dispose();
+        });
+    });
+
+    rows
+}
+
+#[cfg(test)]
+mod tests {
+    use super::VirtualRange;
+
+    fn range(scroll_top: f64, viewport: f64, total: usize) -> (usize, usize) {
+        let r = VirtualRange::compute(scroll_top, viewport, 40.0, total, 5);
+        (r.start, r.end)
+    }
+
+    #[test]
+    fn empty_list_renders_nothing() {
+        assert_eq!(range(0.0, 800.0, 0), (0, 0));
+    }
+
+    #[test]
+    fn short_list_renders_everything() {
+        assert_eq!(range(0.0, 800.0, 7), (0, 7));
+    }
+
+    #[test]
+    fn top_of_list_clamps_overscan() {
+        assert_eq!(range(0.0, 800.0, 250), (0, 25));
+    }
+
+    #[test]
+    fn middle_of_list_adds_overscan_both_sides() {
+        // Rows 50..=70 intersect [2010, 2810).
+        assert_eq!(range(2010.0, 800.0, 250), (45, 76));
+    }
+
+    #[test]
+    fn bottom_of_list_clamps_to_total() {
+        // Max scroll for 250 rows in an 800px viewport.
+        assert_eq!(range(9200.0, 800.0, 250), (225, 250));
+    }
+
+    #[test]
+    fn stale_offset_past_end_yields_tail() {
+        assert_eq!(range(9200.0, 800.0, 10), (0, 10));
+        assert_eq!(range(9200.0, 800.0, 100), (75, 100));
+    }
+}

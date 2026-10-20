@@ -7,10 +7,16 @@
 //! modal), the symbol header expands into the inline ticker search, rows
 //! select the symbol (preview drawer), and the pagination footer mirrors
 //! the reference (page x of y · rows 50/100/250/All).
+//!
+//! The body is virtualized: only the rows intersecting the scroll viewport
+//! (plus an overscan margin) are mounted, between two spacer rows sized to
+//! the skipped rows so the scrollbar still spans the whole page. Rows are
+//! keyed by instrument, so scrolling only mounts the rows entering the
+//! window and leaves the others (and their sparklines) untouched.
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{dismiss_on_outside_click, HfButton, HfIconButton};
+use honba_kao_ui_core::{dismiss_on_outside_click, use_virtual_rows, HfButton, HfIconButton};
 
 use crate::data::instruments::Instrument;
 use crate::stores::columns::{ColumnDef, ScreenerType};
@@ -562,6 +568,59 @@ fn logo_letters(symbol: &str) -> String {
     symbol.chars().take(2).collect::<String>().to_uppercase()
 }
 
+/// Fixed body row height in px; `.sc-tr` in `style/screener.css` pins rows
+/// to it (the symbol cell's two-line stack + padding + border).
+const ROW_HEIGHT_PX: f64 = 39.0;
+
+/// Rows mounted above and below the viewport.
+const OVERSCAN_ROWS: usize = 6;
+
+fn open_in_workbench(symbol: &str) {
+    let url = format!("/workbench?symbol={}", symbol.to_lowercase());
+    if let Some(window) = web_sys::window() {
+        let _ = window.open_with_url_and_target(&url, "_blank");
+    }
+}
+
+/// One body row. The instrument is immutable static data and the row is
+/// keyed by it, so its cells (sparkline / range-bar SVG included) are built
+/// once per mount and rebuilt only when the visible column set changes;
+/// selection only toggles the row class.
+#[component]
+fn ScreenerRow(
+    inst: &'static Instrument,
+    columns: Memo<Vec<ColumnDef>>,
+    store: ScreenerStore,
+) -> impl IntoView {
+    let selected = move || store.active_symbol.with(|active| *active == inst.symbol);
+    let cells = move || {
+        columns
+            .get()
+            .into_iter()
+            .map(|col| {
+                let id = col.id;
+                let class = if id == "symbol" {
+                    "sc-td sc-td--symbol".to_string()
+                } else {
+                    format!("sc-td sc-td--{}", col.align.as_class())
+                };
+                view! { <td class=class>{cell(id, inst, store)}</td> }
+            })
+            .collect_view()
+    };
+    view! {
+        <tr
+            class=move || if selected() { "sc-tr sc-tr--selected" } else { "sc-tr" }
+            title="Click to preview · double-click to open in the Workbench"
+            on:click=move |_| store.set_symbol(&inst.symbol)
+            on:dblclick=move |_| open_in_workbench(&inst.symbol)
+        >
+            {cells}
+            <td class="sc-td sc-td--pad"></td>
+        </tr>
+    }
+}
+
 #[component]
 pub fn ScreenerTable() -> impl IntoView {
     let store = ScreenerStore::take();
@@ -607,18 +666,23 @@ pub fn ScreenerTable() -> impl IntoView {
         search_query.set(String::new());
     };
 
-    let row_click = move |symbol: &str| {
-        store.set_symbol(symbol);
+    let wrap = NodeRef::<leptos::html::Div>::new();
+    let row_count = Signal::derive(move || page_rows.with(Vec::len));
+    let virtual_rows = use_virtual_rows(wrap, row_count, ROW_HEIGHT_PX, OVERSCAN_ROWS);
+    let window_rows = move || {
+        let range = virtual_rows.range.get();
+        page_rows.with(|rows| {
+            let end = range.end.min(rows.len());
+            rows[range.start.min(end)..end].to_vec()
+        })
     };
-    let row_double_click = move |symbol: String| {
-        let url = format!("/workbench?symbol={}", symbol.to_lowercase());
-        if let Some(window) = web_sys::window() {
-            let _ = window.open_with_url_and_target(&url, "_blank");
-        }
-    };
+    // Rows are keyed by the instrument's static address: unique per
+    // instrument and stable across sorts, filters and scrolls.
+    let row_key = |inst: &&'static Instrument| std::ptr::from_ref::<Instrument>(*inst) as usize;
+    let spacer_colspan = move || (visible_columns.get().len() + 1) as i32;
 
     view! {
-        <div class="sc-table-wrap">
+        <div class="sc-table-wrap" node_ref=wrap on:scroll=move |_| virtual_rows.sync()>
             <table class="sc-table">
                 <thead>
                     <tr>
@@ -714,44 +778,25 @@ pub fn ScreenerTable() -> impl IntoView {
                             </td>
                         </tr>
                     </Show>
-                    {move || {
-                        page_rows.get().into_iter().map(|inst| {
-                            let symbol = inst.symbol.clone();
-                            let symbol_for_dbl = inst.symbol.clone();
-                            let symbol_for_store = inst.symbol.clone();
-                            let selected = move || store.active_symbol.get() == symbol;
-                            let _ = logo_letters(&inst.symbol);
-                            let cells = visible_columns.get().into_iter().map(|col| {
-                                let id = col.id;
-                                let class = if id == "symbol" {
-                                    "sc-td sc-td--symbol".to_string()
-                                } else {
-                                    format!("sc-td sc-td--{}", col.align.as_class())
-                                };
-                                let content = cell(id, inst, store);
-                                view! {
-                                    <td class=class>{content}</td>
-                                }
-                            }).collect_view();
-                            view! {
-                                <tr
-                                    class=move || {
-                                        if selected() {
-                                            "sc-tr sc-tr--selected"
-                                        } else {
-                                            "sc-tr"
-                                        }
-                                    }
-                                    title="Click to preview · double-click to open in the Workbench"
-                                    on:click=move |_| row_click(&symbol_for_store)
-                                    on:dblclick=move |_| row_double_click(symbol_for_dbl.clone())
-                                >
-                                    {cells}
-                                    <td class="sc-td sc-td--pad"></td>
-                                </tr>
-                            }
-                        }).collect_view()
-                    }}
+                    <tr class="sc-tr-spacer" aria-hidden="true">
+                        <td
+                            colspan=spacer_colspan
+                            style=move || format!("height: {}px", virtual_rows.space_before())
+                        ></td>
+                    </tr>
+                    <For
+                        each=window_rows
+                        key=row_key
+                        children=move |inst| {
+                            view! { <ScreenerRow inst=inst columns=visible_columns store=store /> }
+                        }
+                    />
+                    <tr class="sc-tr-spacer" aria-hidden="true">
+                        <td
+                            colspan=spacer_colspan
+                            style=move || format!("height: {}px", virtual_rows.space_after())
+                        ></td>
+                    </tr>
                 </tbody>
             </table>
 
