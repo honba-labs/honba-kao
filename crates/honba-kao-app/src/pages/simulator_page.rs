@@ -39,10 +39,10 @@ use crate::sim::run::initial_run_state;
 use crate::sim::run::{RunAbort, SimRunStatus};
 use crate::sim::selection::universe_string;
 #[cfg(target_arch = "wasm32")]
-use crate::stores::simulator::utc_today;
+use crate::stores::controls_store::utc_today;
 #[cfg(target_arch = "wasm32")]
-use crate::stores::simulator::{BrowserClock, run_options};
-use crate::stores::simulator::{SimTab, SimulatorStore};
+use crate::stores::run_store::{BrowserClock, run_options};
+use crate::stores::simulator_store::{SimTab, SimulatorStore};
 
 /// The debug fixture's completed run payload (the client crate's
 /// `backtest_response_completed.json` shapes, embedded verbatim — no
@@ -119,9 +119,12 @@ fn load_demo_run(store: &SimulatorStore) {
     let trades: TradesResponse = serde_json::from_str(DEMO_TRADES).expect("demo journal parses");
 
     // A demo run must not resurrect over an in-flight execute: bump the
-    // generation exactly like `reset_run` does, so any late poll/journal
+    // generation exactly like `RunStore::reset` does, so any late poll/journal
     // fold of a previous attempt is rejected by the same guard.
-    store.run_generation.update(|generation| *generation += 1);
+    store
+        .run
+        .run_generation
+        .update(|generation| *generation += 1);
     let run_id = response.run_id.clone();
 
     let mut run_state: SimRunState = initial_run_state();
@@ -132,9 +135,9 @@ fn load_demo_run(store: &SimulatorStore) {
         "Demo: recorded run replayed (debug fixture)".to_string(),
         format!("Run {run_id} → completed"),
     ];
-    store.run.set(run_state);
+    store.run.state.set(run_state);
 
-    store.journal.set(JournalState {
+    store.run.journal.set(JournalState {
         status: JournalStatus::Ready,
         run_id: Some(run_id),
         trades: trades.trades,
@@ -156,7 +159,7 @@ pub fn SimulatorPage() -> impl IntoView {
     #[cfg(not(target_arch = "wasm32"))]
     let today = crate::sim::controls::Today::new(1970, 1, 1);
     let store = SimulatorStore::new(today, Some(Arc::new(LocalStorage)));
-    store.hydrate();
+    store.controls.hydrate();
 
     // -- Derived reads the components consume --------------------------------
     let analytics = store.analytics_bundle;
@@ -166,12 +169,12 @@ pub fn SimulatorPage() -> impl IntoView {
         analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.total_return))
     });
     let rows = Memo::new(move |_| analytics.with(|bundle| bundle.rows.clone()));
-    let export_name = Memo::new(move |_| store.strategy_name.with(|name| name.clone()));
+    let export_name = Memo::new(move |_| store.controls.strategy_name.with(|name| name.clone()));
 
     // -- Equity card inputs (P6) -------------------------------------------
-    let run_generation = store.run_generation;
-    let controls = store.controls;
-    let strategy = store.strategy;
+    let run_generation = store.run.run_generation;
+    let controls = store.controls.panel;
+    let strategy = store.controls.strategy;
     let equity_series = Memo::new(move |_| analytics.with(|bundle| bundle.equity_series.clone()));
     let run_window = Memo::new(move |_| analytics.with(|bundle| bundle.window.clone()));
     let benchmark_label = Memo::new(move |_| controls.with(|controls| controls.benchmark.clone()));
@@ -179,7 +182,7 @@ pub fn SimulatorPage() -> impl IntoView {
     // The chart's bar window rides the plan (the panel's resolved range), not
     // the run: fe's chart is useful before anything was simulated.
     let bars_window = Memo::new(move |_| {
-        store.plan.with(|plan| {
+        store.controls.plan.with(|plan| {
             Some(honba_api_wasm::analytics::RunWindow {
                 start: plan.range.0.clone(),
                 end: plan.range.1.clone(),
@@ -190,7 +193,7 @@ pub fn SimulatorPage() -> impl IntoView {
         let graph = strategy.get();
         controls.with(|controls| universe_string(&graph, controls))
     });
-    let chart_run = store.run;
+    let chart_run = store.run.state;
     let chart_status = Memo::new(move |_| {
         chart_run.with(|state| {
             if state.status == SimRunStatus::Running {
@@ -210,12 +213,12 @@ pub fn SimulatorPage() -> impl IntoView {
     // the instrument, the timeframe and the execution controls. Every
     // driver loop dies on the bump, so a re-init never leaves a live timer
     // ticking a retired controller.
-    let engine_bars = store.engine_bars;
-    let replay_visible_signal = store.replay_visible;
-    let init_bars = store.engine_bars;
+    let engine_bars = store.replay.engine_bars;
+    let replay_visible_signal = store.replay.visible;
+    let init_bars = store.replay.engine_bars;
     let init_instrument = instrument_id;
-    let init_controls = store.controls;
-    let init_strategy = store.strategy;
+    let init_controls = store.controls.panel;
+    let init_strategy = store.controls.strategy;
     let init_store = store.clone();
     Effect::new(move |_| {
         let bars = init_bars.get();
@@ -235,7 +238,7 @@ pub fn SimulatorPage() -> impl IntoView {
     // The driver loop holds no owner handle; retiring it on unmount keeps a
     // background frame loop from outliving the page (fe cleared its
     // interval timer in the same position).
-    on_cleanup(move || store.replay_driver.update(|token| *token += 1));
+    on_cleanup(move || store.replay.driver.update(|token| *token += 1));
 
     #[cfg(target_arch = "wasm32")]
     let bars_seam: Option<crate::components::simulator::equity_card::BarsSeamRef> =
@@ -245,7 +248,7 @@ pub fn SimulatorPage() -> impl IntoView {
 
     // The validation slice off the run response; nothing is inferred when a
     // payload carried no block.
-    let run = store.run;
+    let run = store.run.state;
     let validation = Memo::new(move |_| {
         run.with(|state| {
             state
@@ -267,14 +270,14 @@ pub fn SimulatorPage() -> impl IntoView {
     });
 
     // -- Toolbar readouts ------------------------------------------------
-    let name = store.strategy_name;
-    let controls = store.controls;
+    let name = store.controls.strategy_name;
+    let controls = store.controls.panel;
     let status_line = Memo::new(move |_| run.with(|state| state.status.as_str().to_string()));
     let running = Memo::new(move |_| run.with(|state| state.status == SimRunStatus::Running));
     let run_id_line =
         Memo::new(move |_| run.with(|state| state.run_id.clone().unwrap_or_default()));
     let error_line = Memo::new(move |_| run.with(|state| state.error.clone().unwrap_or_default()));
-    let last_plan = store.last_plan;
+    let last_plan = store.run.last_plan;
     let plan_window = Memo::new(move |_| {
         last_plan.with(|plan| {
             plan.as_ref()
@@ -372,7 +375,7 @@ pub fn SimulatorPage() -> impl IntoView {
                         type="button"
                         class="sim-toolbar__btn sim-toolbar__btn--ghost"
                         title="Clear the run and journal"
-                        on:click=move |_| reset_store.reset_run()
+                        on:click=move |_| reset_store.run.reset()
                     >
                         "Clear"
                     </button>
@@ -523,7 +526,7 @@ pub fn SimulatorPage() -> impl IntoView {
 /// this tab reports the absence rather than inventing a request.
 #[component]
 fn PayloadPreview(
-    /// `store.last_plan` — the submitted plan, or `None` before any run.
+    /// `store.run.last_plan` — the submitted plan, or `None` before any run.
     last_plan: RwSignal<Option<crate::sim::controls::SimulationRequestPlan>>,
 ) -> impl IntoView {
     view! {

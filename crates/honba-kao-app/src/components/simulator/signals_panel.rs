@@ -19,7 +19,7 @@
 
 use leptos::prelude::*;
 
-use crate::stores::simulator::SimulatorStore;
+use crate::stores::simulator_store::SimulatorStore;
 
 #[component]
 pub fn SignalsPanel(
@@ -28,8 +28,8 @@ pub fn SignalsPanel(
 ) -> impl IntoView {
     let memo_store = store.clone();
     let engine_state = Memo::new(move |_| {
-        memo_store.replay_generation.track();
-        memo_store.replay_state()
+        memo_store.replay.generation.track();
+        memo_store.replay.state()
     });
 
     let confluence = Memo::new(move |_| engine_state.get().last_confluence);

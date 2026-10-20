@@ -21,7 +21,7 @@ use honba_api_wasm::analytics::{MetricKind, format_metric_value};
 use leptos::prelude::*;
 
 use crate::components::simulator::replay_controls::{money_signed, pnl_token};
-use crate::stores::simulator::SimulatorStore;
+use crate::stores::simulator_store::SimulatorStore;
 
 #[component]
 pub fn PortfolioPanel(
@@ -30,8 +30,8 @@ pub fn PortfolioPanel(
 ) -> impl IntoView {
     let memo_store = store.clone();
     let engine_state = Memo::new(move |_| {
-        memo_store.replay_generation.track();
-        memo_store.replay_state()
+        memo_store.replay.generation.track();
+        memo_store.replay.state()
     });
 
     view! {

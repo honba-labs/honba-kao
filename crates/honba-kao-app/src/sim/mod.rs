@@ -34,7 +34,7 @@
 //!   `indicators.rs` series calculator, `evaluator.rs` condition and
 //!   confluence evaluation, `controller.rs` tick/execution state (fe
 //!   `core/simulator/engine/*`, portfolio adapter out of port). The store
-//!   slice wired the controller into `stores/simulator.rs` (generation-bump
+//!   slice wired the controller into `stores/replay_store.rs` (generation-bump
 //!   reactivity, token-guarded frame driver, chart dataset handoff through
 //!   a callback prop) and the page grew the `signals`/`portfolio` dock
 //!   tabs plus the replay toolbar (`replay_controls.rs`). Still pending:
@@ -43,8 +43,10 @@
 //!   panes) are the parallel integration's territory.
 //!
 //! Presentation (port phase P5, not purged kernels — these may hold signals):
-//! - `stores/simulator.rs` — the reactive store, dock tab strip, real
-//!   `ApiClient` seams and execute wiring (fe `store/simulator-store.ts`);
+//! - `stores/simulator_store.rs` — the reactive store (over the
+//!   `controls_store`, `run_store` and `replay_store` slices), dock tab
+//!   strip and execute wiring; `run_store.rs` holds the real `ApiClient`
+//!   seams (fe `store/simulator-store.ts`);
 //! - `pages/simulator_page.rs` — run toolbar, chart arena (P6/P7: the
 //!   replay transport + `signals | portfolio` dock tabs) with the full
 //!   `overview | journal | signals | portfolio | heatmap | validation |

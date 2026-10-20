@@ -21,7 +21,7 @@
 //! Reactivity: the component owns no controller — it reads a memo keyed on
 //! the store's replay generation and calls the store's transport methods;
 //! the driver loop, token guards and visible-bar emission all live in the
-//! store (see `stores/simulator.rs`).
+//! store (see `stores/replay_store.rs`).
 //!
 //! Progress percentage: fe computed `(index / (total - 1)) * 100`, which
 //! renders `NaN%` on a one-bar dataset; here a single bar reads `0%`
@@ -34,7 +34,7 @@ use crate::sim::engine::Indication;
 use crate::sim::engine::ReplayStatus;
 use crate::sim::engine::controller::SimulationEngineState;
 use crate::sim::engine::evaluator::{ConfluenceSnapshot, SignalEvaluation};
-use crate::stores::simulator::SimulatorStore;
+use crate::stores::simulator_store::SimulatorStore;
 
 /// The fe toolbar's speed pill set (`const SPEEDS`, verbatim).
 const SPEEDS: [f64; 5] = [1.0, 5.0, 10.0, 25.0, 50.0];
@@ -83,8 +83,8 @@ pub fn ReplayControls(
 ) -> impl IntoView {
     let memo_store = store.clone();
     let engine_state = Memo::new(move |_| {
-        memo_store.replay_generation.track();
-        memo_store.replay_state()
+        memo_store.replay.generation.track();
+        memo_store.replay.state()
     });
 
     let status_line = Memo::new(move |_| engine_state.get().status);
@@ -112,22 +112,22 @@ pub fn ReplayControls(
     let transport_store = store.clone();
     let on_play_pause = move |_| {
         if status_line.get() == ReplayStatus::Playing {
-            transport_store.replay_pause();
+            transport_store.replay.pause();
         } else {
-            transport_store.replay_play();
+            transport_store.replay.play();
         }
     };
     let on_step = {
         let store = store.clone();
-        move |_| store.replay_step()
+        move |_| store.replay.step()
     };
     let on_reset = {
         let store = store.clone();
-        move |_| store.replay_reset()
+        move |_| store.replay.reset()
     };
     let on_instant = {
         let store = store.clone();
-        move |_| store.replay_instant()
+        move |_| store.replay.instant()
     };
     let button_label = Memo::new(move |_| match engine_state.get().status {
         ReplayStatus::Playing => "Pause".to_string(),
@@ -146,7 +146,7 @@ pub fn ReplayControls(
             return;
         };
         if let Ok(value) = input.value().parse::<usize>() {
-            scrub_store.replay_jump(value);
+            scrub_store.replay.jump(value);
         }
     };
 
@@ -209,7 +209,7 @@ pub fn ReplayControls(
                                             "sim-replay__btn".to_string()
                                         }
                                     }
-                                    on:click=move |_| store.replay_set_speed(value)
+                                    on:click=move |_| store.replay.set_speed(value)
                                 >
                                     {format!("{value}x")}
                                 </button>
