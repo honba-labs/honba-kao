@@ -25,12 +25,41 @@
 //! - `log.rs` (P4) — run-event fold (fe `events.ts`);
 //! - `manifest.rs` (P4) — graph → compile manifest + compile seam
 //!   (fe algodesigner `manifest.ts`/`compile.ts`, the run-facing slice).
+//! - `chart_series.rs` (P6) — graph → chart indicator specs (fe
+//!   `chart-series.ts`);
+//! - `catalogue.rs` (P6) — indicator node catalogue (fe `catalogue.ts`);
+//! - `engine/` (P7) — replay engine: `mod.rs` config + status machine,
+//!   `indicators.rs` series calculator, `evaluator.rs` condition and
+//!   confluence evaluation, `controller.rs` tick/execution state (fe
+//!   `core/simulator/engine/*`, portfolio adapter out of port). The store
+//!   slice wired the controller into `stores/simulator.rs` (generation-bump
+//!   reactivity, token-guarded frame driver, chart dataset handoff through
+//!   a callback prop) and the page grew the `signals`/`portfolio` dock
+//!   tabs plus the replay toolbar (`replay_controls.rs`). Still pending:
+//!   volume pane, indicator overlays and trade markers — the chart-crate
+//!   bridge routes (`setMarkers`, engine-tier `addIndicator`, `SeriesOptions`
+//!   panes) are the parallel integration's territory.
+//!
+//! Presentation (port phase P5, not purged kernels — these may hold signals):
+//! - `stores/simulator.rs` — the reactive store, dock tab strip, real
+//!   `ApiClient` seams and execute wiring (fe `store/simulator-store.ts`);
+//! - `pages/simulator_page.rs` — run toolbar, chart arena (P6/P7: the
+//!   replay transport + `signals | portfolio` dock tabs) with the full
+//!   `overview | journal | signals | portfolio | heatmap | validation |
+//!   logs | payload` strip (fe `SimulatorView` results surface);
+//! - `components/simulator/*` — metrics ribbon, journal table + CSV,
+//!   monthly heatmap, validation badges, run-log/SSE drawer, equity card
+//!   (P6: `equity_card`, realised curve + labelled benchmark overlay)
+//!   (fe `features/simulator/components/*`, phase-8 shapes).
 
 pub mod analytics;
 pub mod bars;
+pub mod catalogue;
 pub mod chart_data;
+pub mod chart_series;
 pub mod controls;
 pub mod defaults;
+pub mod engine;
 pub mod journal;
 pub mod log;
 pub mod manifest;

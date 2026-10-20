@@ -18,7 +18,8 @@ tracing.workspace = true
 tracing-wasm.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+honba-indicators.workspace = true
 honba-kao-client.workspace = true
 honba-kao-ui-core = { path = "../honba-kao-ui-core" }
 openalgo-charts    = { package = "openalgo-charts-rs", path = "../openalgo-charts-rs" }
-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "MouseEvent", "Storage", "MediaQueryList", "Event", "EventTarget", "CustomEvent"] }
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "MouseEvent", "Storage", "MediaQueryList", "Event", "EventTarget", "CustomEvent", "Blob", "BlobPropertyBag", "Url"] }
