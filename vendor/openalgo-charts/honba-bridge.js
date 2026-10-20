@@ -11,11 +11,17 @@
 import { createWidget, injectWidgetStyles, WIDGET_COMPONENT_CSS, WIDGET_DIALOGS, registerWidgetDialog, registerWidgetDialogs, themeMode, openMenu, mountIndicatorPicker as mountBuiltinIndicatorPicker } from './openalgo-charts.widget.mjs';
 import { createChart, BuySellButtons, darkTheme, lightTheme, intervalParts, TickBarAggregator, getChartType, registeredSeriesTransforms, registerInterval, isKnownInterval } from './openalgo-charts.mjs';
 import './openalgo-charts.draw.mjs';
-import { DrawingController, InstrumentDrawings, instrumentDrawingsKey, registerBuiltinDrawingTools, webStorageDrawingStore } from './openalgo-charts.draw.mjs';
+import { DrawingController, InstrumentDrawings, instrumentDrawingsKey, registerBuiltinDrawingTools, webStorageDrawingStore, chromeIconSvg } from './openalgo-charts.draw.mjs';
+/* Transform tier: Heikin Ashi, Renko, range bars, line break, point & figure
+   and Kagi. Without it the native "Chart type" menu lists only the core
+   renderers. Importing registers them as a side effect; the explicit call
+   below guards against the side effect being tree-shaken. */
+import { registerTransformChartTypes } from './openalgo-charts.transform.mjs';
 import { BUILTIN_INDICATORS } from './openalgo-charts.indicators.mjs';
 
-/* Register drawing tools once (idempotent). */
+/* Register drawing tools and transform chart types once (both idempotent). */
 registerBuiltinDrawingTools();
+registerTransformChartTypes();
 
 /* Inject widget CSS (topbar, rail, dialogs, toasts, etc.). */
 if (typeof document !== 'undefined') {
@@ -881,6 +887,73 @@ function parseCustomInterval(text) {
 }
 
 /**
+ * Icon-only Go to / Objects / Alerts in the native top bar. The library builds
+ * these as text-only buttons and has no compact option, so the label text is
+ * swapped for the library's own chrome glyph; the aria-label (the accessible
+ * name) is kept. Objects and Alerts get a title as their hover label; Go to
+ * already has the library's own tooltip (which strips `title`), so a title
+ * there would show a second, native tooltip on top of it.
+ */
+function iconizeTopbarButtons(widget) {
+    const topbar = widget.root.querySelector('.oac-topbar');
+    if (!topbar) return;
+    for (const [selector, icon, hasLibraryTip] of [['.oac-topbar__goto', 'calendar', true], ['.oac-topbar__objects', 'panels', false], ['.oac-topbar__alerts', 'bell', false]]) {
+        const button = topbar.querySelector(selector);
+        if (!button) continue;
+        const label = button.getAttribute('aria-label') || button.textContent.trim();
+        const glyph = widget.root.ownerDocument.createElement('span');
+        glyph.className = 'oac-glyph oac-glyph--chrome';
+        glyph.setAttribute('aria-hidden', 'true');
+        glyph.innerHTML = chromeIconSvg(icon);
+        button.replaceChildren(glyph);
+        button.classList.add('oac-btn--icon');
+        if (label) {
+            button.setAttribute('aria-label', label);
+            if (!hasLibraryTip && !button.title) button.title = label;
+        }
+    }
+}
+
+/**
+ * A drawer for the rail's secondary controls (magnet, keep-armed, lock, hide,
+ * delete-all, undo/redo: the library's `.oac-rail__ctl` block). A small
+ * toggle goes in above the block; CSS shows the toggle and folds the block
+ * away only when the chart host is short (same container query as the
+ * short-pane rail fix in workbench.css), so on roomy panes the rail is the
+ * library's own. Opening the drawer unfolds the block in place and scrolls
+ * it into view; the drawing-tool groups above stay where they are.
+ */
+function mountRailDrawer(widget) {
+    const rail = widget.root.querySelector('.oac-rail');
+    if (!rail || !rail.querySelector('.oac-rail__ctl')) return;
+    const doc = widget.root.ownerDocument;
+    const toggle = doc.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'oac-rail__btn honba-rail-drawer';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'More drawing controls');
+    toggle.title = 'More drawing controls';
+    toggle.innerHTML = chromeIconSvg('more');
+    toggle.addEventListener('click', () => {
+        const open = rail.classList.toggle('honba-rail--drawer-open');
+        toggle.setAttribute('aria-expanded', String(open));
+        const ctl = rail.querySelector('.oac-rail__ctl');
+        if (open && ctl) ctl.scrollIntoView({ block: 'nearest' });
+    });
+    /* The library rebuilds the rail's contents wholesale (`restorePrefs`, e.g.
+       on loading a saved layout): that drops the toggle and builds a new
+       `.oac-rail__ctl`, which the short-pane CSS would then keep hidden with
+       no way to open it. Put the toggle back in front of the current block
+       whenever the rail's children change. */
+    const place = () => {
+        const ctl = rail.querySelector('.oac-rail__ctl');
+        if (ctl && toggle.nextElementSibling !== ctl) ctl.parentNode.insertBefore(toggle, ctl);
+    };
+    place();
+    new MutationObserver(place).observe(rail, { childList: true });
+}
+
+/**
  * Replace the native top bar's flat interval pills with four grouped menus
  * (15m / 1H / 1D / 1W), each listing its siblings plus a "Custom…" entry.
  * Everything else in the native top bar stays as the library renders it.
@@ -936,7 +1009,7 @@ function mountIntervalGroups(widget, alive) {
         const commit = () => {
             const code = parseCustomInterval(input.value);
             if (!code) {
-                error.textContent = 'Use a number and a unit: s, m, h, d, w or M (months)';
+                error.textContent = 'Use a number and a unit: s, m, h, d, w or M (months), up to 2 years';
                 error.hidden = false;
                 input.focus();
                 return;
@@ -1095,6 +1168,10 @@ async function mount(element, options = {}) {
     } catch (error) {
         console.warn('honbaCharts: interval menus unavailable', error);
     }
+
+    /* Icon-only Go to / Objects / Alerts; secondary rail controls in a drawer. */
+    try { iconizeTopbarButtons(widget); } catch (error) { console.warn('honbaCharts: top bar icons unavailable', error); }
+    try { mountRailDrawer(widget); } catch (error) { console.warn('honbaCharts: rail drawer unavailable', error); }
 
     try {
         widget.on('symbol', publishSpec);

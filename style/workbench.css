@@ -1682,10 +1682,43 @@ div.wb-menu__custom-row input {
   container-name: wb-chart-host;
 }
 
+/* Rail drawer (bridge mountRailDrawer): the toggle only exists for short
+   panes; on roomy panes the rail is exactly the library's. */
+.wb-pane__chart-host .oac-widget .oac-rail .honba-rail-drawer {
+  display: none;
+}
+
 @container wb-chart-host (max-height: 880px) {
   /* Extra scope so this beats the widget's runtime-injected stylesheet. */
   .wb-pane__chart-host .oac-widget .oac-rail .oac-rail__ctl {
     position: static;
+  }
+
+  /* Short pane: the secondary controls fold into a drawer behind a toggle,
+     so the drawing-tool groups keep the rail's height. */
+  /* Pinned to the rail's bottom edge so it stays reachable when the tool
+     groups themselves overflow the rail (it scrolls). */
+  .wb-pane__chart-host .oac-widget .oac-rail .honba-rail-drawer {
+    display: grid;
+    place-items: center;
+    margin-top: auto;
+    flex: none;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: inherit;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail.honba-rail--drawer-open .honba-rail-drawer {
+    position: static;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail:not(.honba-rail--drawer-open) .oac-rail__ctl {
+    display: none;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail.honba-rail--drawer-open .honba-rail-drawer {
+    color: var(--oac-accent, currentColor);
   }
 }
 
@@ -1744,4 +1777,16 @@ div.wb-menu__custom-row input {
 .wb-pane__chart-host .oac-widget .honba-tf-custom__error {
   margin: 6px 0 0;
   color: var(--oac-danger);
+}
+
+/* Account menu over the charts. `.nav-rail` is `position: sticky`, which
+   always makes a stacking context; with `z-index: auto` that context paints at
+   level 0 in DOM order, so everything in <main> after it (the chart hosts,
+   whose canvases sit at z-index 1) covered the rail's account popover, whose
+   own `z-index: 80` only counts inside the rail. Lift the whole rail above
+   the page content, below the sticky header (40).
+   (Belongs beside `.nav-rail` in app.css; kept here because app.css has
+   other in-progress edits.) */
+.nav-rail {
+  z-index: 30;
 }
