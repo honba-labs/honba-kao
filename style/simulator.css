@@ -1,0 +1,1088 @@
+/* ------------------------------------------------------------------ */
+/*  honba-kao — Simulator results surface (BEM `sim-*`).               */
+/*                                                                     */
+/*  Ported from honba-fe's phase-8 simulator components. Every tone    */
+/*  resolves through the themes.css variables — no hard-coded colors,  */
+/*  so the page follows the active skin.                               */
+/* ------------------------------------------------------------------ */
+
+/* -- Dock ---------------------------------------------------------- */
+
+.sim-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.sim-dock-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--hair);
+  flex-wrap: wrap;
+}
+
+.sim-dock-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.sim-dock-tab:hover {
+  color: var(--ink);
+}
+
+.sim-dock-tab--active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.sim-dock-tab--active:hover {
+  color: var(--brand);
+}
+
+.sim-dock-body {
+  min-height: 220px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+/* -- Toolbar ------------------------------------------------------- */
+
+.sim-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.sim-toolbar__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.sim-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sim-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sim-toolbar__btn {
+  appearance: none;
+  border: none;
+  border-radius: 6px;
+  background: var(--brand);
+  color: var(--brand-on);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.sim-toolbar__btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.sim-toolbar__btn--ghost {
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+
+.sim-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.sim-status--idle,
+.sim-status--cancelled {
+  color: var(--muted);
+  background: var(--surface-3);
+}
+
+.sim-status--running {
+  color: var(--brand);
+  background: var(--brand-tint);
+}
+
+.sim-status--completed {
+  color: var(--pnl-gain);
+  background: color-mix(in srgb, var(--pnl-gain) 15%, transparent);
+}
+
+.sim-status--failed {
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 15%, transparent);
+}
+
+.sim-run-error {
+  font-size: 11px;
+  color: var(--pnl-loss);
+  word-break: break-word;
+}
+
+/* -- Metrics ribbon ------------------------------------------------ */
+
+.sim-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.sim-ribbon__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--surface-3);
+}
+
+.sim-ribbon__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.sim-ribbon__label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.sim-ribbon__chip {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 0 5px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.sim-ribbon__chip--reported {
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.sim-ribbon__chip--derived {
+  color: var(--warning-color);
+  background: color-mix(in srgb, var(--warning-color) 12%, transparent);
+}
+
+.sim-ribbon__chip--unavailable {
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.sim-ribbon__value {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.sim-ribbon__value--muted {
+  color: var(--muted);
+}
+
+.sim-ribbon__value--pnl-gain {
+  color: var(--pnl-gain);
+}
+
+.sim-ribbon__value--pnl-loss {
+  color: var(--pnl-loss);
+}
+
+/* -- Journal table ------------------------------------------------- */
+
+.sim-journal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.sim-journal__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-journal__filter {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.sim-journal__count {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sim-journal__export {
+  appearance: none;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sim-journal__export:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.sim-journal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+
+.sim-journal__table thead th {
+  background: var(--surface-2);
+  color: var(--ink-2);
+  text-align: left;
+  padding: 6px 8px;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.sim-journal__table tbody td {
+  border-top: 1px solid var(--hair);
+  padding: 5px 8px;
+  vertical-align: middle;
+}
+
+.sim-journal__head-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sim-journal__head-btn--active {
+  color: var(--brand);
+}
+
+.sim-journal__head-btn--desc {
+  text-decoration: underline;
+}
+
+.sim-journal__mono {
+  font-family: var(--mono-font, "IBM Plex Mono", monospace);
+  white-space: nowrap;
+}
+
+.sim-journal__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sim-journal__side--long {
+  color: var(--pnl-gain);
+}
+
+.sim-journal__side--short {
+  color: var(--pnl-loss);
+}
+
+.sim-journal__status--open {
+  color: var(--warning-color);
+}
+
+.sim-journal__pnl--gain {
+  color: var(--pnl-gain);
+}
+
+.sim-journal__pnl--loss {
+  color: var(--pnl-loss);
+}
+
+.sim-journal__pnl--muted {
+  color: var(--muted);
+}
+
+.sim-journal__na {
+  color: var(--muted);
+}
+
+.sim-journal__empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* -- Monthly heatmap ----------------------------------------------- */
+
+.sim-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-heatmap__grid {
+  display: grid;
+  grid-template-columns: 48px repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.sim-heatmap__month {
+  font-size: 9px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.sim-heatmap__year {
+  font-size: 11px;
+  color: var(--ink-2);
+  font-family: var(--mono-font, "IBM Plex Mono", monospace);
+}
+
+.sim-heatmap__cell {
+  height: 26px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-heatmap__cell--empty {
+  background: transparent;
+  border: 1px dashed var(--hair);
+}
+
+.sim-heatmap__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sim-heatmap__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-heatmap__foot strong {
+  color: var(--ink);
+}
+
+.sim-heatmap__foot-index {
+  color: var(--muted);
+}
+
+.sim-heatmap__total--gain {
+  color: var(--pnl-gain);
+}
+
+.sim-heatmap__total--loss {
+  color: var(--pnl-loss);
+}
+
+.sim-heatmap__total--muted {
+  color: var(--muted);
+}
+
+/* -- Validation badges --------------------------------------------- */
+
+.sim-validation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sim-validation__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-validation__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-validation__verdict {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.sim-validation__verdict--pass {
+  color: var(--pnl-gain);
+  background: color-mix(in srgb, var(--pnl-gain) 15%, transparent);
+}
+
+.sim-validation__verdict--fail {
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 15%, transparent);
+}
+
+.sim-validation__absent {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sim-validation__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.sim-validation__gate {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--pnl-gain) 40%, transparent);
+  background: var(--surface-3);
+}
+
+.sim-validation__gate--fail {
+  border-color: color-mix(in srgb, var(--pnl-loss) 40%, transparent);
+}
+
+.sim-validation__gate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.sim-validation__gate-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-validation__gate-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.sim-validation__gate-verdict--pass {
+  color: var(--pnl-gain);
+}
+
+.sim-validation__gate-verdict--fail {
+  color: var(--pnl-loss);
+}
+
+.sim-validation__gate-note {
+  font-size: 10px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+.sim-validation__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--warning-color);
+}
+
+.sim-validation__assumptions {
+  border-top: 1px solid var(--hair);
+  padding-top: 8px;
+}
+
+.sim-validation__assumptions-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.sim-validation__assumptions-absent {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-validation__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sim-validation__chip {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  color: var(--warning-color);
+  background: color-mix(in srgb, var(--warning-color) 12%, transparent);
+}
+
+/* -- Run log drawer ------------------------------------------------ */
+
+.sim-log {
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+
+.sim-log__toggle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+}
+
+.sim-log__toggle-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-log__count {
+  color: var(--muted);
+}
+
+.sim-log__badge {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.sim-log__badge--muted {
+  color: var(--muted);
+}
+
+.sim-log__badge--live {
+  color: var(--brand);
+}
+
+.sim-log__lines {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--mono-font, "IBM Plex Mono", monospace);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-log__line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sim-log__empty {
+  color: var(--muted);
+}
+
+/* -- Payload tab --------------------------------------------------- */
+
+.sim-payload {
+  font-family: var(--mono-font, "IBM Plex Mono", monospace);
+  font-size: 11px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.sim-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* -- Equity & drawdown card (P6) ------------------------------------- */
+.sim-equity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-equity__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sim-equity__caption {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sim-equity__money {
+  font-size: 11px;
+  font-family: var(--mono-font, "IBM Plex Mono", monospace);
+  color: var(--ink-2);
+}
+
+.sim-equity__chart {
+  min-height: 180px;
+}
+
+.sim-equity__drawdown {
+  font-size: 11px;
+  color: var(--pnl-loss);
+}
+
+.sim-equity__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  border: 1px dashed var(--hair);
+  border-radius: 6px;
+}
+
+.sim-equity__note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* -- Bar-loading chart container (P6) --------------------------------- */
+.sim-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-chart__strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--hair);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-chart__symbol {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-chart__tf {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.sim-chart__window {
+  color: var(--muted);
+}
+
+.sim-chart__status {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.sim-chart__badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--hair);
+}
+
+.sim-chart__badge--server {
+  color: var(--pnl-gain);
+}
+
+.sim-chart__badge--preview {
+  color: var(--brand);
+}
+
+.sim-chart__chart {
+  min-height: 260px;
+}
+
+.sim-chart__note {
+  padding: 3px 12px;
+  border-top: 1px solid var(--hair);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* -- Replay toolbar (P7) -------------------------------------------- */
+
+.sim-replay {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--surface);
+  padding: 8px 10px;
+}
+
+.sim-replay__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sim-replay__row--hud,
+.sim-replay__row--book {
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-replay__row--scrub {
+  gap: 10px;
+  font-size: 10px;
+}
+
+.sim-replay__btn {
+  appearance: none;
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--hair);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.sim-replay__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sim-replay__btn--instant {
+  color: var(--warning-color);
+}
+
+.sim-replay__btn--active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.sim-replay__speeds {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.sim-replay__speed-label {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.sim-replay__hud {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  border: 1px solid var(--hair);
+  background: var(--surface-2);
+}
+
+.sim-replay__hud--idle {
+  color: var(--muted);
+}
+
+.sim-replay__hud--buy {
+  color: var(--pnl-gain);
+}
+
+.sim-replay__hud--sell {
+  color: var(--pnl-loss);
+}
+
+.sim-replay__hud-empty {
+  color: var(--muted);
+}
+
+.sim-replay__confluence {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--muted);
+  border: 1px solid var(--hair);
+}
+
+.sim-replay__confluence--buy {
+  background: color-mix(in srgb, var(--pnl-gain) 18%, transparent);
+  color: var(--pnl-gain);
+}
+
+.sim-replay__confluence--sell {
+  background: color-mix(in srgb, var(--pnl-loss) 18%, transparent);
+  color: var(--pnl-loss);
+}
+
+.sim-replay__position {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.sim-replay__pnl {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-replay__pnl--gain {
+  color: var(--pnl-gain);
+}
+
+.sim-replay__pnl--loss {
+  color: var(--pnl-loss);
+}
+
+.sim-replay__pnl--flat {
+  color: var(--ink-2);
+}
+
+.sim-replay__equity {
+  color: var(--ink);
+}
+
+.sim-replay__scrub {
+  flex: 1;
+  accent-color: var(--brand);
+}
+
+.sim-replay__bar-line {
+  color: var(--muted);
+  min-width: 100px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Signals dock tab (P7) ------------------------------------------- */
+
+.sim-panel {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.sim-signals__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sim-signals__pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--hair);
+}
+
+.sim-signals__pill--buy {
+  color: var(--pnl-gain);
+  border-color: var(--pnl-gain);
+}
+
+.sim-signals__pill--sell {
+  color: var(--pnl-loss);
+  border-color: var(--pnl-loss);
+}
+
+.sim-signals__pill--hold {
+  color: var(--muted);
+}
+
+.sim-signals__ratio {
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.sim-signals__stamp {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Portfolio dock tab (P7) ----------------------------------------- */
+
+.sim-portfolio__books {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.sim-portfolio__stat {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-portfolio__pnl--gain {
+  color: var(--pnl-gain);
+}
+
+.sim-portfolio__pnl--loss {
+  color: var(--pnl-loss);
+}
+
+.sim-portfolio__equity {
+  color: var(--ink);
+}
+
+.sim-portfolio__position {
+  margin-bottom: 8px;
+}
+
+.sim-portfolio__chip {
+  display: inline-flex;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-portfolio__chip--flat {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 400;
+  border: 1px solid var(--hair);
+}
+
+.sim-signals__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+
+.sim-signals__table thead th {
+  background: var(--surface-2);
+  color: var(--ink-2);
+  text-align: left;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.sim-signals__table tbody td {
+  border-top: 1px solid var(--hair);
+  padding: 5px 8px;
+  color: var(--ink-2);
+  vertical-align: top;
+}
+
+.sim-signals__row--fired td {
+  color: var(--ink);
+}
+
+.sim-signals__ind--bullish {
+  color: var(--pnl-gain);
+}
+
+.sim-signals__ind--bearish {
+  color: var(--pnl-loss);
+}
+
+.sim-signals__ind--neutral {
+  color: var(--muted);
+}
+
+.sim-signals__table td.sim-signals__details {
+  color: var(--muted);
+}
