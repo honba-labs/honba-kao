@@ -15,7 +15,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 
-use super::dismiss_on_outside_click;
+use honba_kao_ui_core::dismiss_on_outside_click;
 use super::layouts::{area_name, preset_for};
 use crate::components::charts::openalgo_chart as bridge;
 use crate::stores::workbench::{

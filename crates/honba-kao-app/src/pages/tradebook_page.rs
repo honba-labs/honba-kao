@@ -2,13 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader, Placeholder};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader, HfPlaceholder};
 
 #[component]
 pub fn TradebookPage() -> impl IntoView {
     view! {
         <div class="console">
-            <PageHeader
+            <HfPageHeader
                 title="Tradebook"
                 subtitle="Every past analysis — session, month, year-wise"
             />
@@ -16,7 +16,7 @@ pub fn TradebookPage() -> impl IntoView {
             <HfPanel>
                 <HfPanelHeader title="History" />
                 <div class="hfui-panel__content">
-                    <Placeholder
+                    <HfPlaceholder
                         route="tradebook"
                         note="Log of past sessions, months and years: analyses,
                         simulator runs, signals taken and outcomes, grouped by

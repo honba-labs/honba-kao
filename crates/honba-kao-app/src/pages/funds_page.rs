@@ -3,7 +3,7 @@
 use leptos::prelude::*;
 
 use crate::api;
-use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::utils::currency;
 
 #[component]
@@ -17,7 +17,7 @@ pub fn FundsPage() -> impl IntoView {
 
     view! {
         <div class="console">
-            <PageHeader title="Funds" subtitle="Cash, margin and buying power" />
+            <HfPageHeader title="Funds" subtitle="Cash, margin and buying power" />
 
             <HfPanel>
                 <HfPanelHeader title="Account" />

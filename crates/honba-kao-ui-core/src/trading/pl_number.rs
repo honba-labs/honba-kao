@@ -39,14 +39,13 @@ pub fn HfPLNumber(
 
     let is_positive = value > 0.0;
     let is_negative = value < 0.0;
-    let _is_zero = value == 0.0;
 
     let color_class = if is_positive {
-        "hf-plnumber--gain"
+        "positive"
     } else if is_negative {
-        "hf-plnumber--loss"
+        "negative"
     } else {
-        "hf-plnumber--neutral"
+        "neutral"
     };
 
     let direction = if is_positive {
@@ -67,7 +66,7 @@ pub fn HfPLNumber(
         HfPLNumberFormat::Rupees => format!("₹{sign}{abs_value:.2}"),
     };
 
-    let full_class = format!("hf-plnumber {color_class} {class}").trim().to_string();
+    let full_class = format!("hfui-plnumber {color_class} {class}").trim().to_string();
 
     view! {
         <span class=full_class>
@@ -89,34 +88,32 @@ pub enum HfPLNumberFormat {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HfStatusCircle — Green/Yellow/Red with latency text
+// HfStatusCircle — Green/Yellow/Red status dot
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// HfStatusCircle — connection/status indicator with optional latency text.
+/// HfStatusCircle — connection/status indicator dot.
 ///
-/// Mirrors bfx-hf-ui-core `.hfui-statusbar__statuscircle`.
+/// Mirrors bfx-hf-ui-core `.hfui-statusbar__statuscircle`. The status text is
+/// exposed as the accessible label; visible text sits beside it at the call
+/// site.
 ///
 /// ```rust
 /// view! {
-///     <HfStatusCircle status=HfStatus::Connected latency_ms=14 />
+///     <HfStatusCircle status=HfStatus::Connected />
 /// }
 /// ```
 #[component]
 pub fn HfStatusCircle(
     /// Connection status.
     status: HfStatus,
-    /// Optional latency in milliseconds.
-    #[prop(optional)]
-    latency_ms: Option<u32>,
     /// Extra CSS classes.
     #[prop(optional, into)]
     class: String,
 ) -> impl IntoView {
-    let status_class = match status {
-        HfStatus::Connected => "hf-status-circle--connected",
-        HfStatus::Connecting => "hf-status-circle--connecting",
-        HfStatus::Offline => "hf-status-circle--offline",
-        HfStatus::Warning => "hf-status-circle--warning",
+    let color_class = match status {
+        HfStatus::Connected => "green",
+        HfStatus::Connecting | HfStatus::Warning => "yellow",
+        HfStatus::Offline => "red",
     };
 
     let status_text = match status {
@@ -126,15 +123,10 @@ pub fn HfStatusCircle(
         HfStatus::Warning => "Warning",
     };
 
-    let latency_text = latency_ms.map(|ms| format!(" ({ms}ms)")).unwrap_or_default();
-
-    let full_class = format!("hf-status-circle {status_class} {class}").trim().to_string();
+    let full_class = format!("hfui-statusbar__statuscircle {color_class} {class}").trim().to_string();
 
     view! {
-        <div class=full_class>
-            <span class="hf-status-circle__dot" />
-            <span class="hf-status-circle__label">{status_text}{latency_text}</span>
-        </div>
+        <span class=full_class role="img" aria-label=status_text title=status_text />
     }
 }
 
@@ -162,14 +154,14 @@ pub fn HfSideMarker(
     class: String,
 ) -> impl IntoView {
     let color_class = match side {
-        HfSide::Buy => "hf-side-marker--buy",
-        HfSide::Sell => "hf-side-marker--sell",
+        HfSide::Buy => "green",
+        HfSide::Sell => "red",
     };
 
-    let full_class = format!("hf-side-marker {color_class} {class}").trim().to_string();
+    let full_class = format!("row-marker {color_class} {class}").trim().to_string();
 
     view! {
-        <div class=full_class />
+        <span class=full_class />
     }
 }
 

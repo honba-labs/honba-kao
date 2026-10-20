@@ -30,7 +30,7 @@ use crate::components::simulator::run_log::RunLogDrawer;
 use crate::components::simulator::signals_panel::SignalsPanel;
 use crate::components::simulator::simulator_chart::SimulatorChart;
 use crate::components::simulator::validation_badges::ValidationBadges;
-use crate::components::ui::PageHeader;
+use honba_kao_ui_core::HfPageHeader;
 #[cfg(debug_assertions)]
 use crate::sim::journal::{JournalState, JournalStatus};
 use crate::sim::persistence::LocalStorage;
@@ -336,7 +336,7 @@ pub fn SimulatorPage() -> impl IntoView {
 
     view! {
         <div class="console">
-            <PageHeader
+            <HfPageHeader
                 title="Simulator"
                 subtitle="Backtester · run the active strategy, journal its fills, read the results"
             />

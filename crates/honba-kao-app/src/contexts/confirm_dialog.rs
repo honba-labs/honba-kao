@@ -3,7 +3,7 @@
 
 use leptos::prelude::*;
 
-use crate::components::ui::{ButtonVariant, HfButton};
+use honba_kao_ui_core::{HfButton, HfButtonVariant};
 
 #[derive(Copy, Clone)]
 pub struct ConfirmDialogContext {
@@ -81,13 +81,13 @@ pub fn ConfirmDialogHost() -> impl IntoView {
                         </p>
                         <div class="modal-actions">
                             <HfButton
-                                variant=ButtonVariant::Ghost
+                                variant=HfButtonVariant::Ghost
                                 on_click=Callback::new(move |_| ctx.close())
                             >
                                 "Cancel"
                             </HfButton>
                             <HfButton
-                                variant=ButtonVariant::Green
+                                variant=HfButtonVariant::Green
                                 on_click=Callback::new(move |_| ctx.confirm())
                             >
                                 "Confirm"

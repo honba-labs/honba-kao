@@ -10,9 +10,8 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{HfButton, HfIconButton};
+use honba_kao_ui_core::{dismiss_on_outside_click, HfButton, HfIconButton};
 
-use crate::components::workbench::dismiss_on_outside_click;
 use crate::data::instruments::Instrument;
 use crate::stores::screener::{
     AdvancedFilters, ColumnDef, DetailTab, ScreenerStore, ScreenerType, SortDirection,

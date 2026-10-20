@@ -3,7 +3,7 @@
 
 use leptos::prelude::*;
 
-use crate::components::ui::{HfPanel, HfPanelHeader};
+use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 use crate::utils::currency;
 
 #[component]

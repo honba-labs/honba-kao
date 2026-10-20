@@ -3,7 +3,7 @@
 
 use leptos::prelude::*;
 
-use crate::components::ui::{CircleStatus, HfStatusCircle};
+use honba_kao_ui_core::{HfStatus, HfStatusCircle};
 use crate::theme::ThemeContext;
 
 #[component]
@@ -14,12 +14,12 @@ pub fn StatusBar() -> impl IntoView {
         <footer class="hfui-statusbar__wrapper">
             <div class="hfui-statusbar__left">
                 <div class="hfui-statusbar__item">
-                    <HfStatusCircle status=CircleStatus::Green />
+                    <HfStatusCircle status=HfStatus::Connected />
                     <span>"API connected (/api/health)"</span>
                 </div>
                 <div class="hfui-statusbar__divider" />
                 <div class="hfui-statusbar__item">
-                    <HfStatusCircle status=CircleStatus::Green />
+                    <HfStatusCircle status=HfStatus::Connected />
                     <span>"WS connected (14ms)"</span>
                 </div>
                 <div class="hfui-statusbar__divider" />

@@ -10,7 +10,7 @@
 //!   router/           ->    router/           (paths + AppRoutes + AppChrome)
 //!   pages/            ->    pages/            (top-level screens)
 //!   components/<dom>/ ->    components/<dom>/ (domain components)
-//!   components/ui/    ->    components/ui/    (primitives)
+//!   components/ui/    ->    honba-kao-ui-core (primitives, separate crate)
 //!   contexts/         ->    contexts/         (provide_context / expect_context)
 //!   stores/           ->    stores/           (reactive signals per store)
 //!   lib/api/          ->    api/              (namespaced client modules)

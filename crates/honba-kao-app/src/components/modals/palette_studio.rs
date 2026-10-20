@@ -1,11 +1,11 @@
 //! 256-colour palette studio + theme inspector.
 //!
-//! The modal is built only while `is_open` is set, so the 256 swatches are
+//! The modal is mounted only while `is_open` is set, so the 256 swatches are
 //! constructed on demand and open/close is genuinely reactive.
 
 use leptos::prelude::*;
 
-use crate::components::ui::HfModal;
+use honba_kao_ui_core::composed::modal::HfModal;
 use crate::theme::palette::{ColorToken, get_palette_256};
 
 #[component]
@@ -24,7 +24,6 @@ pub fn PaletteStudio(
             view! {
                 <HfModal
                     title="256-colour palette studio"
-                    is_open=true
                     on_close=on_close
                 >
                     <div class="palette-studio">

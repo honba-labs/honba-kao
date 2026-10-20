@@ -29,7 +29,7 @@ primitives, over contexts/stores/api) is kept while the runtime gets faster.
 | `components/common/HeaderBar.tsx` | `components/common/header_bar.rs` + `common/nav_rail.rs` | top bar + **iconized side rail** (nofx uses a top nav; honba keeps the navbar as a left icon rail) |
 | `pages/`                         | `pages/`                                            | top-level screens |
 | `components/<domain>/`           | `components/<domain>/`                              | `auth`, `terminal`, `trader`, `charts`, `strategy`, `planning`, `modals`, `faq`, `landing` |
-| `components/ui/`                 | `components/ui/`                                    | primitives (bfx-hf-ui-core design language) |
+| `components/ui/`                 | `crates/honba-kao-ui-core` (separate crate)         | primitives (bfx-hf-ui-core design language) |
 | `contexts/`                      | `contexts/`                                         | `provide_context` / `expect_context` |
 | `stores/`                        | `stores/`                                           | reactive signals (≈ Zustand) |
 | `lib/api/*`                      | `api/`                                              | namespaced client + transport |

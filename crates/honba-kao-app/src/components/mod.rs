@@ -1,6 +1,5 @@
 //! Domain + presentational components.
 //!
-//! * [`ui`] — framework-level primitives (buttons, panels, modals, …).
 //! * [`common`] — app chrome shared across screens (header, footer, rail,
 //!   overlays).
 //! * [`charts`], [`strategy`] — charting and strategy-studio domain pieces.
@@ -14,5 +13,4 @@ pub mod modals;
 pub mod screener;
 pub mod simulator;
 pub mod strategy;
-pub mod ui;
 pub mod workbench;

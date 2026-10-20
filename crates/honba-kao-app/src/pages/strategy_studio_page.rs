@@ -2,13 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader, Placeholder};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader, HfPlaceholder};
 
 #[component]
 pub fn StrategyStudioPage() -> impl IntoView {
     view! {
         <div class="console">
-            <PageHeader
+            <HfPageHeader
                 title="Strategy Builder"
                 subtitle="AI-native, Python-coded strategies · sandboxed CSR execution"
             />
@@ -16,7 +16,7 @@ pub fn StrategyStudioPage() -> impl IntoView {
             <HfPanel>
                 <HfPanelHeader title="Studio" />
                 <div class="hfui-panel__content">
-                    <Placeholder
+                    <HfPlaceholder
                         route="strategy builder"
                         note="Python strategy code with AI assistance, executed in a
                         sandboxed CSR runtime. Strategies bind to a symbol or a

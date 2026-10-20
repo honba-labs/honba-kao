@@ -4,7 +4,7 @@
 use leptos::prelude::*;
 
 use crate::components::charts::{ChartSeries, OpenAlgoChart};
-use crate::components::ui::{HfPanel, HfPanelHeader};
+use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 use crate::data::demo_data::demo_ohlc_bars;
 
 #[component]

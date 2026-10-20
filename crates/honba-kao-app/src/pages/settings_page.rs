@@ -3,7 +3,7 @@
 use leptos::prelude::*;
 
 use crate::api;
-use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::constants::branding;
 use crate::stores::trading_mode::{TradingMode, use_trading_mode};
 
@@ -19,7 +19,7 @@ pub fn SettingsPage() -> impl IntoView {
 
     view! {
         <div class="console">
-            <PageHeader title="Settings" subtitle="Runtime, trading and notifications" />
+            <HfPageHeader title="Settings" subtitle="Runtime, trading and notifications" />
 
             <HfPanel>
                 <HfPanelHeader title="Runtime" />

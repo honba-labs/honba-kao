@@ -11,7 +11,7 @@ use leptos::prelude::*;
 
 use crate::api;
 use crate::components::charts::EquityChart;
-use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::types::{BrokerStatus, Holding};
 use crate::utils::{compact_currency, currency, percent, quantity};
 
@@ -42,7 +42,7 @@ pub fn PortfolioPage() -> impl IntoView {
 
     view! {
         <div class="console portfolio">
-            <PageHeader
+            <HfPageHeader
                 title="Portfolio"
                 subtitle="Every broker account, one aggregated book"
             >
@@ -52,7 +52,7 @@ pub fn PortfolioPage() -> impl IntoView {
                         format!("{} of {} brokers linked", snapshot.get().connected_brokers(), brokers.get().len())
                     }}
                 </span>
-            </PageHeader>
+            </HfPageHeader>
 
             <div class="portfolio-kpis">
                 <div class="kpi">

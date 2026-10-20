@@ -4,7 +4,7 @@
 use leptos::prelude::*;
 
 use crate::api;
-use crate::components::ui::{ButtonVariant, HfButton, HfPanel, HfPanelHeader};
+use honba_kao_ui_core::{HfButton, HfButtonSize, HfButtonVariant, HfPanel, HfPanelHeader};
 use crate::utils::percent;
 
 #[component]
@@ -15,7 +15,7 @@ pub fn StrategyStudio() -> impl IntoView {
     view! {
         <HfPanel>
             <HfPanelHeader title="Strategy library" counter=count>
-                <HfButton variant=ButtonVariant::Green small=true>"+ New strategy"</HfButton>
+                <HfButton variant=HfButtonVariant::Green size=HfButtonSize::Small>"+ New strategy"</HfButton>
             </HfPanelHeader>
 
             <div class="hfui-panel__content strategy-grid">
@@ -31,7 +31,7 @@ pub fn StrategyStudio() -> impl IntoView {
                                 <p class="strategy-card__desc">{s.description}</p>
                                 <div class="strategy-card__foot">
                                     <span class="muted small">{format!("by {}", s.author)}</span>
-                                    <HfButton variant=ButtonVariant::Ghost small=true>"Open"</HfButton>
+                                    <HfButton variant=HfButtonVariant::Ghost size=HfButtonSize::Small>"Open"</HfButton>
                                 </div>
                             </div>
                         }

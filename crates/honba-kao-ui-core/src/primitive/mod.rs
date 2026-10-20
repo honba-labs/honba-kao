@@ -10,5 +10,11 @@ pub mod switch;
 pub mod label;
 pub mod separator;
 pub mod tabs;
+pub mod panel;
+pub mod page_header;
+pub mod placeholder;
+pub mod card;
+pub mod kpi;
+pub mod badge;
 
 // Icons are at the crate root level (icons/), re-exported via lib.rs

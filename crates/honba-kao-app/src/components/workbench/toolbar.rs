@@ -4,7 +4,7 @@
 
 use leptos::prelude::*;
 
-use super::dismiss_on_outside_click;
+use honba_kao_ui_core::dismiss_on_outside_click;
 use super::layouts::{LAYOUT_PRESETS, LayoutIcon, preset_for};
 use crate::stores::workbench::{TradingState, WorkbenchStore};
 
