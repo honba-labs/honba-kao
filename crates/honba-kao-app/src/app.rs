@@ -8,10 +8,10 @@
 use leptos::prelude::*;
 use leptos_router::components::Router;
 
-use crate::contexts::{AuthContext, ConfirmDialogContext, ConfirmDialogHost, LanguageContext};
-use crate::stores::TradingModeStore;
+use crate::shared::contexts::{AuthContext, ConfirmDialogContext, ConfirmDialogHost, LanguageContext};
+use crate::shared::stores::TradingModeStore;
 use crate::router::AppRoutes;
-use crate::theme::ThemeContext;
+use crate::shared::theme::ThemeContext;
 
 #[component]
 pub fn App() -> impl IntoView {

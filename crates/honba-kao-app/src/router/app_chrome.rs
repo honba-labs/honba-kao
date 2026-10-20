@@ -11,9 +11,9 @@
 
 use leptos::prelude::*;
 
-use crate::components::common::{HeaderBar, LoginRequiredOverlay, NavRail, SiteFooter};
-use crate::components::modals::PaletteStudio;
+use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
 use crate::router::paths::Page;
+use crate::shared::components::{LoginRequiredOverlay, PaletteStudio};
 
 #[component]
 pub fn AppChrome(

@@ -28,7 +28,7 @@ check-prod:
 # Prohibit raw <button>/<input> elements in the app crate: all interactive
 # primitives must come from honba-kao-ui-core (HfButton, HfInput, etc.).
 lint-design-system:
-	@! grep -rnE '<(button|input)[ >]' crates/honba-kao-app/src/components/ crates/honba-kao-app/src/pages/ \
+	@! grep -rnE '<(button|input)[ >]' crates/honba-kao-app/src/features/ crates/honba-kao-app/src/router/ crates/honba-kao-app/src/shared/components/ \
 		&& echo "lint-design-system: no raw <button>/<input> found" \
 		|| (echo "lint-design-system: raw <button>/<input> found above - use honba_kao_ui_core primitives instead" && exit 1)
 

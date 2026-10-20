@@ -43,7 +43,7 @@ fi
 # 4. Bridge uses mount_chart_with_options (not raw js_mount for actual mounting)
 echo "  Checking bridge uses widget-tier mount..."
 # Check that mount_chart_with_options is used in PaneChart (actual mount point)
-if ! grep -q "mount_chart_with_options" "$ROOT/crates/honba-kao-app/src/components/workbench/pane_chart.rs" 2>/dev/null; then
+if ! grep -q "mount_chart_with_options" "$ROOT/crates/honba-kao-app/src/features/workbench/components/pane_chart.rs" 2>/dev/null; then
     echo "❌ FAIL: mount_chart_with_options() not used in PaneChart"
     ERRORS=$((ERRORS + 1))
 else
@@ -51,7 +51,7 @@ else
 fi
 
 # Also verify js_mount is only in extern block (import) not called directly in effect
-if grep -A5 -B5 "match js_mount(" "$ROOT/crates/honba-kao-app/src/components/charts/openalgo_chart.rs" 2>/dev/null | grep -v "mount_chart_with_options"; then
+if grep -A5 -B5 "match js_mount(" "$ROOT/crates/honba-kao-app/src/shared/components/charts/openalgo_chart.rs" 2>/dev/null | grep -v "mount_chart_with_options"; then
     echo "❌ FAIL: Raw js_mount() called in effect instead of mount_chart_with_options()"
     ERRORS=$((ERRORS + 1))
 else
@@ -95,7 +95,7 @@ fi
 
 # 7. Components use .wb-* namespace
 echo "  Checking component namespace usage..."
-if grep -r "class=\"wb-" "$ROOT/crates/honba-kao-app/src/components/workbench/pane_chart.rs" 2>/dev/null | head -5; then
+if grep -r "class=\"wb-" "$ROOT/crates/honba-kao-app/src/features/workbench/components/pane_chart.rs" 2>/dev/null | head -5; then
     echo "✅ Components use .wb-* namespace"
 else
     echo "⚠️  Warning: Could not verify .wb-* namespace (may be false negative)"

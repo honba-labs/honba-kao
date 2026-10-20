@@ -1,7 +1,0 @@
-//! System config API namespace. Mirrors `web/src/lib/api/config.ts`.
-
-use crate::types::SystemConfig;
-
-pub fn get_system_config() -> SystemConfig {
-    SystemConfig::default()
-}

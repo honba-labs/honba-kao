@@ -16,27 +16,28 @@ token palette.
 
 ## Frontend structure (`crates/honba-kao-app/src`)
 
-Mirrors nofx `web/src/`, layer for layer. Leptos has no virtual DOM and compiles
-to WASM, so the same layering (route table → pages → domain components →
-primitives, over contexts/stores/api) is kept while the runtime gets faster.
+Feature-sliced, translated from nofx `web/src/`. Leptos has no virtual DOM and
+compiles to WASM; each domain screen owns its page, components, stores and
+private data under `features/<name>/`, the router and persistent shell sit
+beside it, and code used by more than one slice lives in `shared/`.
 
 | nofx `web/src/`                  | honba-kao `crates/honba-kao-app/src/`               | Notes |
 | -------------------------------- | --------------------------------------------------- | ----- |
 | `App.tsx`                        | `app.rs`                                            | provider stack (contexts + stores) |
 | `main.tsx`                       | `lib.rs`                                            | `mount_to_body(App)` |
 | `router/paths.ts`                | `router/paths.rs`                                   | `ROUTES` constants + `Page` enum |
-| `router/AppRoutes.tsx`           | `router/app_routes.rs`, `router/app_chrome.rs`      | route table + `AppChrome` layout |
-| `components/common/HeaderBar.tsx` | `components/common/header_bar.rs` + `common/nav_rail.rs` | top bar + **iconized side rail** (nofx uses a top nav; honba keeps the navbar as a left icon rail) |
-| `pages/`                         | `pages/`                                            | top-level screens |
-| `components/<domain>/`           | `components/<domain>/`                              | `auth`, `terminal`, `trader`, `charts`, `strategy`, `planning`, `modals`, `faq`, `landing` |
+| `router/AppRoutes.tsx`           | `router/routes.rs`, `router/app_chrome.rs`          | route table + `AppChrome` layout |
+| `components/common/HeaderBar.tsx` | `router/chrome/header_bar.rs` + `chrome/nav_rail.rs` | top bar + **iconized side rail** (nofx uses a top nav; honba keeps the navbar as a left icon rail) |
+| `pages/` + `components/<domain>/` + `stores/` | `features/<domain>/`                   | `screener`, `workbench`, `simulator`, `strategy_studio`, `portfolio`, `tradebook`, `account`, `auth`, `landing`; each with its page plus `components/`, `stores/`, `data/` as needed |
 | `components/ui/`                 | `crates/honba-kao-ui-core` (separate crate)         | primitives (bfx-hf-ui-core design language) |
-| `contexts/`                      | `contexts/`                                         | `provide_context` / `expect_context` |
-| `stores/`                        | `stores/`                                           | reactive signals (≈ Zustand) |
-| `lib/api/*`                      | `api/`                                              | namespaced client + transport |
-| `lib/*`                          | `utils/`                                            | `format`, `indicators`, `text` |
-| `hooks/`                         | `hooks/`                                            | reusable reactive helpers |
-| `types/`                         | `types/`                                            | domain types |
-| `i18n/`, `constants/`, `data/`   | same names                                          | translations, branding, sample data |
+| `components/common/`, `charts/`  | `shared/components/`                                | cross-feature components and charts |
+| `contexts/`                      | `shared/contexts/`                                  | `provide_context` / `expect_context` |
+| `stores/` (app-wide)             | `shared/stores/`                                    | reactive signals (≈ Zustand) |
+| `lib/api/*`                      | `shared/api/`                                       | namespaced client + transport |
+| `lib/*`                          | `shared/utils/`                                     | `format`, `indicators`, `text` |
+| `hooks/`                         | `shared/hooks/`                                     | reusable reactive helpers |
+| `types/`                         | `shared/types/`                                     | domain types |
+| `i18n/`, `constants/`, `data/`   | `shared/<same name>/`                               | translations, branding, sample data |
 | `src/styles/`                    | `style/` (repo root, served by Trunk)               | `app.css` (chrome), `brand.css` (landing) |
 
 Route map (same as nofx): `/`, `/login`, `/register`, `/reset-password`,
@@ -48,14 +49,14 @@ Authenticated screens are gated inline, exactly like the reference app's
 ### Performance notes
 - **Leptos 0.7 CSR + WASM** — compiled output, no virtual DOM, fine-grained
   reactivity instead of tree diffing.
-- **Polling instead of SWR** — `hooks::use_interval` is the equivalent of SWR's
+- **Polling instead of SWR** — `shared::hooks::use_interval` is the equivalent of SWR's
   `refreshInterval`; screens read the tick to refresh positions/account/decisions.
 - **Charts are Rust-native SVG** — no vendored TradingView/charting bundle.
 - **Production profile** — `trunk build --release` selects cargo's `release`
   profile, so `[profile.release]` carries `opt-level = 3`, `lto = true`,
   `codegen-units = 1`, `panic = "abort"`; `profile.prod` inherits from it.
-- **API layer is real, data is sample** — `api::http` is wired to the typed
-  `honba-kao-client`; each namespace currently returns `data::demo_data` so the
+- **API layer is real, data is sample** — `shared::api::http` is wired to the typed
+  `honba-kao-client`; each namespace currently returns `shared::data::demo_data` so the
   UI is fully explorable before the backend routes exist.
 
 ## Prerequisites
@@ -94,6 +95,6 @@ All builds explicitly resort to either `dev` or `prod` profiles (instead of unop
 
 Dev uses the relative path `/api` (proxied). For prod, either:
 - serve `dist/` and the API from the same origin (simplest), or
-- change `API_BASE_URL` in `crates/honba-kao-app/src/constants/branding.rs`.
+- change `API_BASE_URL` in `crates/honba-kao-app/src/shared/constants/branding.rs`.
 
 License: AGPL-3.0.

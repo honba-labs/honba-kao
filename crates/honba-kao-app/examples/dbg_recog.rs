@@ -1,5 +1,5 @@
-use honba_kao_app::studio::codegen::{generate_code, recognize};
-use honba_kao_app::sim::selection::builtin_template;
+use honba_kao_app::features::strategy_studio::kernel::codegen::{generate_code, recognize};
+use honba_kao_app::features::simulator::kernel::selection::builtin_template;
 
 fn main() {
     let graph = builtin_template().0;

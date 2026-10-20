@@ -1,0 +1,97 @@
+//! Workbench — the trading cockpit. Charting workspace, order tickets and
+//! the per-symbol depth/position drawer, composing the body ported from the
+//! labs frontend's `workbench-app.tsx`.
+//!
+//! The page owns the [`WorkbenchStore`] context; everything under the page
+//! (toolbar, chart grid, ticket, drawer, modal) reads it via
+//! `WorkbenchStore::take()`.
+
+use leptos::prelude::*;
+
+use crate::features::workbench::components::chart_grid::MultiChartGrid;
+use crate::features::workbench::components::indicator_picker::IndicatorPickerDialog;
+use crate::features::workbench::components::order_modal::WorkbenchOrderModal;
+use crate::features::workbench::components::order_ticket::OrderTicketPanel;
+use crate::features::workbench::components::symbol_search::SymbolSearchModal;
+use crate::features::workbench::components::toolbar::WorkbenchToolbar;
+use crate::features::workbench::components::trading_drawer::TradingDrawer;
+use crate::features::workbench::stores::order_draft_store::OrderSide;
+use crate::features::workbench::stores::workbench_store::WorkbenchStore;
+
+use wasm_bindgen::JsCast;
+
+#[component]
+pub fn WorkbenchPage() -> impl IntoView {
+    let store = WorkbenchStore::new();
+    store.provide();
+
+    // Demo seeds live until the backend answers — `fetch_state` overwrites
+    // the slices it can reach and leaves the rest in place offline.
+    store.book.fetch_state();
+
+    // The chart bubble's clicks (the bridge dispatches `honba-order-click`
+    // from the engine's subscribeClick) open the order modal — labs'
+    // subscribeClick wiring, re-homed across the bridge. The listener is
+    // removed when the page unmounts, so each visit holds exactly one.
+    let handler =
+        window_event_listener_untyped("honba-order-click", move |event: web_sys::Event| {
+            let Ok(event) = event.dyn_into::<web_sys::CustomEvent>() else {
+                return;
+            };
+            let detail = event.detail();
+            let field = |detail: &wasm_bindgen::JsValue, name: &str| -> String {
+                js_sys::Reflect::get(detail, &wasm_bindgen::JsValue::from(name))
+                    .ok()
+                    .and_then(|value| value.as_string())
+                    .unwrap_or_default()
+            };
+            let number = |detail: &wasm_bindgen::JsValue, name: &str| -> f64 {
+                js_sys::Reflect::get(detail, &wasm_bindgen::JsValue::from(name))
+                    .ok()
+                    .and_then(|value| value.as_f64())
+                    .unwrap_or_default()
+            };
+            let action = field(&detail, "action");
+            let symbol = field(&detail, "symbol");
+            let quantity = number(&detail, "qty").round().max(1.0) as i64;
+
+            match action.as_str() {
+                "sell" => {
+                    store.draft.open_order_modal(
+                        Some(&symbol),
+                        Some(OrderSide::Sell),
+                        None,
+                        Some(quantity),
+                    );
+                }
+                _ => {
+                    // `:buy` and `:qty` both lean buy, like the labs terminal.
+                    store.draft.open_order_modal(
+                        Some(&symbol),
+                        Some(OrderSide::Buy),
+                        None,
+                        Some(quantity),
+                    );
+                }
+            }
+        });
+    on_cleanup(move || handler.remove());
+
+    view! {
+        <div class="wb-view">
+            <WorkbenchToolbar />
+
+            <div class="wb-body">
+                <MultiChartGrid />
+                <Show when=move || store.draft.ticket_open.get()>
+                    <OrderTicketPanel />
+                </Show>
+            </div>
+
+            <TradingDrawer />
+            <WorkbenchOrderModal />
+            <SymbolSearchModal />
+            <IndicatorPickerDialog />
+        </div>
+    }
+}

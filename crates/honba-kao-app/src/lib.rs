@@ -1,44 +1,31 @@
 //! 本場・顔 honba-kao — Leptos SPA root.
 //!
-//! The crate is laid out to mirror the `web/` app of `NoFxAiOS/nofx`
-//! (Vite + React + TS), translated to idiomatic Rust/Leptos:
+//! The crate is feature-sliced: each domain screen owns its page, components,
+//! stores and private data under `features/<name>/`; the router and persistent
+//! shell sit beside it, and anything used by more than one slice lives in
+//! `shared/`. Translated from the `web/` app of `NoFxAiOS/nofx`:
 //!
 //! ```text
 //! web/src/            ->  crates/honba-kao-app/src/
-//!   App.tsx           ->    app.rs            (provider stack)
-//!   main.tsx          ->    lib.rs            (mount_to_body)
-//!   router/           ->    router/           (paths + AppRoutes + AppChrome)
-//!   pages/            ->    pages/            (top-level screens)
-//!   components/<dom>/ ->    components/<dom>/ (domain components)
-//!   components/ui/    ->    honba-kao-ui-core (primitives, separate crate)
-//!   contexts/         ->    contexts/         (provide_context / expect_context)
-//!   stores/           ->    stores/           (reactive signals per store)
-//!   lib/api/          ->    api/              (namespaced client modules)
-//!   lib/*             ->    utils/            (format, indicators, text)
-//!   hooks/            ->    hooks/            (reusable reactive helpers)
-//!   types/            ->    types/
-//!   i18n/             ->    i18n/
-//!   constants/        ->    constants/
-//!   data/             ->    data/
-//!   styles/           ->    ../../style/      (Trunk-served CSS)
+//!   App.tsx           ->    app.rs                (provider stack)
+//!   main.tsx          ->    lib.rs                (mount_to_body)
+//!   router/           ->    router/               (paths + AppRoutes + AppChrome + chrome/)
+//!   pages/ + components/<dom>/ + stores/
+//!                     ->    features/<dom>/       (page, components/, stores/, data/)
+//!   components/ui/    ->    honba-kao-ui-core     (primitives, separate crate)
+//!   components/common ->    shared/components/    (cross-feature components)
+//!   contexts/         ->    shared/contexts/      (provide_context / expect_context)
+//!   lib/api/          ->    shared/api/           (namespaced client modules)
+//!   lib/*             ->    shared/utils/         (format, indicators, text)
+//!   hooks/, types/, i18n/, constants/, data/
+//!                     ->    shared/<same name>/
+//!   styles/           ->    ../../style/          (Trunk-served CSS)
 //! ```
 
-pub mod api;
 pub mod app;
-pub mod components;
-pub mod constants;
-pub mod contexts;
-pub mod data;
-pub mod hooks;
-pub mod i18n;
-pub mod pages;
+pub mod features;
 pub mod router;
-pub mod sim;
-pub mod stores;
-pub mod studio;
-pub mod theme;
-pub mod types;
-pub mod utils;
+pub mod shared;
 
 pub use app::App;
 
