@@ -63,6 +63,12 @@
 
 use std::sync::Arc;
 
+use honba_api_wasm::analytics::{
+    AnalyticsInput, EquitySeries, JournalRow, MonthlyHeatmap, RibbonMetric, RoundTripStats,
+    RunMetrics, RunWindow, derive_ribbon_metrics, equity_series, journal_rows, monthly_heatmap,
+    round_trip_stats,
+};
+use honba_api_wasm::pairing::{RoundTrip, pair_trades};
 use honba_kao_client::ClientError;
 use honba_kao_client::wire::{
     BacktestMetrics, BacktestRequest, BacktestResponse, BarsResponse, CompiledStrategy,
@@ -71,11 +77,6 @@ use honba_kao_client::wire::{
 use leptos::prelude::*;
 use serde_json::Value;
 
-use crate::sim::analytics::{
-    AnalyticsInput, EquitySeries, JournalRow, MonthlyHeatmap, RibbonMetric, RoundTripStats,
-    RunWindow, derive_ribbon_metrics, equity_series, journal_rows, monthly_heatmap,
-    round_trip_stats,
-};
 use crate::sim::bars::BarsState;
 use crate::sim::chart_data::ChartBar;
 use crate::sim::controls::{
@@ -88,7 +89,6 @@ use crate::sim::journal::{
     JournalClient, JournalState, apply_journal_loading, initial_journal_state, load_journal,
 };
 use crate::sim::manifest::{StrategyCompiler, compile_strategy};
-use crate::sim::pairing::{RoundTrip, pair_trades};
 use crate::sim::persistence::{
     LayoutStorage, SimulatorPersisted, load_persisted, persist_selection,
 };
@@ -427,8 +427,15 @@ impl SimulatorStore {
                             start: plan.range.0.clone(),
                             end: plan.range.1.clone(),
                         });
+                let run_metrics = metrics.as_ref().map(|metrics| RunMetrics {
+                    trades: metrics.trades,
+                    net_pnl: metrics.net_pnl,
+                    sharpe: metrics.sharpe,
+                    max_drawdown: metrics.max_drawdown,
+                    total_return: metrics.total_return,
+                });
                 let input = AnalyticsInput {
-                    metrics: metrics.as_ref(),
+                    metrics: run_metrics.as_ref(),
                     trips: &trips,
                     window: window.as_ref(),
                     initial_capital: Some(capital),

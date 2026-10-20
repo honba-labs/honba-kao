@@ -17,10 +17,10 @@
 //! engine's exit kind (`PositionClosed`) is bookkeeping, not a strategy
 //! attribution, and the pairing surface's honest rules about it hold here.
 
+use honba_api_wasm::analytics::{MetricKind, format_metric_value};
 use leptos::prelude::*;
 
 use crate::components::simulator::replay_controls::{money_signed, pnl_token};
-use crate::sim::analytics::{MetricKind, format_metric_value};
 use crate::stores::simulator::SimulatorStore;
 
 #[component]

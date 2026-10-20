@@ -3,8 +3,12 @@
 WASM compute surface for the Honba frontend. Pure compute only: no tokio, no filesystem, no
 network; depends on the pure L0-L4 crates (`scripts/dependency_graph.py` enforces this).
 
-Logic lives in plain Rust modules that are tested natively; `src/lib.rs` is a thin `wasm-bindgen`
-layer over them.
+Logic lives in plain Rust modules that are tested natively and expose typed Rust APIs
+(`indicators::close_series`/`ohlc_series`, `screener::scan_predicate`/`scan_group`,
+`replay::replay_journal`, `pairing`, `analytics`, `calendar`); `src/lib.rs` is a thin
+`wasm-bindgen` layer over them, behind the default `js` feature. Workspace Rust callers
+(`honba-kao-app`) depend on the crate with `default-features = false` and call the typed APIs
+directly, with no JSON round trip.
 
 ## Indicators
 

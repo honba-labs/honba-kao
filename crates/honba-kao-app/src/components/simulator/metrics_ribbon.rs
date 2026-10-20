@@ -8,9 +8,8 @@
 //! a reported and a computed number visible at a glance (risk R5, honesty
 //! invariant 1: metrics are never invented).
 
+use honba_api_wasm::analytics::{format_metric_value, MetricKind, MetricProvenance, RibbonMetric};
 use leptos::prelude::*;
-
-use crate::sim::analytics::{format_metric_value, MetricKind, MetricProvenance, RibbonMetric};
 
 /// fe's `PROVENANCE_STYLE` — the chip label per provenance (the strings the
 /// UI shows; `MetricProvenance::as_str` keeps the wire spelling for folds).

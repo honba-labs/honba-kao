@@ -104,7 +104,7 @@ pub struct LoadBarsRequest<'a> {
 /// malformed date (an "epoch" window is simply empty).
 pub fn seconds_of_date(date: &str) -> i64 {
     crate::sim::controls::Today::from_iso(date).map_or(0, |today| {
-        crate::sim::chart_data::days_from_civil(today.year as i64, today.month, today.day)
+        honba_api_wasm::calendar::days_from_civil(today.year as i64, today.month, today.day)
             * 86_400
     })
 }

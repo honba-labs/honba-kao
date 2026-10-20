@@ -1,8 +1,9 @@
 //! Pure Journal v1 replay, free of any wasm-bindgen types.
 //!
 //! Everything here runs natively, so it is conformance-tested without a wasm runtime (see
-//! `tests/replay_conformance.rs`). The `#[wasm_bindgen]` layer in [`crate`] only forwards to
-//! [`journal_header_json`] and [`replay_journal_json`].
+//! `tests/replay_conformance.rs`). Rust callers use the typed [`journal_header`] and
+//! [`replay_journal`]; the `#[wasm_bindgen]` layer in [`crate`] forwards to the JSON-string
+//! wrappers [`journal_header_json`] and [`replay_journal_json`], which render those results.
 //!
 //! The audit trail itself is `honba_engine::audit` (L3). The browser has no filesystem, so the
 //! NDJSON crosses the boundary as an in-memory string: this module parses it with
@@ -29,7 +30,7 @@ use std::collections::BTreeMap;
 use std::io::BufReader;
 
 use honba_engine::{AuditKind, AuditLog, JournalHeader, JournalV1, ReplayState};
-use honba_messages::{OrderSide, TradingState};
+use honba_messages::{OrderEventKind, OrderSide, TradingState};
 use serde_json::{Value, json};
 
 /// Why a journal request was refused: a stable `reason` in a `reason: message` pair
@@ -113,7 +114,25 @@ fn classify(error: &std::io::Error, header_line: Option<&str>, record_lines: usi
     }
 }
 
-fn parse_journal(journal_ndjson: &str) -> Result<JournalV1, (ReplayError, String)> {
+/// A refused journal: the stable [`ReplayError`] classification plus the reader's original
+/// diagnostic. Displays as the `reason: message` pair the wasm boundary throws.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JournalError {
+    /// The stable classification.
+    pub reason: ReplayError,
+    /// The underlying `io`/`serde` message.
+    pub message: String,
+}
+
+impl std::fmt::Display for JournalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.reason.reason(), self.message)
+    }
+}
+
+impl std::error::Error for JournalError {}
+
+fn parse_journal(journal_ndjson: &str) -> Result<JournalV1, JournalError> {
     let mut lines = journal_ndjson
         .lines()
         .filter(|line| !line.trim().is_empty());
@@ -122,12 +141,16 @@ fn parse_journal(journal_ndjson: &str) -> Result<JournalV1, (ReplayError, String
     JournalV1::read_ndjson(BufReader::new(journal_ndjson.as_bytes())).map_err(|error| {
         let message = error.to_string();
         let reason = classify(&error, header_line.as_deref(), record_lines);
-        (reason, message)
+        JournalError { reason, message }
     })
 }
 
-fn pair(error: (ReplayError, String)) -> String {
-    format!("{}: {}", error.0.reason(), error.1)
+fn header_serialize_error(error: &serde_json::Error) -> String {
+    JournalError {
+        reason: ReplayError::HeaderSerialize,
+        message: error.to_string(),
+    }
+    .to_string()
 }
 
 /// Renders a finite `f64` as a JSON number, and anything else as `null` (never `NaN`/infinity).
@@ -153,11 +176,6 @@ fn trading_state_str(state: TradingState) -> &'static str {
     }
 }
 
-fn header_value(header: &JournalHeader) -> Result<Value, String> {
-    serde_json::to_value(header)
-        .map_err(|error| pair((ReplayError::HeaderSerialize, error.to_string())))
-}
-
 /// The final rejection reason per order id, as recorded by the replayed [`ReplayState`].
 ///
 /// The engine exposes rejections only by lookup ([`ReplayState::rejection`]); the order ids come
@@ -179,79 +197,205 @@ fn rejection_reasons(state: &ReplayState, log: &AuditLog) -> BTreeMap<String, St
     rejections
 }
 
-/// Parses the journal and returns its header as JSON.
-///
-/// # Errors
-///
-/// A `reason: message` pair for an empty stream, a missing or malformed header, an unsupported
-/// journal version, or a header that fails serialization.
-pub fn journal_header_json(journal_ndjson: &str) -> Result<String, String> {
-    let journal = parse_journal(journal_ndjson).map_err(pair)?;
-    serde_json::to_string(&journal.header)
-        .map_err(|error| pair((ReplayError::HeaderSerialize, error.to_string())))
+/// Net position per instrument after the replay.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PositionSummary {
+    /// The instrument id, `SYMBOL.EXCHANGE`.
+    pub instrument: String,
+    /// The signed net quantity.
+    pub quantity: f64,
 }
 
-/// Replays the journal and returns the compact summary JSON described in the module docs.
-///
-/// # Errors
-///
-/// A `reason: message` pair for an empty stream, a missing or malformed header, a malformed
-/// record line, an unsupported journal version, or a header that fails serialization.
-pub fn replay_journal_json(journal_ndjson: &str) -> Result<String, String> {
-    let journal = parse_journal(journal_ndjson).map_err(pair)?;
-    let state = ReplayState::from_log(&journal.log);
+/// One order's reconstructed state after the replay.
+#[derive(Clone, Debug, PartialEq)]
+pub struct OrderSummary {
+    /// The client order id.
+    pub order_id: String,
+    /// The instrument id, `SYMBOL.EXCHANGE`.
+    pub instrument: String,
+    /// The order side.
+    pub side: OrderSide,
+    /// The cumulative filled quantity.
+    pub filled_qty: f64,
+    /// The latest lifecycle event kind, if any.
+    pub lifecycle: Option<OrderEventKind>,
+    /// Whether a cancel was requested.
+    pub cancel_requested: bool,
+}
 
-    let positions: Vec<Value> = state
-        .positions()
-        .iter()
-        .map(|(instrument, quantity)| (instrument.to_string(), number(*quantity)))
-        .collect::<BTreeMap<_, _>>()
-        .into_iter()
-        .map(|(instrument, quantity)| json!({"instrument": instrument, "quantity": quantity}))
-        .collect();
+/// The reconstructed state of a replayed journal.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ReplaySummary {
+    /// The trading state at the end of the log.
+    pub trading_state: TradingState,
+    /// Number of dispatches recorded.
+    pub dispatches: u64,
+    /// Net positions, sorted by instrument.
+    pub positions: Vec<PositionSummary>,
+    /// Orders, sorted by order id.
+    pub orders: Vec<OrderSummary>,
+    /// Final rejection reason per rejected order id.
+    pub rejections: BTreeMap<String, String>,
+}
 
-    let orders: Vec<Value> = state
-        .orders()
-        .values()
-        .map(|order| {
-            let lifecycle = match order.lifecycle {
-                Some(kind) => Value::String(kind.to_string()),
-                None => Value::Null,
-            };
-            (
-                order.order_id.clone(),
+/// A replayed journal: its provenance header and the reconstructed state.
+#[derive(Clone, Debug)]
+pub struct JournalReplay {
+    /// The provenance header.
+    pub header: JournalHeader,
+    /// The reconstructed state.
+    pub replay: ReplaySummary,
+}
+
+impl JournalReplay {
+    /// Renders the compact summary JSON described in the module docs.
+    ///
+    /// # Errors
+    ///
+    /// A `reason: message` pair when the header fails serialization.
+    pub fn to_json(&self) -> Result<String, String> {
+        let positions: Vec<Value> = self
+            .replay
+            .positions
+            .iter()
+            .map(|position| {
+                json!({"instrument": position.instrument, "quantity": number(position.quantity)})
+            })
+            .collect();
+
+        let orders: Vec<Value> = self
+            .replay
+            .orders
+            .iter()
+            .map(|order| {
+                let lifecycle = match order.lifecycle {
+                    Some(kind) => Value::String(kind.to_string()),
+                    None => Value::Null,
+                };
                 json!({
                     "order_id": order.order_id,
-                    "instrument": order.instrument.to_string(),
+                    "instrument": order.instrument,
                     "side": side_str(order.side),
                     "filled_qty": number(order.filled_qty),
                     "lifecycle": lifecycle,
                     "cancel_requested": order.cancel_requested,
-                }),
+                })
+            })
+            .collect();
+
+        let rejections: serde_json::Map<String, Value> = self
+            .replay
+            .rejections
+            .iter()
+            .map(|(order_id, reason)| (order_id.clone(), Value::String(reason.clone())))
+            .collect();
+
+        let summary = json!({
+            "trading_state": trading_state_str(self.replay.trading_state),
+            "dispatches": self.replay.dispatches,
+            "positions": positions,
+            "orders": orders,
+            "rejections": Value::Object(rejections),
+        });
+
+        let header = serde_json::to_value(&self.header)
+            .map_err(|error| header_serialize_error(&error))?;
+        let out = json!({
+            "header": header,
+            "replay": summary,
+        });
+        Ok(out.to_string())
+    }
+}
+
+/// Parses the journal and returns its provenance header.
+///
+/// # Errors
+///
+/// A [`JournalError`] for an empty stream, a missing or malformed header, a malformed record
+/// line, or an unsupported journal version.
+pub fn journal_header(journal_ndjson: &str) -> Result<JournalHeader, JournalError> {
+    Ok(parse_journal(journal_ndjson)?.header)
+}
+
+/// Replays the journal and returns the header plus the reconstructed state, with positions
+/// sorted by instrument, orders sorted by order id and rejections keyed by order id.
+///
+/// # Errors
+///
+/// As [`journal_header`].
+pub fn replay_journal(journal_ndjson: &str) -> Result<JournalReplay, JournalError> {
+    let journal = parse_journal(journal_ndjson)?;
+    let state = ReplayState::from_log(&journal.log);
+
+    let positions: Vec<PositionSummary> = state
+        .positions()
+        .iter()
+        .map(|(instrument, quantity)| (instrument.to_string(), *quantity))
+        .collect::<BTreeMap<_, _>>()
+        .into_iter()
+        .map(|(instrument, quantity)| PositionSummary {
+            instrument,
+            quantity,
+        })
+        .collect();
+
+    let orders: Vec<OrderSummary> = state
+        .orders()
+        .values()
+        .map(|order| {
+            (
+                order.order_id.clone(),
+                OrderSummary {
+                    order_id: order.order_id.clone(),
+                    instrument: order.instrument.to_string(),
+                    side: order.side,
+                    filled_qty: order.filled_qty,
+                    lifecycle: order.lifecycle,
+                    cancel_requested: order.cancel_requested,
+                },
             )
         })
         .collect::<BTreeMap<_, _>>()
         .into_values()
         .collect();
 
-    let rejections: serde_json::Map<String, Value> = rejection_reasons(&state, &journal.log)
-        .into_iter()
-        .map(|(order_id, reason)| (order_id, Value::String(reason)))
-        .collect();
+    let rejections = rejection_reasons(&state, &journal.log);
 
-    let summary = json!({
-        "trading_state": trading_state_str(state.trading_state()),
-        "dispatches": state.dispatches(),
-        "positions": positions,
-        "orders": orders,
-        "rejections": Value::Object(rejections),
-    });
+    Ok(JournalReplay {
+        replay: ReplaySummary {
+            trading_state: state.trading_state(),
+            dispatches: state.dispatches(),
+            positions,
+            orders,
+            rejections,
+        },
+        header: journal.header,
+    })
+}
 
-    let out = json!({
-        "header": header_value(&journal.header)?,
-        "replay": summary,
-    });
-    Ok(out.to_string())
+/// Parses the journal and returns its header as JSON: the wire form of [`journal_header`].
+///
+/// # Errors
+///
+/// A `reason: message` pair for an empty stream, a missing or malformed header, an unsupported
+/// journal version, or a header that fails serialization.
+pub fn journal_header_json(journal_ndjson: &str) -> Result<String, String> {
+    let header = journal_header(journal_ndjson).map_err(|error| error.to_string())?;
+    serde_json::to_string(&header).map_err(|error| header_serialize_error(&error))
+}
+
+/// Replays the journal and returns the compact summary JSON described in the module docs: the
+/// wire form of [`replay_journal`].
+///
+/// # Errors
+///
+/// A `reason: message` pair for an empty stream, a missing or malformed header, a malformed
+/// record line, an unsupported journal version, or a header that fails serialization.
+pub fn replay_journal_json(journal_ndjson: &str) -> Result<String, String> {
+    replay_journal(journal_ndjson)
+        .map_err(|error| error.to_string())?
+        .to_json()
 }
 
 /// Parses the journal and returns the number of audit records after the header.
@@ -261,6 +405,6 @@ pub fn replay_journal_json(journal_ndjson: &str) -> Result<String, String> {
 /// A `reason: message` pair for an empty stream, a missing or malformed header, a malformed
 /// record line, or an unsupported journal version.
 pub fn journal_record_count(journal_ndjson: &str) -> Result<usize, String> {
-    let journal = parse_journal(journal_ndjson).map_err(pair)?;
+    let journal = parse_journal(journal_ndjson).map_err(|error| error.to_string())?;
     Ok(journal.log.len())
 }

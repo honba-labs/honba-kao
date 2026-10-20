@@ -4,18 +4,33 @@
 
 //! WASM compute surface for Honba frontend.
 //!
-//! Pure compute only: indicators (close-only and OHLC), screener evaluation, and Journal v1
-//! backtest replay. No tokio, no filesystem, no network. Depends only on pure L0-L4 crates.
+//! Pure compute only: indicators (close-only and OHLC), screener evaluation, Journal v1
+//! backtest replay, fill → round-trip pairing and run analytics. No tokio, no filesystem, no
+//! network. Depends only on pure L0-L4 crates.
 //!
-//! The logic lives in plain Rust modules ([`indicators`], [`screener`], [`replay`]) that are
-//! tested natively; this file is only the `wasm-bindgen` layer over them. Series cross the
-//! boundary as `Float64Array`; a screen result and a journal replay cross as JSON strings.
+//! The logic lives in plain Rust modules ([`indicators`], [`screener`], [`replay`],
+//! [`pairing`], [`analytics`], [`calendar`]) that are tested natively and expose **typed** Rust
+//! APIs: same-workspace Rust callers (the Leptos app) call those directly with plain structs, no
+//! JSON round trip. With the default `js` feature, this file adds the `wasm-bindgen` layer for
+//! external JS callers on top: series cross that boundary as `Float64Array`; a screen result and a
+//! journal replay cross as JSON strings rendered from the typed results.
 
+#[cfg(feature = "js")]
 use wasm_bindgen::prelude::*;
 
+pub mod analytics;
+pub mod calendar;
 pub mod indicators;
+pub mod pairing;
 pub mod replay;
 pub mod screener;
+
+/// Renders an indicator failure as a `reason: message` pair (ADR 0012 rule 4) for the
+/// wasm boundary, which can only throw the message string.
+#[cfg(feature = "js")]
+fn indicator_error(error: &indicators::IndicatorError) -> JsError {
+    JsError::new(&format!("{}: {error}", error.reason()))
+}
 
 /// Full indicator series over `closes`, same length as the input, `NaN` during warm-up.
 ///
@@ -23,6 +38,7 @@ pub mod screener;
 /// carrying a `reason: message` pair) on an unknown indicator, bad params, non-finite input, or
 /// finite input whose result overflows `f64` (e.g. an SMA of values near `1e308`); it never
 /// returns infinity. The `reason` is the stable [`IndicatorError::reason`] string.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn indicator_series(
     name: &str,
@@ -30,7 +46,7 @@ pub fn indicator_series(
     closes: &[f64],
 ) -> Result<Vec<f64>, JsError> {
     indicators::indicator_series(name, params_json, closes)
-        .map_err(|error| indicators::error_pair(&error))
+        .map_err(|error| indicator_error(&error))
 }
 
 /// Full OHLC-input indicator series (currently `atr`) over equal-length `high`, `low` and
@@ -42,6 +58,7 @@ pub fn indicator_series(
 /// `1..=1000000`), unequal array lengths, non-finite input, or finite input whose result
 /// overflows `f64`; it never returns infinity. Empty arrays give an empty result. The `reason` is
 /// the stable [`IndicatorError::reason`] string.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn ohlc_indicator_series(
     name: &str,
@@ -51,10 +68,11 @@ pub fn ohlc_indicator_series(
     close: &[f64],
 ) -> Result<Vec<f64>, JsError> {
     indicators::ohlc_indicator_series(name, params_json, high, low, close)
-        .map_err(|error| indicators::error_pair(&error))
+        .map_err(|error| indicator_error(&error))
 }
 
 /// JSON catalog of the available indicators: names, params, outputs and warm-up length.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn list_indicators() -> String {
     indicators::list_indicators_json()
@@ -68,6 +86,7 @@ pub fn list_indicators() -> String {
 /// still in warm-up). Throws a JavaScript `Error` on malformed predicate JSON, unequal lengths,
 /// non-finite input, an inconsistent OHLC row, an unsupported metric, or an operator/operand
 /// mismatch.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn screener_scan_predicate(
     predicate_json: &str,
@@ -85,6 +104,7 @@ pub fn screener_scan_predicate(
 ///
 /// `group_json` is a JSON `ScreenerFilterGroup`. Returns the same JSON shape and throws the same
 /// way as [`screener_scan_predicate`], plus on group shape/size/operator errors.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn screener_scan_group(
     group_json: &str,
@@ -104,6 +124,7 @@ pub fn screener_scan_group(
 /// `type: "header"`; the rest are audit records). Returns the `JournalHeader` object as JSON.
 /// Throws a JavaScript `Error` on an empty stream, a missing or malformed header, a malformed
 /// record line, or an unsupported journal version.
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn journal_header(journal_ndjson: &str) -> Result<String, JsError> {
     replay::journal_header_json(journal_ndjson).map_err(|e| JsError::new(&e))
@@ -116,6 +137,7 @@ pub fn journal_header(journal_ndjson: &str) -> Result<String, JsError> {
 /// "rejections"}}`, with `positions`/`orders` sorted and `rejections` keyed by order id, so the
 /// frontend can show a backtest journal offline. Throws a JavaScript `Error` on the same inputs
 /// as [`journal_header`].
+#[cfg(feature = "js")]
 #[wasm_bindgen]
 pub fn replay_journal(journal_ndjson: &str) -> Result<String, JsError> {
     replay::replay_journal_json(journal_ndjson).map_err(|e| JsError::new(&e))

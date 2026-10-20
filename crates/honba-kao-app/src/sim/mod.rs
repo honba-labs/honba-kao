@@ -6,6 +6,10 @@
 //! `components/simulator/`) consumes them; the reactive store (`stores/`) is
 //! the only place that holds signals.
 //!
+//! Fills → round trips pairing (fe `trade-pairing.ts`) and run analytics
+//! (fe `analytics.ts`) live in `honba_api_wasm::{pairing, analytics}`; the
+//! shared civil-date helpers in `honba_api_wasm::calendar`.
+//!
 //! Port map:
 //! - `defaults.rs` — slider/select constants + fill-model descriptors
 //!   (fe `controls.ts` constant blocks);
@@ -14,8 +18,6 @@
 //! - `chart_data.rs` (P2) — bars → chart series, resampling, preview
 //!   (fe `chart-data.ts`, `bars.ts`);
 //! - `persistence.rs` (P2) — `localStorage` handoff (fe `persistence.ts`);
-//! - `pairing.rs` (P3) — fills → round trips (fe `trade-pairing.ts`);
-//! - `analytics.rs` (P3) — honest metrics + heatmap + CSV (fe `analytics.ts`);
 //! - `ops.rs` (P3/P5 helpers) — run-mode/trust badges + drawdown stats
 //!   (fe `ops.ts`);
 //! - `selection.rs` (P4) — strategy graph shape, `controls_for_graph`,
@@ -52,7 +54,6 @@
 //!   (P6: `equity_card`, realised curve + labelled benchmark overlay)
 //!   (fe `features/simulator/components/*`, phase-8 shapes).
 
-pub mod analytics;
 pub mod bars;
 pub mod catalogue;
 pub mod chart_data;
@@ -64,7 +65,6 @@ pub mod journal;
 pub mod log;
 pub mod manifest;
 pub mod ops;
-pub mod pairing;
 pub mod persistence;
 pub mod run;
 pub mod selection;

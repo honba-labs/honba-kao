@@ -1,11 +1,12 @@
 //! Run analytics (HBD-2026-DES-005 P3).
 //!
-//! The Leptos port of honba-fe `core/simulator/analytics.ts`. Turns a completed
+//! The Rust port of honba-fe `core/simulator/analytics.ts`. Turns a completed
 //! run into the numbers the analytics surface shows. The run payload
-//! ([`wire::BacktestMetrics`]) carries only five fields — `total_return`,
-//! `sharpe`, `max_drawdown`, `net_pnl`, `trades` — so everything else is either
-//! **derived** deterministically from those plus the journal round trips
-//! ([`crate::sim::pairing`]) and the run window, or reported **unavailable**
+//! (the wire `BacktestMetrics`, mirrored here as [`RunMetrics`]) carries only
+//! five fields — `total_return`, `sharpe`, `max_drawdown`, `net_pnl`, `trades` —
+//! so everything else is either **derived** deterministically from those plus
+//! the journal round trips ([`crate::pairing`]) and the run window, or reported
+//! **unavailable**
 //! (provenance [`MetricProvenance::Unavailable`]). Nothing here invents a value
 //! the wire did not supply: every ribbon metric carries its provenance and,
 //! when derived, the rule that produced it.
@@ -18,16 +19,40 @@
 //!
 //! Money rule (per the port's DoD, mirrored from the design doc): fill costs
 //! arrive in integer minor units on the wire and are converted to major-unit
-//! floats **once**, at the [`crate::sim::pairing`] boundary; everything here
+//! floats **once**, at the [`crate::pairing`] boundary; everything here
 //! keeps raw major-unit floats like fe, and presentation divides by nothing.
-//! No [`wire::WireMoney`] value may leak this far — this module only speaks f64.
+//! No wire `Money` value may leak this far — this module only speaks f64.
 
 use std::collections::BTreeMap;
 
-use honba_kao_client::wire::BacktestMetrics;
+use crate::calendar::{civil_from_days, days_from_civil, IST_OFFSET_SECONDS};
+use crate::pairing::{Direction, RoundTrip, RoundTripExitReason, RoundTripStatus};
 
-use crate::sim::chart_data::{civil_from_days, days_from_civil, ChartBar, IST_OFFSET_SECONDS};
-use crate::sim::pairing::{Direction, RoundTrip, RoundTripExitReason, RoundTripStatus};
+/// The run payload's five wire metrics (the API's `BacktestMetrics`), as the
+/// analytics read them. The app copies them over field for field.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RunMetrics {
+    /// Number of completed round trips.
+    pub trades: u64,
+    /// Net profit across the run.
+    pub net_pnl: f64,
+    /// Annualized Sharpe ratio.
+    pub sharpe: f64,
+    /// Maximum peak-to-trough drawdown, as a positive fraction.
+    pub max_drawdown: f64,
+    /// Total return as a fraction of initial capital.
+    pub total_return: f64,
+}
+
+/// One benchmark price point: a bar's timestamp and close, all
+/// [`benchmark_equity`] reads off a bar.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ClosePoint {
+    /// Bar timestamp, whole UTC seconds.
+    pub time: i64,
+    /// Close.
+    pub close: f64,
+}
 
 /// The kind of metric and how a value renders for it (`MetricKind`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -101,8 +126,8 @@ pub struct RunWindow {
 #[derive(Clone, Copy, Debug)]
 pub struct AnalyticsInput<'a> {
     /// The run payload's five wire metrics, when the run reported them.
-    pub metrics: Option<&'a BacktestMetrics>,
-    /// The journal's derived round trips ([`crate::sim::pairing`]).
+    pub metrics: Option<&'a RunMetrics>,
+    /// The journal's derived round trips ([`crate::pairing`]).
     pub trips: &'a [RoundTrip],
     /// The run window, when the controls resolved one.
     pub window: Option<&'a RunWindow>,
@@ -437,11 +462,11 @@ pub fn equity_series(input: &AnalyticsInput<'_>) -> EquitySeries {
 /// window, a different sampling, or no bars), so the caller shows a labelled
 /// absence rather than a misleading overlay.
 pub fn benchmark_equity(
-    bars: &[ChartBar],
+    bars: &[ClosePoint],
     equity: &EquitySeries,
     input: &AnalyticsInput<'_>,
 ) -> Option<Vec<f64>> {
-    let mut usable: Vec<&ChartBar> = bars
+    let mut usable: Vec<&ClosePoint> = bars
         .iter()
         .filter(|bar| bar.close.is_finite() && bar.close > 0.0)
         .collect();
@@ -920,10 +945,10 @@ fn format_currency(value: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sim::pairing::pair_trades;
-    use honba_kao_client::wire::{
-        Currency, Exchange, InstrumentId, OrderId, Trade, WireMoney, WireOrderSide as OrderSide,
-        WireUnixNanos,
+    use crate::pairing::pair_trades;
+    use honba_entities::{Currency, Money as WireMoney, Trade};
+    use honba_messages::{
+        Exchange, InstrumentId, OrderId, OrderSide, UnixNanos as WireUnixNanos,
     };
 
     const JAN_2: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC
@@ -957,8 +982,8 @@ mod tests {
         ]
     }
 
-    fn fixture_metrics() -> BacktestMetrics {
-        BacktestMetrics {
+    fn fixture_metrics() -> RunMetrics {
+        RunMetrics {
             total_return: 0.1,
             sharpe: 1.25,
             max_drawdown: 0.2,
@@ -975,7 +1000,7 @@ mod tests {
     }
 
     fn input<'a>(
-        metrics: Option<&'a BacktestMetrics>,
+        metrics: Option<&'a RunMetrics>,
         trips: &'a [RoundTrip],
         window: Option<&'a RunWindow>,
         initial_capital: Option<f64>,
@@ -1192,14 +1217,10 @@ mod tests {
         let metrics = fixture_metrics();
         let run = input(Some(&metrics), &trips, Some(&window), Some(100_000.0));
         let equity = equity_series(&run);
-        let bars: Vec<ChartBar> = (0..91)
-            .map(|i| ChartBar {
+        let bars: Vec<ClosePoint> = (0..91)
+            .map(|i| ClosePoint {
                 time: JAN_2 + i * DAYS + 10 * HOURS,
-                open: (100 + i) as f64,
-                high: (100 + i) as f64,
-                low: (100 + i) as f64,
                 close: (100 + i) as f64,
-                volume: 0.0,
             })
             .collect();
         let benchmark = benchmark_equity(&bars, &equity, &run).expect("daily sampling");
@@ -1221,13 +1242,9 @@ mod tests {
         let no_window_input = input(Some(&metrics), &trips, None, Some(100_000.0));
         assert_eq!(
             benchmark_equity(
-                &[ChartBar {
+                &[ClosePoint {
                     time: JAN_2,
-                    open: 100.0,
-                    high: 100.0,
-                    low: 100.0,
                     close: 100.0,
-                    volume: 0.0,
                 }],
                 &equity,
                 &no_window_input

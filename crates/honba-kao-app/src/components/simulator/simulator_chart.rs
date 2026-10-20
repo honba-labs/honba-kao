@@ -51,11 +51,11 @@
 
 use std::sync::Arc;
 
+use honba_api_wasm::analytics::RunWindow;
 use leptos::prelude::*;
 
 use openalgo_charts::types::Bar;
 
-use crate::sim::analytics::RunWindow;
 use crate::sim::bars::{
     BarsSeam, BarsSource, BarsState, BarsStatus, LoadBarsRequest, load_run_bars_fold,
     no_client_fallback_note, preview_for,

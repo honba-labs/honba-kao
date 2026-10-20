@@ -13,7 +13,7 @@ use honba_indicators::{
     Atr, BollingerBands, Ema, Indicator, Macd, Rsi, Sma, Stochastic, WilliamsR,
 };
 use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
 
 /// Largest accepted period; bounds the memory an untrusted `params_json` can request.
 pub const MAX_PERIOD: usize = 1_000_000;
@@ -40,12 +40,6 @@ pub enum IndicatorError {
         /// Length of `close`.
         close: usize,
     },
-}
-
-/// Renders an indicator failure as a `reason: message` pair (ADR 0012 rule 4) for the
-/// wasm boundary, which can only throw the message string.
-pub fn error_pair(error: &IndicatorError) -> wasm_bindgen::JsError {
-    wasm_bindgen::JsError::new(&format!("{}: {error}", error.reason()))
 }
 
 impl IndicatorError {
@@ -199,7 +193,290 @@ fn check_output(out: &[f64]) -> Result<(), IndicatorError> {
     }
 }
 
-/// Computes the full series of indicator `name` over `closes`.
+/// Which band a [`CloseIndicator::Bollinger`] series reports.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BollingerOutput {
+    /// The moving average.
+    Middle,
+    /// `middle + k * stddev`.
+    Upper,
+    /// `middle - k * stddev`.
+    Lower,
+}
+
+/// Which line a [`CloseIndicator::Macd`] series reports.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MacdOutput {
+    /// `ema(fast) - ema(slow)`.
+    Macd,
+    /// The signal EMA of the MACD line.
+    Signal,
+    /// `macd - signal`.
+    Histogram,
+}
+
+/// Which line an [`OhlcIndicator::Stochastic`] series reports.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StochasticOutput {
+    /// `%K`.
+    K,
+    /// `%D`, the SMA of `%K` over `d_period`.
+    D,
+}
+
+/// A close-only indicator request, typed: the Rust-facing form of `name` + `params_json`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CloseIndicator {
+    /// Simple moving average.
+    Sma {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+    },
+    /// Exponential moving average, seeded with the SMA.
+    Ema {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+    },
+    /// Wilder RSI.
+    Rsi {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+    },
+    /// Bollinger bands.
+    Bollinger {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+        /// Band width in standard deviations, finite and `>= 0`.
+        k: f64,
+        /// The band to report.
+        output: BollingerOutput,
+    },
+    /// MACD.
+    Macd {
+        /// Fast EMA length, below `slow`.
+        fast: usize,
+        /// Slow EMA length.
+        slow: usize,
+        /// Signal EMA length.
+        signal: usize,
+        /// The line to report.
+        output: MacdOutput,
+    },
+}
+
+/// An OHLC-input indicator request, typed: the Rust-facing form of `name` + `params_json`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OhlcIndicator {
+    /// Wilder ATR.
+    Atr {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+    },
+    /// Williams %R.
+    WilliamsR {
+        /// Window length, `1..=MAX_PERIOD`.
+        period: usize,
+    },
+    /// Stochastic oscillator.
+    Stochastic {
+        /// `%K` window length, `1..=MAX_PERIOD`.
+        period: usize,
+        /// `%D` smoothing length, `1..=MAX_PERIOD`.
+        d_period: usize,
+        /// The line to report.
+        output: StochasticOutput,
+    },
+}
+
+impl CloseIndicator {
+    /// Parses the wire form: indicator `name` plus a `params_json` object (blank means `{}`).
+    ///
+    /// Unknown fields are rejected and every value is range-checked, in the same order
+    /// [`indicator_series`] has always reported them.
+    ///
+    /// # Errors
+    ///
+    /// [`IndicatorError::UnknownIndicator`] or [`IndicatorError::InvalidParams`].
+    pub fn from_json(name: &str, params_json: &str) -> Result<Self, IndicatorError> {
+        Ok(match name {
+            "sma" => Self::Sma {
+                period: period("period", parse::<PeriodParams>(params_json)?.period)?,
+            },
+            "ema" => Self::Ema {
+                period: period("period", parse::<PeriodParams>(params_json)?.period)?,
+            },
+            "rsi" => Self::Rsi {
+                period: period("period", parse::<PeriodParams>(params_json)?.period)?,
+            },
+            "bollinger" => {
+                let p: BollingerParams = parse(params_json)?;
+                bollinger_k(p.k)?;
+                let output = [
+                    BollingerOutput::Middle,
+                    BollingerOutput::Upper,
+                    BollingerOutput::Lower,
+                ][pick(&p.output, &["middle", "upper", "lower"])?];
+                Self::Bollinger {
+                    period: period("period", p.period)?,
+                    k: p.k,
+                    output,
+                }
+            }
+            "macd" => {
+                let p: MacdParams = parse(params_json)?;
+                let (fast, slow, signal) = macd_periods(p.fast, p.slow, p.signal)?;
+                let output = [MacdOutput::Macd, MacdOutput::Signal, MacdOutput::Histogram]
+                    [pick(&p.output, &["macd", "signal", "histogram"])?];
+                Self::Macd {
+                    fast,
+                    slow,
+                    signal,
+                    output,
+                }
+            }
+            other => return Err(IndicatorError::UnknownIndicator(other.to_string())),
+        })
+    }
+
+    /// Range-checks the request exactly as [`Self::from_json`] does.
+    fn validate(&self) -> Result<(), IndicatorError> {
+        match *self {
+            Self::Sma { period: n } | Self::Ema { period: n } | Self::Rsi { period: n } => {
+                period("period", n)?;
+            }
+            Self::Bollinger { period: n, k, .. } => {
+                bollinger_k(k)?;
+                period("period", n)?;
+            }
+            Self::Macd {
+                fast, slow, signal, ..
+            } => {
+                macd_periods(fast, slow, signal)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl OhlcIndicator {
+    /// Parses the wire form: indicator `name` plus a `params_json` object (blank means `{}`).
+    ///
+    /// # Errors
+    ///
+    /// [`IndicatorError::UnknownIndicator`] (including a close-only name) or
+    /// [`IndicatorError::InvalidParams`].
+    pub fn from_json(name: &str, params_json: &str) -> Result<Self, IndicatorError> {
+        Ok(match name {
+            "atr" => Self::Atr {
+                period: period("period", parse::<PeriodParams>(params_json)?.period)?,
+            },
+            "williams_r" => Self::WilliamsR {
+                period: period("period", parse::<PeriodParams>(params_json)?.period)?,
+            },
+            "stochastic" => {
+                let p: StochasticParams = parse(params_json)?;
+                let output =
+                    [StochasticOutput::K, StochasticOutput::D][pick(&p.output, &["k", "d"])?];
+                Self::Stochastic {
+                    period: period("period", p.period)?,
+                    d_period: period("d_period", p.d_period)?,
+                    output,
+                }
+            }
+            other => return Err(IndicatorError::UnknownIndicator(other.to_string())),
+        })
+    }
+
+    /// Range-checks the request exactly as [`Self::from_json`] does.
+    fn validate(&self) -> Result<(), IndicatorError> {
+        match *self {
+            Self::Atr { period: n } | Self::WilliamsR { period: n } => {
+                period("period", n)?;
+            }
+            Self::Stochastic {
+                period: n,
+                d_period,
+                ..
+            } => {
+                period("period", n)?;
+                period("d_period", d_period)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+fn bollinger_k(k: f64) -> Result<(), IndicatorError> {
+    if !k.is_finite() || k < 0.0 {
+        return Err(IndicatorError::InvalidParams(format!(
+            "`k` must be finite and >= 0, got {k}"
+        )));
+    }
+    Ok(())
+}
+
+fn macd_periods(
+    fast: usize,
+    slow: usize,
+    signal: usize,
+) -> Result<(usize, usize, usize), IndicatorError> {
+    let (fast, slow, signal) = (
+        period("fast", fast)?,
+        period("slow", slow)?,
+        period("signal", signal)?,
+    );
+    if fast >= slow {
+        return Err(IndicatorError::InvalidParams(format!(
+            "`fast` ({fast}) must be less than `slow` ({slow})"
+        )));
+    }
+    Ok((fast, slow, signal))
+}
+
+/// Computes the full series of a typed close-only indicator over `closes`.
+///
+/// The request is validated before the data is inspected, so a bad request fails the same way
+/// on any input.
+///
+/// # Errors
+///
+/// [`IndicatorError`] for bad params, non-finite input, or finite input whose result overflows
+/// `f64` (infinite output, or `NaN` after warm-up).
+pub fn close_series(indicator: &CloseIndicator, closes: &[f64]) -> Result<Vec<f64>, IndicatorError> {
+    indicator.validate()?;
+    if let Some(i) = closes.iter().position(|c| !c.is_finite()) {
+        return Err(IndicatorError::NonFiniteInput(i));
+    }
+    let out = match *indicator {
+        CloseIndicator::Sma { period: n } => run(Sma::new(n), closes, |v| v),
+        CloseIndicator::Ema { period: n } => run(Ema::new(n), closes, |v| v),
+        CloseIndicator::Rsi { period: n } => run(Rsi::new(n), closes, |v| v),
+        CloseIndicator::Bollinger {
+            period: n,
+            k,
+            output,
+        } => run(BollingerBands::new(n, k), closes, |v| match output {
+            BollingerOutput::Middle => v.middle,
+            BollingerOutput::Upper => v.upper,
+            BollingerOutput::Lower => v.lower,
+        }),
+        CloseIndicator::Macd {
+            fast,
+            slow,
+            signal,
+            output,
+        } => run(Macd::new(fast, slow, signal), closes, |v| match output {
+            MacdOutput::Macd => v.macd,
+            MacdOutput::Signal => v.signal,
+            MacdOutput::Histogram => v.histogram,
+        }),
+    };
+    check_output(&out)?;
+    Ok(out)
+}
+
+/// Computes the full series of indicator `name` over `closes`: the wire form of
+/// [`close_series`].
 ///
 /// `params_json` is a JSON object (see [`list_indicators_json`]); blank means `{}`. Unknown
 /// fields are rejected. Multi-output indicators (`macd`, `bollinger`) select one output with the
@@ -214,117 +491,27 @@ pub fn indicator_series(
     params_json: &str,
     closes: &[f64],
 ) -> Result<Vec<f64>, IndicatorError> {
-    // Validate params before inspecting the data so a bad request fails the same way on any input.
-    enum Plan {
-        Sma(usize),
-        Ema(usize),
-        Rsi(usize),
-        Bollinger(usize, f64, usize),
-        Macd(usize, usize, usize, usize),
-    }
-    let plan = match name {
-        "sma" => Plan::Sma(period(
-            "period",
-            parse::<PeriodParams>(params_json)?.period,
-        )?),
-        "ema" => Plan::Ema(period(
-            "period",
-            parse::<PeriodParams>(params_json)?.period,
-        )?),
-        "rsi" => Plan::Rsi(period(
-            "period",
-            parse::<PeriodParams>(params_json)?.period,
-        )?),
-        "bollinger" => {
-            let p: BollingerParams = parse(params_json)?;
-            if !p.k.is_finite() || p.k < 0.0 {
-                return Err(IndicatorError::InvalidParams(format!(
-                    "`k` must be finite and >= 0, got {}",
-                    p.k
-                )));
-            }
-            let out = pick(&p.output, &["middle", "upper", "lower"])?;
-            Plan::Bollinger(period("period", p.period)?, p.k, out)
-        }
-        "macd" => {
-            let p: MacdParams = parse(params_json)?;
-            let (fast, slow, signal) = (
-                period("fast", p.fast)?,
-                period("slow", p.slow)?,
-                period("signal", p.signal)?,
-            );
-            if fast >= slow {
-                return Err(IndicatorError::InvalidParams(format!(
-                    "`fast` ({fast}) must be less than `slow` ({slow})"
-                )));
-            }
-            let out = pick(&p.output, &["macd", "signal", "histogram"])?;
-            Plan::Macd(fast, slow, signal, out)
-        }
-        other => return Err(IndicatorError::UnknownIndicator(other.to_string())),
-    };
-    if let Some(i) = closes.iter().position(|c| !c.is_finite()) {
-        return Err(IndicatorError::NonFiniteInput(i));
-    }
-    let out = match plan {
-        Plan::Sma(n) => run(Sma::new(n), closes, |v| v),
-        Plan::Ema(n) => run(Ema::new(n), closes, |v| v),
-        Plan::Rsi(n) => run(Rsi::new(n), closes, |v| v),
-        Plan::Bollinger(n, k, out) => run(BollingerBands::new(n, k), closes, |v| {
-            [v.middle, v.upper, v.lower][out]
-        }),
-        Plan::Macd(f, s, g, out) => run(Macd::new(f, s, g), closes, |v| {
-            [v.macd, v.signal, v.histogram][out]
-        }),
-    };
-    check_output(&out)?;
-    Ok(out)
+    close_series(&CloseIndicator::from_json(name, params_json)?, closes)
 }
 
-/// Computes the full series of OHLC-input indicator `name` over equal-length `high`, `low` and
-/// `close` series (`atr`: Wilder; `williams_r`; `stochastic` with `output` `k`/`d`; `period` required).
+/// Computes the full series of a typed OHLC-input indicator over equal-length `high`, `low` and
+/// `close` series (`atr`: Wilder; `williams_r`; `stochastic`).
 ///
-/// Same conventions as [`indicator_series`]: params are validated first (unknown fields rejected,
-/// `period` in `1..=MAX_PERIOD`), then lengths, then finiteness; the output has the input's
+/// The request is validated first, then lengths, then finiteness; the output has the input's
 /// length with `period - 1` leading `NaN`s (the first bar's true range is `high - low`); empty
 /// input gives empty output; infinite output from finite input is [`IndicatorError::NonFiniteOutput`].
 ///
 /// # Errors
 ///
-/// [`IndicatorError`] for an unknown (or close-only) name, bad params, unequal lengths,
-/// non-finite input, `high < low` at any index ([`IndicatorError::InvertedRange`]), or overflow.
-pub fn ohlc_indicator_series(
-    name: &str,
-    params_json: &str,
+/// [`IndicatorError`] for bad params, unequal lengths, non-finite input, `high < low` at any index
+/// ([`IndicatorError::InvertedRange`]), or overflow.
+pub fn ohlc_series(
+    indicator: &OhlcIndicator,
     high: &[f64],
     low: &[f64],
     close: &[f64],
 ) -> Result<Vec<f64>, IndicatorError> {
-    enum Kind {
-        Atr(usize),
-        WilliamsR(usize),
-        Stochastic(usize, usize, usize),
-    }
-    let kind = match name {
-        "atr" => Kind::Atr(period(
-            "period",
-            parse::<PeriodParams>(params_json)?.period,
-        )?),
-        "williams_r" => Kind::WilliamsR(period(
-            "period",
-            parse::<PeriodParams>(params_json)?.period,
-        )?),
-        "stochastic" => {
-            let p: StochasticParams = parse(params_json)?;
-            let out = pick(&p.output, &["k", "d"])?;
-            Kind::Stochastic(
-                period("period", p.period)?,
-                period("d_period", p.d_period)?,
-                out,
-            )
-        }
-        other => return Err(IndicatorError::UnknownIndicator(other.to_string())),
-    };
+    indicator.validate()?;
     if high.len() != low.len() || high.len() != close.len() {
         return Err(IndicatorError::LengthMismatch {
             high: high.len(),
@@ -345,22 +532,29 @@ pub fn ohlc_indicator_series(
         .zip(low)
         .zip(close)
         .map(|((&h, &l), &c)| (h, l, c));
-    let out: Vec<f64> = match kind {
-        Kind::Atr(n) => {
+    let out: Vec<f64> = match *indicator {
+        OhlcIndicator::Atr { period: n } => {
             let mut ind = Atr::new(n);
             bars.map(|(h, l, c)| ind.update_hlc(h, l, c).unwrap_or(f64::NAN))
                 .collect()
         }
-        Kind::WilliamsR(n) => {
+        OhlcIndicator::WilliamsR { period: n } => {
             let mut ind = WilliamsR::new(n);
             bars.map(|(h, l, c)| ind.update_hlc(h, l, c).unwrap_or(f64::NAN))
                 .collect()
         }
-        Kind::Stochastic(n, d, out) => {
-            let mut ind = Stochastic::new(n, d);
+        OhlcIndicator::Stochastic {
+            period: n,
+            d_period,
+            output,
+        } => {
+            let mut ind = Stochastic::new(n, d_period);
             bars.map(|(h, l, c)| {
                 ind.update_hlc(h, l, c)
-                    .and_then(|v| if out == 0 { Some(v.k) } else { v.d })
+                    .and_then(|v| match output {
+                        StochasticOutput::K => Some(v.k),
+                        StochasticOutput::D => v.d,
+                    })
                     .unwrap_or(f64::NAN)
             })
             .collect()
@@ -370,8 +564,27 @@ pub fn ohlc_indicator_series(
     Ok(out)
 }
 
-/// Describes the available indicators as JSON: names, inputs, params, outputs, warm-up and the
-/// render contract (E6-S5).
+/// Computes the full series of OHLC-input indicator `name`: the wire form of [`ohlc_series`].
+///
+/// Same conventions as [`indicator_series`]: params are validated first (unknown fields rejected,
+/// `period` in `1..=MAX_PERIOD`, `period` required), then lengths, then finiteness.
+///
+/// # Errors
+///
+/// [`IndicatorError`] for an unknown (or close-only) name, bad params, unequal lengths,
+/// non-finite input, `high < low` at any index ([`IndicatorError::InvertedRange`]), or overflow.
+pub fn ohlc_indicator_series(
+    name: &str,
+    params_json: &str,
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+) -> Result<Vec<f64>, IndicatorError> {
+    ohlc_series(&OhlcIndicator::from_json(name, params_json)?, high, low, close)
+}
+
+/// Describes the available indicators: names, inputs, params, outputs, warm-up and the render
+/// contract (E6-S5).
 ///
 /// Shape: `{"warmup_value":"NaN","indicators":[{"name","input","params":[{"name","type",
 /// "required","default"?,"min"?}],"outputs":[..],"warmup":"..","presentation":{"pane","plots",
@@ -379,7 +592,8 @@ pub fn ohlc_indicator_series(
 /// [`ohlc_indicator_series`] ones (those also carry `"export":"ohlc_indicator_series"`). The
 /// `warmup` text is the number of leading `NaN` values. `presentation` is the render contract the
 /// chart consumes: the pane, one plot per output and any zones.
-pub fn list_indicators_json() -> String {
+#[must_use]
+pub fn indicator_catalog() -> Value {
     let period = json!({"name": "period", "type": "integer", "required": true, "min": 1,
         "max": MAX_PERIOD});
     let int = |n: &str, d: usize| {
@@ -428,5 +642,10 @@ pub fn list_indicators_json() -> String {
              "presentation": pres("stochastic")},
         ],
     })
-    .to_string()
+}
+
+/// [`indicator_catalog`] as a JSON string, for the wasm boundary.
+#[must_use]
+pub fn list_indicators_json() -> String {
+    indicator_catalog().to_string()
 }

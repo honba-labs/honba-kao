@@ -3,7 +3,7 @@
 //! The Leptos port of honba-fe `core/simulator/journal.ts`: `GET
 //! /backtests/{id}/journal` answers with **fills** ([`wire::Trade`]), which
 //! the chart and the analytics surface pair into round trips
-//! ([`crate::sim::pairing`]). This module owns the fetch state only; it never
+//! ([`honba_api_wasm::pairing`]). This module owns the fetch state only; it never
 //! pairs, so the pairing rules stay in one tested place.
 //!
 //! The client seam is a narrow trait, exactly as the run loop's is, so the

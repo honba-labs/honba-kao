@@ -1,8 +1,10 @@
 //! Pure screener evaluation, free of any wasm-bindgen types.
 //!
 //! Everything here runs natively, so it is conformance-tested without a wasm runtime (see
-//! `tests/screener_conformance.rs`). The `#[wasm_bindgen]` layer in [`crate`] only forwards to
-//! [`scan_predicate_json`] and [`scan_group_json`].
+//! `tests/screener_conformance.rs`). Rust callers use the typed [`scan_predicate`] /
+//! [`scan_group`] (and [`predicate_matches`] / [`group_matches`]) over parsed filters; the
+//! `#[wasm_bindgen]` layer in [`crate`] forwards to the JSON-string wrappers
+//! [`scan_predicate_json`] and [`scan_group_json`], which parse, call the typed form and render.
 //!
 //! The evaluator itself is `honba_indicators::screener` (L3); this module is the thin adaptation
 //! from the frontend's column-oriented arrays (`open`/`high`/`low`/`close`/`volume`) to the
@@ -244,16 +246,106 @@ fn f64_value(x: f64) -> Value {
     serde_json::Number::from_f64(x).map_or(Value::Null, Value::Number)
 }
 
-/// Renders `{"result": bool, "metrics": {key: number|null}}`.
-fn scan_json(result: bool, metrics: BTreeMap<String, Option<f64>>) -> String {
-    let metrics: serde_json::Map<String, Value> = metrics
-        .into_iter()
-        .map(|(key, value)| (key, value.map_or(Value::Null, f64_value)))
-        .collect();
-    json!({ "result": result, "metrics": Value::Object(metrics) }).to_string()
+/// The outcome of a scan: whether the filter matched, and the latest value of every metric it
+/// reads (`None` is a metric still in warm-up, distinct from a missing key).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ScanOutcome {
+    /// Whether the filter matched the latest bar.
+    pub result: bool,
+    /// Latest value per metric key read by the filter.
+    pub metrics: BTreeMap<String, Option<f64>>,
 }
 
-/// Evaluates one predicate JSON document against a bar history built from the input arrays.
+impl ScanOutcome {
+    /// Renders `{"result": bool, "metrics": {key: number|null}}`.
+    #[must_use]
+    pub fn to_json(&self) -> String {
+        let metrics: serde_json::Map<String, Value> = self
+            .metrics
+            .iter()
+            .map(|(key, value)| (key.clone(), value.map_or(Value::Null, f64_value)))
+            .collect();
+        json!({ "result": self.result, "metrics": Value::Object(metrics) }).to_string()
+    }
+}
+
+/// Evaluates one typed predicate against a bar history built from the input arrays.
+///
+/// # Errors
+///
+/// [`WasmScreenerError`] for unequal lengths, non-finite input, an inconsistent OHLC row, or a
+/// [`ScreenerError`] (unknown/unsupported metric, bad operand).
+pub fn predicate_matches(
+    predicate: &ScreenerFilterPredicate,
+    open: &[f64],
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+    volume: &[f64],
+) -> Result<bool, WasmScreenerError> {
+    let bars = bars_from_arrays(open, high, low, close, volume)?;
+    Ok(evaluate_predicate(predicate, &bars)?)
+}
+
+/// Evaluates one typed filter group (AND/OR, possibly nested) against the input arrays.
+///
+/// # Errors
+///
+/// As [`predicate_matches`], plus group shape/size/operator errors.
+pub fn group_matches(
+    group: &ScreenerFilterGroup,
+    open: &[f64],
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+    volume: &[f64],
+) -> Result<bool, WasmScreenerError> {
+    let bars = bars_from_arrays(open, high, low, close, volume)?;
+    Ok(evaluate_group(group, &bars)?)
+}
+
+/// Evaluates a typed predicate and reports both its `result` and the latest `metrics` it reads:
+/// its key and any right-hand metric reference.
+///
+/// # Errors
+///
+/// As [`predicate_matches`].
+pub fn scan_predicate(
+    predicate: &ScreenerFilterPredicate,
+    open: &[f64],
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+    volume: &[f64],
+) -> Result<ScanOutcome, WasmScreenerError> {
+    let bars = bars_from_arrays(open, high, low, close, volume)?;
+    let result = evaluate_predicate(predicate, &bars)?;
+    let metrics = latest_metrics(&predicate_keys(predicate), &bars)?;
+    Ok(ScanOutcome { result, metrics })
+}
+
+/// Evaluates a typed group and reports both its `result` and the latest value of every metric it
+/// reads (in first-seen order, without repeats).
+///
+/// # Errors
+///
+/// As [`group_matches`].
+pub fn scan_group(
+    group: &ScreenerFilterGroup,
+    open: &[f64],
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+    volume: &[f64],
+) -> Result<ScanOutcome, WasmScreenerError> {
+    let bars = bars_from_arrays(open, high, low, close, volume)?;
+    let result = evaluate_group(group, &bars)?;
+    let keys = group_metric_keys(group)?;
+    let metrics = latest_metrics(&keys, &bars)?;
+    Ok(ScanOutcome { result, metrics })
+}
+
+/// Evaluates one predicate JSON document: the wire form of [`predicate_matches`].
 ///
 /// `predicate_json` is the wire form of a `ScreenerFilterPredicate`, e.g.
 /// `{"key":"close","op":"gt","value":10}`.
@@ -272,11 +364,10 @@ pub fn evaluate_predicate_json(
     volume: &[f64],
 ) -> Result<bool, String> {
     let pred = parse_predicate(predicate_json).map_err(error_pair)?;
-    let bars = bars_from_arrays(open, high, low, close, volume).map_err(error_pair)?;
-    evaluate_predicate(&pred, &bars).map_err(error_pair)
+    predicate_matches(&pred, open, high, low, close, volume).map_err(error_pair)
 }
 
-/// Evaluates one filter group JSON document (AND/OR, possibly nested) against the input arrays.
+/// Evaluates one filter group JSON document: the wire form of [`group_matches`].
 ///
 /// # Errors
 ///
@@ -290,15 +381,13 @@ pub fn evaluate_group_json(
     volume: &[f64],
 ) -> Result<bool, String> {
     let group = parse_group(group_json).map_err(error_pair)?;
-    let bars = bars_from_arrays(open, high, low, close, volume).map_err(error_pair)?;
-    evaluate_group(&group, &bars).map_err(error_pair)
+    group_matches(&group, open, high, low, close, volume).map_err(error_pair)
 }
 
-/// Evaluates a predicate and reports both its `result` and the latest `metrics` it reads.
+/// Evaluates a predicate JSON document: the wire form of [`scan_predicate`].
 ///
 /// Returns the JSON string `{"result": bool, "metrics": {key: number|null}}`, where a `null`
-/// metric is still in warm-up. For a single predicate the metrics are its key and any right-hand
-/// metric reference.
+/// metric is still in warm-up.
 ///
 /// # Errors
 ///
@@ -312,14 +401,12 @@ pub fn scan_predicate_json(
     volume: &[f64],
 ) -> Result<String, String> {
     let pred = parse_predicate(predicate_json).map_err(error_pair)?;
-    let bars = bars_from_arrays(open, high, low, close, volume).map_err(error_pair)?;
-    let result = evaluate_predicate(&pred, &bars).map_err(error_pair)?;
-    let metrics = latest_metrics(&predicate_keys(&pred), &bars).map_err(error_pair)?;
-    Ok(scan_json(result, metrics))
+    scan_predicate(&pred, open, high, low, close, volume)
+        .map(|outcome| outcome.to_json())
+        .map_err(error_pair)
 }
 
-/// Evaluates a group and reports both its `result` and the latest value of every metric it reads
-/// (in first-seen order, without repeats).
+/// Evaluates a group JSON document: the wire form of [`scan_group`].
 ///
 /// Returns the same JSON shape as [`scan_predicate_json`].
 ///
@@ -335,9 +422,7 @@ pub fn scan_group_json(
     volume: &[f64],
 ) -> Result<String, String> {
     let group = parse_group(group_json).map_err(error_pair)?;
-    let bars = bars_from_arrays(open, high, low, close, volume).map_err(error_pair)?;
-    let result = evaluate_group(&group, &bars).map_err(error_pair)?;
-    let keys = group_metric_keys(&group).map_err(error_pair)?;
-    let metrics = latest_metrics(&keys, &bars).map_err(error_pair)?;
-    Ok(scan_json(result, metrics))
+    scan_group(&group, open, high, low, close, volume)
+        .map(|outcome| outcome.to_json())
+        .map_err(error_pair)
 }

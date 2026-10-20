@@ -10,7 +10,7 @@
 //! - the timer body (`ticksPerFrame` loop, `completed` on exhaustion) is
 //!   fe's `startTimer` interval callback, expressed as [`run_frame`];
 //! - `handleTradeExecution` (fill models, fees, round-trip construction) is
-//!   [`ReplayController::execute_trade`], building `sim::pairing::RoundTrip`
+//!   [`ReplayController::execute_trade`], building `honba_api_wasm::pairing::RoundTrip`
 //!   values so engines' trips read exactly like the journal pairs them.
 //!
 //! Honesty + deviation notes (pinned):
@@ -32,6 +32,10 @@
 //! - fe's timers restart on `setSpeed`; kao has no timer — the store
 //!   re-reads `interval_ms`/`ticks_per_frame` each frame.
 
+use honba_api_wasm::pairing::{
+    Direction, RoundTrip, RoundTripExitReason, RoundTripLeg, RoundTripStatus,
+};
+
 use crate::sim::chart_data::ChartBar;
 use crate::sim::engine::evaluator::{
     ConfluenceSnapshot, EvaluatedIndicators, ExecutedTrade, SignalEvaluation, TradeAction,
@@ -41,9 +45,6 @@ use crate::sim::engine::{
     ActivePosition, DEFAULT_FILL_FEE, DEFAULT_L2_SLIPPAGE_BPS, FillModel, L2_HALF_SPREAD_FLOOR,
     L2_RANGE_FACTOR, ReplayConfig, ReplayStatus, Side, SimulatedTick, TickPhase, clamp_speed,
     clock_str,
-};
-use crate::sim::pairing::{
-    Direction, RoundTrip, RoundTripExitReason, RoundTripLeg, RoundTripStatus,
 };
 use crate::sim::selection::StrategyGraphShape;
 

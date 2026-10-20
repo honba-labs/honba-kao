@@ -180,7 +180,7 @@ pub fn SimulatorPage() -> impl IntoView {
     // the run: fe's chart is useful before anything was simulated.
     let bars_window = Memo::new(move |_| {
         store.plan.with(|plan| {
-            Some(crate::sim::analytics::RunWindow {
+            Some(honba_api_wasm::analytics::RunWindow {
                 start: plan.range.0.clone(),
                 end: plan.range.1.clone(),
             })

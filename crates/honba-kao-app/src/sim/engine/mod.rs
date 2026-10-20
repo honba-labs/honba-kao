@@ -29,7 +29,7 @@ pub mod controller;
 pub mod evaluator;
 pub mod indicators;
 
-use crate::sim::chart_data::{civil_from_days, IST_OFFSET_SECONDS};
+use honba_api_wasm::calendar::{civil_from_days, IST_OFFSET_SECONDS};
 
 /// fe default `initialCapital`.
 pub const DEFAULT_INITIAL_CAPITAL: f64 = 100_000.0;
@@ -410,7 +410,7 @@ pub fn stamp_str(ts: i64) -> String {
 mod tests {
     use super::*;
 
-    use crate::sim::chart_data::days_from_civil;
+    use honba_api_wasm::calendar::days_from_civil;
 
     /// UTC 2024-01-15 10:00:00 → IST 15:30.
     fn ts_utc_2024_01_15_10h() -> i64 {

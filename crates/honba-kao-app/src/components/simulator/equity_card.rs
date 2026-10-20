@@ -24,20 +24,18 @@
 
 use std::sync::Arc;
 
+use honba_api_wasm::analytics::{
+    benchmark_equity, benchmark_instrument_id, format_metric_value, AnalyticsInput, ClosePoint,
+    EquitySampling, EquitySeries, MetricKind, RunWindow,
+};
 use leptos::prelude::*;
 
 use openalgo_charts::types::{Bar, SeriesKind, SeriesOptions};
 
 use crate::sim::bars::{seconds_of_date, BarsSeam};
-use crate::sim::chart_data::{to_chart_bars, ChartBar};
+use crate::sim::chart_data::to_chart_bars;
 use crate::sim::ops::max_drawdown_pct;
 use crate::sim::run::RunAbort;
-use crate::sim::{
-    analytics::{
-        benchmark_equity, benchmark_instrument_id, format_metric_value, AnalyticsInput, EquitySampling,
-        EquitySeries, MetricKind, RunWindow,
-    },
-};
 
 /// The bar seam as a shared handle (wasm only — the native build never
 /// renders this page).
@@ -197,14 +195,20 @@ pub fn EquityCard(
             }
             match outcome {
                 Ok(response) => {
-                    let chart_bars: Vec<ChartBar> = to_chart_bars(&response.bars);
+                    let closes: Vec<ClosePoint> = to_chart_bars(&response.bars)
+                        .iter()
+                        .map(|bar| ClosePoint {
+                            time: bar.time,
+                            close: bar.close,
+                        })
+                        .collect();
                     let input = AnalyticsInput {
                         metrics: None,
                         trips: &[],
                         window: Some(&window_owned),
                         initial_capital: None,
                     };
-                    match benchmark_equity(&chart_bars, &held_equity, &input) {
+                    match benchmark_equity(&closes, &held_equity, &input) {
                         Some(series) => {
                             benchmark.set(Some(series));
                             note.set(Some(format!(

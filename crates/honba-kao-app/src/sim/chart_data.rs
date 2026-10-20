@@ -27,12 +27,12 @@
 //! conversion. The finite-price checks stay because they are cheap and mirror
 //! fe, even though a Rust-decoded wire bar cannot hold a NaN.
 
-use honba_kao_client::wire::{Bar as WireBar, WireUnixNanos};
+use honba_api_wasm::calendar::{
+    civil_from_days, days_from_civil, unix_nanos_to_seconds, IST_OFFSET_SECONDS,
+};
+use honba_kao_client::wire::Bar as WireBar;
 
 use crate::sim::controls::{parse_bar_spec, BarUnit};
-
-/// IST is the session the Simulator charts; UTC+5:30 has no DST.
-pub const IST_OFFSET_SECONDS: i64 = 5 * 3600 + 1800;
 
 /// NSE regular session, in seconds past IST midnight (09:15 → 15:30).
 pub const SESSION_OPEN_SECONDS: i64 = 9 * 3600 + 15 * 60;
@@ -78,16 +78,6 @@ pub fn bar_spec_seconds(bar_spec: &str) -> Option<i64> {
     Some(unit_seconds * step as i64)
 }
 
-/// `ts_event` → whole UTC seconds (exact integer division; see the module doc
-/// for the JS deviation). `None` only for the epoch placeholder.
-pub fn unix_nanos_to_seconds(ts: WireUnixNanos) -> Option<i64> {
-    let nanos = ts.as_u64();
-    if nanos == 0 {
-        return None;
-    }
-    Some((nanos / 1_000_000_000) as i64)
-}
-
 /// Normalise wire bars for the chart: seconds-based `time`, ascending order,
 /// one bar per timestamp (the later row wins) and invalid rows dropped.
 ///
@@ -130,34 +120,6 @@ fn ist_day_start(time: i64) -> i64 {
 fn ist_weekday(time: i64) -> i64 {
     let day = (time + IST_OFFSET_SECONDS).div_euclid(86_400);
     (day + 4).rem_euclid(7)
-}
-
-/// Civil date (year, month 1-12, day 1-31) of the day index
-/// `days since 1970-01-01` (Hinnant's `civil_from_days`).
-pub(crate) fn civil_from_days(z: i64) -> (i64, u32, u32) {
-    let z = z + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097; // [0, 146096]
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365; // [0, 399]
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100); // [0, 365]
-    let mp = (5 * doy + 2) / 153; // [0, 11]
-    let d = doy - (153 * mp + 2) / 5 + 1; // [1, 31]
-    let m = if mp < 10 { mp + 3 } else { mp - 9 }; // [1, 12]
-    (if m <= 2 { y + 1 } else { y }, m as u32, d as u32)
-}
-
-/// Day index `days since 1970-01-01` of a civil date (Hinnant's
-/// `days_from_civil`). Month must be 1-12; the day may overflow (e.g. 32),
-/// the caller normalises first.
-pub(crate) fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
-    let y = if m <= 2 { y - 1 } else { y };
-    let era = y.div_euclid(400);
-    let yoe = y - era * 400; // [0, 399]
-    let mp = if m > 2 { m - 3 } else { m + 9 } as i64; // [0, 11]
-    let doy = (153 * mp + 2) / 5 + d as i64 - 1; // [0, 365]
-    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy; // [0, 146096]
-    era * 146_097 + doe - 719_468
 }
 
 /// Canonical bucket start for `time`, aware of IST day/week/month boundaries
@@ -475,8 +437,10 @@ pub fn marker_tolerance_sec(bar_spec: &str) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use honba_api_wasm::pairing::{markers_from_pairing, pair_trades, FillSide, TradeMarkerKind};
     use honba_kao_client::wire::{
-        Exchange, BarAggregation, BarSpecification, BarType, InstrumentId, PriceType,
+        Currency, Exchange, BarAggregation, BarSpecification, BarType, InstrumentId, OrderId,
+        PriceType, Trade, WireOrderSide as OrderSide, WireUnixNanos,
     };
     /// 2024-01-01 is a Monday.
     const JAN1_2024: i64 = 1_704_067_200;
@@ -520,16 +484,6 @@ mod tests {
     /// fe `minute(day, offset, close)`: one `offset`-minutes-past-open bar.
     fn minute(day_index: i64, offset: i64, close: f64, volume: f64) -> ChartBar {
         chart_bar(open(day_index) + offset * 60, close, volume)
-    }
-
-    #[test]
-    fn reads_whole_seconds_off_the_wire_timestamps() {
-        // 1.7e18 ns is a u64 — the seconds are an exact integer division on
-        // the Rust side (fe sliced the string to dodge Number precision).
-        let ts = WireUnixNanos::from_u64(1_700_000_000_250_000_000);
-        assert_eq!(unix_nanos_to_seconds(ts), Some(1_700_000_000));
-        // The epoch placeholder reads as absent.
-        assert_eq!(unix_nanos_to_seconds(WireUnixNanos::from_u64(0)), None);
     }
 
     #[test]
@@ -602,14 +556,6 @@ mod tests {
         let times: Vec<i64> = resample_bars(&bars, "5m").iter().map(|b| b.time).collect();
         let expected: Vec<i64> = bars.iter().map(|b| b.time).collect();
         assert_eq!(times, expected);
-    }
-
-    #[test]
-    fn civil_helpers_round_trip() {
-        // Sanity of the civil helpers the IST bucketing leans on.
-        let (y, m, d) = civil_from_days((JAN1_2024).div_euclid(86_400));
-        assert_eq!((y, m, d), (2024, 1u32, 1u32));
-        assert_eq!(days_from_civil(2024, 1, 1), JAN1_2024.div_euclid(86_400));
     }
 
     #[test]
@@ -733,5 +679,82 @@ mod tests {
             .collect();
         assert_eq!(snap_ts(&[open(0) - 120], &bars, 300), vec![open(0)]);
         assert_eq!(snap_ts(&[open(0) + 1_000], &bars, 300), vec![open(0) + 900]);
+    }
+
+    // --- journal fixtures → markers on bars -------------------------------------
+    //
+    // Phase 7 acceptance criterion: buy/sell markers land on the correct *bar*
+    // timestamps. Journal fixtures are paired into round trips, converted to
+    // markers and snapped onto a real 5-minute bar series whose timestamps are
+    // skewed a few seconds off the fill instants — as a venue reports them.
+
+    #[test]
+    fn snapped_markers_land_on_the_bar_their_fill_belongs_to() {
+        // 2024-01-02, 09:15 IST (the NSE session open) is 03:45 UTC.
+        let session_open = day(1) + 3 * 3600 + 45 * 60;
+        let bar_times: Vec<i64> = [0, 5, 10, 15, 20, 25].iter().map(|m| session_open + m * 60).collect();
+        let bars: Vec<ChartBar> = bar_times
+            .iter()
+            .enumerate()
+            .map(|(index, &time)| ChartBar {
+                time,
+                open: 100.0 + index as f64,
+                high: 101.0 + index as f64,
+                low: 99.0 + index as f64,
+                close: 100.5 + index as f64,
+                volume: 1_000.0,
+            })
+            .collect();
+
+        let trade_at = |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
+            let seconds = bar_times[bar_index] + skew_sec;
+            Trade::new(
+                OrderId::new(format!("o-{:?}-{}", side, bar_index)),
+                InstrumentId::new("TCS", Exchange::new("NSE")),
+                side,
+                quantity,
+                price,
+                Currency::Inr,
+                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
+                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
+            )
+        };
+
+        // A long entered on the first bar and scaled out across two later bars.
+        let trades = [
+            trade_at(OrderSide::Buy, 100.0, 100.0, 0, 2),
+            trade_at(OrderSide::Sell, 60.0, 110.0, 3, 4),
+            trade_at(OrderSide::Sell, 40.0, 120.0, 5, 1),
+        ];
+        let tolerance = marker_tolerance_sec("5m");
+        let markers = markers_from_pairing(&pair_trades(&trades));
+        let times: Vec<i64> = snap_ts(
+            &markers.iter().map(|m| m.ts).collect::<Vec<_>>(),
+            &bars,
+            tolerance,
+        );
+
+        // Every marker lands exactly on a bar timestamp.
+        assert!(!times.is_empty());
+        assert!(times.iter().all(|ts| bar_times.contains(ts)));
+        // Each entry/exit keeps its bar, side intact.
+        let kinds: Vec<(TradeMarkerKind, FillSide, i64)> = markers
+            .iter()
+            .enumerate()
+            .map(|(index, m)| (m.kind, m.side, times[index]))
+            .collect();
+        assert_eq!(
+            kinds,
+            vec![
+                (TradeMarkerKind::Entry, FillSide::Buy, bar_times[0]),
+                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[3]),
+                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[5]),
+            ]
+        );
+
+        // A fill with no skew still lands.
+        let exact = markers_from_pairing(&pair_trades(&[trade_at(OrderSide::Buy, 10.0, 100.0, 2, 0)]));
+        let exact_times = snap_ts(&[exact[0].ts], &bars, tolerance);
+        assert_eq!(exact_times, vec![bar_times[2]]);
     }
 }

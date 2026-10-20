@@ -3,18 +3,15 @@
 //!
 //! One row per derived round trip, filterable and sortable, with a CSV
 //! export built from the very rows on screen so the file and the table
-//! agree by construction (`sim::analytics::journal_rows` + `to_csv`, design
+//! agree by construction (`honba_api_wasm::analytics::journal_rows` + `to_csv`, design
 //! wart W5: one journal source). **Slippage has no column value**: the
 //! journal is fills with no signal price, so it is left blank rather than
 //! guessed (risk R5) — the column exists to document the absence.
 
+use honba_api_wasm::analytics::{format_timestamp, to_csv, CsvColumn, JournalRow};
+use honba_api_wasm::pairing::{Direction, RoundTripStatus};
 use leptos::prelude::*;
 use wasm_bindgen::JsCast;
-
-use crate::sim::analytics::{
-    format_timestamp, to_csv, CsvColumn, JournalRow,
-};
-use crate::sim::pairing::{Direction, RoundTripStatus};
 
 /// fe's `SortKey` — the eight sortable columns.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -413,7 +410,7 @@ pub fn JournalTable(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sim::pairing::RoundTripExitReason;
+    use honba_api_wasm::pairing::RoundTripExitReason;
 
     fn sample_row() -> JournalRow {
         JournalRow {

@@ -9,9 +9,8 @@
 //! wire `total_return` is shown alongside, labelled, rather than asserted
 //! to equal a *realised* figure it need not match (risk R5).
 
+use honba_api_wasm::analytics::{HeatmapCell, MonthlyHeatmap};
 use leptos::prelude::*;
-
-use crate::sim::analytics::MonthlyHeatmap;
 
 /// fe's `MONTHS` header row.
 const MONTHS: [&str; 12] = [
@@ -91,7 +90,7 @@ pub fn MonthlyHeatmap(
                             let year = *year;
                             // One owned slice per year: no borrows escape the
                             // render closure.
-                            let year_cells: Vec<(usize, crate::sim::analytics::HeatmapCell)> =
+                            let year_cells: Vec<(usize, HeatmapCell)> =
                                 heatmap
                                     .cells
                                     .iter()

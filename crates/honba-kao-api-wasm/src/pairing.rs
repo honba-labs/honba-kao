@@ -1,7 +1,7 @@
 //! Fill → round-trip pairing (HBD-2026-DES-005 P3).
 //!
-//! The Leptos port of honba-fe `core/simulator/trade-pairing.ts`. The journal
-//! (`GET /backtests/{id}/journal`, decoded [`wire::TradesResponse`]) carries
+//! The Rust port of honba-fe `core/simulator/trade-pairing.ts`. The journal
+//! (`GET /backtests/{id}/journal`, decoded `TradesResponse`) carries
 //! **fills**, not round trips: there is no entry/exit field, no PnL, no
 //! size-in-size-out and no signal reason. Everything a round trip reports is
 //! therefore *derived* here, by one documented rule set, so the chart markers,
@@ -25,16 +25,16 @@
 //!   contract gap, never a guess.
 //!
 //! Money deviation from fe (documented per the port's DoD): fe's journal carried
-//! `costs.amount` as a float in **major units**; the wire [`wire::Trade`]
-//! carries ledger [`wire::WireMoney`] in integer minor units. The conversion
-//! happens **once, at this boundary** — [`wire::WireMoney::to_major_f64`] — so
+//! `costs.amount` as a float in **major units**; the wire [`Trade`]
+//! carries ledger `Money` in integer minor units. The conversion
+//! happens **once, at this boundary** — `Money::to_major_f64` — so
 //! pairing and everything downstream (analytics, equity, heatmap, CSV) keep raw
 //! major-unit floats exactly like fe, and match the server's own
 //! `honba-analytics::RoundTrip::from_fills`, which does the same one-time
 //! conversion. Presentation is a P5 render-time concern only.
 //!
 //! Every other guard fe dropped fills for (bad side, non-finite size/price,
-//! absent timestamp) is structurally impossible: a wire [`wire::Trade`] is
+//! absent timestamp) is structurally impossible: a wire [`Trade`] is
 //! validated at its deserialization door (`side` ∈ {buy, sell}, `quantity` and
 //! `price` finite and > 0, costs exact `Money`), so [`PairingResult::dropped`]
 //! counts the only remaining failure mode — the epoch `0` placeholder
@@ -42,9 +42,10 @@
 
 use std::collections::BTreeMap;
 
-use honba_kao_client::wire::{Trade, WireOrderSide};
+use honba_entities::Trade;
+use honba_messages::OrderSide;
 
-use crate::sim::chart_data::unix_nanos_to_seconds;
+use crate::calendar::unix_nanos_to_seconds;
 
 /// Which side of the book a fill sat on (`FillSide`); `isSide`, typed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -65,12 +66,12 @@ impl FillSide {
     }
 
     /// fe's `isSide` guard: `None` for a sideless fill. (A parsed wire
-    /// [`Trade`] never carries [`WireOrderSide::NoOrderSide`] — its own
+    /// [`Trade`] never carries [`OrderSide::NoOrderSide`] — its own
     /// validate rejects it — but an in-memory one can, so the guard stays.)
-    pub fn from_order_side(side: WireOrderSide) -> Option<FillSide> {
+    pub fn from_order_side(side: OrderSide) -> Option<FillSide> {
         match side {
-            WireOrderSide::Buy => Some(FillSide::Buy),
-            WireOrderSide::Sell => Some(FillSide::Sell),
+            OrderSide::Buy => Some(FillSide::Buy),
+            OrderSide::Sell => Some(FillSide::Sell),
             _ => None,
         }
     }
@@ -700,10 +701,8 @@ pub fn trip_for_marker<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use honba_kao_client::wire::{
-        Currency, Exchange, InstrumentId, OrderId, WireMoney, WireOrderSide as OrderSide,
-        WireUnixNanos,
-    };
+    use honba_entities::{Currency, Money as WireMoney};
+    use honba_messages::{Exchange, InstrumentId, OrderId, UnixNanos as WireUnixNanos};
 
     const JAN1: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC (fe's Date.UTC(2024, 0, 2))
 
@@ -967,84 +966,6 @@ mod tests {
         assert_eq!(trip_for_marker(&result, Some(&markers[1].trip_id)).unwrap().id, "trip-1");
         assert!(trip_for_marker(&result, Some("trip-99")).is_none());
         assert!(trip_for_marker(&result, None).is_none());
-    }
-
-    // --- journal fixtures → markers on bars -------------------------------------
-    //
-    // Phase 7 acceptance criterion: buy/sell markers land on the correct *bar*
-    // timestamps. Journal fixtures are paired into round trips, converted to
-    // markers and snapped onto a real 5-minute bar series whose timestamps are
-    // skewed a few seconds off the fill instants — as a venue reports them.
-
-    #[test]
-    fn snapped_markers_land_on_the_bar_their_fill_belongs_to() {
-        use crate::sim::chart_data::{marker_tolerance_sec, snap_ts, ChartBar};
-        // 2024-01-02, 09:15 IST (the NSE session open) is 03:45 UTC.
-        let session_open = JAN1 + 3 * 3600 + 45 * 60;
-        let bar_times: Vec<i64> = [0, 5, 10, 15, 20, 25].iter().map(|m| session_open + m * 60).collect();
-        let bars: Vec<ChartBar> = bar_times
-            .iter()
-            .enumerate()
-            .map(|(index, &time)| ChartBar {
-                time,
-                open: 100.0 + index as f64,
-                high: 101.0 + index as f64,
-                low: 99.0 + index as f64,
-                close: 100.5 + index as f64,
-                volume: 1_000.0,
-            })
-            .collect();
-
-        let trade_at = |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
-            let seconds = bar_times[bar_index] + skew_sec;
-            Trade::new(
-                OrderId::new(format!("o-{:?}-{}", side, bar_index)),
-                InstrumentId::new("TCS", Exchange::new("NSE")),
-                side,
-                quantity,
-                price,
-                Currency::Inr,
-                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
-                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
-            )
-        };
-
-        // A long entered on the first bar and scaled out across two later bars.
-        let trades = [
-            trade_at(OrderSide::Buy, 100.0, 100.0, 0, 2),
-            trade_at(OrderSide::Sell, 60.0, 110.0, 3, 4),
-            trade_at(OrderSide::Sell, 40.0, 120.0, 5, 1),
-        ];
-        let tolerance = marker_tolerance_sec("5m");
-        let markers = markers_from_pairing(&pair_trades(&trades));
-        let times: Vec<i64> = snap_ts(
-            &markers.iter().map(|m| m.ts).collect::<Vec<_>>(),
-            &bars,
-            tolerance,
-        );
-
-        // Every marker lands exactly on a bar timestamp.
-        assert!(!times.is_empty());
-        assert!(times.iter().all(|ts| bar_times.contains(ts)));
-        // Each entry/exit keeps its bar, side intact.
-        let kinds: Vec<(TradeMarkerKind, FillSide, i64)> = markers
-            .iter()
-            .enumerate()
-            .map(|(index, m)| (m.kind, m.side, times[index]))
-            .collect();
-        assert_eq!(
-            kinds,
-            vec![
-                (TradeMarkerKind::Entry, FillSide::Buy, bar_times[0]),
-                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[3]),
-                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[5]),
-            ]
-        );
-
-        // A fill with no skew still lands.
-        let exact = markers_from_pairing(&pair_trades(&[trade_at(OrderSide::Buy, 10.0, 100.0, 2, 0)]));
-        let exact_times = snap_ts(&[exact[0].ts], &bars, tolerance);
-        assert_eq!(exact_times, vec![bar_times[2]]);
     }
 
     #[test]
