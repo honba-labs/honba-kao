@@ -10,7 +10,8 @@ use leptos::prelude::*;
 
 use super::market_depth::MarketDepth;
 use crate::data::demo_data;
-use crate::stores::workbench::{DrawerTab, WorkbenchStore};
+use crate::stores::layout_store::DrawerTab;
+use crate::stores::workbench_store::WorkbenchStore;
 use crate::utils::{currency, percent, quantity};
 
 /// The six drawer tabs in display order.
@@ -27,9 +28,9 @@ const TABS: [(DrawerTab, &'static str); 6] = [
 fn tab_count(store: &WorkbenchStore, tab: DrawerTab) -> usize {
     match tab {
         DrawerTab::Holdings => demo_data::demo_holdings().len(),
-        DrawerTab::Positions => store.positions.get_untracked().len(),
-        DrawerTab::Orders => store.orders.get_untracked().len(),
-        DrawerTab::Trades => store.trades.get_untracked().len(),
+        DrawerTab::Positions => store.book.positions.get_untracked().len(),
+        DrawerTab::Orders => store.book.orders.get_untracked().len(),
+        DrawerTab::Trades => store.book.trades.get_untracked().len(),
         _ => 0,
     }
 }
@@ -39,7 +40,7 @@ pub fn TradingDrawer() -> impl IntoView {
     let store = WorkbenchStore::take();
 
     view! {
-        <Show when=move || store.drawer_open.get() fallback=move || view! { <DrawerStrip store=store /> }>
+        <Show when=move || store.layout.drawer_open.get() fallback=move || view! { <DrawerStrip store=store /> }>
             <section class="wb-drawer">
                 <header class="wb-drawer__tabs">
                     <div class="wb-drawer__tab-list">
@@ -54,14 +55,14 @@ pub fn TradingDrawer() -> impl IntoView {
                     <button
                         class="wb-chip wb-chip--ghost"
                         title="Minimize Drawer"
-                        on:click=move |_| store.toggle_drawer()
+                        on:click=move |_| store.layout.toggle_drawer()
                     >
                         "▾"
                     </button>
                 </header>
 
                 <div class="wb-drawer__body">
-                    {move || match store.drawer_tab.get() {
+                    {move || match store.layout.drawer_tab.get() {
                         DrawerTab::Holdings => view! { <HoldingsTable /> }.into_any(),
                         DrawerTab::Positions => view! { <PositionsTable /> }.into_any(),
                         DrawerTab::Orders => view! { <OrdersTable /> }.into_any(),
@@ -110,7 +111,7 @@ fn DrawerStrip(store: WorkbenchStore) -> impl IntoView {
                 <button
                     class="wb-strip__open"
                     title="Open Trading Drawer"
-                    on:click=move |_| store.toggle_drawer()
+                    on:click=move |_| store.layout.toggle_drawer()
                 >
                     "Portfolio Drawer ▴"
                 </button>
@@ -129,7 +130,7 @@ fn DrawerTabPill(
     count: usize,
     #[prop(default = false)] opens: bool,
 ) -> impl IntoView {
-    let selected = move || store.drawer_tab.get() == tab;
+    let selected = move || store.layout.drawer_tab.get() == tab;
     view! {
         <button
             class=move || {
@@ -137,9 +138,9 @@ fn DrawerTabPill(
             }
             title=label
             on:click=move |_| {
-                store.set_drawer_tab(tab);
-                if opens && !store.drawer_open.get_untracked() {
-                    store.toggle_drawer();
+                store.layout.set_drawer_tab(tab);
+                if opens && !store.layout.drawer_open.get_untracked() {
+                    store.layout.toggle_drawer();
                 }
             }
         >
@@ -212,7 +213,7 @@ fn PositionsTable() -> impl IntoView {
     let store = WorkbenchStore::take();
     view! {
         {move || {
-            let positions = store.positions.get();
+            let positions = store.book.positions.get();
             if positions.is_empty() {
                 return view! {
                     <div class="wb-drawer__empty">"No open positions in this session."</div>
@@ -235,7 +236,7 @@ fn PositionsTable() -> impl IntoView {
                             <td class="wb-drawer-table__action">
                                 <button
                                     class="wb-chip wb-chip--danger"
-                                    on:click=move |_| store.close_position(&symbol)
+                                    on:click=move |_| store.book.close_position(&symbol)
                                 >
                                     "✕ Close"
                                 </button>
@@ -269,7 +270,7 @@ fn OrdersTable() -> impl IntoView {
             </thead>
             <tbody>
         {move || {
-            let orders = store.orders.get();
+            let orders = store.book.orders.get();
             if orders.is_empty() {
                 return view! {
                     <tr><td class="wb-drawer__empty" colspan=8>"No open orders."</td></tr>
@@ -294,7 +295,7 @@ fn OrdersTable() -> impl IntoView {
                                 <button
                                     class="wb-chip wb-chip--danger"
                                     title="Cancel Order"
-                                    on:click=move |_| store.cancel_order(&order_id)
+                                    on:click=move |_| store.book.cancel_order(&order_id)
                                 >
                                     "✕ Cancel"
                                 </button>
@@ -328,7 +329,7 @@ fn TradesTable() -> impl IntoView {
             </thead>
             <tbody>
         {move || {
-            let trades = store.trades.get();
+            let trades = store.book.trades.get();
             if trades.is_empty() {
                 return view! {
                     <tr><td class="wb-drawer__empty" colspan=6>"No executions in this session."</td></tr>
@@ -393,7 +394,7 @@ fn DepthTab() -> impl IntoView {
     view! {
         <div class="wb-depth-tab">
             {move || {
-                let symbol = store.ticket.get().symbol;
+                let symbol = store.draft.ticket.get().symbol;
                 view! { <MarketDepth symbol=symbol /> }
             }}
         </div>

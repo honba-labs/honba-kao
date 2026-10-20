@@ -14,7 +14,7 @@ use leptos::prelude::*;
 
 use crate::data::indices::{IndexItem, indices_for_market};
 use crate::data::instruments::{Instrument, by_symbol};
-use crate::stores::screener::{DetailTab, ScreenerStore};
+use crate::stores::screener_store::{DetailTab, ScreenerStore};
 use crate::utils::format::percent;
 
 // ---------------------------------------------------------------------------

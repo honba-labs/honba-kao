@@ -6,7 +6,8 @@ use leptos::prelude::*;
 
 use honba_kao_ui_core::dismiss_on_outside_click;
 use super::layouts::{LAYOUT_PRESETS, LayoutIcon, preset_for};
-use crate::stores::workbench::{TradingState, WorkbenchStore};
+use crate::stores::book_store::TradingState;
+use crate::stores::workbench_store::WorkbenchStore;
 
 #[component]
 pub fn WorkbenchToolbar() -> impl IntoView {
@@ -27,19 +28,19 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                 <div class="wb-toolbar__grid-label">
                     <span class="wb-toolbar__eyebrow">"Workspace Grid"</span>
                     {move || {
-                        let preset = store.layout.get();
+                        let preset = store.layout.layout.get();
                         view! { <span class="wb-toolbar__preset">{preset_for(preset).label}</span> }
                     }}
                 </div>
                 <div class="wb-toolbar__menu" node_ref=grid_menu_host>
                     <button
                         class="wb-btn wb-btn--chrome"
-                        title=move || preset_for(store.layout.get()).label
+                        title=move || preset_for(store.layout.layout.get()).label
                         aria-haspopup="menu"
                         on:click=move |_| grid_menu_open.update(|open| *open = !*open)
                     >
                         <span class="wb-btn__icon">
-                            {move || view! { <LayoutIcon layout=store.layout.get() /> }}
+                            {move || view! { <LayoutIcon layout=store.layout.layout.get() /> }}
                         </span>
                         <span class="wb-caret">"▾"</span>
                     </button>
@@ -49,7 +50,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                                 .iter()
                                 .map(|preset| {
                                     let layout = preset.layout;
-                                    let selected = move || store.layout.get() == layout;
+                                    let selected = move || store.layout.layout.get() == layout;
                                     view! {
                                         <button
                                             class=move || {
@@ -62,7 +63,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                                             role="menuitem"
                                             title=preset.label
                                             on:click=move |_| {
-                                                store.set_layout(layout);
+                                                store.layout.set_layout(layout);
                                                 grid_menu_open.set(false);
                                             }
                                         >
@@ -80,11 +81,11 @@ pub fn WorkbenchToolbar() -> impl IntoView {
 
             // -- Right: status, engine, toggles ------------------------------
             <div class="wb-toolbar__right">
-                {move || match store.status.get() {
+                {move || match store.book.status.get() {
                     Some(status) => {
                         let text = status.text().to_string();
                         view! {
-                            <button class=status.as_class() title="Dismiss" on:click=move |_| store.dismiss_status()>
+                            <button class=status.as_class() title="Dismiss" on:click=move |_| store.book.dismiss_status()>
                                 {text}
                             </button>
                         }
@@ -98,12 +99,12 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                 // reachable without leaving the toolbar.
                 <div class="wb-toolbar__menu" node_ref=state_menu_host>
                     <button
-                        class=move || format!("wb-engine wb-engine--{}", store.trading_state.get().as_id())
+                        class=move || format!("wb-engine wb-engine--{}", store.book.trading_state.get().as_id())
                         title="Trading state (click to change)"
                         aria-haspopup="menu"
                         on:click=move |_| state_menu_open.update(|open| *open = !*open)
                     >
-                        {move || format!("Engine: {}", store.trading_state.get().as_id())}
+                        {move || format!("Engine: {}", store.book.trading_state.get().as_id())}
                         <span class="wb-caret">"▾"</span>
                     </button>
                     <Show when=move || state_menu_open.get()>
@@ -115,7 +116,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                             ]
                                 .into_iter()
                                 .map(|(state, label)| {
-                                    let selected = move || store.trading_state.get() == state;
+                                    let selected = move || store.book.trading_state.get() == state;
                                     view! {
                                         <button
                                             class=move || {
@@ -128,7 +129,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                                             role="menuitem"
                                             title=label
                                             on:click=move |_| {
-                                                store.set_trading_state(state, None);
+                                                store.book.set_trading_state(state, None);
                                                 state_menu_open.set(false);
                                             }
                                         >
@@ -145,7 +146,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                 </div>
 
                 {move || {
-                    let halted = store.trading_state.get() == TradingState::Halted;
+                    let halted = store.book.trading_state.get() == TradingState::Halted;
                     let button_class = if halted {
                         "wb-btn wb-btn--solid wb-btn--buy"
                     } else {
@@ -155,7 +156,7 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                     view! {
                         <button
                             class=button_class
-                            on:click=move |_| store.toggle_kill_switch()
+                            on:click=move |_| store.book.toggle_kill_switch()
                         >
                             {label}
                         </button>
@@ -165,27 +166,27 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                 <button
                     class="wb-btn wb-btn--chrome"
                     title="Search symbol"
-                    on:click=move |_| store.open_symbol_search(None)
+                    on:click=move |_| store.layout.open_symbol_search(None)
                 >
                     "Search"
                 </button>
 
                 <button
                     class=move || {
-                        if store.ticket_open.get() {
+                        if store.draft.ticket_open.get() {
                             "wb-btn wb-btn--chrome wb-btn--engaged"
                         } else {
                             "wb-btn wb-btn--chrome"
                         }
                     }
                     title=move || {
-                        if store.ticket_open.get() {
+                        if store.draft.ticket_open.get() {
                             "Collapse Order Ticket"
                         } else {
                             "Expand Order Ticket"
                         }
                     }
-                    on:click=move |_| store.toggle_order_ticket()
+                    on:click=move |_| store.draft.toggle_order_ticket()
                 >
                     "Ticket"
                 </button>
@@ -193,15 +194,15 @@ pub fn WorkbenchToolbar() -> impl IntoView {
                 <button
                     class="wb-btn wb-btn--chrome"
                     title=move || {
-                        if store.drawer_open.get() {
+                        if store.layout.drawer_open.get() {
                             "Collapse Bottom Drawer"
                         } else {
                             "Expand Bottom Drawer"
                         }
                     }
-                    on:click=move |_| store.toggle_drawer()
+                    on:click=move |_| store.layout.toggle_drawer()
                 >
-                    <span class="wb-caret">{move || if store.drawer_open.get() { "▾" } else { "▴" }}</span>
+                    <span class="wb-caret">{move || if store.layout.drawer_open.get() { "▾" } else { "▴" }}</span>
                 </button>
             </div>
         </div>

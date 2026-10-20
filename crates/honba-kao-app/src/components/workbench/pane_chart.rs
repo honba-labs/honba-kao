@@ -18,9 +18,10 @@ use wasm_bindgen::closure::Closure;
 use honba_kao_ui_core::dismiss_on_outside_click;
 use super::layouts::{area_name, preset_for};
 use crate::components::charts::openalgo_chart as bridge;
-use crate::stores::workbench::{
-    AppliedIndicator, ChartMode, ChartPaneConfig, PaneField, Timeframe, WorkbenchStore,
+use crate::stores::layout_store::{
+    AppliedIndicator, ChartMode, ChartPaneConfig, PaneField, Timeframe,
 };
+use crate::stores::workbench_store::WorkbenchStore;
 
 // ---------------------------------------------------------------------------
 // Workspace panes
@@ -30,16 +31,24 @@ use crate::stores::workbench::{
 /// active pane (the order ticket then tracks it).
 #[component]
 pub(crate) fn ChartPane(index: usize, store: WorkbenchStore) -> impl IntoView {
-    let pane = Memo::new(move |_| store.panes.get().get(index).cloned().unwrap_or_default());
+    let pane = Memo::new(move |_| {
+        store
+            .layout
+            .panes
+            .get()
+            .get(index)
+            .cloned()
+            .unwrap_or_default()
+    });
     let pane_id = format!("pane-{index}");
 
     // One handle signal per pane, created up front so the header chips and
     // the chart host share it (the registry owns it for the whole session).
     let chart_handle = chart_handle_for(&pane_id);
 
-    let is_active = move || store.active_pane.get() == index;
+    let is_active = move || store.layout.active_pane.get() == index;
     // Panes beyond the current preset's cell count are parked, not shown.
-    let is_parked = move || index >= preset_for(store.layout.get()).cell_count;
+    let is_parked = move || index >= preset_for(store.layout.layout.get()).cell_count;
 
     view! {
         <div
@@ -71,7 +80,7 @@ fn PaneHeader(
     chart_handle: RwSignal<Option<f64>>,
 ) -> impl IntoView {
     let pane_id = format!("pane-{index}");
-    let applied = store.pane_indicators(pane_id.clone());
+    let applied = store.layout.pane_indicators(pane_id.clone());
 
     view! {
         <div class="wb-pane__bar">
@@ -79,7 +88,7 @@ fn PaneHeader(
                 <button
                     class="wb-chip wb-chip--symbol"
                     title="Search symbol"
-                    on:click=move |_| store.open_symbol_search(Some(index))
+                    on:click=move |_| store.layout.open_symbol_search(Some(index))
                 >
                     {move || pane.get().symbol.clone()}
                     <span class="wb-caret">"▾"</span>
@@ -399,7 +408,7 @@ fn IndicatorChips(
                                     if let Some(id) = chart_handle.get_untracked() {
                                         bridge::remove_indicator(id, &instance_id);
                                     }
-                                    store.remove_pane_indicator(&pane_id, &instance_id);
+                                    store.layout.remove_pane_indicator(&pane_id, &instance_id);
                                 }
                             >
                                 "×"
@@ -418,7 +427,7 @@ fn IndicatorChips(
             <button
                 class="wb-pill wb-pill--add-indicator"
                 title="Indicators"
-                on:click=move |_| store.open_indicator_picker(index)
+                on:click=move |_| store.layout.open_indicator_picker(index)
             >
                 "ƒx"
             </button>
@@ -444,7 +453,7 @@ fn PaneChart(
     let attempts = RwSignal::new(0u32);
     let mount_epoch = RwSignal::new(0u64);
     let pane_id = format!("pane-{index}");
-    let applied = store.pane_indicators(pane_id.clone());
+    let applied = store.layout.pane_indicators(pane_id.clone());
 
     let spec =
         Memo::new(move |_| pane.with(|pane| (pane.symbol.clone(), pane.timeframe, pane.mode)));
@@ -477,7 +486,7 @@ fn PaneChart(
         }
 
         let chart_mode = mode.as_id(); // e.g., "candlestick", "area", "line"
-        let quantity = store.ticket.get_untracked().quantity;
+        let quantity = store.draft.ticket.get_untracked().quantity;
         let epoch = mount_epoch.get_untracked() + 1;
         mount_epoch.set(epoch);
 
@@ -546,7 +555,7 @@ fn PaneChart(
 
     // The bubble's qty label follows the order ticket.
     Effect::new(move |_| {
-        let quantity = store.ticket.get().quantity;
+        let quantity = store.draft.ticket.get().quantity;
         if let Some(id) = handle.get_untracked() {
             bridge::set_bubble_quantity(id, quantity);
         }

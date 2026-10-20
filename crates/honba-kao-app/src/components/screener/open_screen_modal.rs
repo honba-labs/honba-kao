@@ -7,7 +7,7 @@
 
 use leptos::prelude::*;
 
-use crate::stores::screener::{ScreenDefinition, ScreenerStore, builtin_screens_registry};
+use crate::stores::screener_store::{ScreenDefinition, ScreenerStore, builtin_screens_registry};
 
 /// The category tabs (`cat.id` + labels of the labs modal).
 const CATEGORIES: [(&str, &str); 6] = [

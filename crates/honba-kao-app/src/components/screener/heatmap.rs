@@ -7,7 +7,7 @@
 use leptos::prelude::*;
 
 use crate::data::instruments::Instrument;
-use crate::stores::screener::{DetailTab, ScreenerStore};
+use crate::stores::screener_store::{DetailTab, ScreenerStore};
 use crate::utils::format::{currency, percent};
 
 /// The seven-tier change% color scale (labs `getHeatColor`).

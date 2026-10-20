@@ -5,14 +5,14 @@
 use leptos::prelude::*;
 
 use super::pane_chart::ChartPane;
-use crate::stores::workbench::WorkbenchStore;
+use crate::stores::workbench_store::WorkbenchStore;
 
 #[component]
 pub fn MultiChartGrid() -> impl IntoView {
     let store = WorkbenchStore::take();
 
     view! {
-        <div class=move || format!("wb-grid wb-grid--{}", store.layout.get().as_id())>
+        <div class=move || format!("wb-grid wb-grid--{}", store.layout.layout.get().as_id())>
             <ChartPane index=0 store=store />
             <ChartPane index=1 store=store />
             <ChartPane index=2 store=store />

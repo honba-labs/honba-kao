@@ -9,9 +9,8 @@
 
 use leptos::prelude::*;
 
-use crate::stores::screener::{
-    ColumnCategory, ScreenerStore, ScreenerType, columns_for_screener, preset_for_tab,
-};
+use crate::stores::columns::{ColumnCategory, ScreenerType, columns_for_screener, preset_for_tab};
+use crate::stores::screener_store::ScreenerStore;
 
 /// Canonical category order for the tab strip (`ColumnCategory` display
 /// order, matching the labs modal's grouping).

@@ -12,7 +12,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use leptos::prelude::*;
 
 use crate::components::charts::openalgo_chart::IndicatorDef;
-use crate::stores::workbench::{AppliedIndicator, WorkbenchStore};
+use crate::stores::layout_store::AppliedIndicator;
+use crate::stores::workbench_store::WorkbenchStore;
 
 /// Minted instance ids so the engine can own per-instance state and the
 /// chips keep working across pane remounts.
@@ -83,7 +84,7 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
     let active_tab = RwSignal::new(Tab::All);
 
     // The catalog the bridge returned (fetched when the dialog opened).
-    let catalog = store.picker_catalog;
+    let catalog = store.layout.picker_catalog;
 
     // Registry rows filtered by the tab + query.
     let visible = Memo::new(move |_| {
@@ -112,6 +113,7 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
             })
             .filter(|definition| match tab {
                 Tab::Favourites => store
+                    .layout
                     .fav_indicators
                     .get()
                     .iter()
@@ -125,8 +127,9 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
     // The pane the picker serves and its live applied list (both track the
     // `picker_target` signal, so the header count stays honest).
     let applied = Memo::new(move |_| {
-        let pane_id = format!("pane-{}", store.picker_target.get());
+        let pane_id = format!("pane-{}", store.layout.picker_target.get());
         store
+            .layout
             .applied_indicators
             .get()
             .iter()
@@ -142,9 +145,9 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
     });
 
     let add_indicator = move |definition: IndicatorDef| {
-        let pane_id = format!("pane-{}", store.picker_target.get_untracked());
+        let pane_id = format!("pane-{}", store.layout.picker_target.get_untracked());
         let def_id = definition.id.clone();
-        store.add_pane_indicator(
+        store.layout.add_pane_indicator(
             &pane_id,
             AppliedIndicator {
                 instance_id: next_instance_id(&pane_id, &def_id),
@@ -156,8 +159,8 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
     };
 
     view! {
-        <Show when=move || store.picker_open.get()>
-            <div class="hfui-modal__backdrop" on:click=move |_| store.close_indicator_picker()>
+        <Show when=move || store.layout.picker_open.get()>
+            <div class="hfui-modal__backdrop" on:click=move |_| store.layout.close_indicator_picker()>
                 <div
                     class="hfui-modal__container wb-picker"
                     on:click=move |event| event.stop_propagation()
@@ -166,7 +169,7 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
                         <div class="wb-picker__title">
                             <span>"Indicators"</span>
                             <span class="wb-picker__hint">
-                                {move || format!("pane {}", pane_index_label(store.picker_target.get()))}
+                                {move || format!("pane {}", pane_index_label(store.layout.picker_target.get()))}
                                 {" · "}
                                 {move || format!("{} active", applied.get().len())}
                             </span>
@@ -174,7 +177,7 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
                         <button
                             class="hfui-panel__icon-button"
                             title="Close"
-                            on:click=move |_| store.close_indicator_picker()
+                            on:click=move |_| store.layout.close_indicator_picker()
                         >
                             "×"
                         </button>
@@ -230,10 +233,10 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
                                             <button
                                                 class="wb-picker__fav"
                                                 title="Favourite"
-                                                on:click=move |_| store.toggle_fav_indicator(&def_id_for_click)
+                                                on:click=move |_| store.layout.toggle_fav_indicator(&def_id_for_click)
                                             >
                                                 {move || {
-                                                    if store.fav_indicators.get().iter().any(|id| *id == def_id_for_fav) {
+                                                    if store.layout.fav_indicators.get().iter().any(|id| *id == def_id_for_fav) {
                                                         "★"
                                                     } else {
                                                         "☆"
@@ -259,7 +262,7 @@ pub fn IndicatorPickerDialog() -> impl IntoView {
                             <span class="wb-picker__eyebrow">"Recents"</span>
                             <div class="wb-picker__recent-chips">
                                 {move || {
-                                    store.recent_indicators.get().iter().map(|id| {
+                                    store.layout.recent_indicators.get().iter().map(|id| {
                                         let id = id.clone();
                                         view! { <span class="wb-badge">{id}</span> }
                                     }).collect_view()

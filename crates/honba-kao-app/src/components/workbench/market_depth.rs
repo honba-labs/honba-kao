@@ -5,7 +5,7 @@
 
 use leptos::prelude::*;
 
-use crate::stores::workbench::instrument_price;
+use crate::stores::order_draft_store::instrument_price;
 use crate::utils::quantity;
 
 #[derive(Clone, Debug, PartialEq)]

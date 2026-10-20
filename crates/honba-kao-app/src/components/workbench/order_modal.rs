@@ -9,9 +9,9 @@ use leptos::prelude::*;
 
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
-use crate::stores::workbench::{
-    OrderSide, OrderType, Product, TicketField, TimeInForce, TradingState, WorkbenchStore,
-};
+use crate::stores::book_store::TradingState;
+use crate::stores::order_draft_store::{OrderSide, OrderType, Product, TicketField, TimeInForce};
+use crate::stores::workbench_store::WorkbenchStore;
 use crate::utils::currency;
 
 /// Quantity quick chips, as in the labs modal.
@@ -32,9 +32,9 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
     let submitting = RwSignal::new(false);
     let success = RwSignal::new(false);
 
-    let halted = move || store.trading_state.get() == TradingState::Halted;
+    let halted = move || store.book.trading_state.get() == TradingState::Halted;
 
-    let close = move |_| store.close_order_modal();
+    let close = move |_| store.draft.close_order_modal();
 
     let submit = move |_| {
         if halted() || submitting.get_untracked() {
@@ -47,14 +47,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
         set_timeout(
             move || {
                 success.set(false);
-                store.close_order_modal();
+                store.draft.close_order_modal();
             },
             Duration::from_millis(500),
         );
     };
 
     view! {
-        <Show when=move || store.modal_open.get()>
+        <Show when=move || store.draft.modal_open.get()>
             <div class="hfui-modal__backdrop" on:click=close>
                 <div
                     class="hfui-modal__container wb-order-modal"
@@ -64,7 +64,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                     <div class="hfui-modal__header">
                         <div class="wb-order-modal__title">
                             {move || {
-                                let side = store.ticket.get().side;
+                                let side = store.draft.ticket.get().side;
                                 let class = if side.is_buy() {
                                     "wb-order-modal__side wb-order-modal__side--buy"
                                 } else {
@@ -72,7 +72,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                 };
                                 view! { <span class=class>{side.label()}</span> }
                             }}
-                            {move || store.ticket.get().symbol.clone()}
+                            {move || store.draft.ticket.get().symbol.clone()}
                             <span class="wb-order-modal__venue">"NSE EQ"</span>
                         </div>
                         <button class="hfui-panel__icon-button" title="Close" on:click=close>
@@ -85,7 +85,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                         <div class="wb-order-modal__ltp-row">
                             <span class="tnum">
                                 "LTP: "
-                                <strong>{move || format!("₹{:.2}", store.ticket.get().price)}</strong>
+                                <strong>{move || format!("₹{:.2}", store.draft.ticket.get().price)}</strong>
                             </span>
                             <button
                                 class="wb-order-modal__depth-toggle"
@@ -107,7 +107,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                         <Show when=move || show_depth.get()>
                             <div class="wb-order-modal__depth">
                                 {move || {
-                                    let symbol = store.ticket.get().symbol;
+                                    let symbol = store.draft.ticket.get().symbol;
                                     view! { <MarketDepth symbol=symbol /> }
                                 }}
                             </div>
@@ -125,7 +125,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                 <span class="wb-field__label wb-field__label--secondary">"Product Type"</span>
                                 <span class="wb-field__hint">
                                     {move || {
-                                        if store.ticket.get().product == Product::Intraday {
+                                        if store.draft.ticket.get().product == Product::Intraday {
                                             "5x Leverage Intraday"
                                         } else {
                                             "Zero Leverage Delivery"
@@ -148,14 +148,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     .map(|(order_type, label)| {
                                         let order_type = *order_type;
                                         let label = *label;
-                                        let selected = move || store.ticket.get().order_type == order_type;
+                                        let selected = move || store.draft.ticket.get().order_type == order_type;
                                         view! {
                                             <button
                                                 class=move || {
                                                     if selected() { "wb-pill wb-pill--on" } else { "wb-pill" }
                                                 }
                                                 on:click=move |_| {
-                                                    store.set_ticket_field(TicketField::OrderType(order_type));
+                                                    store.draft.set_ticket_field(TicketField::OrderType(order_type));
                                                 }
                                             >
                                                 {label}
@@ -176,7 +176,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                             <div class="wb-stepper-row">
                                 <button
                                     class="wb-step wb-step--square"
-                                    on:click=move |_| store.shift_quantity(-1)
+                                    on:click=move |_| store.draft.shift_quantity(-1)
                                 >
                                     "−"
                                 </button>
@@ -186,14 +186,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     disabled=Signal::stored(false)
                                     min=1.0
                                     step="1"
-                                    value=Signal::derive(move || store.ticket.get().quantity as f64)
+                                    value=Signal::derive(move || store.draft.ticket.get().quantity as f64)
                                     on_set=Callback::new(move |quantity: f64| {
-                                        store.set_ticket_field(TicketField::Quantity(quantity as i64));
+                                        store.draft.set_ticket_field(TicketField::Quantity(quantity as i64));
                                     })
                                 />
                                 <button
                                     class="wb-step wb-step--square"
-                                    on:click=move |_| store.shift_quantity(1)
+                                    on:click=move |_| store.draft.shift_quantity(1)
                                 >
                                     "+"
                                 </button>
@@ -207,7 +207,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                         view! {
                                             <button
                                                 class="wb-step wb-step--chip"
-                                                on:click=move |_| store.shift_quantity(chip)
+                                                on:click=move |_| store.draft.shift_quantity(chip)
                                             >
                                                 {format!("+{chip}")}
                                             </button>
@@ -217,7 +217,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                 <button
                                     class="wb-step wb-step--chip wb-step--reset"
                                     on:click=move |_| {
-                                        store.set_ticket_field(TicketField::Quantity(1));
+                                        store.draft.set_ticket_field(TicketField::Quantity(1));
                                     }
                                 >
                                     "Reset (1)"
@@ -233,18 +233,18 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     class="wb-input--mono"
                                     step="0.05"
                                     placeholder=Signal::derive(move || {
-                                        if store.ticket.get().order_type == OrderType::Market {
+                                        if store.draft.ticket.get().order_type == OrderType::Market {
                                             "MKT".to_string()
                                         } else {
                                             "0.00".to_string()
                                         }
                                     })
                                     disabled=Signal::derive(move || {
-                                        store.ticket.get().order_type == OrderType::Market
+                                        store.draft.ticket.get().order_type == OrderType::Market
                                     })
-                                    value=Signal::derive(move || store.ticket.get().price)
+                                    value=Signal::derive(move || store.draft.ticket.get().price)
                                     on_set=Callback::new(move |price: f64| {
-                                        store.set_ticket_field(TicketField::Price(price));
+                                        store.draft.set_ticket_field(TicketField::Price(price));
                                     })
                                 />
                             </div>
@@ -255,7 +255,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     step="0.05"
                                     placeholder=Signal::derive(move || {
                                         if matches!(
-                                            store.ticket.get().order_type,
+                                            store.draft.ticket.get().order_type,
                                             OrderType::StopMarket | OrderType::StopLimit
                                         ) {
                                             "Trigger".to_string()
@@ -265,13 +265,13 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                     })
                                     disabled=Signal::derive(move || {
                                         !matches!(
-                                            store.ticket.get().order_type,
+                                            store.draft.ticket.get().order_type,
                                             OrderType::StopMarket | OrderType::StopLimit
                                         )
                                     })
-                                    value=Signal::derive(move || store.ticket.get().trigger_price)
+                                    value=Signal::derive(move || store.draft.ticket.get().trigger_price)
                                     on_set=Callback::new(move |trigger_price: f64| {
-                                        store.set_ticket_field(TicketField::TriggerPrice(trigger_price));
+                                        store.draft.set_ticket_field(TicketField::TriggerPrice(trigger_price));
                                     })
                                 />
                             </div>
@@ -279,7 +279,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
 
                         // -- Validity + order value ---------------------------------------
                         {move || {
-                            let ticket = store.ticket.get();
+                            let ticket = store.draft.ticket.get();
                             let order_value = (ticket.price * ticket.quantity as f64 * 100.0).round() / 100.0;
                             view! {
                                 <div class="wb-validity">
@@ -290,7 +290,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                             (TimeInForce::Ioc, "IOC"),
                                         ]
                                             .map(|(tif, label)| {
-                                                let selected = move || store.ticket.get().tif == tif;
+                                                let selected = move || store.draft.ticket.get().tif == tif;
                                                 view! {
                                                     <button
                                                         class=move || {
@@ -301,7 +301,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                                             }
                                                         }
                                                         on:click=move |_| {
-                                                            store.set_ticket_field(TicketField::TimeInForce(tif));
+                                                            store.draft.set_ticket_field(TicketField::TimeInForce(tif));
                                                         }
                                                     >
                                                         {label}
@@ -322,7 +322,7 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                     // -- Footer ------------------------------------------------------
                     <div class="hfui-modal__footer">
                         {move || {
-                            let ticket = store.ticket.get();
+                            let ticket = store.draft.ticket.get();
                             let margin = (ticket.price * ticket.quantity as f64
                                 * ticket.product.margin_factor()
                                 * 100.0)
@@ -338,8 +338,8 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                                         "Cancel"
                                     </button>
                                     {move || {
-                                        let ticket = store.ticket.get();
-                                        let halted = store.trading_state.get() == TradingState::Halted;
+                                        let ticket = store.draft.ticket.get();
+                                        let halted = store.book.trading_state.get() == TradingState::Halted;
                                         let side = if ticket.side.is_buy() { "buy" } else { "sell" };
                                         let label = if success.get() {
                                             "✓ Placed".to_string()
@@ -370,14 +370,14 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
 
 #[component]
 fn ModalSideButton(store: WorkbenchStore, side: OrderSide) -> impl IntoView {
-    let selected = move || store.ticket.get().side == side;
+    let selected = move || store.draft.ticket.get().side == side;
     view! {
         <button
             class=move || {
                 let base = if side.is_buy() { "wb-side wb-side--buy" } else { "wb-side wb-side--sell" };
                 if selected() { format!("{base} wb-side--on") } else { base.to_string() }
             }
-            on:click=move |_| store.set_ticket_field(TicketField::Side(side))
+            on:click=move |_| store.draft.set_ticket_field(TicketField::Side(side))
         >
             "⚡ "
             {side.label()}
@@ -387,14 +387,14 @@ fn ModalSideButton(store: WorkbenchStore, side: OrderSide) -> impl IntoView {
 
 #[component]
 fn ModalProductCard(store: WorkbenchStore, product: Product) -> impl IntoView {
-    let selected = move || store.ticket.get().product == product;
+    let selected = move || store.draft.ticket.get().product == product;
     view! {
         <button
             class=move || {
                 let base = "wb-toggle wb-toggle--card";
                 if selected() { format!("{base} wb-toggle--on") } else { base.to_string() }
             }
-            on:click=move |_| store.set_ticket_field(TicketField::Product(product))
+            on:click=move |_| store.draft.set_ticket_field(TicketField::Product(product))
         >
             {move || {
                 if product == Product::Intraday {

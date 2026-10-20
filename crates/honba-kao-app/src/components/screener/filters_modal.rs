@@ -10,7 +10,8 @@
 use leptos::prelude::*;
 
 use crate::data::indices::{IndexItem, indices_for_market};
-use crate::stores::screener::{AdvancedFilters, ScreenerStore, count_active_filters};
+use crate::stores::filter_engine::{AdvancedFilters, count_active_filters};
+use crate::stores::screener_store::ScreenerStore;
 use crate::utils::percent;
 
 /// Sidebar sections in the labs order.

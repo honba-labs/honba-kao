@@ -6,7 +6,7 @@
 
 use leptos::prelude::*;
 
-use crate::stores::workbench::WorkbenchLayout;
+use crate::stores::layout_store::WorkbenchLayout;
 
 /// One workspace grid preset: how many panes it shows and what it is called.
 pub struct LayoutPreset {

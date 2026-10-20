@@ -6,7 +6,7 @@ use leptos::prelude::*;
 use wasm_bindgen::JsCast;
 
 use crate::data::symbol_search::{self, SymbolCategory};
-use crate::stores::workbench::WorkbenchStore;
+use crate::stores::workbench_store::WorkbenchStore;
 use crate::utils::format::percent;
 
 /// The search modal: fixed overlay, the pooled results react to the query.
@@ -24,14 +24,14 @@ pub fn SymbolSearchModal() -> impl IntoView {
 
     // Esc closes; Enter picks the top row. The listener installs while open.
     Effect::new(move |_| {
-        if !store.search_open.get() {
+        if !store.layout.search_open.get() {
             return;
         }
         let close = move |first: Option<String>| {
             if let Some(symbol) = first {
                 store.pick_symbol(&symbol);
             } else {
-                store.close_symbol_search();
+                store.layout.close_symbol_search();
             }
         };
 
@@ -45,7 +45,7 @@ pub fn SymbolSearchModal() -> impl IntoView {
             match key_event.key().as_str() {
                 "Escape" => {
                     key_event.prevent_default();
-                    store.close_symbol_search();
+                    store.layout.close_symbol_search();
                 }
                 "Enter" => {
                     key_event.prevent_default();
@@ -60,7 +60,7 @@ pub fn SymbolSearchModal() -> impl IntoView {
     // Autofocus the field when the modal opens.
     let input_ref = NodeRef::<leptos::html::Input>::new();
     Effect::new(move |_| {
-        if store.search_open.get()
+        if store.layout.search_open.get()
             && let Some(input) = input_ref.get()
         {
             let _ = input.focus();
@@ -68,8 +68,8 @@ pub fn SymbolSearchModal() -> impl IntoView {
     });
 
     view! {
-        <Show when=move || store.search_open.get()>
-            <div class="hfui-modal__backdrop" on:click=move |_| store.close_symbol_search()>
+        <Show when=move || store.layout.search_open.get()>
+            <div class="hfui-modal__backdrop" on:click=move |_| store.layout.close_symbol_search()>
                 <div
                     class="hfui-modal__container wb-search"
                     on:click=move |event| event.stop_propagation()
@@ -84,7 +84,7 @@ pub fn SymbolSearchModal() -> impl IntoView {
                         <button
                             class="hfui-panel__icon-button"
                             title="Close"
-                            on:click=move |_| store.close_symbol_search()
+                            on:click=move |_| store.layout.close_symbol_search()
                         >
                             "×"
                         </button>

@@ -15,7 +15,8 @@ use crate::components::workbench::order_ticket::OrderTicketPanel;
 use crate::components::workbench::symbol_search::SymbolSearchModal;
 use crate::components::workbench::toolbar::WorkbenchToolbar;
 use crate::components::workbench::trading_drawer::TradingDrawer;
-use crate::stores::workbench::{OrderSide, WorkbenchStore};
+use crate::stores::order_draft_store::OrderSide;
+use crate::stores::workbench_store::WorkbenchStore;
 
 use wasm_bindgen::JsCast;
 
@@ -26,7 +27,7 @@ pub fn WorkbenchPage() -> impl IntoView {
 
     // Demo seeds live until the backend answers — `fetch_state` overwrites
     // the slices it can reach and leaves the rest in place offline.
-    store.fetch_state();
+    store.book.fetch_state();
 
     // The chart bubble's clicks (the bridge dispatches `honba-order-click`
     // from the engine's subscribeClick) open the order modal — labs'
@@ -56,7 +57,7 @@ pub fn WorkbenchPage() -> impl IntoView {
 
             match action.as_str() {
                 "sell" => {
-                    store.open_order_modal(
+                    store.draft.open_order_modal(
                         Some(&symbol),
                         Some(OrderSide::Sell),
                         None,
@@ -65,7 +66,7 @@ pub fn WorkbenchPage() -> impl IntoView {
                 }
                 _ => {
                     // `:buy` and `:qty` both lean buy, like the labs terminal.
-                    store.open_order_modal(
+                    store.draft.open_order_modal(
                         Some(&symbol),
                         Some(OrderSide::Buy),
                         None,
@@ -82,7 +83,7 @@ pub fn WorkbenchPage() -> impl IntoView {
 
             <div class="wb-body">
                 <MultiChartGrid />
-                <Show when=move || store.ticket_open.get()>
+                <Show when=move || store.draft.ticket_open.get()>
                     <OrderTicketPanel />
                 </Show>
             </div>

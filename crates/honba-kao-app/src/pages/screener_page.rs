@@ -18,7 +18,7 @@ use crate::components::screener::filters_modal::FiltersModal;
 use crate::components::screener::heatmap::ScreenerHeatmap;
 use crate::components::screener::open_screen_modal::OpenScreenModal;
 use crate::components::screener::screener_table::ScreenerTable;
-use crate::stores::screener::{ScreenerStore, ViewMode};
+use crate::stores::screener_store::{ScreenerStore, ViewMode};
 use wasm_bindgen::prelude::*;
 
 #[component]
