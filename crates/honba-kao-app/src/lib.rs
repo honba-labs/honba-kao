@@ -35,6 +35,7 @@ pub mod pages;
 pub mod router;
 pub mod sim;
 pub mod stores;
+pub mod studio;
 pub mod theme;
 pub mod types;
 pub mod utils;

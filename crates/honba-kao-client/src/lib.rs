@@ -24,7 +24,8 @@
 use gloo_net::http::{Request, RequestBuilder};
 use honba_api::{
     BacktestRequest, BacktestResponse, BarsResponse, CompiledStrategy, DepthResponse,
-    OrdersRequest, OrdersResponse, PortfolioPositionsResponse, QuotesResponse, StrategiesResponse,
+    LayoutDocument, LayoutsResponse, OrdersRequest, OrdersResponse, PortfolioPositionsResponse,
+    ProfileRevision, QuotesResponse, StrategiesResponse, SweepRequest, SweepResponse,
     TradesResponse, TradingStateChange, TradingStateRequest, TradingStateResponse,
 };
 use honba_entities::PortfolioPosition;
@@ -39,9 +40,10 @@ pub mod wire {
     pub use honba_analytics::ValidationBlock;
     pub use honba_api::{
         BacktestEventsQuery, BacktestMetrics, BacktestRequest, BacktestResponse, BarsQuery,
-        BarsResponse, CompiledStrategy, OrdersRequest, OrdersResponse, DEFAULT_BAR_SPEC,
-        DEFAULT_INITIAL_CAPITAL, FILL_MODELS, MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS,
-        RunStatus, StreamFrame, StrategiesResponse, TradesResponse,
+        BarsResponse, CompiledStrategy, LayoutDocument, LayoutsResponse, OrdersRequest,
+        OrdersResponse, ProfileRevision, DEFAULT_BAR_SPEC, DEFAULT_INITIAL_CAPITAL, FILL_MODELS,
+        MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS, RunStatus, StreamFrame, StrategiesResponse,
+        SweepRequest, SweepResponse, TradesResponse,
     };
     pub use honba_entities::{Currency, Money as WireMoney, PortfolioPosition, PositionSide, Trade};
     pub use honba_messages::Exchange;
@@ -376,6 +378,59 @@ impl ApiClient {
         let path = format!("/backtests/{}/journal", crate::encode_query(id));
         self.send(Request::get, &path, None).await
     }
+
+    // -- Strategy studio (HBD-2026-DES-006 P0) --------------------------------
+
+    /// `POST /strategies/verify` — the pure, idempotent verify step: compile
+    /// only, no catalog entry. The answer is the normalized `StrategyIr`
+    /// echo, typed server-side but read here as raw JSON (the studio only
+    /// hands it back to the caller for display; adding the type would pull
+    /// honba-strategy into the client for one read-only field).
+    pub async fn post_strategies_verify(
+        &self,
+        manifest: &serde_json::Value,
+    ) -> Result<serde_json::Value, ClientError> {
+        let body =
+            serde_json::to_string(manifest).map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::post, "/strategies/verify", Some(body))
+            .await
+    }
+
+    /// `POST /sweeps` — submit a parameter-sweep job. `SweepRequest::resolve`
+    /// requires `strategy`, `params` (a `{name: [low, high, step]}` object)
+    /// and non-zero `seed`; `trials` must equal the Cartesian grid size, or
+    /// the server rejects with `trials_mismatched`.
+    pub async fn post_sweeps(&self, request: &SweepRequest) -> Result<SweepResponse, ClientError> {
+        let body =
+            serde_json::to_string(request).map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::post, "/sweeps", Some(body)).await
+    }
+
+    /// `GET /sweeps/{id}` — the sweep job's lifecycle state and, once
+    /// `completed`, its ranked report.
+    pub async fn get_sweeps_by_id(&self, id: &str) -> Result<SweepResponse, ClientError> {
+        let path = format!("/sweeps/{}", crate::encode_query(id));
+        self.send(Request::get, &path, None).await
+    }
+
+    /// `GET /profile/layouts` — every named server-side layout, by name.
+    pub async fn get_profile_layouts(&self) -> Result<LayoutsResponse, ClientError> {
+        self.send(Request::get, "/profile/layouts", None).await
+    }
+
+    /// `PUT /profile/layouts/{name}` — store one named layout document (an
+    /// opaque JSON value server-side). The studio's library sync is
+    /// best-effort over this: a failure keeps the strategy local.
+    pub async fn put_profile_layout(
+        &self,
+        name: &str,
+        document: &serde_json::Value,
+    ) -> Result<ProfileRevision, ClientError> {
+        let path = format!("/profile/layouts/{}", crate::encode_query(name));
+        let body = serde_json::to_string(&LayoutDocument(document.clone()))
+            .map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::put, &path, Some(body)).await
+    }
 }
 
 /// Reject an envelope that does not speak the client's wire shape.
@@ -444,5 +499,71 @@ mod tests {
         };
         assert_eq!(error.to_string(), "api: order_rejected: no_position");
         assert!(!error.retryable());
+    }
+
+    // -- Strategy studio conformance fixtures (HBD-2026-DES-006 P0) ----------
+
+    /// The `schema/conformance/studio` JSON files, read relative to the crate.
+    fn fixture(name: &str) -> String {
+        for base in ["../..", "../../.."] {
+            let path = format!(
+                "{base}/schema/conformance/studio/{name}.json"
+            );
+            if std::fs::read_to_string(&path).is_ok() {
+                return path;
+            }
+        }
+        panic!("fixture `{name}` not found under schema/conformance/studio");
+    }
+
+    /// Decodes a fixture through the same envelope path `send()` uses,
+    /// asserting the server can answer the studio's seams and the client
+    /// can read it, without any shape drift.
+    fn decode_fixture<T: serde::de::DeserializeOwned>(
+        name: &str,
+    ) -> Result<T, honba_messages::ErrorDetail> {
+        let text = std::fs::read_to_string(fixture(name)).expect("fixture file");
+        let envelope: honba_messages::ResponseEnvelope<T> =
+            serde_json::from_str(&text).expect("fixture envelope decodes");
+        envelope.into_result()
+    }
+
+    #[test]
+    fn the_verify_response_fixture_decodes_to_the_ir_echo() {
+        let ir: serde_json::Value =
+            decode_fixture("strategies_verify_response").expect("verify echoes the IR");
+        let manifest = ir
+            .get("manifest")
+            .and_then(|m| m.get("name"))
+            .and_then(|n| n.as_str());
+        assert_eq!(manifest, Some("sma_crossover"));
+        // The IR normalizes the resolved timeframes list; the studio's
+        // verify panel renders exactly these fields.
+        assert_eq!(ir["warmup_bars"], 20);
+        assert!(ir["timeframes"].is_array());
+    }
+
+    #[test]
+    fn the_verify_error_fixture_carries_the_agent_readable_reason() {
+        // StrategyManifest decode failure: verify answers 422 with
+        // `context.reason = <IrError::code()>`, designed to be reactable
+        // without parsing the human message (honba-ya verify.rs).
+        let text = std::fs::read_to_string(fixture("verify_error_no_subscriptions"))
+            .expect("fixture file");
+        let envelope: honba_messages::ResponseEnvelope<serde_json::Value> =
+            serde_json::from_str(&text).expect("fixture envelope decodes");
+        let detail = envelope.into_result().expect_err("verify refused");
+        let context = detail.context.expect("verify attaches context");
+        assert_eq!(context["reason"].as_str(), Some("no_subscriptions"));
+    }
+
+    #[test]
+    fn the_sweep_response_fixture_decodes() {
+        let sweep: honba_api::SweepResponse =
+            decode_fixture("sweep_response").expect("sweep report decodes");
+        assert_eq!(sweep.status, honba_api::RunStatus::Completed);
+        let report = sweep.report.expect("completed sweep carries a report");
+        assert_eq!(report.ranked.len(), 2);
+        assert!(report.best.is_some());
     }
 }

@@ -1,0 +1,17 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "data": {
+    "job_id": "01JGSWM2YY4VYBZ2BTFEFTQY9C",
+    "status": "completed",
+    "report": {
+      "ranked": [
+        { "trial_id": "t0", "params": { "fast": 3, "slow": 8, "quantity": 10.0 },
+          "metrics": { "fills": 4, "round_trips": 2, "trades": 2, "equity": 1000120.0 } },
+        { "trial_id": "t1", "params": { "fast": 5, "slow": 12, "quantity": 10.0 },
+          "metrics": { "fills": 2, "round_trips": 1, "trades": 1, "equity": 999880.0 } }
+      ],
+      "best": { "trial_id": "t0", "params": { "fast": 3, "slow": 8, "quantity": 10.0 } }
+    }
+  }
+}
