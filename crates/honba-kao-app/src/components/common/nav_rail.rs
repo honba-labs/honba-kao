@@ -76,7 +76,7 @@ const RAIL_ITEMS: &[RailItem] = &[
 
 #[component]
 pub fn NavRail(
-    #[prop(default = Page::Home)] current_page: Page,
+    #[prop(into, default = Page::Home.into())] current_page: Signal<Page>,
     on_login_required: Callback<String>,
     /// The chrome-level palette studio flag; the account menu opens it.
     #[prop(into)]
@@ -95,6 +95,7 @@ pub fn NavRail(
                         let href = item.href;
                         let gate = item.page.label();
                         let glyph = item.glyph;
+                        let page = item.page;
 
                         // Signed in: route directly; signed out: login overlay.
                         if auth.is_authenticated() {
@@ -114,7 +115,7 @@ pub fn NavRail(
                                 <button
                                     class="nav-rail__item"
                                     data-label=move || language.t(key).to_string()
-                                    aria-current=if current_page == item.page {
+                                    aria-current=move || if current_page.get() == page {
                                         "page"
                                     } else {
                                         ""

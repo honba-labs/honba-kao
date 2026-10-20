@@ -17,7 +17,10 @@ use crate::router::paths::Page;
 
 #[component]
 pub fn AppChrome(
-    #[prop(default = Page::Home)] current_page: Page,
+    /// The page to highlight; reactive because the chrome stays mounted
+    /// while the routed page beneath it changes.
+    #[prop(into, default = Page::Home.into())]
+    current_page: Signal<Page>,
     /// The side icon rail is shared by the workspace screens; marketing
     /// surfaces (landing) opt out.
     #[prop(default = true)]

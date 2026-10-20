@@ -6,6 +6,9 @@ use wasm_bindgen::JsCast;
 
 /// Clickaway handler — calls callback when clicking outside a reference element.
 ///
+/// One `mousedown` listener is installed per mounted element; it is removed
+/// before the effect reruns and when the calling owner is cleaned up.
+///
 /// ```rust
 /// use honba_kao_ui_core::hooks::use_click_outside;
 ///
@@ -23,20 +26,15 @@ pub fn use_click_outside(
         if let Some(el) = node_ref.get() {
             let el: web_sys::Element = el.unchecked_into();
             let callback = callback.clone();
-            let handler = move |ev: web_sys::MouseEvent| {
+            let handle = window_event_listener(leptos::ev::mousedown, move |ev| {
                 let target_el = ev
                     .target()
                     .and_then(|t| t.dyn_into::<web_sys::Element>().ok());
                 if !el.contains(target_el.as_ref().map(|e| &**e)) {
                     (callback.borrow_mut())();
                 }
-            };
-            if let Some(window) = web_sys::window() {
-                let _ = window.add_event_listener_with_callback(
-                    "mousedown",
-                    &wasm_bindgen::closure::Closure::wrap(Box::new(handler) as Box<dyn FnMut(web_sys::MouseEvent)>).into_js_value().unchecked_ref(),
-                );
-            }
+            });
+            on_cleanup(move || handle.remove());
         }
     });
 }
@@ -77,24 +75,18 @@ where
 }
 
 /// Escape key handler — calls callback when Escape is pressed.
+///
+/// The `keydown` listener is removed when the calling owner is cleaned up.
 pub fn use_escape_key(
     callback: impl FnMut() + 'static,
 ) {
-    let callback = std::rc::Rc::new(std::cell::RefCell::new(callback));
-    leptos::prelude::Effect::new(move |_| {
-        if let Some(window) = web_sys::window() {
-            let callback = callback.clone();
-            let handler = move |ev: web_sys::KeyboardEvent| {
-                if ev.key() == "Escape" {
-                    (callback.borrow_mut())();
-                }
-            };
-            let _ = window.add_event_listener_with_callback(
-                "keydown",
-                &wasm_bindgen::closure::Closure::wrap(Box::new(handler) as Box<dyn FnMut(web_sys::KeyboardEvent)>).into_js_value().unchecked_ref(),
-            );
+    let callback = std::cell::RefCell::new(callback);
+    let handle = window_event_listener(leptos::ev::keydown, move |ev| {
+        if ev.key() == "Escape" {
+            (callback.borrow_mut())();
         }
     });
+    on_cleanup(move || handle.remove());
 }
 
 /// Focus trap — traps focus within a reference element when active.
@@ -127,8 +119,18 @@ pub fn use_media_query(query: &'static str) -> leptos::prelude::RwSignal<bool> {
             };
             let handler_closure = wasm_bindgen::closure::Closure::wrap(Box::new(handler) as Box<dyn FnMut(web_sys::Event)>);
             let _ = mql.add_event_listener_with_callback("change", handler_closure.as_ref().unchecked_ref());
-            handler_closure.forget();
             m.set(mql.matches());
+            // The same closure that was added is the one removed on cleanup.
+            let listener = StoredValue::new_local((mql, handler_closure));
+            on_cleanup(move || {
+                listener.with_value(|(mql, closure)| {
+                    let _ = mql.remove_event_listener_with_callback(
+                        "change",
+                        closure.as_ref().unchecked_ref(),
+                    );
+                });
+                listener.dispose();
+            });
         }
     }
     matches
@@ -236,7 +238,16 @@ pub fn use_tick_stream(
                 }
             }) as Box<dyn FnMut(web_sys::MessageEvent)>);
             ws.set_onmessage(Some(onmessage_cb.as_ref().unchecked_ref()));
-            onmessage_cb.forget();
+            // Detach the handler and close the socket when the owner is
+            // cleaned up, before the closure itself is dropped.
+            let socket = StoredValue::new_local((ws, onmessage_cb));
+            on_cleanup(move || {
+                socket.with_value(|(ws, _)| {
+                    ws.set_onmessage(None);
+                    let _ = ws.close();
+                });
+                socket.dispose();
+            });
         }
     });
 }

@@ -207,8 +207,9 @@ pub fn OpenAlgoChart(
     // ------------------------------------------------------------------------
     // Reactivity: Buy/Sell Order Clicks
     // ------------------------------------------------------------------------
+    // The listener lives until the component's owner is cleaned up.
     if let Some(cb) = on_order_click {
-        let order_listener = Closure::<dyn FnMut(JsValue)>::new(move |event: JsValue| {
+        let order_listener = window_event_listener_untyped("honba-order-click", move |event| {
             let Ok(custom_ev) = event.dyn_into::<web_sys::CustomEvent>() else {
                 return;
             };
@@ -233,13 +234,7 @@ pub fn OpenAlgoChart(
                 quantity: qty,
             });
         });
-
-        if let Some(window) = web_sys::window() {
-            let _ = window.add_event_listener_with_callback(
-                "honba-order-click",
-                order_listener.as_ref().unchecked_ref(),
-            );
-        }
+        on_cleanup(move || order_listener.remove());
     }
 
     // ------------------------------------------------------------------------

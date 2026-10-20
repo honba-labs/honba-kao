@@ -18,7 +18,6 @@ use crate::components::workbench::trading_drawer::TradingDrawer;
 use crate::stores::workbench::{OrderSide, WorkbenchStore};
 
 use wasm_bindgen::JsCast;
-use wasm_bindgen::closure::Closure;
 
 #[component]
 pub fn WorkbenchPage() -> impl IntoView {
@@ -31,9 +30,10 @@ pub fn WorkbenchPage() -> impl IntoView {
 
     // The chart bubble's clicks (the bridge dispatches `honba-order-click`
     // from the engine's subscribeClick) open the order modal — labs'
-    // subscribeClick wiring, re-homed across the bridge.
+    // subscribeClick wiring, re-homed across the bridge. The listener is
+    // removed when the page unmounts, so each visit holds exactly one.
     let handler =
-        Closure::<dyn FnMut(wasm_bindgen::JsValue)>::new(move |event: wasm_bindgen::JsValue| {
+        window_event_listener_untyped("honba-order-click", move |event: web_sys::Event| {
             let Ok(event) = event.dyn_into::<web_sys::CustomEvent>() else {
                 return;
             };
@@ -74,13 +74,7 @@ pub fn WorkbenchPage() -> impl IntoView {
                 }
             }
         });
-    if let Some(window) = web_sys::window() {
-        let _ = window.add_event_listener_with_callback(
-            "honba-order-click",
-            handler.as_ref().unchecked_ref::<js_sys::Function>(),
-        );
-        handler.forget(); // lives for the whole session; safer than dangling removes
-    }
+    on_cleanup(move || handler.remove());
 
     view! {
         <div class="wb-view">

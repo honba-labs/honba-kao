@@ -2,12 +2,17 @@
 //!
 //! Signed-in users land on Portfolio (the console's default workspace);
 //! unknown paths fall back to `/`, which itself redirects authenticated users
-//! there and still shows the marketing landing to guests. Gated screens are
-//! gated inline, exactly like the old `web/src/router/AppRoutes.tsx`
-//! (`isLoggedIn ? <Screen/> : <Redirect/>`) expressions.
+//! there and still shows the marketing landing to guests.
+//!
+//! The gated workspace screens are children of one pathless parent route
+//! whose view, [`AppShell`], mounts the [`AppChrome`] once and renders the
+//! matched page through `<Outlet/>`. Navigating between workspace screens
+//! therefore swaps only the outlet content; the header, nav rail and their
+//! state survive.
 
 use leptos::prelude::*;
-use leptos_router::components::{Redirect, Route, Routes};
+use leptos_router::components::{Outlet, ParentRoute, Redirect, Route, Routes};
+use leptos_router::hooks::use_location;
 use leptos_router::path;
 
 use crate::components::auth::{LoginPage, RegisterPage, ResetPasswordPage};
@@ -18,12 +23,10 @@ use crate::pages::{
     StrategyStudioPage, TradebookPage, WorkbenchPage,
 };
 use crate::router::app_chrome::AppChrome;
-use crate::router::paths::{Page, ROUTES};
+use crate::router::paths::{Page, ROUTES, get_current_page_for_path};
 
 #[component]
 pub fn AppRoutes() -> impl IntoView {
-    let auth = use_auth();
-
     view! {
         // Unknown paths fall through to `/`, which routes by session state.
         <Routes fallback=|| view! { <Redirect path=ROUTES::HOME /> }>
@@ -34,113 +37,50 @@ pub fn AppRoutes() -> impl IntoView {
             <Route path=path!("/reset-password") view=|| view! { <ResetPasswordPage /> } />
             <Route path=path!("/setup") view=|| view! { <SetupPage /> } />
 
-            // --- Gated workspace ----------------------------------------------
-            <Route path=path!("/portfolio") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Portfolio>
-                            <PortfolioPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
+            // --- Gated workspace (persistent chrome) --------------------------
+            <ParentRoute path=path!("") view=AppShell>
+                <Route path=path!("/portfolio") view=PortfolioPage />
+                <Route path=path!("/screener") view=ScreenerPage />
+                <Route path=path!("/workbench") view=WorkbenchPage />
+                <Route path=path!("/strategy") view=StrategyStudioPage />
+                <Route path=path!("/simulator") view=SimulatorPage />
+                <Route path=path!("/tradebook") view=TradebookPage />
 
-            <Route path=path!("/screener") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Screener>
-                            <ScreenerPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            <Route path=path!("/workbench") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Workbench>
-                            <WorkbenchPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            <Route path=path!("/strategy") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Strategy>
-                            <StrategyStudioPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            <Route path=path!("/simulator") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Simulator>
-                            <SimulatorPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            <Route path=path!("/tradebook") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Tradebook>
-                            <TradebookPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            // --- User cluster ---------------------------------------------------
-            <Route path=path!("/settings") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Settings>
-                            <SettingsPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
-
-            <Route path=path!("/funds") view=move || {
-                if auth.is_authenticated() {
-                    view! {
-                        <AppChrome current_page=Page::Funds>
-                            <FundsPage />
-                        </AppChrome>
-                    }
-                        .into_any()
-                } else {
-                    view! { <Redirect path=ROUTES::LOGIN /> }.into_any()
-                }
-            } />
+                // --- User cluster -------------------------------------------
+                <Route path=path!("/settings") view=SettingsPage />
+                <Route path=path!("/funds") view=FundsPage />
+            </ParentRoute>
         </Routes>
     }
+}
+
+/// Layout for the gated workspace: guests are sent to sign-in, hosts get the
+/// chrome mounted once with the matched child page in its `<main>` outlet.
+///
+/// The session is checked when the shell mounts. The shell is only left
+/// mounted across navigations between its own children, and the only way a
+/// session ends (sign-out) navigates to `/`, which unmounts the shell.
+#[component]
+fn AppShell() -> impl IntoView {
+    let auth = use_auth();
+
+    if !auth.is_authenticated() {
+        return view! { <Redirect path=ROUTES::LOGIN /> }.into_any();
+    }
+
+    let location = use_location();
+    let current_page = Memo::new(move |_| {
+        location
+            .pathname
+            .with(|pathname| get_current_page_for_path(pathname).unwrap_or(Page::Home))
+    });
+
+    view! {
+        <AppChrome current_page=current_page>
+            <Outlet />
+        </AppChrome>
+    }
+    .into_any()
 }
 
 /// `/`: authenticated users go straight to Portfolio (the default landing);

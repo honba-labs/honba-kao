@@ -10,7 +10,6 @@
 
 use leptos::prelude::*;
 use leptos_router::components::A;
-use wasm_bindgen::JsCast;
 
 use honba_kao_ui_core::{HfButton, HfButtonVariant, HfIconButton, HfTradingModeToggle, HfTradingModeType};
 
@@ -21,7 +20,9 @@ use crate::stores::{TradingMode, trading_mode::use_trading_mode};
 use crate::theme::{Mode, Preference, THEMES, ThemeContext};
 
 #[component]
-pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoView {
+pub fn HeaderBar(
+    #[prop(into, default = Page::Home.into())] current_page: Signal<Page>,
+) -> impl IntoView {
     let auth = use_auth();
     let language = use_language();
     let theme = expect_context::<ThemeContext>();
@@ -33,7 +34,7 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
     install_scroll_listener(scrolled);
 
     // Translucent over the marketing hero, solid as soon as the page moves.
-    let transparent = Memo::new(move |_| current_page == Page::Home && !scrolled.get());
+    let transparent = Memo::new(move |_| current_page.get() == Page::Home && !scrolled.get());
 
     // The store's TradingMode mapped onto the indicator's wire enum.
     let widget_mode = Signal::derive(move || match trading.mode().get() {
@@ -183,19 +184,14 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
     }
 }
 
-/// Keep `scrolled` in sync with the window, using a passive listener.
+/// Keep `scrolled` in sync with the window scroll position. The listener is
+/// removed when the header's owner is cleaned up.
 fn install_scroll_listener(scrolled: RwSignal<bool>) {
-    let Some(window) = web_sys::window() else {
-        return;
-    };
-
-    let reader = window.clone();
-    let on_scroll = wasm_bindgen::closure::Closure::<dyn FnMut()>::new(move || {
-        scrolled.set(reader.scroll_y().unwrap_or(0.0) > 8.0);
+    let handle = window_event_listener(leptos::ev::scroll, move |_| {
+        let y = web_sys::window()
+            .and_then(|window| window.scroll_y().ok())
+            .unwrap_or(0.0);
+        scrolled.set(y > 8.0);
     });
-
-    let _ = window.add_event_listener_with_callback("scroll", on_scroll.as_ref().unchecked_ref());
-    // The header lives for the whole session; leaking one closure is cheaper
-    // than threading an owner through every route.
-    on_scroll.forget();
+    on_cleanup(move || handle.remove());
 }
