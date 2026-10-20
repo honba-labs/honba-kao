@@ -1,0 +1,21 @@
+{
+  "kind": "record",
+  "seq": 1,
+  "message": {
+    "schema_version": 4,
+    "event": {
+      "type": "order_filled",
+      "order_id": "BK-1-2",
+      "last_qty": 10.0,
+      "last_px": 22060.0,
+      "ts_event": {
+        "iso": "2023-11-15T00:05:05.000000000Z",
+        "unix_nanos": "1700006705000000000"
+      }
+    },
+    "ts_init": {
+      "iso": "2023-11-15T00:05:05.000000000Z",
+      "unix_nanos": "1700006705000000000"
+    }
+  }
+}

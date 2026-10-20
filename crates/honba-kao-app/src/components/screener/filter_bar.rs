@@ -4,6 +4,7 @@
 //! Table/Heatmap view toggle, the quick-preset + market row, the row-3
 //! status strip ("All N / Filtered M", shortlist chip, Export CSV).
 
+use honba_kao_ui_core::HfButton;
 use leptos::prelude::*;
 
 use crate::components::screener::drawers::IndexDrawer;
@@ -47,87 +48,67 @@ pub fn FilterBar() -> impl IntoView {
                         let screener_type = *screener_type;
                         let active = move || store.screener_type.get() == screener_type;
                         view! {
-                            <button
-                                class=move || {
-                                    if active() {
-                                        "sc-filter-bar__type sc-filter-bar__type--on"
-                                    } else {
-                                        "sc-filter-bar__type"
-                                    }
-                                }
-                                title=screener_type.stock_name()
-                                on:click=move |_| store.set_screener_type(screener_type)
+                            <HfButton
+                                class="sc-filter-bar__type".to_string()
+                                active=Signal::derive(active)
+                                title=screener_type.stock_name().to_string()
+                                on_click=Callback::new(move |_| store.set_screener_type(screener_type))
                             >
                                 {type_label(screener_type)}
-                            </button>
+                            </HfButton>
                         }
                     })
                     .collect_view()}
 
-                <button
-                    class="sc-filter-bar__screens"
-                    title="Open the screen catalog"
-                    on:click=move |_| store.toggle_open_screen_modal(true)
+                <HfButton
+                    class="sc-filter-bar__screens".to_string()
+                    title="Open the screen catalog".to_string()
+                    on_click=Callback::new(move |_| store.toggle_open_screen_modal(true))
                 >
                     <span class="sc-filter-bar__screens-label">"Screens"</span>
                     <span class="sc-filter-bar__screens-title">
                         {move || store.screen_title.get()}
                     </span>
-                </button>
+                </HfButton>
 
                 <span class="sc-filter-bar__spacer"></span>
 
-                <button
-                    class="sc-filter-bar__tool"
-                    title="Open the columns configurator"
-                    on:click=move |_| store.column_modal.set(true)
+                <HfButton
+                    class="sc-filter-bar__tool".to_string()
+                    title="Open the columns configurator".to_string()
+                    on_click=Callback::new(move |_| store.column_modal.set(true))
                 >
                     "Columns"
                     <span class="sc-filter-bar__badge">
                         {move || store.visible_columns.get().len()}
                     </span>
-                </button>
+                </HfButton>
 
-                <button
-                    class=move || {
-                        if filter_count.get() == 0 {
-                            "sc-filter-bar__tool"
-                        } else {
-                            "sc-filter-bar__tool sc-filter-bar__tool--fair"
-                        }
-                    }
-                    title="Open the filters modal"
-                    on:click=move |_| store.filter_modal.set(true)
+                <HfButton
+                    class="sc-filter-bar__tool".to_string()
+                    active=Signal::derive(move || filter_count.get() != 0)
+                    title="Open the filters modal".to_string()
+                    on_click=Callback::new(move |_| store.filter_modal.set(true))
                 >
                     "Filters"
                     <span class="sc-filter-bar__badge">{move || filter_count.get()}</span>
-                </button>
+                </HfButton>
 
                 <div class="sc-filter-bar__seg">
-                    <button
-                        class=move || {
-                            if store.view_mode.get() == ViewMode::Table {
-                                "sc-filter-bar__seg-btn sc-filter-bar__seg-btn--on"
-                            } else {
-                                "sc-filter-bar__seg-btn"
-                            }
-                        }
-                        on:click=move |_| store.view_mode.set(ViewMode::Table)
+                    <HfButton
+                        class="sc-filter-bar__seg-btn".to_string()
+                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Table)
+                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Table))
                     >
                         "Table"
-                    </button>
-                    <button
-                        class=move || {
-                            if store.view_mode.get() == ViewMode::Heatmap {
-                                "sc-filter-bar__seg-btn sc-filter-bar__seg-btn--on"
-                            } else {
-                                "sc-filter-bar__seg-btn"
-                            }
-                        }
-                        on:click=move |_| store.view_mode.set(ViewMode::Heatmap)
+                    </HfButton>
+                    <HfButton
+                        class="sc-filter-bar__seg-btn".to_string()
+                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Heatmap)
+                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Heatmap))
                     >
                         "Heatmap"
-                    </button>
+                    </HfButton>
                 </div>
             </div>
 
@@ -150,18 +131,13 @@ pub fn FilterBar() -> impl IntoView {
                         let preset_id = *preset_id;
                         let active = move || store.quick_preset.get() == preset_id;
                         view! {
-                            <button
-                                class=move || {
-                                    if active() {
-                                        "sc-filter-bar__type sc-filter-bar__type--on"
-                                    } else {
-                                        "sc-filter-bar__type"
-                                    }
-                                }
-                                on:click=move |_| store.set_quick_preset(preset_id)
+                            <HfButton
+                                class="sc-filter-bar__type".to_string()
+                                active=Signal::derive(active)
+                                on_click=Callback::new(move |_| store.set_quick_preset(preset_id))
                             >
                                 {preset_label.to_string()}
-                            </button>
+                            </HfButton>
                         }
                     })
                     .collect_view()}
@@ -172,56 +148,41 @@ pub fn FilterBar() -> impl IntoView {
                         let market = *market;
                         let active = move || store.market.get() == market;
                         view! {
-                            <button
-                                class=move || {
-                                    if active() {
-                                        "sc-filter-bar__market sc-filter-bar__market--on"
-                                    } else {
-                                        "sc-filter-bar__market"
-                                    }
-                                }
-                                on:click=move |_| store.set_market(market)
+                            <HfButton
+                                class="sc-filter-bar__market".to_string()
+                                active=Signal::derive(active)
+                                on_click=Callback::new(move |_| store.set_market(market))
                             >
                                 {market}
-                            </button>
+                            </HfButton>
                         }
                     })
                     .collect_view()}
 
                 // Index multi-select dropdown (labs IndexDrawer).
                 <div class="sc-filter-bar__index-anchor" node_ref=index_host>
-                    <button
-                        class=move || {
-                            if index_open.get() || index_count.get() > 0 {
-                                "sc-filter-bar__market sc-filter-bar__market--on"
-                            } else {
-                                "sc-filter-bar__market"
-                            }
-                        }
-                        title="Filter instruments by benchmark or sectoral index"
-                        on:click=move |_| index_open.update(|open| *open = !*open)
+                    <HfButton
+                        class="sc-filter-bar__market".to_string()
+                        active=Signal::derive(move || index_open.get() || index_count.get() > 0)
+                        title="Filter instruments by benchmark or sectoral index".to_string()
+                        on_click=Callback::new(move |_| index_open.update(|open| *open = !*open))
                     >
                         "Index"
                         <span class="sc-filter-bar__badge">{move || index_count.get()}</span>
-                    </button>
+                    </HfButton>
                     <IndexDrawer open=index_open host=index_host />
                 </div>
 
-                <button
-                    class=move || {
-                        if store.is_live.get() {
-                            "sc-filter-bar__live sc-filter-bar__live--on"
-                        } else {
-                            "sc-filter-bar__live"
-                        }
-                    }
-                    title="Toggle the simulated live tick badge"
-                    on:click=move |_| store.toggle_live()
+                <HfButton
+                    class="sc-filter-bar__live".to_string()
+                    active=Signal::derive(move || store.is_live.get())
+                    title="Toggle the simulated live tick badge".to_string()
+                    on_click=Callback::new(move |_| store.toggle_live())
                 >
                     {move || {
                         if store.is_live.get() { "Live" } else { "Paused" }
                     }}
-                </button>
+                </HfButton>
             </div>
 
             // --- Row 3: counts + watchlist + export
@@ -246,13 +207,13 @@ pub fn FilterBar() -> impl IntoView {
                     {move || store.shortlist.get().len()}
                 </span>
                 <span class="sc-filter-bar__spacer"></span>
-                <button
-                    class="sc-filter-bar__export"
-                    title="Download the current screen as CSV"
-                    on:click=move |_| store.export_csv()
+                <HfButton
+                    class="sc-filter-bar__export".to_string()
+                    title="Download the current screen as CSV".to_string()
+                    on_click=Callback::new(move |_| store.export_csv())
                 >
                     "Export CSV"
-                </button>
+                </HfButton>
             </div>
         </div>
     }

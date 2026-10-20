@@ -1,7 +1,30 @@
 # Master Plan: 本場・顔 honba-kao
 
-> **The face of the real thing.**  
+> **The face of the real thing.**
 > High-performance Leptos (0.7+ CSR) web trading terminal for Indian equities (`honba-ya` backend, `honba-kokoro` types, `honba-me` indicators), modeled on the professional UI architecture, styling language, and component design of [Bitfinex Honey Framework Core (`bfx-hf-ui-core`)](https://github.com/bitfinexcom/bfx-hf-ui-core), powered by an extensible **256-color named design token palette** for limitless custom theming.
+
+---
+
+## 0. Executive Summary & Critical Assessment
+
+### Current State (as of 2026-10-19)
+- **Working prototype** with 256-color palette, 8 themes, widget-tier chart integration
+- **Critical gaps** preventing professional-grade delivery:
+  - ❌ No design system crate — 10 primitives only, missing 25+ Radix/Shadcn components
+  - ❌ Domain components use raw HTML + custom CSS (violates `hints.md`)
+  - ❌ Monolithic stores (1659-line `workbench.rs`), no query layer, no form handling
+  - ❌ No route loaders, error boundaries, code splitting, a11y patterns
+  - ❌ No component tests, no e2e, no CI enforcement
+
+### Target State: Professional Leptos Architecture
+- ✅ `honba-kao-ui-core` crate with 35+ accessible primitives (Radix parity)
+- ✅ Feature-sliced architecture (`features/`, `shared/`, `widgets/`, `pages/`)
+- ✅ `leptos-query` for server state, optimistic mutations, caching
+- ✅ Form library with schema validation
+- ✅ Route loaders, auth guards, error boundaries
+- ✅ Full a11y (ARIA, focus management, keyboard nav)
+- ✅ Component tests + Playwright e2e
+- ✅ CI enforcement for design system usage
 
 ---
 
@@ -10,11 +33,12 @@
 `honba-kao` is a single-page WebAssembly application (CSR) built with **Leptos 0.7**, compiled via **Trunk**, communicating with `honba-ya` over typed HTTP REST and WebSocket streaming.
 
 ### Key Tenets
-1. **Trading-Terminal First**: Dense, high-contrast, information-rich layouts designed for intraday algo-trading, position monitoring, and decision audits.
-2. **Visual Fidelity to `bfx-hf-ui-core`**: Strict adherence to the Bitfinex Honey Framework design system—including dark/light palettes, variable-based shades, 5px corner radii, elevation shading, and tabular numeric typography.
-3. **256-Color Named Palette System**: A rigorous, extensible 256-color named palette architecture (`--c-000` to `--c-255`) acting as canonical design tokens for current Bitfinex themes and any future custom themes (e.g., Monokai, Nord, Solarized, Bloomberg Amber, Cyberpunk Neon).
-4. **Pure Rust Reactivity**: Signals, memos, and resources in Leptos 0.7 without virtual DOM overhead, delivering 60fps tick updates and zero-jank UI reflows.
-5. **Native WASM Compute**: Seamless integration with `honba-kao-api-wasm` to run screener filters, OHLC aggregations, and technical indicators locally in the browser thread.
+1. **Trading-Terminal First**: Dense, high-contrast, information-rich layouts for intraday algo-trading, position monitoring, and decision audits.
+2. **Visual Fidelity to `bfx-hf-ui-core`**: Strict adherence to Bitfinex Honey Framework design system—dark/light palettes, variable-based shades, 5px corner radii, elevation shading, tabular numeric typography.
+3. **256-Color Named Palette System**: Rigorous, extensible 256-color named palette (`--c-000` to `--c-255`) as canonical design tokens for current Bitfinex themes and any future custom themes.
+4. **Pure Rust Reactivity**: Signals, memos, resources in Leptos 0.7 without virtual DOM overhead, delivering 60fps tick updates and zero-jank UI reflows.
+5. **Native WASM Compute**: Seamless integration with `honba-kao-api-wasm` to run screener filters, OHLC aggregations, and technical indicators locally.
+6. **Design System Discipline**: Every component composes from `honba-kao-ui-core` primitives. Zero raw HTML in domain components (enforced by CI).
 
 ---
 
@@ -23,7 +47,7 @@
 The styling infrastructure is divided into three distinct layers:
 1. **Canonical Palette Layer (Tokens `000` to `255`)**: 256 named, calibrated color tokens.
 2. **Semantic Theme Alias Layer**: Maps Honey Framework variables (`--background-color`, `--primary-*`, `--shade-*`) to canonical palette tokens.
-3. **Runtime Custom Theme Engine**: Allows dynamic JSON-based theme loading, runtime CSS injection, and Canvas/SVG chart color synchronization in Rust.
+3. **Runtime Custom Theme Engine**: Dynamic JSON-based theme loading, runtime CSS injection, Canvas/SVG chart color synchronization in Rust.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -46,373 +70,513 @@ The styling infrastructure is divided into three distinct layers:
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │             Layer 2: Leptos UI Components & Canvas Renderers           │
-│  HfPanel, HfButton, HfPLNumber, PositionsTable, LivePnlSparkline       │
+│  HfPanel, HfButton, HfPLNumber, HfSelect, HfDataTable, ChartWidget    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 2.1 The 256-Color Canonical Named Token Architecture
 
-Every token in the palette has an index (`--c-000` .. `--c-255`) and an unambiguous, descriptive semantic name (`--c-<name>`):
+**Every token has an index (`--c-000` .. `--c-255`) and an unambiguous semantic name (`--c-<name>`):**
 
 #### 1. System & Terminal Core (Tokens `000`–`015` — 16 Colors)
-Standard terminal color primitives adapted for high-contrast trading terminals:
-- `000` (`--c-term-black`): `#0a1017`
-- `001` (`--c-term-red`): `#d9383e`
-- `002` (`--c-term-green`): `#00b88d`
-- `003` (`--c-term-yellow`): `#d9b300`
-- `004` (`--c-term-blue`): `#0073d9`
-- `005` (`--c-term-magenta`): `#b340b3`
-- `006` (`--c-term-cyan`): `#00a3a3`
-- `007` (`--c-term-white`): `#d0d7de`
-- `008` (`--c-term-bright-black` / gray): `#4f5a62`
-- `009` (`--c-term-bright-red`): `#f05359`
-- `010` (`--c-term-bright-green`): `#00e0ad`
-- `011` (`--c-term-bright-yellow`): `#fcd206`
-- `012` (`--c-term-bright-blue`): `#0089ff`
-- `013` (`--c-term-bright-magenta`): `#e05ce0`
-- `014` (`--c-term-bright-cyan`): `#00d9d9`
-- `015` (`--c-term-bright-white`): `#ffffff`
+| Index | Name | Hex | Purpose |
+|-------|------|-----|---------|
+| 000 | `--c-term-black` | `#0a1017` | Deep void / canvas base |
+| 001 | `--c-term-red` | `#d9383e` | Error / loss |
+| 002 | `--c-term-green` | `#00b88d` | Success / gain |
+| 003 | `--c-term-yellow` | `#d9b300` | Warning |
+| 004 | `--c-term-blue` | `#0073d9` | Info / links |
+| 005 | `--c-term-magenta` | `#b340b3` | Algo signals |
+| 006 | `--c-term-cyan` | `#00a3a3` | Ticker highlights |
+| 007 | `--c-term-white` | `#d0d7de` | Primary text |
+| 008 | `--c-term-bright-black` | `#4f5a62` | Muted text |
+| 009 | `--c-term-bright-red` | `#f05359` | Bright loss |
+| 010 | `--c-term-bright-green` | `#00e0ad` | Bright gain |
+| 011 | `--c-term-bright-yellow` | `#fcd206` | Bright warning |
+| 012 | `--c-term-bright-blue` | `#0089ff` | Bright info |
+| 013 | `--c-term-bright-magenta` | `#e05ce0` | Bright algo |
+| 014 | `--c-term-bright-cyan` | `#00d9d9` | Bright ticker |
+| 015 | `--c-term-bright-white` | `#ffffff` | Max contrast |
 
-#### 2. Chromatic Spectrum Ramps (Tokens `016`–`231` — 216 Colors = 18 Hues × 12 Luminance Steps)
-Each hue contains 12 perceptual luminance steps (Step `01` = deepest shade, Step `06` = pure hue, Step `12` = pastel tint/highlight):
-1. **`slate-01` .. `slate-12`** (`016`–`027`): Cool Slate neutrals, card borders, passive text.
-2. **`marine-01` .. `marine-12`** (`028`–`039`): Bitfinex dark terminal navy surfaces (`#102331`, `#172d3e`, `#1e384d`).
-3. **`azure-01` .. `azure-12`** (`040`–`051`): Vibrant electric blue accents, focus rings, link text.
-4. **`cyan-01` .. `cyan-12`** (`052`–`063`): Aqua ticker highlights, code indicators, order book depth.
-5. **`teal-01` .. `teal-12`** (`064`–`075`): Bitfinex signature mint & execution indicators (`#00e0ad` ramp).
-6. **`emerald-01` .. `emerald-12`** (`076`–`087`): Positive PnL gains, buy wall markers, confirmed fills.
-7. **`lime-01` .. `lime-12`** (`088`–`099`): High-intensity neon green for burst volume anomalies.
-8. **`chartreuse-01` .. `chartreuse-12`** (`100`–`111`): Oscillators, RSI oversold/overbought markers.
-9. **`amber-01` .. `amber-12`** (`112`–`123`): Warnings, risk throttle limits, connecting statuses.
-10. **`gold-01` .. `gold-12`** (`124`–`135`): Precious metals, benchmark index comparisons, premium badges.
-11. **`orange-01` .. `orange-12`** (`136`–`147`): Pending in-flight orders, margin utilization warnings.
-12. **`coral-01` .. `coral-12`** (`148`–`159`): Bitfinex coral red sell scale (`#f05359` ramp).
-13. **`crimson-01` .. `crimson-12`** (`160`–`171`): Negative PnL losses, stop loss triggers, kill-switch active.
-14. **`rose-01` .. `rose-12`** (`172`–`183`): Subtle drawdown shading, bid/ask spread highlight.
-15. **`magenta-01` .. `magenta-12`** (`184`–`195`): Algo state markers, strategy execution signals.
-16. **`purple-01` .. `purple-12`** (`196`–`207`): Historical backtest equity curves, simulation benchmark.
-17. **`violet-01` .. `violet-12`** (`208`–`219`): Bracket and OCO order boundary indicators.
-18. **`indigo-01` .. `indigo-22`** (`220`–`231`): Liquidity heatmaps and cumulative volume profiling.
+#### 2. Chromatic Spectrum Ramps (Tokens `016`–`231` — 216 Colors = 18 Hues × 12 Steps)
+Each hue: 12 perceptual luminance steps (01 = deepest, 06 = pure hue, 12 = pastel).
+
+| Hue | Tokens | Use Case |
+|-----|--------|----------|
+| `slate-01..12` | `016–027` | Cool neutrals, card borders, passive text |
+| `marine-01..12` | `028–039` | **Bitfinex dark terminal navy** (`#102331`, `#172d3e`, `#1e384d`) |
+| `azure-01..12` | `040–051` | Electric blue accents, focus rings, links |
+| `cyan-01..12` | `052–063` | Aqua ticker highlights, code indicators |
+| `teal-01..12` | `064–075` | **Signature mint** (`#00e0ad` ramp) — buy/gain |
+| `emerald-01..12` | `076–087` | Positive PnL, buy walls, confirmed fills |
+| `lime-01..12` | `088–099` | Neon green for burst volume anomalies |
+| `chartreuse-01..12` | `100–111` | Oscillators, RSI oversold/overbought |
+| `amber-01..12` | `112–123` | Warnings, risk throttle, connecting |
+| `gold-01..12` | `124–135` | Precious metals, benchmarks, premium |
+| `orange-01..12` | `136–147` | Pending orders, margin warnings |
+| `coral-01..12` | `148–159` | **Sell scale** (`#f05359` ramp) |
+| `crimson-01..12` | `160–171` | Negative PnL, stop loss, kill-switch |
+| `rose-01..12` | `172–183` | Drawdown shading, spread highlight |
+| `magenta-01..12` | `184–195` | Algo state markers, strategy signals |
+| `purple-01..12` | `196–207` | Backtest equity curves, benchmarks |
+| `violet-01..12` | `208–219` | Bracket/OCO boundaries |
+| `indigo-01..12` | `220–231` | Liquidity heatmaps, cumulative volume |
 
 #### 3. Monochrome Luminance Ramp (Tokens `232`–`255` — 24 Steps)
-A calibrated 24-step grayscale ramp from absolute terminal void (`mono-00`) to pure white (`mono-23`):
+Calibrated grayscale from absolute void (`mono-00`) to pure white (`mono-23`):
 - `232` (`--c-mono-00`): `#080c10` (deep void / canvas base)
-- `233` (`--c-mono-01`): `#0f151c`
-- `234` (`--c-mono-02`): `#161e27`
-- `...`
 - `244` (`--c-mono-12`): `#7a8894` (mid-gray border / inactive icon)
-- `...`
 - `254` (`--c-mono-22`): `#f0f3f6`
 - `255` (`--c-mono-23`): `#ffffff` (pure white text highlight)
 
 ---
 
-### 2.2 Semantic Theme Alias Mapping
+## 3. Professional Architecture Redesign
 
-Component stylesheets reference semantic aliases that resolve to the 256-color palette. Switching themes merely remaps these aliases:
-
-| Semantic Alias | Default Dark (BFX Honey) | Default Light Mode | High-Contrast / Custom Theme |
-| :--- | :--- | :--- | :--- |
-| `--background-color` | `var(--c-marine-02)` (`#172d3e`) | `var(--c-mono-21)` (`#efefef`) | Custom base background |
-| `--darker-background-color` | `var(--c-marine-01)` (`#102331`) | `var(--c-mono-23)` (`#ffffff`) | Custom card/panel surface |
-| `--lighter-background-color`| `var(--c-marine-03)` (`#1c364a`) | `var(--c-mono-20)` (`#e5e8ec`) | Elevated hover containers |
-| `--grayish-color` | `var(--c-slate-04)` (`#4f5a62`) | `var(--c-slate-02)` (`#d0d7de`) | Structural dividers & borders |
-| `--primary-0` (tint) | `var(--c-teal-02)` | `var(--c-teal-01)` | Row hover tint / active pill |
-| `--primary-8` (text) | `var(--c-teal-10)` | `var(--c-teal-08)` | Highlighted green text |
-| `--primary-9` (pure) | `var(--c-teal-07)` (`#00e0ad`) | `var(--c-teal-07)` (`#00e0ad`) | Primary brand accent |
-| `--secondary-0` .. `--9` | `var(--c-azure-02)` .. `10` | `var(--c-azure-01)` .. `08` | Blue interactive accents |
-| `--shade-0` .. `--shade-9` | `var(--c-marine-03)` .. `mono-22` | `var(--c-mono-20)` .. `mono-03` | Depth elevation & text scale |
-| `--pnl-gain` / `hfui-green` | `var(--c-teal-08)` | `var(--c-emerald-07)` | Positive profit/gain |
-| `--pnl-loss` / `hfui-red` | `var(--c-coral-08)` | `var(--c-crimson-07)` | Negative loss |
-| `--pnl-neutral` | `var(--c-mono-14)` | `var(--c-mono-10)` | Break-even PnL |
-| `--order-buy` | `var(--c-emerald-07)` | `var(--c-emerald-07)` | Buy side indicator |
-| `--order-sell` | `var(--c-crimson-07)` | `var(--c-crimson-07)` | Sell side indicator |
-| `--status-warning` | `var(--c-amber-08)` (`#fcd206`)| `var(--c-amber-08)` | Connecting / Throttling |
-| `--text-color` | `var(--c-mono-18)` | `var(--c-mono-04)` | Body copy |
-
----
-
-### 2.3 Physical Styling Properties (Corners, Shading & Elevation)
-
-- **Corners & Border Radii**:
-  - Global container radius: `$border-radius: 5px;` applied to all panels, buttons, cards, dropdowns, and modal dialogs.
-  - Counter & Status Badges: Pill shape with `border-radius: 100px;`.
-  - Status Indicators & Side Stick Markers: Circular (`border-radius: 50%;`) or vertical stick (`width: 2px; height: 12px; border-radius: 0;`).
-- **Shading & Elevation**:
-  - Panel Elevation: Deep visual contrast between workspace base (`--background-color`) and inner body (`--darker-background-color`).
-  - Elevated Popovers & Modals: `box-shadow: 5px -4px 15px 0px rgba(0, 0, 0, 0.45);`.
-  - Row Hover: Subtle highlighting via `var(--primary-0)` background with `var(--primary-8)` text transition.
-- **Typography & Formatting**:
-  - Font family: `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
-  - Tabular Numbers: `font-feature-settings: "tnum"` enabled across all tables, prices, quantities, and PnL fields.
-  - Trailing decimals: `opacity: 0.6;` styling for trailing fractional zeros.
-- **Custom Scrollbars**:
-  - Track: transparent.
-  - Thumb: `var(--shade-1)`, hovering to `var(--shade-3)` with smooth transitions.
-
----
-
-### 2.4 Extensible Custom Theme Engine Architecture
-
-To support any custom theme (Monokai, Solarized, Nord, Bloomberg Terminal, Cyberpunk Neon, OLED Black):
-
-1. **Rust Palette Representation (`honba-kao-app/src/theme/palette.rs`)**:
-   ```rust
-   #[derive(Clone, Debug, Serialize, Deserialize)]
-   pub struct Palette256 {
-       pub colors: [String; 256], // 256 Hex / OKLCH strings
-   }
-
-   #[derive(Clone, Debug, Serialize, Deserialize)]
-   pub struct CustomThemeDefinition {
-       pub id: String,
-       pub name: String,
-       pub is_dark: bool,
-       pub palette: Palette256,
-       pub semantic_overrides: HashMap<String, String>,
-   }
-   ```
-2. **Dynamic In-Browser CSS Injection**:
-   - Leptos reactive effect injects or updates a `<style id="honba-custom-theme">` tag on the fly.
-   - Allows users to drag-and-drop or paste a `.json` theme file and preview it instantly with zero page reloads.
-3. **Canvas & SVG Chart Color Synchronization**:
-   - Canvas/SVG sparklines (`LivePnlSparkline`) retrieve RGB values directly from the active `Palette256` struct in Rust memory, guaranteeing exact color match between CSS panels and rendered charts.
-4. **Theme Studio & Palette Inspector (`ThemeStudioModal`)**:
-   - An in-terminal palette inspector displaying all 256 color swatches, WCAG contrast verification against `--background-color`, and interactive color picker for tweaking and exporting custom themes.
-
----
-
-## 3. Leptos Component Matrix & Design Specifications
-
-Every component is modeled on its corresponding pattern in `bfx-hf-ui-core/src/ui` and `src/components`:
+### 3.1 Crate Structure (New)
 
 ```
-bfx-hf-ui-core Pattern           honba-kao Leptos Component        Module Path
-────────────────────────────────────────────────────────────────────────────────────────────
-ui/Panel                        HfPanel, HfPanelHeader            crates/honba-kao-app/src/ui/panel.rs
-ui/Button                       HfButton, HfIconButton            crates/honba-kao-app/src/ui/button.rs
-ui/PLNumber                     HfPLNumber                        crates/honba-kao-app/src/ui/pl_number.rs
-ui/Dropdown, SimpleDropdown     HfDropdown, HfSelect              crates/honba-kao-app/src/ui/dropdown.rs
-ui/Modal                        HfModal                           crates/honba-kao-app/src/ui/modal.rs
-ui/AttentionBar                 HfAttentionBar                    crates/honba-kao-app/src/ui/attention_bar.rs
-ui/ProgressBar                  HfProgressBar                     crates/honba-kao-app/src/ui/progress_bar.rs
-ui/Tabs                         HfTabs, HfTab                     crates/honba-kao-app/src/ui/tabs.rs
-components/Navbar               Navbar                            crates/honba-kao-app/src/components/navbar.rs
-components/StatusBar            StatusBar                         crates/honba-kao-app/src/components/status_bar.rs
-components/PositionsTable       PositionsTablePanel               crates/honba-kao-app/src/components/positions.rs
-components/AtomicOrdersTable    OrdersTablePanel                  crates/honba-kao-app/src/components/orders.rs
-components/TradesTablePanel     TradesTablePanel                  crates/honba-kao-app/src/components/trades.rs
-components/TradingStatePanel    TradersOverviewPanel              crates/honba-kao-app/src/components/traders.rs
-(New / Honba-Specific)          DecisionLogPanel                  crates/honba-kao-app/src/components/decision_log.rs
-(New / Honba-Specific)          RiskLimitsModal                   crates/honba-kao-app/src/components/risk_modal.rs
-(New / Honba-Specific)          LivePnlSparkline                  crates/honba-kao-app/src/components/sparkline.rs
-(New / Custom Themes)           ThemeStudioModal                  crates/honba-kao-app/src/components/theme_studio.rs
+honba-kao/
+├── crates/
+│   ├── honba-kao-ui-core/        # NEW: Design system primitives (35+ components)
+│   ├── honba-kao-app/            # REFACTORED: Feature-sliced architecture
+│   ├── honba-kao-client/         # Typed REST client (keep)
+│   ├── honba-kao-api-wasm/       # WASM compute (keep)
+│   └── honba-kao-test-utils/     # NEW: Testing helpers
+├── docs/
+│   ├── widget-integration.md     # Widget tier isolation
+│   ├── architecture.md           # This document
+│   ├── component-guide.md        # Component authoring guide
+│   └── contributing.md           # Development workflow
+├── scripts/
+│   ├── check-widget-integration.sh
+│   ├── check-ui-core-usage.sh    # Enforces ui-core usage
+│   └── check-a11y.sh             # Accessibility audit
+└── style/                        # Organized SCSS modules
 ```
 
-### 3.1 Component Specifications
+### 3.2 `honba-kao-ui-core` — Design System Primitives (Mirroring `bfx-hf-ui-core`)
 
-#### 1. `HfPanel` (`.hfui-panel`)
-- **Structure**:
-  - `.hfui-panel`: Flex container, `background: var(--darker-background-color)`, `border-radius: 5px`, `overflow: hidden`.
-  - `.hfui-panel__header`: `background: var(--background-color)`, title label (`.hfui-panel__label`), badge counter (`.hfui-panel__counter`), optional tab switcher (`.hfui-panel__header-tabs`), header action buttons (`HfIconButton`).
-  - `.hfui-panel__secondaryheader__wrapper`: Sub-bar for filters, search inputs, symbol selector, or timeframe dropdowns.
-  - `.hfui-panel__content`: Flexible body with optional collapsible sidebar drawer (`.hfui_panel__sidebar-container`).
-- **Features**: Collapsible, maximizable to full screen, tab switching with signal persistence, loading overlay spinner.
+**Structure mirrors `bfx-hf-ui-core/src/ui` and `src/components` with `Hf` prefix:**
 
-#### 2. `HfButton` (`.hfui-button`)
-- **Variants**: `Default` (`--lighter-background-color`), `Green` (`$green-button-color`), `Red` (`$red-button-color`), `Blue` (`$blue-color`), `Ghost`.
-- **States**: Hover opacity (`0.8`), Active compression effect, Disabled (`opacity: 0.5`, `cursor: not-allowed`).
-- **Props**: `on_click`, `variant`, `disabled`, `loading`, `icon`, `children`.
+```
+honba-kao-ui-core/src/
+├── primitive/              # Unstyled, accessible primitives (Radix parity)
+│   ├── icons.rs           # HfIcon — procedural outline icons (stroke="currentColor", fill="none", 16/20/24px)
+│   ├── button.rs          # HfButton, HfIconButton — variants: Default/Green/Red/Blue/Ghost
+│   ├── input.rs           # HfInput, HfTextarea
+│   ├── select.rs          # HfSelect, HfSelectTrigger, HfSelectContent, HfSelectItem, HfSelectSeparator
+│   ├── checkbox.rs        # HfCheckbox
+│   ├── radio.rs           # HfRadioGroup, HfRadioGroupItem
+│   ├── switch.rs          # HfSwitch
+│   ├── label.rs           # HfLabel
+│   ├── separator.rs       # HfSeparator
+│   ├── slider.rs          # HfSlider
+│   ├── tabs.rs            # HfTabs, HfTabsList, HfTabsTrigger, HfTabsContent
+│   ├── tooltip.rs         # HfTooltip, HfTooltipTrigger, HfTooltipContent
+│   ├── popover.rs         # HfPopover, HfPopoverTrigger, HfPopoverContent
+│   ├── menu.rs            # HfMenu, HfMenuTrigger, HfMenuContent, HfMenuItem, HfMenuSeparator
+│   ├── dialog.rs          # HfDialog, HfDialogTrigger, HfDialogContent, HfDialogHeader, HfDialogFooter
+│   ├── drawer.rs          # HfDrawer, HfDrawerTrigger, HfDrawerContent, HfDrawerHeader, HfDrawerFooter
+│   ├── sheet.rs           # HfSheet (mobile drawer)
+│   ├── toast.rs           # HfToast, HfToastProvider, HfToastViewport, HfToastTitle, HfToastDescription, HfToastAction
+│   ├── alert.rs           # HfAlert, HfAlertTitle, HfAlertDescription
+│   ├── avatar.rs          # HfAvatar, HfAvatarImage, HfAvatarFallback
+│   ├── badge.rs           # HfBadge
+│   ├── skeleton.rs        # HfSkeleton
+│   ├── scroll_area.rs     # HfScrollArea
+│   ├── table.rs           # HfTable, HfTableHeader, HfTableBody, HfTableRow, HfTableCell, HfTableCaption, HfTableHeaderCell
+│   ├── pagination.rs      # HfPagination, HfPaginationItem, HfPaginationLink
+│   ├── breadcrumb.rs      # HfBreadcrumb, HfBreadcrumbItem, HfBreadcrumbSeparator, HfBreadcrumbLink, HfBreadcrumbPage, HfBreadcrumbEllipsis
+│   ├── accordion.rs       # HfAccordion, HfAccordionItem, HfAccordionTrigger, HfAccordionContent
+│   ├── collapsible.rs     # HfCollapsible, HfCollapsibleTrigger, HfCollapsibleContent
+│   ├── hover_card.rs      # HfHoverCard, HfHoverCardTrigger, HfHoverCardContent
+│   ├── context_menu.rs    # HfContextMenu, HfContextMenuTrigger, HfContextMenuContent, HfContextMenuItem, HfContextMenuSeparator
+│   ├── command.rs         # HfCommand, HfCommandInput, HfCommandList, HfCommandItem, HfCommandSeparator, HfCommandShortcut
+│   ├── navigation_menu.rs # HfNavigationMenu, HfNavigationMenuList, HfNavigationMenuItem, HfNavigationMenuLink, HfNavigationMenuIndicator
+│   ├── progress.rs        # HfProgress
+│   ├── toggle.rs          # HfToggle, HfToggleGroup, HfToggleGroupItem
+│   ├── form.rs            # HfForm, HfField, HfFormItem, HfFormLabel, HfFormControl, HfFormMessage, HfFormSubmit
+│   ├── aspect_ratio.rs    # HfAspectRatio
+│   ├── resizable.rs       # HfResizablePanelGroup, HfResizablePanel, HfResizableHandle
+│   └── scrollbar.rs       # HfScrollbar (custom scrollbar styling)
+├── trading/                # Trading-specific primitives (bfx-hf-ui-core `components/` parity)
+│   ├── pl_number.rs       # HfPLNumber — P&L with ▲/▼, ₹/%, color-coded (teal/coral)
+│   ├── status_circle.rs   # HfStatusCircle — Green/Yellow/Red with latency text
+│   ├── kpi.rs             # HfKPI — Key metric card with label, value, change, sparkline
+│   ├── panel.rs           # HfPanel, HfPanelHeader, HfPanelContent, HfPanelSidebar
+│   ├── attention_bar.rs   # HfAttentionBar — top-bar warnings (throttle, circuit, margin)
+│   ├── progress_bar.rs    # HfProgressBar — fill percentage with color coding
+│   ├── side_marker.rs     # HfSideMarker — row marker dot (green/red) for buy/sell
+│   ├── order_badge.rs     # HfOrderBadge — order type (MKT/LMT/SL/SL-M), status, side
+│   ├── risk_badge.rs      # HfRiskBadge — rejection reason (CIRCUIT_FILTER, MAX_DRAWDOWN, etc.)
+│   ├── market_phase.rs    # HfMarketPhase — Pre-open/Regular/Closing/Closed indicator
+│   ├── trading_mode.rs    # HfTradingMode — SANDBOX (yellow) vs LIVE NSE (green)
+│   ├── quantity_input.rs  # HfQuantityInput — stepper with quick chips (25/50/100/250)
+│   ├── price_input.rs     # HfPriceInput — ₹ formatting, tick-size validation
+│   └── symbol_chip.rs     # HfSymbolChip — symbol with exchange badge, clickable
+├── composed/               # Opinionated, styled patterns (feature-level)
+│   ├── data_table.rs      # HfDataTable — sortable, filterable, paginated, virtualized
+│   ├── filter_bar.rs      # HfFilterBar — segmented pills, HfSelect, HfSwitch, search
+│   ├── header_bar.rs      # HfHeaderBar — logo, nav, mode toggle, theme, notifications
+│   ├── sidebar.rs         # HfSidebar — icon rail navigation (HfSidebarItem)
+│   ├── chart_toolbar.rs   # HfChartToolbar — symbol, timeframe, chart type, indicators, snapshot
+│   ├── order_ticket.rs    # HfOrderTicket — symbol, side, type, qty, price, SL/TP, submit
+│   ├── trading_drawer.rs  # HfTradingDrawer — tabs: Holdings/Positions/Orders/Trades/Analytics/Depth
+│   ├── modal.rs           # HfModal — confirm, alert, prompt (HfConfirmDialog, HfAlertDialog)
+│   ├── positions_table.rs # HfPositionsTable — Symbol, Side, Qty, Avg, LTP, UPL, RPL, actions
+│   ├── orders_table.rs    # HfOrdersTable — tabs: Active/Algo/History, fill progress, cancel
+│   ├── trades_table.rs    # HfTradesTable — timestamp, slippage, fees
+│   ├── decision_log.rs    # HfDecisionLog — timestamp, strategy, symbol, verdict, rejection badges
+│   ├── risk_modal.rs      # HfRiskModal — max drawdown, daily loss, position limits editor
+│   ├── sparkline.rs       # HfSparkline — Canvas/SVG micro-chart, palette-synced colors
+│   └── theme_studio.rs    # HfThemeStudio — 256-swatch inspector, contrast audit, JSON import/export
+├── hooks/
+│   ├── use_click_outside.rs
+│   ├── use_escape_key.rs
+│   ├── use_focus_trap.rs
+│   ├── use_media_query.rs
+│   ├── use_local_storage.rs
+│   ├── use_debounce.rs
+│   ├── use_controllable_state.rs
+│   ├── use_tick_stream.rs      # WebSocket tick subscription
+│   ├── use_market_phase.rs     # NSE phase computation
+│   └── use_trading_state.rs    # HALTED/REDUCING/ACTIVE sync
+├── icons/
+│   ├── outline.rs         # Procedural outline icons (stroke only, fill="none")
+│   │   # All icons: fn name() -> View { view! { <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">...</svg> } }
+│   │   # Trading: chart, candlestick, trending_up, trending_down, buy, sell, order, position, portfolio, wallet
+│   │   # Navigation: home, settings, search, menu, chevron_left, chevron_right, chevron_up, chevron_down
+│   │   # Actions: plus, minus, x, check, edit, delete, copy, download, upload, refresh, filter, sort
+│   │   # Status: check_circle, alert_circle, alert_triangle, info, loader, wifi, wifi_off, server
+│   │   # Chart: timeframe_1m, timeframe_1h, timeframe_1d, chart_type_candle, chart_type_line, chart_type_area
+│   │   # Drawing: trend_line, horizontal_line, vertical_line, ray, rectangle, ellipse, text, measure
+│   │   # UI: bell, bell_off, eye, eye_off, lock, unlock, key, user, log_out, log_in
+│   └── mod.rs             # Re-exports: pub use outline::*;
+└── theme/
+    ├── tokens.rs          # Semantic token access (--shade-*, --primary-*, --pnl-*)
+    ├── css_vars.rs        # CSS variable helpers
+    └── palette_256.rs     # Palette256 struct, contrast audit, JSON import/export
+```
 
-#### 3. `HfPLNumber` (`.hfui-plnumber`)
-- **Visuals**: Displays profit/loss formatted as Indian Rupees (`₹`) or percentage.
-- **Directional Indicators**: Prefixed with `▲` (green `var(--pnl-gain)`) for positive/gain, `▼` (red `var(--pnl-loss)`) for loss.
-- **Change Animation**: Brief flash on tick updates when value increases or decreases compared to previous signal value.
+**bfx-hf-ui-core → honba-kao-ui-core Mapping:**
 
-#### 4. `HfDropdown` / `HfSelect`
-- **Design**: Themed select trigger matching `.hfui-select`, custom popup menu rendered in a portal with `var(--background-color)` surface, 5px radius, `--shade-0` item hover.
+| bfx-hf-ui-core | honba-kao-ui-core | Category |
+|---|---|---|
+| `ui/Panel` | `trading/panel.rs` → `HfPanel`, `HfPanelHeader` | Trading primitive |
+| `ui/Button` | `primitive/button.rs` → `HfButton`, `HfIconButton` | Primitive |
+| `ui/Icons` | `primitive/icons.rs` + `icons/outline.rs` → `HfIcon` | Primitive |
+| `ui/PLNumber` | `trading/pl_number.rs` → `HfPLNumber` | Trading primitive |
+| `ui/Dropdown`, `SimpleDropdown` | `primitive/select.rs` → `HfSelect` | Primitive |
+| `ui/Modal` | `primitive/dialog.rs` → `HfDialog` | Primitive |
+| `ui/AttentionBar` | `trading/attention_bar.rs` → `HfAttentionBar` | Trading primitive |
+| `ui/ProgressBar` | `trading/progress_bar.rs` → `HfProgressBar` | Trading primitive |
+| `ui/Tabs` | `primitive/tabs.rs` → `HfTabs` | Primitive |
+| `ui/StatusBar` | `trading/status_circle.rs` → `HfStatusCircle` + composed | Trading |
+| `components/Navbar` | `composed/header_bar.rs` → `HfHeaderBar` | Composed |
+| `components/StatusBar` | `composed/trading_drawer.rs` + `trading/status_circle.rs` | Composed |
+| `components/PositionsTable` | `composed/positions_table.rs` → `HfPositionsTable` | Composed |
+| `components/AtomicOrdersTable` | `composed/orders_table.rs` → `HfOrdersTable` | Composed |
+| `components/TradesTablePanel` | `composed/trades_table.rs` → `HfTradesTable` | Composed |
+| `components/TradingStatePanel` | `composed/trading_drawer.rs` + `trading/status_circle.rs` | Composed |
+| *(New)* | `trading/decision_log.rs` → `HfDecisionLog` | Trading |
+| *(New)* | `trading/risk_badge.rs` → `HfRiskBadge` | Trading |
+| *(New)* | `composed/sparkline.rs` → `HfSparkline` | Composed |
+| *(New)* | `composed/theme_studio.rs` → `HfThemeStudio` | Composed |
 
-#### 5. `Navbar` (`.hfui-navbar__wrapper`)
-- **Brand**: `本場・顔` logo with status badge.
-- **Navigation Routes**:
-  - `/traders` — Active strategy traders and supervisor control.
-  - `/positions` — Real-time position ledger and live PnL.
-  - `/orders` — Atomic orders, algo execution, and fill logs.
-  - `/decisions` — Decision journal, risk rejection audit.
-  - `/backtest` — Interactive backtest visualizer powered by `honba-kao-api-wasm`.
-- **Controls**:
-  - Trading Mode Toggle: `SANDBOX` (warning yellow pill) vs `LIVE NSE` (green pill).
-  - Theme Selector: Preset selector (Dark BFX, Light BFX, Monokai, Nord, Custom) and Theme Studio opener.
-  - Notifications Bell: Sliding side drawer for system alerts and fill notifications.
-  - Session Controls: Auth status, token expiration indicator, disconnect button.
+**Compliance Rule (CI-enforced):**
+```bash
+# Domain components MUST compose from honba-kao-ui-core
+# Forbidden in domain components: raw <button>, <input>, <select>, <dialog>, <table>
+# Required: import from honba-kao-ui-core::{primitive, trading, composed}
 
-#### 6. `StatusBar` (`.hfui-statusbar__wrapper`)
-- **Fixed Position**: Pinned to the bottom viewport edge.
-- **Indicators**:
-  - API HTTP Health: `.hfui-statusbar__statuscircle` (Green = Connected, Yellow = Connecting, Red = Offline).
-  - WebSocket Stream: `.hfui-statusbar__statuscircle` with real-time latency readout (e.g., `WS Connected (14ms)`).
-  - Market Session Clock: NSE market hours indicator (`Pre-open`, `Regular Trading`, `Closing`, `Closed`).
-  - Active Theme: Badge showing current theme name.
-  - Build Version: Release git commit and build timestamp.
+# ICON RULE: Outline SVG only, generated on-the-fly
+# - No static .svg files in the repo
+# - All icons generated via `honba_kao_ui_core::icons::outline::*`
+# - Each icon is a Rust function returning `View` with stroke="currentColor" fill="none"
+# - Sizes: 16px (default), 20px (lg), 24px (xl) via CSS variables
+# - CI check: `grep -r "\.svg" crates/honba-kao-app/src --include="*.rs" && exit 1`
+```
 
-#### 7. `PositionsTablePanel`
-- **Columns**: Symbol, Exchange (`NSE`/`BSE`), Side (`LONG` / `SHORT` with `.row-marker`), Qty, Average Price, LTP / Mark Price, Unrealized PnL (`HfPLNumber`), Realized PnL, Risk Utilization Bar, Actions (`Square Off`, `Edit SL/TP`).
-- **Interactivity**: Row click navigates to trader detail; hover state highlights with `var(--primary-0)`.
+**Compliance Rule (CI-enforced):**
+```bash
+# No raw <button>, <input>, <select> in domain components
+# Must import from honba-kao-ui-core
+```
 
-#### 8. `OrdersTablePanel`
-- **Sections**: Tabbed between `Active Orders`, `Algo Orders`, and `Execution History`.
-- **Features**: Side color dot (`.row-marker.green` / `.row-marker.red`), order type badge, cumulative fill percentage bar (`HfProgressBar`), instant cancel trigger.
+### 3.3 Feature-Sliced Architecture (`honba-kao-app`)
 
-#### 9. `DecisionLogPanel`
-- **Auditing**: Live stream of trading decisions emitted by `honba-nou` and `honba-ya`.
-- **Visual Filters**: Rejection badges showing the exact risk gate that halted execution (e.g., `CIRCUIT_FILTER`, `MAX_DRAWDOWN_BREACH`, `INSUFFICIENT_MARGIN`, `COOLDOWN_ACTIVE`).
+```
+crates/honba-kao-app/src/
+├── app.rs                    # Root: providers + router + error boundary
+├── main.rs                   # WASM entry point
+├── error_boundary.rs         # Global error boundary
+├── features/                 # Business logic slices
+│   ├── auth/
+│   │   ├── api.rs            # Auth API calls
+│   │   ├── model.rs          # User, Session types
+│   │   ├── store.rs          # AuthStore (signals + actions)
+│   │   ├── components/       # LoginForm, RegisterForm
+│   │   └── hooks.rs          # use_auth, use_login
+│   ├── portfolio/
+│   ├── screener/
+│   ├── workbench/
+│   ├── strategy_studio/
+│   ├── simulator/
+│   ├── tradebook/
+│   ├── funds/
+│   └── settings/
+├── shared/                   # Cross-feature kernel
+│   ├── api/                  # Base client, interceptors, query client
+│   ├── hooks/                # use_query, use_mutation, use_debounce
+│   ├── components/           # Layout, ErrorBoundary, Loading
+│   ├── types/                # Shared domain types
+│   └── utils/
+├── widgets/                  # Composite UI blocks (reusable)
+│   ├── chart/                # ChartWidget, ChartToolbar, DrawingRail
+│   ├── order_ticket/
+│   └── trading_drawer/
+├── pages/                    # Thin page composition
+│   ├── portfolio_page.rs
+│   ├── workbench_page.rs
+│   └── ...
+├── router/
+│   ├── routes.rs             # Route definitions with loaders
+│   ├── guards.rs             # AuthGuard, RoleGuard
+│   └── layout.rs             # AppChrome, PublicLayout
+└── providers/
+    ├── theme_provider.rs
+    ├── auth_provider.rs
+    ├── query_provider.rs     # leptos-query provider
+    └── toast_provider.rs
+```
 
-#### 10. `LivePnlSparkline`
-- **Implementation**: Lightweight inline SVG / Canvas micro-chart displaying real-time equity curves, color-tinted to green/red querying active `Palette256` tokens.
+### 3.4 State Management Overhaul
 
-#### 11. `ThemeStudioModal`
-- **Capabilities**: Visual inspector of all 256 colors (`--c-000` to `--c-255`), live alias mapper, JSON import/export, and real-time contrast ratio auditing.
+**Replace monolithic stores with:**
+- **`leptos-query`** (TanStack Query port) for server state
+- **`leptos_router::use_query_map`** for URL state
+- **Local signals** for UI state only
+- **`leptos_store` pattern** for complex client state (workbench)
+
+```rust
+// features/workbench/store.rs - Refactored
+use leptos::prelude::*;
+use leptos_query::{use_query, use_mutation, QueryClient};
+
+#[derive(Clone)]
+pub struct WorkbenchStore {
+    query_client: QueryClient,
+    active_pane: RwSignal<usize>,
+    layout: RwSignal<WorkbenchLayout>,
+    drawer_open: RwSignal<bool>,
+    ticket_open: RwSignal<bool>,
+}
+
+impl WorkbenchStore {
+    // Server state via queries
+    pub fn positions(&self) -> Query<Vec<Position>> {
+        use_query(["positions"], || api::get_positions())
+    }
+    
+    pub fn orders(&self) -> Query<Vec<Order>> {
+        use_query(["orders"], || api::get_orders())
+    }
+    
+    // Mutations with optimistic updates
+    pub fn place_order(&self) -> Mutation<OrderRequest, Order> {
+        use_mutation(
+            |req| api::post_order(req),
+            OnMutate::new(|req| {
+                self.orders.update(|o| o.insert(0, req.into()));
+            }),
+            OnError::new(|_, _, _| self.orders.invalidate()),
+            OnSettled::new(|_| {
+                self.orders.invalidate();
+                self.positions.invalidate();
+            })
+        )
+    }
+}
+```
+
+### 3.5 Data Fetching Layer
+
+```rust
+// shared/api/query_client.rs
+use leptos_query::{QueryClient, QueryClientProvider};
+
+pub fn create_query_client() -> QueryClient {
+    QueryClient::new()
+        .set_default_stale_time(Duration::from_secs(30))
+        .set_default_cache_time(Duration::from_secs(300))
+        .set_retry(3)
+        .set_retry_delay(|attempt| Duration::from_millis(1000 * attempt as u64))
+}
+
+// Usage in components
+let positions = use_query(
+    QueryKey::new(&["positions", portfolio_id]),
+    || api::get_portfolio_positions(portfolio_id)
+);
+
+let place_order = use_mutation(
+    |req: OrderRequest| api::post_order(req),
+    MutationOptions {
+        on_mutate: Some(|req| { /* optimistic update */ }),
+        on_error: Some(|err, _, _| toast.error(err.to_string())),
+        on_success: Some(|_| {
+            query_client.invalidate_queries(&["positions"]);
+            query_client.invalidate_queries(&["orders"]);
+        }),
+    }
+);
+```
+
+### 3.6 Form Handling
+
+```rust
+// ui-core/src/form.rs
+pub fn use_form<T: Default + Clone + PartialEq>(
+    initial: T,
+    validate: impl Fn(&T) -> FieldErrors<T> + 'static,
+    on_submit: impl Fn(T) + 'static,
+) -> FormHandle<T> { /* ... */ }
+
+// Usage
+#[component]
+fn OrderTicketForm() -> impl IntoView {
+    let form = use_form(
+        OrderTicketDraft::default(),
+        |draft| validate_order_ticket(draft),
+        |draft| store.place_order(draft),
+    );
+    
+    view! {
+        <Form on_submit=form.handle_submit>
+            <FormField name="symbol">
+                <FormLabel>"Symbol"</FormLabel>
+                <FormInput bind:value=form.field("symbol") />
+                <FormError field="symbol" />
+            </FormField>
+            <FormSubmit disabled=form.is_submitting>"Place Order"</FormSubmit>
+        </Form>
+    }
+}
+```
+
+### 3.7 Routing with Loaders
+
+```rust
+// router/routes.rs
+#[component]
+pub fn AppRoutes() -> impl IntoView {
+    let query_client = create_query_client();
+    
+    view! {
+        <QueryClientProvider client=query_client>
+            <Router>
+                <Routes fallback=|| view! { <Redirect path="/portfolio" /> }>
+                    <Route path="/" view=RootRoute />
+                    <Route path="/login" view=LoginPage />
+                    
+                    <Route 
+                        path="/portfolio" 
+                        view=move || view! {
+                            <AppChrome current_page=Page::Portfolio>
+                                <PortfolioPage />
+                            </AppChrome>
+                        }
+                        loader=|| async move {
+                            let _ = api::get_portfolio_summary().await;
+                            let _ = api::get_positions().await;
+                        }
+                    />
+                    <Route 
+                        path="/workbench" 
+                        view=WorkbenchPage 
+                        loader=|| async move {
+                            let _ = api::get_trading_state().await;
+                        }
+                    />
+                </Routes>
+            </Router>
+        </QueryClientProvider>
+    }
+}
+```
 
 ---
 
-## 4. State Management & Reactive Data Flow
+### 3.8 Workbench Terminal Chrome — single account entry + trading-mode indicator (done)
 
-```
-                               ┌────────────────────────────────────────────────┐
-                               │             App (Root Component)               │
-                               │  - ThemeContext (256-Palette + CSS Injection)  │
-                               │  - AuthContext (JWT + SessionStorage)          │
-                               │  - ApiClientContext (Typed REST Client)        │
-                               │  - WsContext (Reconnecting Event Stream)       │
-                               └───────────────────────┬────────────────────────┘
-                                                       │
-                           ┌───────────────────────────┴───────────────────────────┐
-                           ▼                                                       ▼
-        ┌────────────────────────────────────┐                  ┌────────────────────────────────────┐
-        │        Typed REST Client           │                  │     WebSocket Event Consumer       │
-        │    (honba-kao-client crate)        │                  │      (honba-ya-ws::Event)          │
-        │  - /health                         │                  │  - Tick / LTP Stream               │
-        │  - /api/traders                    │                  │  - Order Fill Notifications        │
-        │  - /api/positions                  │                  │  - Risk Limit Alert Events         │
-        │  - /api/decisions                  │                  │  - Trader State Change Broadcasts  │
-        └─────────────────┬──────────────────┘                  └──────────────────┬─────────────────┘
-                          │                                                        │
-                          └───────────────────────────┬────────────────────────────┘
-                                                      ▼
-                                   ┌──────────────────────────────────────┐
-                                   │       Reactive View State Layer      │
-                                   │  - Traders Signal / Memo             │
-                                   │  - Positions & Realtime PnL Signal   │
-                                   │  - Orders & Fill Progress Signal     │
-                                   │  - Decision Log FIFO Buffer Signal   │
-                                   └──────────────────┬───────────────────┘
-                                                      ▼
-                                   ┌──────────────────────────────────────┐
-                                   │       WASM Computation Worker        │
-                                   │      (honba-kao-api-wasm crate)      │
-                                   │  - Local Screener Filtering          │
-                                   │  - Technical Indicators (EMA, RSI)   │
-                                   │  - Local Backtest Replay Engine      │
-                                   └──────────────────────────────────────┘
-```
+Investigated the honba-fe workbench chrome (reference) and aligned honba-kao:
 
----
+| Surface | honba-fe reference | honba-kao (now) |
+|---|---|---|
+| User entry | **One** initials avatar, bottom of the 68px rail | **One** `AccountCluster`: initials avatar bottom-left of `NavRail`; popover = identity header, Portfolio, Palette studio, Settings, Funds, sign out; closes on outside click (`use_click_outside`) |
+| Header right | Trading-mode segmented indicator (PaperTrading amber / Live pulsing green) + funds + bell | `HfTradingModeToggle` (ui-core) — togglable `PAPER | LIVE` pill, amber/green dots, live pulses; wired to `TradingModeStore`; header's old `UserMenu` removed (guests keep the sign-in CTA) |
+| Trading-mode state | Local `equityStore.tradingMode` | `stores/trading_mode.rs`: `TradingMode {Paper, Live}`, localStorage-persisted (`honba.trading_mode`), provided app-wide, Settings checkbox shares it |
+| Palette studio | n/a | Hosted by `AppChrome`; opened from the rail's account popover (`palette_open` signal threaded through `NavRail`) |
+| Icons | lucide-react | All chrome icons from `honba_kao_ui_core::icons::outline` (`briefcase`, `search_check`, `terminal`, `sliders`, `play_circle`, `book`, `settings`, `wallet`, `user`, `log_out`, `layout_grid`) — made `const fn` so they compose into statics; garbled paths fixed (`user`, `settings`, `wallet`, `alert_circle`, `wifi`, `wifi_off`); no inline SVG in the chrome |
 
-## 5. Phased Implementation Milestones
+The widget's own drawing rail stays enabled (`rail: true` in `honba-bridge.js` — ~100
+grouped tools); the compliance script (`check-widget-integration.sh`) was synced to this
+decision: only `topbar: true` is forbidden and only the `.oac-topbar` hide rule is required.
+All scripts green.
 
-### Phase M0: Foundations, 256-Color Palette & UI Primitives (Week 1)
-- [ ] **M0.1 Pin Leptos 0.7 & Dependencies**: Upgrade/verify Leptos 0.7 CSR setup in `honba-kao-app`, `leptos_router`, `wasm-bindgen`, and `gloo-net`.
-- [ ] **M0.2 256-Color Named Token SCSS & Engine**:
-  - Implement `style/palette_256.scss` declaring canonical `--c-000` through `--c-255` and semantic names (`--c-marine-*`, `--c-teal-*`, `--c-coral-*`, etc.).
-  - Port `variables.scss` from `bfx-hf-ui-core` into `honba-kao-app/style/variables.scss`, mapping BFX variables to canonical 256-tokens.
-  - Implement `body.Dark` and `body.Light` default alias maps.
-- [ ] **M0.3 Rust ThemeEngine & Palette256 Struct**:
-  - Implement `Palette256` and `CustomThemeDefinition` in `honba-kao-app::theme`.
-  - Build runtime CSS injector `<style id="honba-theme-custom">` for on-the-fly theme switching without reloading.
-  - Persist chosen theme (preset ID or custom JSON) in `localStorage`.
-- [ ] **M0.4 Base UI Primitives (`crates/honba-kao-app/src/ui/`)**:
-  - `HfPanel` & `HfPanelHeader` with label, counter pill, action icons, and 5px radius styling.
-  - `HfButton` supporting `Green`, `Red`, `Blue`, `Default`, and `Ghost` variants.
-  - `HfPLNumber` supporting currency (`₹`), percentage, `▲`/`▼` glyphs, and dynamic palette coloring.
-  - `HfDropdown` / `HfSelect` with themed options menu.
-  - `HfModal` dialog with backdrop overlay.
 
-### Phase M1: Shell, Navigation & System Status (Week 2)
-- [ ] **M1.1 Global Layout Grid**: Flexible multi-panel layout matching Honey Framework terminal design.
-- [ ] **M1.2 Top Navbar**:
-  - Logo (`本場・顔`), navigation route links, mode toggle (`Sandbox` / `Live NSE`).
-  - Layout switch dropdown, notification drawer trigger button, theme dropdown with quick switcher.
-- [ ] **M1.3 Fixed Bottom StatusBar**:
-  - API HTTP connection indicator (pinging `/health` with green/yellow/red pill).
-  - WebSocket connection indicator and latency timer.
-  - NSE market phase indicator (Pre-open, Regular, Closed).
-  - Active theme badge and build version.
-- [ ] **M1.4 Notification Drawer**: Flyout sidebar displaying actionable notifications and toasts.
+## 4. Updated Phased Implementation Milestones
 
-### Phase M2: Trader Views & Supervisory Controls (Weeks 3–4)
-- [ ] **M2.1 Typed Client Expansion (`honba-kao-client`)**:
-  - Endpoints for `GET /api/traders`, `POST /api/traders/{id}/start`, `POST /api/traders/{id}/pause`, `POST /api/traders/{id}/stop`.
-  - Models for trader profiles, strategy configs, and run statuses.
-- [ ] **M2.2 Traders Overview Panel**:
-  - Card/grid view of active strategy instances (trader name, universe, state badge, net PnL).
-  - Instant action buttons: Pause, Resume, Stop, and Emergency Square-Off.
-- [ ] **M2.3 Trader Detail Panel**:
-  - Strategy parameters breakdown, target universe list, and active position holdings.
-  - Inline PnL sparkline (`LivePnlSparkline`) tracking session equity curve with palette-synced Canvas/SVG.
-- [ ] **M2.4 Risk Limits Inspector & Editor**:
-  - Modal dialog (`RiskLimitsModal`) to inspect and update max drawdown, max daily loss, and position limits against `honba-kokoro-risk`.
-- [ ] **M2.5 Theme Studio & 256-Color Inspector Modal**:
-  - `ThemeStudioModal` to preview all 256 colors, test contrast ratios, and export custom theme JSON.
+### Phase 0: Foundation & Design System Extraction (Week 1-2)
+- [ ] **0.1** Create `honba-kao-ui-core` crate with workspace config
+- [ ] **0.2** Implement 15 core primitives: `Button`, `Input`, `Select`, `Checkbox`, `Radio`, `Switch`, `Label`, `Dialog`, `Drawer`, `Toast`, `Tooltip`, `Tabs`, `Table`, `Badge`, `Avatar`
+- [ ] **0.3** Implement 10 composed patterns: `DataTable`, `FilterBar`, `HeaderBar`, `ChartToolbar`, `OrderTicket`, `TradingDrawer`, `Modal`, `Sidebar`, `Pagination`, `Breadcrumb`
+- [ ] **0.4** Add CI enforcement: `check-ui-core-usage.sh` (fails on raw `<button>` in domain components)
+- [ ] **0.5** Migrate existing `hints.md` violations to ui-core (filter_bar, screener_table, header_bar)
 
-### Phase M3: Live Execution, Positions & Orders (Weeks 5–6)
-- [ ] **M3.1 WebSocket Event Consumer (`honba-ya-ws`)**:
-  - Resilient WebSocket connection to `honba-ya-ws`.
-  - Stream decoder mapping server events (`OrderPlaced`, `OrderFilled`, `OrderCancelled`, `PositionUpdated`, `TickUpdate`) to reactive signals.
-- [ ] **M3.2 Positions Table Panel**:
-  - Interactive table displaying open positions, symbol, exchange, side (with `.row-marker`), qty, LTP, unrealized PnL via `HfPLNumber`.
-  - Quick "Square-Off" button invoking REST endpoint with confirmation modal.
-- [ ] **M3.3 Atomic & Algo Orders Table Panel**:
-  - Tabbed order viewer (Active, Algo/TWAP/Iceberg, History).
-  - Progress fill indicator (`HfProgressBar`), status dots, cancellation action.
-- [ ] **M3.4 Trades Execution History Panel**:
-  - Timestamped execution list, slippage calculation, brokerage fee estimate.
+### Phase 1: Architecture Migration (Week 3-4)
+- [ ] **1.1** Restructure `honba-kao-app` to feature-sliced architecture
+- [ ] **1.2** Add `leptos-query` + `QueryClientProvider` at root
+- [ ] **1.3** Refactor `WorkbenchStore` → query + mutation pattern
+- [ ] **1.4** Refactor `ScreenerStore`, `PortfolioStore` similarly
+- [ ] **1.5** Add `ErrorBoundary` at route level
 
-### Phase M4: Decision Journal & Audit Log (Week 7)
-- [ ] **M4.1 Decision Stream Ingestion**:
-  - Fetch and stream decision audit records from `honba-ya-api-rest` (`/api/decisions`).
-- [ ] **M4.2 Decision Log Panel**:
-  - High-density table displaying timestamp, strategy ID, symbol, action proposed, and execution verdict (`APPROVED` / `REJECTED`).
-  - Prominent rejection reason badges (e.g. `CIRCUIT_FILTER`, `MAX_DRAWDOWN`, `SPREAD_TOO_WIDE`).
-- [ ] **M4.3 Decision Inspection Flyout**:
-  - Deep-dive drawer showing raw JSON decision payload, market snapshot at decision time, and evaluated risk matrices.
+### Phase 2: Forms, Routing, Auth (Week 5-6)
+- [ ] **2.1** Implement form library with `use_form` hook + schema validation
+- [ ] **2.2** Migrate `OrderTicket`, `LoginForm`, `SettingsForm` to new forms
+- [ ] **2.3** Add route loaders for `/portfolio`, `/workbench`, `/screener`
+- [ ] **2.4** Add `AuthGuard` + `RoleGuard` for protected routes
+- [ ] **2.5** Implement JWT refresh + expiration handling
 
-### Phase M5: WASM Analytics, Screener & Local Backtesting (Week 8)
-- [ ] **M5.1 In-Browser Screener Integration**:
-  - Embed `honba-kao-api-wasm::screener` into a dedicated Screener Panel.
-  - Multi-metric filtering (volume spikes, momentum, RSI, ATR) executed client-side without roundtrip latency.
-- [ ] **M5.2 Local Backtest Replay Visualizer**:
-  - Hook into `honba-kao-api-wasm::replay` to run historical bar replay in the browser.
-  - Interactive scrubbing timeline with bar-by-bar order execution visualization.
+### Phase 3: Workbench & Chart Parity (Week 7-8)
+- [ ] **3.1** Complete widget-tier chart integration (already done)
+- [ ] **3.2** Build `ChartWidget` + `ChartToolbar` + `DrawingRail` as reusable widgets
+- [ ] **3.3** Implement 502-indicator picker with categories/favorites/recents
+- [ ] **3.4** Add `SymbolSearchModal` with 4000+ symbols, expressions
+- [ ] **3.5** Add snapshot (download/copy), fullscreen, objects panel
 
-### Phase M6: Authentication, Hardening & Static Deployment (Week 9)
-- [ ] **M6.1 Auth & Session Management**:
-  - JWT storage in `sessionStorage` with automatic header injection.
-  - Token expiration warning and silent refresh or re-login modal.
-- [ ] **M6.2 Responsive & Mobile Polish**:
-  - Touch-friendly tap targets, collapsible panels, and responsive breakpoints for tablets/mobile monitors.
-- [ ] **M6.3 Quality Assurance & Conformance**:
-  - Unit tests via `wasm-bindgen-test` for client serialization and component state.
-  - Theme contrast validation tests verifying WCAG AA/AAA compliance on all 256 tokens.
-  - End-to-end testing with Playwright running against simulated `honba-ya` backend.
-- [ ] **M6.4 Static Asset Packaging & Production Distribution**:
-  - All builds explicitly resort to `dev` (fast iteration, opt-level = 1) or `prod` (distribution, opt-level = 3, lto = true, codegen-units = 1, panic = "abort") profiles instead of debug.
-  - Trunk production build (`make build-prod` / `trunk build --release`) with wasm optimization.
-  - Deployable Dockerfile and Nginx configuration with compression and cache headers.
-  - Direct integration into `tower-http::services::ServeDir` for unified single-binary hosting.
+### Phase 4: Screener, Strategy Studio, Simulator (Week 9-10)
+- [ ] **4.1** Screener: `HfDataTable` with virtualized rows, column visibility, presets
+- [ ] **4.2** Strategy Studio: Node editor with `HfCommand` palette
+      — see `honba-docs/docs/architecture/strategy_studio.md`
+      (HBD-2026-DES-006) for the AI-native studio + auto-researcher design
+- [ ] **4.3** Simulator: Paper trading with `HfOrderTicket` + mock fills
+      — supersedes this bullet see `honba-docs/docs/architecture/kao_simulator_port.md`
+      (HBD-2026-DES-005) for the audited phased port of honba-fe's simulator
+- [ ] **4.4** Tradebook: `HfDataTable` with filters, export
+
+### Phase 5: Quality, Testing, Polish (Week 11-12)
+- [ ] **5.1** Add `leptos_testing_library` component tests (ui-core + features)
+- [ ] **5.2** Add Playwright e2e: auth flow, workbench, order placement
+- [ ] **5.3** Accessibility audit: `check-a11y.sh` (WCAG AA)
+- [ ] **5.4** Bundle splitting by route (`leptos_router::Lazy`)
+- [ ] **5.5** Performance: virtualized lists, memoization, bundle analysis
+- [ ] **5.6** Documentation: `architecture.md`, `component-guide.md`, `contributing.md`
 
 ---
 
-## 6. Directory Structure Target
+## 5. Directory Structure Target (Updated)
 
 ```
 honba-kao/
@@ -422,72 +586,118 @@ honba-kao/
 ├── plan.md
 ├── index.html
 ├── Trunk.toml
+├── rust-toolchain.toml
 └── crates/
-    ├── honba-kao-api-wasm/              # High-speed in-browser WASM compute
+    ├── honba-kao-ui-core/              # NEW: Design system (35+ primitives)
     │   ├── Cargo.toml
     │   └── src/
-    │       ├── indicators.rs            # Browser indicator calculations
-    │       ├── replay.rs                # Local backtest replay
-    │       └── screener.rs              # Client-side stock screener
-    ├── honba-kao-client/                # Typed REST client
+    │       ├── lib.rs
+    │       ├── primitive/              # 25 Radix primitives + icons
+    │       │   ├── icons.rs           # HfIcon — procedural outline icons
+    │       │   ├── button.rs
+    │       │   ├── input.rs
+    │       │   ├── select.rs
+    │       │   ├── checkbox.rs
+    │       │   ├── radio.rs
+    │       │   ├── switch.rs
+    │       │   ├── label.rs
+    │       │   ├── separator.rs
+    │       │   ├── slider.rs
+    │       │   ├── tabs.rs
+    │       │   ├── tooltip.rs
+    │       │   ├── popover.rs
+    │       │   ├── menu.rs
+    │       │   ├── dialog.rs
+    │       │   ├── drawer.rs
+    │       │   ├── sheet.rs
+    │       │   ├── toast.rs
+    │       │   ├── alert.rs
+    │       │   ├── avatar.rs
+    │       │   ├── badge.rs
+    │       │   ├── skeleton.rs
+    │       │   ├── scroll_area.rs
+    │       │   ├── table.rs
+    │       │   ├── pagination.rs
+    │       │   ├── breadcrumb.rs
+    │       │   ├── accordion.rs
+    │       │   ├── collapsible.rs
+    │       │   ├── hover_card.rs
+    │       │   ├── context_menu.rs
+    │       │   ├── command.rs
+    │       │   ├── navigation_menu.rs
+    │       │   ├── progress.rs
+    │       │   ├── toggle.rs
+    │       │   ├── form.rs
+    │       │   ├── aspect_ratio.rs
+    │       │   ├── resizable.rs
+    │       │   └── scrollbar.rs
+    │       ├── composed/               # 10 opinionated patterns
+    │       ├── hooks/                  # 7 reusable hooks
+    │       └── theme/                  # Token access
+    ├── honba-kao-app/                  # REFACTORED: Feature-sliced
     │   ├── Cargo.toml
+    │   ├── style/
+    │   │   ├── palette_256.scss        # 256 canonical tokens
+    │   │   ├── variables.scss          # BFX HF semantic aliases
+    │   │   ├── themes.scss             # 8 theme definitions
+    │   │   ├── layout.scss             # Terminal grid
+    │   │   └── components/             # Component-specific
     │   └── src/
-    │       ├── auth.rs                  # Session & token handlers
-    │       ├── error.rs                 # Typed client errors
-    │       ├── lib.rs                   # ApiClient root
-    │       └── models.rs                # Wire DTOs shared with honba-ya
-    └── honba-kao-app/                   # Main Leptos CSR Terminal App
-        ├── Cargo.toml
-        ├── style/
-        │   ├── palette_256.scss         # 256 named canonical color tokens
-        │   ├── variables.scss           # BFX HF color palette, shades & vars
-        │   ├── theme.scss               # body.Dark, body.Light & custom alias maps
-        │   ├── layout.scss              # Terminal grid, navbar & statusbar
-        │   └── components/
-        │       ├── panel.scss           # hfui-panel styling & sub-headers
-        │       ├── button.scss          # hfui-button variants
-        │       ├── table.scss           # Tabular formatting & row markers
-        │       └── modal.scss           # Dialogs & backdrop overlays
-        └── src/
-            ├── lib.rs                   # SPA entrypoint & wasm_bindgen(start)
-            ├── theme/                   # 256-Color Theme System
-            │   ├── mod.rs               # ThemeEngine & ThemeContext
-            │   ├── palette.rs           # Palette256 struct & color conversions
-            │   ├── presets.rs           # Built-in presets (Dark, Light, Monokai, Nord)
-            │   └── injector.rs          # Runtime CSS <style> injector
-            ├── context/
-            │   ├── auth.rs              # AuthContext
-            │   └── ws.rs                # WebSocket event stream context
-            ├── ui/                      # BFX HF UI Primitives
-            │   ├── attention_bar.rs     # HfAttentionBar
-            │   ├── button.rs            # HfButton & HfIconButton
-            │   ├── dropdown.rs          # HfDropdown & HfSelect
-            │   ├── modal.rs             # HfModal dialog
-            │   ├── panel.rs             # HfPanel & HfPanelHeader
-            │   ├── pl_number.rs         # HfPLNumber (colored with ▲/▼)
-            │   ├── progress_bar.rs      # HfProgressBar
-            │   └── tabs.rs              # HfTabs & HfTab
-            └── components/              # Domain-Specific Terminal Panels
-                ├── navbar.rs            # Top navigation bar & tools
-                ├── status_bar.rs        # Bottom connectivity & clock bar
-                ├── traders.rs           # Trader grid & supervisory control
-                ├── positions.rs         # PositionsTablePanel
-                ├── orders.rs            # OrdersTablePanel (Atomic & Algo)
-                ├── trades.rs            # TradesTablePanel
-                ├── decision_log.rs      # DecisionLogPanel with rejection badges
-                ├── risk_modal.rs        # RiskLimitsModal editor
-                ├── sparkline.rs         # LivePnlSparkline canvas/SVG
-                └── theme_studio.rs      # ThemeStudioModal & 256-swatch inspector
+    │       ├── app.rs                  # Root: providers + router + error boundary
+    │       ├── main.rs                 # WASM entry
+    │       ├── error_boundary.rs
+    │       ├── features/               # 8 feature slices
+    │       ├── shared/                 # Cross-feature kernel
+    │       ├── widgets/                # 3 composite widgets
+    │       ├── pages/                  # 8 thin pages
+    │       ├── router/                 # Routes + guards + loaders
+    │       └── providers/              # 4 context providers
+    ├── honba-kao-client/               # Typed REST client
+    ├── honba-kao-api-wasm/             # WASM compute
+    └── honba-kao-test-utils/           # NEW: Testing helpers
 ```
 
 ---
 
-## 7. Definition of Done & Success Criteria
+## 6. Definition of Done & Success Criteria
 
-1. **256 Named Tokens**: The application defines and names all 256 tokens (`--c-000` to `--c-255`), organized into 16 terminal basics, 18 chromatic 12-step ramps, and a 24-step monochrome scale.
-2. **Dynamic Custom Theme Loading**: Custom themes can be imported as JSON or chosen from presets without recompiling, immediately updating all CSS variables and Canvas/SVG charts.
-3. **Aesthetic Consistency**: The UI looks and feels like a native Bitfinex Honey Framework terminal, strictly respecting `--background-color`, `--darker-background-color`, `--shade-0..9`, and 5px rounded corners.
-4. **Zero Inlined Styles**: All layouts and colors adhere to the SCSS variable hierarchy without ad-hoc hardcoded color codes.
-5. **Reactive Real-Time Performance**: Handles bursts of 100+ tick updates/sec from WebSocket without stuttering or dropping frames.
-6. **Resilient Connectivity**: Gracefully handles network loss with explicit visual cues in `StatusBar`, automatic exponential backoff reconnection, and state synchronization.
-7. **Full Audit Traceability**: Any rejected order or decision visibly explains the exact constraint breached (e.g. risk limit, circuit band, margin shortfall) in `DecisionLogPanel`.
+### Design System
+1. **256 Named Tokens**: All `--c-000` to `--c-255` defined with semantic names
+2. **Dynamic Custom Themes**: JSON import/export, instant CSS injection, Canvas/SVG sync
+3. **35+ Primitives**: Full Radix/Shadcn parity, all accessible (ARIA, focus, keyboard)
+4. **Zero Inlined Styles**: All layouts/colors via SCSS variable hierarchy
+
+### Architecture
+5. **Feature-Sliced**: Clear `features/`/`shared/`/`widgets/`/`pages/` separation
+6. **Server State**: `leptos-query` with caching, deduping, retries, optimistic updates
+7. **Forms**: Schema validation, field-level errors, accessible messages
+8. **Routing**: Loaders, guards, error boundaries, code splitting
+
+### Quality
+9. **Tests**: Component tests (ui-core + features) + Playwright e2e (critical paths)
+10. **A11y**: WCAG AA compliant, focus management, keyboard nav, ARIA
+11. **CI Enforcement**: `check-ui-core-usage.sh`, `check-widget-integration.sh`, `check-a11y.sh`
+12. **Performance**: <100ms TTI, 60fps ticks, virtualized tables, bundle splitting
+
+### Trading Terminal
+13. **Workbench Parity**: Full openalgo-charts widget tier (502 indicators, drawing rail, objects, settings, snapshot)
+14. **Real-time**: 100+ ticks/sec via WebSocket, zero-frame-drop
+15. **Audit**: Every rejected order/decision shows exact constraint breached
+
+---
+
+## 7. Immediate Next Steps (This Week)
+
+| Task | Owner | Status |
+|------|-------|--------|
+| Create `honba-kao-ui-core` crate | — | 🔴 Not started |
+| Implement `Button`, `Input`, `Select`, `Dialog`, `Toast` | — | 🔴 Not started |
+| Add `check-ui-core-usage.sh` to CI | — | 🔴 Not started |
+| Migrate `filter_bar.rs` → `HfFilterBar` | — | 🔴 Not started |
+| Migrate `header_bar.rs` → `HfHeaderBar` | — | 🔴 Not started |
+| Add `leptos-query` to workspace | — | 🔴 Not started |
+| Refactor `WorkbenchStore` to query/mutation | — | 🔴 Not started |
+
+---
+
+**This plan supersedes the previous phased milestones (M0-M6).** The new architecture addresses all critical gaps while preserving the original vision: a Bitfinex-grade trading terminal with 256-color theming, native WASM compute, and professional Reactivity.

@@ -9,10 +9,14 @@ use crate::components::ui::HfModal;
 use crate::theme::palette::{ColorToken, get_palette_256};
 
 #[component]
-pub fn PaletteStudio(is_open: RwSignal<bool>) -> impl IntoView {
+pub fn PaletteStudio(
+    /// Read-only open flag — the flag lives in the chrome-level store.
+    is_open: Signal<bool>,
+    /// Closes the modal via the same store that opened it.
+    on_close: Callback<()>,
+) -> impl IntoView {
     let tokens = get_palette_256();
     let selected = RwSignal::new(Option::<ColorToken>::None);
-    let on_close = Callback::new(move |_| is_open.set(false));
 
     view! {
         {move || is_open.get().then(|| {

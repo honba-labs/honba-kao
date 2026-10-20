@@ -1,0 +1,9 @@
+{
+  "run_id": "2025-01-02-v1-0-0-b7a1c9de834f2a019b3c5d6e7f809a1b",
+  "status": "failed",
+  "error": {
+    "code": "validation_invalid_request",
+    "message": "unknown strategy \"not_compiled\"",
+    "retryable": false
+  }
+}

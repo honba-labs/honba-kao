@@ -3,18 +3,26 @@
 //!
 //!   Portfolio · Screener · Workbench · Strategy · Simulator · Tradebook
 //!
-//! plus a User cluster pinned to the bottom (Settings, Funds, sign out).
+//! with a **single** account entry pinned to the bottom-left: the initials
+//! avatar whose popover carries the account destinations — Portfolio, Palette
+//! studio, Settings, Funds, sign out (the header hosts the trading-mode
+//! indicator instead of a second user menu).
 //!
 //! Behaviours:
 //!   * one icon per workspace, hover shows a floating label;
 //!   * the active route is lit in brand-soft (`<A>`'s `aria-current` drives
 //!     the cell highlight through CSS `:has()`);
 //!   * signed-out clicks on auth-gated destinations open the
-//!     `LoginRequiredOverlay` instead of routing.
+//!     `LoginRequiredOverlay` instead of routing;
+//!   * icons are procedural outline glyphs from `honba-kao-ui-core` — no
+//!     inline SVG in the chrome.
 
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
+
+use honba_kao_ui_core::icons::outline::{self, SvgIcon};
+use honba_kao_ui_core::hooks::use_click_outside;
 
 use crate::contexts::{use_auth, use_language};
 use crate::router::paths::{Page, ROUTES};
@@ -24,17 +32,7 @@ struct RailItem {
     href: &'static str,
     key: &'static str,
     page: Page,
-    icon: RailIcon,
-}
-
-#[derive(Copy, Clone)]
-enum RailIcon {
-    Portfolio,
-    Screener,
-    Workbench,
-    Strategy,
-    Simulator,
-    Tradebook,
+    glyph: &'static str,
 }
 
 const RAIL_ITEMS: &[RailItem] = &[
@@ -42,113 +40,47 @@ const RAIL_ITEMS: &[RailItem] = &[
         href: ROUTES::PORTFOLIO,
         key: "nav.portfolio",
         page: Page::Portfolio,
-        icon: RailIcon::Portfolio,
+        glyph: outline::briefcase(),
     },
     RailItem {
         href: ROUTES::SCREENER,
         key: "nav.screener",
         page: Page::Screener,
-        icon: RailIcon::Screener,
+        glyph: outline::search_check(),
     },
     RailItem {
         href: ROUTES::WORKBENCH,
         key: "nav.workbench",
         page: Page::Workbench,
-        icon: RailIcon::Workbench,
+        glyph: outline::terminal(),
     },
     RailItem {
         href: ROUTES::STRATEGY,
         key: "nav.strategy",
         page: Page::Strategy,
-        icon: RailIcon::Strategy,
+        glyph: outline::sliders(),
     },
     RailItem {
         href: ROUTES::SIMULATOR,
         key: "nav.simulator",
         page: Page::Simulator,
-        icon: RailIcon::Simulator,
+        glyph: outline::play_circle(),
     },
     RailItem {
         href: ROUTES::TRADEBOOK,
         key: "nav.tradebook",
         page: Page::Tradebook,
-        icon: RailIcon::Tradebook,
+        glyph: outline::book(),
     },
 ];
-
-fn icon(icon: RailIcon) -> impl IntoView {
-    match icon {
-        RailIcon::Portfolio => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="7" width="18" height="13" rx="2" />
-                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <path d="M3 12h18" />
-            </svg>
-        }
-            .into_any(),
-        RailIcon::Screener => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.5-4.5" />
-                <path d="M8 11.5 10 14l4.5-5" />
-            </svg>
-        }
-            .into_any(),
-        RailIcon::Workbench => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="16" rx="2" />
-                <path d="m7 9 3 3-3 3" />
-                <path d="M12 15h5" />
-            </svg>
-        }
-            .into_any(),
-        RailIcon::Strategy => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 21v-7" />
-                <path d="M4 10V3" />
-                <path d="M12 21v-9" />
-                <path d="M12 8V3" />
-                <path d="M20 21v-5" />
-                <path d="M20 12V3" />
-                <path d="M1 14h6" />
-                <path d="M9 8h6" />
-                <path d="M17 16h6" />
-            </svg>
-        }
-            .into_any(),
-        RailIcon::Simulator => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="m10 8 6 4-6 4z" />
-            </svg>
-        }
-            .into_any(),
-        RailIcon::Tradebook => view! {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                <path d="M9 7h7" />
-                <path d="M9 10.5h5" />
-            </svg>
-        }
-            .into_any(),
-    }
-}
-
-/// User icon for the bottom cluster.
-fn user_icon() -> impl IntoView {
-    view! {
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4.5 21c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5" />
-        </svg>
-    }
-}
 
 #[component]
 pub fn NavRail(
     #[prop(default = Page::Home)] current_page: Page,
     on_login_required: Callback<String>,
+    /// The chrome-level palette studio flag; the account menu opens it.
+    #[prop(into)]
+    palette_open: RwSignal<bool>,
 ) -> impl IntoView {
     let auth = use_auth();
     let language = use_language();
@@ -162,7 +94,7 @@ pub fn NavRail(
                         let key = item.key;
                         let href = item.href;
                         let gate = item.page.label();
-                        let glyph = icon(item.icon);
+                        let glyph = item.glyph;
 
                         // Signed in: route directly; signed out: login overlay.
                         if auth.is_authenticated() {
@@ -171,7 +103,9 @@ pub fn NavRail(
                                     class="nav-rail__item"
                                     data-label=move || language.t(key).to_string()
                                 >
-                                    <A href=href>{glyph}</A>
+                                    <A href=href>
+                                        <SvgIcon path=glyph size=18 />
+                                    </A>
                                 </div>
                             }
                                 .into_any()
@@ -187,7 +121,7 @@ pub fn NavRail(
                                     }
                                     on:click=move |_| on_login_required.run(gate.to_string())
                                 >
-                                    {icon(item.icon)}
+                                    <SvgIcon path=glyph size=18 />
                                 </button>
                             }
                                 .into_any()
@@ -198,35 +132,48 @@ pub fn NavRail(
 
             <span class="nav-rail__spacer" />
 
-            <UserCluster on_login_required />
+            <AccountCluster on_login_required palette_open />
         </nav>
     }
 }
 
-/// Bottom-of-rail user cluster: a User icon whose popover carries the account
-/// destinations — Settings, Funds and sign out. Guests get the login overlay.
+/// The single account entry: initials avatar pinned to the rail's bottom-left.
+/// Guests get the sign-in trigger; hosts get the merged account popover
+/// (identity, Portfolio, Palette studio, Settings, Funds, sign out).
 #[component]
-fn UserCluster(#[prop(into)] on_login_required: Callback<String>) -> impl IntoView {
+fn AccountCluster(
+    #[prop(into)] on_login_required: Callback<String>,
+    /// The chrome-level palette studio flag; the account menu opens it.
+    #[prop(into)]
+    palette_open: RwSignal<bool>,
+) -> impl IntoView {
     let auth = use_auth();
     let language = use_language();
     let navigate = StoredValue::new(use_navigate());
     let open = RwSignal::new(false);
+    let cluster = NodeRef::<leptos::html::Div>::new();
+
+    // Clicking anywhere outside the cluster (trigger + popover) closes it.
+    use_click_outside(cluster, move || open.set(false));
 
     view! {
-        <div class="nav-rail__user">
+        <div class="nav-rail__user" node_ref=cluster>
             {move || if auth.is_authenticated() {
+                let initials = crate::utils::text::initials(&auth.display_name());
                 view! {
                     <button
-                        class="nav-rail__item"
+                        class="nav-rail__item nav-rail__user-trigger"
                         data-label=move || language.t("nav.user").to_string()
                         aria-haspopup="menu"
                         aria-expanded=move || open.get().to_string()
+                        aria-label="Account menu"
                         on:click=move |_| open.update(|value| *value = !*value)
                     >
-                        {user_icon()}
+                        <span class="nav-rail__avatar">{initials}</span>
                     </button>
                     <Show when=move || open.get()>
-                        <RailUserMenu
+                        <AccountMenu
+                            palette_open
                             on_close=Callback::new(move |_| open.set(false))
                             on_sign_out=Callback::new(move |_| {
                                 open.set(false);
@@ -242,9 +189,10 @@ fn UserCluster(#[prop(into)] on_login_required: Callback<String>) -> impl IntoVi
                     <button
                         class="nav-rail__item"
                         data-label=move || language.t("auth.sign_in").to_string()
+                        aria-haspopup="menu"
                         on:click=move |_| on_login_required.run("Workspace".to_string())
                     >
-                        {user_icon()}
+                        <SvgIcon path=outline::user() size=18 />
                     </button>
                 }
                     .into_any()
@@ -253,9 +201,17 @@ fn UserCluster(#[prop(into)] on_login_required: Callback<String>) -> impl IntoVi
     }
 }
 
-/// The popover itself: Settings, Funds, sign out.
+/// The merged account popover: identity header, then Portfolio · Palette
+/// studio · Settings · Funds, a divider, and sign out.
 #[component]
-fn RailUserMenu(on_close: Callback<()>, on_sign_out: Callback<()>) -> impl IntoView {
+fn AccountMenu(
+    on_close: Callback<()>,
+    on_sign_out: Callback<()>,
+    /// Signal into the chrome-hosted palette studio modal.
+    #[prop(into)]
+    palette_open: RwSignal<bool>,
+) -> impl IntoView {
+    let auth = use_auth();
     let navigate = StoredValue::new(use_navigate());
 
     let go = move |route: &'static str| {
@@ -263,59 +219,77 @@ fn RailUserMenu(on_close: Callback<()>, on_sign_out: Callback<()>) -> impl IntoV
         navigate.with_value(|nav| nav(route, Default::default()));
     };
 
+    let initials = crate::utils::text::initials(&auth.display_name());
+    let email = auth
+        .user
+        .get()
+        .map(|user| user.email)
+        .unwrap_or_else(|| "signed out".to_string());
+
     view! {
         <div class="rail-user-menu" role="menu" aria-label="User">
-            <button role="menuitem" on:click=move |_| go(ROUTES::SETTINGS)>
-                <IconGear />
-                "Settings"
-            </button>
-            <button role="menuitem" on:click=move |_| go(ROUTES::FUNDS)>
-                <IconWallet />
-                "Funds"
-            </button>
+            <div class="rail-user-menu__head">
+                <span class="nav-rail__avatar nav-rail__avatar--lg">{initials}</span>
+                <div class="rail-user-menu__identity">
+                    <div class="rail-user-menu__name">{move || auth.display_name()}</div>
+                    <div class="rail-user-menu__email">{email}</div>
+                </div>
+            </div>
+
+            <div class="rail-user-menu__sep" />
+
+            <RailMenuItem
+                glyph=outline::briefcase()
+                label="Portfolio"
+                on_click=Callback::new(move |_| go(ROUTES::PORTFOLIO))
+            />
+            <RailMenuItem
+                glyph=outline::settings()
+                label="Settings"
+                on_click=Callback::new(move |_| go(ROUTES::SETTINGS))
+            />
+            <RailMenuItem
+                glyph=outline::wallet()
+                label="Funds"
+                on_click=Callback::new(move |_| go(ROUTES::FUNDS))
+            />
+            <RailMenuItem
+                glyph=outline::layout_grid()
+                label="Palette studio"
+                on_click=Callback::new(move |_| {
+                    on_close.run(());
+                    palette_open.set(true);
+                })
+            />
 
             <div class="rail-user-menu__sep" />
 
             <button
-                class="rail-user-menu__item--danger"
+                class="rail-user-menu__item rail-user-menu__item--danger"
                 role="menuitem"
                 on:click=move |_| on_sign_out.run(())
             >
-                <IconLogout />
+                <SvgIcon path=outline::log_out() size=15 />
                 "Sign out"
             </button>
         </div>
     }
 }
 
+/// One popover row: outline glyph + label.
 #[component]
-fn IconGear() -> impl IntoView {
+fn RailMenuItem(
+    /// Path data from `honba_kao_ui_core::icons::outline`.
+    #[prop(into)]
+    glyph: &'static str,
+    #[prop(into)]
+    label: &'static str,
+    on_click: Callback<()>,
+) -> impl IntoView {
     view! {
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-    }
-}
-
-#[component]
-fn IconWallet() -> impl IntoView {
-    view! {
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="6" width="20" height="14" rx="2" />
-            <path d="M16 6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2" />
-            <path d="M22 12h-5a2 2 0 0 0 0 4h5z" />
-        </svg>
-    }
-}
-
-#[component]
-fn IconLogout() -> impl IntoView {
-    view! {
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <path d="m16 17 5-5-5-5" />
-            <path d="M21 12H9" />
-        </svg>
+        <button role="menuitem" on:click=move |_| on_click.run(())>
+            <SvgIcon path=glyph size=15 />
+            {label}
+        </button>
     }
 }

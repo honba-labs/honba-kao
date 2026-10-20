@@ -1,0 +1,25 @@
+[package]
+name = "honba-kao-ui-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "honba_kao_ui_core"
+
+[dependencies]
+leptos.workspace = true
+leptos_router.workspace = true
+wasm-bindgen.workspace = true
+web-sys = { version = "0.3", features = [
+    "Window", "Document", "Element", "Node", "Event", "EventTarget",
+    "HtmlElement", "HtmlInputElement", "MouseEvent", "KeyboardEvent", "FocusEvent",
+    "SvgElement", "SvgsvgElement", "SvgPathElement",
+    "MediaQueryList", "Storage", "WebSocket", "MessageEvent",
+] }
+js-sys = "0.3"
+gloo-net = { version = "0.6", features = ["http"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror = "1"

@@ -5,12 +5,16 @@ use leptos::prelude::*;
 use crate::api;
 use crate::components::ui::{HfPanel, HfPanelHeader, PageHeader};
 use crate::constants::branding;
+use crate::stores::trading_mode::{TradingMode, use_trading_mode};
 
 #[component]
 pub fn SettingsPage() -> impl IntoView {
     let config = api::config::get_system_config();
     let telegram = api::telegram::get_status();
-    let paper = RwSignal::new(config.paper_trading);
+    // The paper toggle is the same state the header's PAPER|LIVE indicator
+    // shows — one source of truth, persisted by the shared store.
+    let trading = use_trading_mode();
+    let paper = trading.is_paper();
     let notify = RwSignal::new(false);
 
     view! {
@@ -46,7 +50,14 @@ pub fn SettingsPage() -> impl IntoView {
                         <input
                             type="checkbox"
                             prop:checked=move || paper.get()
-                            on:change=move |_| paper.update(|v| *v = !*v)
+                            on:change=move |_| {
+                                let next = if paper.get() {
+                                    TradingMode::Live
+                                } else {
+                                    TradingMode::Paper
+                                };
+                                trading.set(next);
+                            }
                         />
                         <span>"Paper trading mode"</span>
                     </label>

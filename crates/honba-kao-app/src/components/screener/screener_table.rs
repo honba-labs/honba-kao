@@ -10,6 +10,8 @@
 
 use leptos::prelude::*;
 
+use honba_kao_ui_core::{HfButton, HfIconButton};
+
 use crate::components::workbench::dismiss_on_outside_click;
 use crate::data::instruments::Instrument;
 use crate::stores::screener::{
@@ -223,13 +225,15 @@ fn cell(id: &str, inst: &Instrument, store: ScreenerStore) -> AnyView {
                     <span class="sc-symbol__logo">{logo_letters(&inst.symbol)}</span>
                     <span class="sc-symbol__details">
                         <span class="sc-symbol__row1">
-                            <button
+                            <HfButton
                                 class="sc-symbol__ticker"
                                 title="Open the detail drawer"
-                                on:click=move |_| store.open_detail(&ticker_for_click, DetailTab::Overview)
+                                on_click=Callback::new(move |_| {
+                                    store.open_detail(&ticker_for_click, DetailTab::Overview)
+                                })
                             >
                                 <strong>{ticker}</strong>
-                            </button>
+                            </HfButton>
                             <span class="sc-symbol__exchange">{exchange}</span>
                         </span>
                         <span class="sc-symbol__row2">
@@ -451,6 +455,8 @@ fn ColHeader(col: ColumnDef, is_filtered: bool, store: ScreenerStore) -> impl In
     dismiss_on_outside_click(menu_open, menu_host);
 
     let label = col.label.to_string();
+    let label_trigger = label.clone();
+    let label_menu = label.clone();
     let has_arrow = true;
 
     let sort_asc = move |_| {
@@ -490,10 +496,11 @@ fn ColHeader(col: ColumnDef, is_filtered: bool, store: ScreenerStore) -> impl In
 
     view! {
         <div class="sc-th" node_ref=menu_host>
-            <button
+            <HfButton
                 class="sc-th__label"
                 title=format!("Filter, sort, or configure {}", col.label)
-                on:click=move |_| menu_open.update(|open| *open = !*open)
+                active=Signal::derive(move || menu_open.get())
+                on_click=Callback::new(move |_| menu_open.update(|open| *open = !*open))
             >
                 <Show when=move || is_filtered>
                     <span class="sc-th__filter-dot" title="Column is filtered"></span>
@@ -504,44 +511,44 @@ fn ColHeader(col: ColumnDef, is_filtered: bool, store: ScreenerStore) -> impl In
                 <Show when=is_sorted_desc>
                     <span class="sc-th__arrow">"↓"</span>
                 </Show>
-                <span>{label.clone()}</span>
+                <span>{label_trigger}</span>
                 <Show when=move || has_arrow>
                     <span class="sc-th__caretp">"▾"</span>
                 </Show>
-            </button>
+            </HfButton>
 
             <Show when=move || menu_open.get()>
                 <div class="sc-th__menu" role="menu">
-                    <div class="sc-th__menu-title">{label.clone()}</div>
-                    <button
+                    <div class="sc-th__menu-title">{label_menu.clone()}</div>
+                    <HfButton
                         class="sc-th__menu-item"
-                        class:sc-th__menu-item--on=is_sorted_asc
                         role="menuitem"
-                        on:click=sort_asc
+                        active=Signal::derive(is_sorted_asc)
+                        on_click=Callback::new(sort_asc)
                     >
                         "Sort ascending"
-                    </button>
-                    <button
+                    </HfButton>
+                    <HfButton
                         class="sc-th__menu-item"
-                        class:sc-th__menu-item--on=is_sorted_desc
                         role="menuitem"
-                        on:click=sort_desc
+                        active=Signal::derive(is_sorted_desc)
+                        on_click=Callback::new(sort_desc)
                     >
                         "Sort descending"
-                    </button>
-                    <button class="sc-th__menu-item" role="menuitem" on:click=clear_sort>
+                    </HfButton>
+                    <HfButton class="sc-th__menu-item" role="menuitem" on_click=Callback::new(clear_sort)>
                         "No sort"
-                    </button>
+                    </HfButton>
                     <Show when=move || col.id != "symbol">
                         <div class="sc-th__menu-rule"></div>
-                        <button class="sc-th__menu-item" role="menuitem" on:click=hide>
+                        <HfButton class="sc-th__menu-item" role="menuitem" on_click=Callback::new(hide)>
                             "Hide column"
-                        </button>
+                        </HfButton>
                     </Show>
                     <div class="sc-th__menu-rule"></div>
-                    <button class="sc-th__menu-item" role="menuitem" on:click=manage>
+                    <HfButton class="sc-th__menu-item" role="menuitem" on_click=Callback::new(manage)>
                         "Customize columns…"
-                    </button>
+                    </HfButton>
                 </div>
             </Show>
         </div>
@@ -642,25 +649,25 @@ pub fn ScreenerTable() -> impl IntoView {
                                                             }
                                                         }
                                                     />
-                                                    <button
+                                                    <HfIconButton
+                                                        icon=honba_kao_ui_core::icons::outline::x_close()
+                                                        size=16
                                                         class="sc-th__search-close"
                                                         title="Clear search (Esc)"
-                                                        on:click=clear_search
-                                                    >
-                                                        "×"
-                                                    </button>
+                                                        on_click=Callback::new(clear_search)
+                                                    />
                                                     <span class="sc-th__count">
                                                         {move || format_number(total_items.get() as f64)}
                                                     </span>
                                                 </Show>
                                                 <Show when=move || !search_active()>
-                                                    <button
+                                                    <HfIconButton
+                                                        icon=honba_kao_ui_core::icons::outline::search()
+                                                        size=16
                                                         class="sc-th__search-btn"
                                                         title="Search tickers"
-                                                        on:click=move |_| header_search_open.set(true)
-                                                    >
-                                                        "⌕"
-                                                    </button>
+                                                        on_click=Callback::new(move |_| header_search_open.set(true))
+                                                    />
                                                     <span
                                                         class="sc-th__title sc-th__title--click"
                                                         title="Sort by symbol"
@@ -687,13 +694,13 @@ pub fn ScreenerTable() -> impl IntoView {
                             }).collect_view()
                         }}
                         <th class="sc-th sc-th--add">
-                            <button
+                            <HfIconButton
+                                icon=honba_kao_ui_core::icons::outline::plus()
+                                size=16
                                 class="sc-th__add"
                                 title="Add / remove columns"
-                                on:click=move |_| store.column_modal.set(true)
-                            >
-                                "+"
-                            </button>
+                                on_click=Callback::new(move |_| store.column_modal.set(true))
+                            />
                         </th>
                     </tr>
                 </thead>
@@ -764,23 +771,23 @@ pub fn ScreenerTable() -> impl IntoView {
                     " )"
                 </div>
                 <div class="sc-table__pager">
-                    <button
+                    <HfIconButton
+                        icon=honba_kao_ui_core::icons::outline::chevron_left()
+                        size=16
                         class="sc-table__pager-btn"
                         title="Previous page"
-                        disabled=move || valid_page.get() <= 1
-                        on:click=move |_| store.set_page(valid_page.get() - 1)
-                    >
-                        "‹"
-                    </button>
+                        disabled=Signal::derive(move || valid_page.get() <= 1)
+                        on_click=Callback::new(move |_| store.set_page(valid_page.get() - 1))
+                    />
                     <span class="sc-table__page-badge">{move || valid_page.get()}</span>
-                    <button
+                    <HfIconButton
+                        icon=honba_kao_ui_core::icons::outline::chevron_right()
+                        size=16
                         class="sc-table__pager-btn"
                         title="Next page"
-                        disabled=move || valid_page.get() >= max_page.get()
-                        on:click=move |_| store.set_page(valid_page.get() + 1)
-                    >
-                        "›"
-                    </button>
+                        disabled=Signal::derive(move || valid_page.get() >= max_page.get())
+                        on_click=Callback::new(move |_| store.set_page(valid_page.get() + 1))
+                    />
                     <div class="sc-table__pagesize">
                         <span class="sc-table__pagesize-label">"Rows"</span>
                         <select

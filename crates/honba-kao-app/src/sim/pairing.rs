@@ -1,0 +1,1069 @@
+//! Fill → round-trip pairing (HBD-2026-DES-005 P3).
+//!
+//! The Leptos port of honba-fe `core/simulator/trade-pairing.ts`. The journal
+//! (`GET /backtests/{id}/journal`, decoded [`wire::TradesResponse`]) carries
+//! **fills**, not round trips: there is no entry/exit field, no PnL, no
+//! size-in-size-out and no signal reason. Everything a round trip reports is
+//! therefore *derived* here, by one documented rule set, so the chart markers,
+//! the tooltip and the P5 trade journal all agree:
+//!
+//! - Fills are ordered by `ts_event`, stable, per instrument.
+//! - A **round trip = one position episode**: it opens when the net position
+//!   leaves zero and closes when it returns to zero (or flips through it).
+//! - Scale-in fills join the open episode as more lots; scale-out fills consume
+//!   those lots **FIFO**. One episode with three exits is one round trip with
+//!   three exit legs — not three trips.
+//! - Realised PnL is **derived**: `(exit − entry) × closed qty × direction`,
+//!   net of the run's fill costs, with entry costs allocated pro-rata to the
+//!   closed quantity so an open trip is not charged for inventory it still
+//!   holds.
+//! - A position still open when the run ends is reported with
+//!   [`RoundTripStatus::Open`] and no exit reason, and is labelled as derived
+//!   wherever it is drawn.
+//! - `exit_reason` is one of the three *derived* states below. The journal
+//!   carries no strategy-level reason (stop, target, signal) — that is a
+//!   contract gap, never a guess.
+//!
+//! Money deviation from fe (documented per the port's DoD): fe's journal carried
+//! `costs.amount` as a float in **major units**; the wire [`wire::Trade`]
+//! carries ledger [`wire::WireMoney`] in integer minor units. The conversion
+//! happens **once, at this boundary** — [`wire::WireMoney::to_major_f64`] — so
+//! pairing and everything downstream (analytics, equity, heatmap, CSV) keep raw
+//! major-unit floats exactly like fe, and match the server's own
+//! `honba-analytics::RoundTrip::from_fills`, which does the same one-time
+//! conversion. Presentation is a P5 render-time concern only.
+//!
+//! Every other guard fe dropped fills for (bad side, non-finite size/price,
+//! absent timestamp) is structurally impossible: a wire [`wire::Trade`] is
+//! validated at its deserialization door (`side` ∈ {buy, sell}, `quantity` and
+//! `price` finite and > 0, costs exact `Money`), so [`PairingResult::dropped`]
+//! counts the only remaining failure mode — the epoch `0` placeholder
+//! timestamp — and is 0 for any well-formed journal.
+
+use std::collections::BTreeMap;
+
+use honba_kao_client::wire::{Trade, WireOrderSide};
+
+use crate::sim::chart_data::unix_nanos_to_seconds;
+
+/// Which side of the book a fill sat on (`FillSide`); `isSide`, typed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FillSide {
+    /// A buy fill.
+    Buy,
+    /// A sell fill.
+    Sell,
+}
+
+impl FillSide {
+    /// The wire spelling, echoed by chart tooltips and markers.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            FillSide::Buy => "buy",
+            FillSide::Sell => "sell",
+        }
+    }
+
+    /// fe's `isSide` guard: `None` for a sideless fill. (A parsed wire
+    /// [`Trade`] never carries [`WireOrderSide::NoOrderSide`] — its own
+    /// validate rejects it — but an in-memory one can, so the guard stays.)
+    pub fn from_order_side(side: WireOrderSide) -> Option<FillSide> {
+        match side {
+            WireOrderSide::Buy => Some(FillSide::Buy),
+            WireOrderSide::Sell => Some(FillSide::Sell),
+            _ => None,
+        }
+    }
+}
+
+/// One journal fill, normalised and sortable (`PairedFill`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PairedFill {
+    /// Original index in the response, so ties keep wire order.
+    pub index: usize,
+    /// UTC seconds.
+    pub ts: i64,
+    /// Which side of the book.
+    pub side: FillSide,
+    /// Fill price.
+    pub price: f64,
+    /// Fill quantity.
+    pub quantity: f64,
+    /// The fill's transaction costs, in **major units** (see the module doc).
+    pub costs: f64,
+    /// Costs' ISO 4217 currency code.
+    pub currency: String,
+    /// The originating order id.
+    pub order_id: String,
+    /// `SYMBOL.EXCHANGE` instrument id.
+    pub instrument: String,
+}
+
+/// One entry or exit fill leg of a round trip (`RoundTripLeg`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct RoundTripLeg {
+    /// UTC seconds.
+    pub ts: i64,
+    /// Leg price.
+    pub price: f64,
+    /// Leg quantity.
+    pub quantity: f64,
+    /// Leg costs, major units.
+    pub costs: f64,
+    /// Originating order id.
+    pub order_id: String,
+}
+
+/// Why an episode ended, as far as the journal lets anyone know
+/// (`RoundTripExitReason`) — always derived, never a strategy-level guess.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RoundTripExitReason {
+    /// The exit fill brought the position flat.
+    PositionClosed,
+    /// The exit fill overran flat and opened the opposite position; the
+    /// residue may be an open episode.
+    Flipped,
+    /// The run ended while the position was still open.
+    OpenAtEnd,
+}
+
+impl RoundTripExitReason {
+    /// fe's wire spelling, shown in the journal table and markers' tooltips.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RoundTripExitReason::PositionClosed => "position_closed",
+            RoundTripExitReason::Flipped => "flipped",
+            RoundTripExitReason::OpenAtEnd => "open_at_end",
+        }
+    }
+}
+
+/// Direction a round trip opened with (`direction`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    /// Position opened with a buy.
+    Long,
+    /// Position opened with a sell.
+    Short,
+}
+
+impl Direction {
+    /// fe's wire spelling.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Direction::Long => "long",
+            Direction::Short => "short",
+        }
+    }
+}
+
+/// Whether a trip is fully realised (`status`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RoundTripStatus {
+    /// The episode's inventory was fully closed.
+    Closed,
+    /// The run ended with inventory still held.
+    Open,
+}
+
+impl RoundTripStatus {
+    /// fe's wire spelling.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RoundTripStatus::Closed => "closed",
+            RoundTripStatus::Open => "open",
+        }
+    }
+}
+
+/// A derived round trip (`RoundTrip`). All PnL-bearing values are derived from
+/// the journal fills; nothing is reported the fills cannot support.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RoundTrip {
+    /// Stable id, `trip-<n>` in entry order.
+    pub id: String,
+    /// `SYMBOL.EXCHANGE` instrument id.
+    pub instrument: String,
+    /// Direction the position opened with.
+    pub direction: Direction,
+    /// Whether the run ended with the position closed.
+    pub status: RoundTripStatus,
+    /// Quantity paired into this trip (its entry size).
+    pub quantity: f64,
+    /// Quantity still held at the run's end; 0 for a closed trip.
+    pub open_quantity: f64,
+    /// First fill's timestamp, UTC seconds.
+    pub entry_ts: i64,
+    /// Last (or only) exit fill's timestamp; `None` while nothing closed.
+    pub exit_ts: Option<i64>,
+    /// Weighted-average entry price.
+    pub avg_entry: f64,
+    /// Weighted-average exit price; `None` until something has closed.
+    pub avg_exit: Option<f64>,
+    /// Entry fill legs.
+    pub entry_fills: Vec<RoundTripLeg>,
+    /// Exit fill legs.
+    pub exit_fills: Vec<RoundTripLeg>,
+    /// Recorded fill costs, entry + exit (major units, as the venue reported).
+    pub fees: f64,
+    /// Derived, net of allocated costs. `None` until part of the trip closed.
+    pub realized_pnl: Option<f64>,
+    /// Derived `realized_pnl / (avg_entry × closed qty)`.
+    pub return_pct: Option<f64>,
+    /// Derived — the journal carries no strategy-level exit reason.
+    pub exit_reason: RoundTripExitReason,
+}
+
+/// A position still held when the run ended (`OpenPosition`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct OpenPosition {
+    /// `SYMBOL.EXCHANGE` instrument id.
+    pub instrument: String,
+    /// Direction the position opened with.
+    pub direction: Direction,
+    /// Quantity still held.
+    pub quantity: f64,
+    /// Average price of the remaining lots.
+    pub avg_price: f64,
+    /// When the position was first opened, UTC seconds.
+    pub since_ts: i64,
+}
+
+/// The pairing of a journal (`PairingResult`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PairingResult {
+    /// Normalised, ordered fills.
+    pub fills: Vec<PairedFill>,
+    /// Round trips in entry order (`trip-1`, `trip-2`, …).
+    pub trips: Vec<RoundTrip>,
+    /// Positions still open at the run's end, per instrument.
+    pub open_positions: Vec<OpenPosition>,
+    /// Fills that could not be paired. For wire trades this is structurally
+    /// 0 except for the epoch-placeholder timestamp (see the module doc).
+    pub dropped: usize,
+}
+
+/// Chart marker kind (`TradeMarkerKind`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TradeMarkerKind {
+    /// An entry fill leg.
+    Entry,
+    /// An exit fill leg.
+    Exit,
+    /// The labelled tail of a still-open position (derived, not a fill).
+    Open,
+}
+
+impl TradeMarkerKind {
+    /// fe's wire spelling, echoed by the chart's click handler.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            TradeMarkerKind::Entry => "entry",
+            TradeMarkerKind::Exit => "exit",
+            TradeMarkerKind::Open => "open",
+        }
+    }
+}
+
+/// A trade marker over the chart (`TradeMarker`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TradeMarker {
+    /// Stable id, echoed by the chart's click handler.
+    pub key: String,
+    /// UTC seconds; snapped to a bar timestamp before it is drawn (P6).
+    pub ts: i64,
+    /// Marker side as drawn.
+    pub side: FillSide,
+    /// Kind.
+    pub kind: TradeMarkerKind,
+    /// Marker price.
+    pub price: f64,
+    /// Marker quantity.
+    pub quantity: f64,
+    /// Owning trip id.
+    pub trip_id: String,
+    /// `SYMBOL.EXCHANGE` instrument id.
+    pub instrument: String,
+    /// True when the marker is derived rather than a fill (the open tail).
+    pub derived: bool,
+}
+
+/// Same float slack fe paired with (`EPSILON`).
+const EPSILON: f64 = 1e-9;
+
+/// Builds the normalised fill from a validated wire trade, or `None` when its
+/// timestamp is the epoch placeholder (the one non-finite-free drop).
+///
+/// fe gated this behind an `isSide` type check on untyped JSON; on the Rust
+/// side the wire [`Trade`] is validated at its deserialization door, so there
+/// is nothing left to check. A plain function — a `From` impl for
+/// `Option` would trip the orphan rule.
+fn paired_fill_from(trade: &Trade) -> Option<PairedFill> {
+    let costs = trade.costs();
+    let currency = costs.currency();
+    let instrument = trade.instrument_id();
+    Some(PairedFill {
+        index: usize::MAX, // fixed by the caller, which knows the index
+        ts: unix_nanos_to_seconds(trade.ts_event())?,
+        side: FillSide::from_order_side(trade.side())?,
+        price: trade.price(),
+        quantity: trade.quantity(),
+        costs: costs.to_major_f64(),
+        currency: currency.code().to_string(),
+        order_id: trade.order_id().as_str().to_string(),
+        instrument: format!(
+            "{}.{}",
+            instrument.symbol(),
+            instrument.exchange().as_str()
+        ),
+    })
+}
+
+/// Wire fills → sorted, timestamped, side-checked fills (`fillsFromTrades`).
+///
+/// fe dropped fills it could not read a side/timestamp/size/price from and
+/// counted them; on the Rust side the wire [`Trade`] is validated at the door,
+/// so only the epoch-placeholder timestamp can drop. See the module doc.
+pub fn fills_from_trades(trades: &[Trade]) -> (Vec<PairedFill>, usize) {
+    let mut fills: Vec<PairedFill> = Vec::with_capacity(trades.len());
+    let mut dropped = 0;
+    for (index, trade) in trades.iter().enumerate() {
+        let Some(mut fill) = paired_fill_from(trade) else {
+            dropped += 1;
+            continue;
+        };
+        fill.index = index;
+        fills.push(fill);
+    }
+    fills.sort_by_key(|fill| (fill.ts, fill.index));
+    (fills, dropped)
+}
+
+/// One partial lot of an open episode (`Lot`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Lot {
+    remaining: f64,
+    price: f64,
+}
+
+/// Pairing workspace for one instrument's episode (`Episode`).
+#[derive(Clone, Debug)]
+struct Episode {
+    instrument: String,
+    direction: Direction,
+    entry_fills: Vec<RoundTripLeg>,
+    exit_fills: Vec<RoundTripLeg>,
+    entry_qty: f64,
+    entry_notional: f64,
+    entry_costs: f64,
+    exit_qty: f64,
+    exit_notional: f64,
+    exit_costs: f64,
+    entry_ts: i64,
+    exit_ts: Option<i64>,
+    lots: Vec<Lot>,
+    exit_reason: RoundTripExitReason,
+}
+
+fn open_episode(fill: &PairedFill) -> Episode {
+    Episode {
+        instrument: fill.instrument.clone(),
+        direction: if fill.side == FillSide::Buy {
+            Direction::Long
+        } else {
+            Direction::Short
+        },
+        entry_fills: vec![RoundTripLeg {
+            ts: fill.ts,
+            price: fill.price,
+            quantity: fill.quantity,
+            costs: fill.costs,
+            order_id: fill.order_id.clone(),
+        }],
+        exit_fills: Vec::new(),
+        entry_qty: fill.quantity,
+        entry_notional: fill.quantity * fill.price,
+        entry_costs: fill.costs,
+        exit_qty: 0.0,
+        exit_notional: 0.0,
+        exit_costs: 0.0,
+        entry_ts: fill.ts,
+        exit_ts: None,
+        lots: vec![Lot {
+            remaining: fill.quantity,
+            price: fill.price,
+        }],
+        exit_reason: RoundTripExitReason::OpenAtEnd,
+    }
+}
+
+fn add_entry(episode: &mut Episode, fill: &PairedFill) {
+    episode.entry_fills.push(RoundTripLeg {
+        ts: fill.ts,
+        price: fill.price,
+        quantity: fill.quantity,
+        costs: fill.costs,
+        order_id: fill.order_id.clone(),
+    });
+    episode.entry_qty += fill.quantity;
+    episode.entry_notional += fill.quantity * fill.price;
+    episode.entry_costs += fill.costs;
+    episode.lots.push(Lot {
+        remaining: fill.quantity,
+        price: fill.price,
+    });
+}
+
+fn episode_exit_ts(episode: &Episode) -> i64 {
+    episode.exit_ts.unwrap_or(i64::MIN)
+}
+
+/// Pair one instrument's ordered fills into position episodes (`pairInstrument`).
+///
+/// Closing fills consume the open lots FIFO; remaining quantity past flat
+/// flips through zero and opens the opposite episode with the residue.
+fn pair_instrument(fills: &[&PairedFill]) -> (Vec<Episode>, Option<Episode>) {
+    let mut episodes: Vec<Episode> = Vec::new();
+    let mut open: Option<Episode> = None;
+
+    for fill in fills {
+        let opening_side = if fill.side == FillSide::Buy {
+            Direction::Long
+        } else {
+            Direction::Short
+        };
+        let Some(episode) = open.as_mut() else {
+            open = Some(open_episode(fill));
+            continue;
+        };
+
+        if opening_side == episode.direction {
+            add_entry(episode, fill);
+            continue;
+        }
+
+        // Closing (or reversing) fill: consume the open lots FIFO.
+        let per_unit = fill.costs / fill.quantity;
+        let mut remaining = fill.quantity;
+        episode.exit_fills.push(RoundTripLeg {
+            ts: fill.ts,
+            price: fill.price,
+            quantity: fill.quantity,
+            costs: fill.costs,
+            order_id: fill.order_id.clone(),
+        });
+
+        while remaining > EPSILON && !episode.lots.is_empty() {
+            let mut lot = episode.lots[0];
+            let taken = lot.remaining.min(remaining);
+            lot.remaining -= taken;
+            remaining -= taken;
+            episode.exit_qty += taken;
+            episode.exit_notional += taken * fill.price;
+            episode.exit_costs += taken * per_unit;
+            if lot.remaining <= EPSILON {
+                episode.lots.remove(0);
+            } else {
+                // The fill ran out mid-lot; the rest stays open.
+                episode.lots[0] = lot;
+            }
+        }
+        episode.exit_ts = Some(fill.ts);
+
+        if episode.lots.is_empty() {
+            episode.exit_reason = if remaining > EPSILON {
+                RoundTripExitReason::Flipped
+            } else {
+                RoundTripExitReason::PositionClosed
+            };
+            episodes.push(open.take().expect("episode is present"));
+            if remaining > EPSILON {
+                // The fill ran past flat: the residue opens the opposite episode.
+                let mut residue = (*fill).clone();
+                residue.quantity = remaining;
+                residue.costs = per_unit * remaining;
+                open = Some(open_episode(&residue));
+            }
+        }
+    }
+
+    (episodes, open)
+}
+
+/// fe's `round(value, digits = 10)`: trims float noise off derived values.
+fn round(value: f64, digits: i32) -> f64 {
+    let factor = 10f64.powi(digits);
+    (value * factor).round() / factor
+}
+
+fn finalize_episode(episode: &Episode, id: String, open: bool) -> RoundTrip {
+    let closed_qty = episode.exit_qty;
+    let avg_entry = if episode.entry_qty > 0.0 {
+        episode.entry_notional / episode.entry_qty
+    } else {
+        0.0
+    };
+    let avg_exit = if closed_qty > 0.0 {
+        Some(episode.exit_notional / closed_qty)
+    } else {
+        None
+    };
+    let open_quantity: f64 = episode.lots.iter().map(|lot| lot.remaining).sum();
+    let sign = if episode.direction == Direction::Long {
+        1.0
+    } else {
+        -1.0
+    };
+    let allocated_entry_costs = if closed_qty > 0.0 && episode.entry_qty > 0.0 {
+        episode.entry_costs * (closed_qty / episode.entry_qty)
+    } else {
+        0.0
+    };
+    let realized_pnl = avg_exit.map(|avg_exit| {
+        sign * (avg_exit - avg_entry) * closed_qty - (allocated_entry_costs + episode.exit_costs)
+    });
+    let capital = avg_entry * closed_qty;
+
+    RoundTrip {
+        id,
+        instrument: episode.instrument.clone(),
+        direction: episode.direction,
+        status: if open {
+            RoundTripStatus::Open
+        } else {
+            RoundTripStatus::Closed
+        },
+        quantity: round(episode.entry_qty, 8),
+        open_quantity: round(open_quantity, 8),
+        entry_ts: episode.entry_ts,
+        exit_ts: episode.exit_ts,
+        avg_entry: round(avg_entry, 10),
+        avg_exit: avg_exit.map(|value| round(value, 10)),
+        entry_fills: episode.entry_fills.clone(),
+        exit_fills: episode.exit_fills.clone(),
+        fees: round(episode.entry_costs + episode.exit_costs, 10),
+        realized_pnl: realized_pnl.map(|value| round(value, 10)),
+        return_pct: realized_pnl.filter(|_| capital > 0.0).map(|value| round(value / capital, 10)),
+        exit_reason: if open {
+            RoundTripExitReason::OpenAtEnd
+        } else {
+            episode.exit_reason
+        },
+    }
+}
+
+fn open_position_of(episode: &Episode) -> Option<OpenPosition> {
+    let quantity: f64 = episode.lots.iter().map(|lot| lot.remaining).sum();
+    if quantity <= EPSILON {
+        return None;
+    }
+    let notional: f64 = episode
+        .lots
+        .iter()
+        .map(|lot| lot.remaining * lot.price)
+        .sum();
+    Some(OpenPosition {
+        instrument: episode.instrument.clone(),
+        direction: episode.direction,
+        quantity: round(quantity, 8),
+        avg_price: round(notional / quantity, 10),
+        since_ts: episode.entry_ts,
+    })
+}
+
+/// Pair journal fills into round trips, per instrument (`pairFills`).
+///
+/// Returns the fills unchanged (they are the journal's raw layer), the trips
+/// numbered in entry order and any positions still open at the run's end.
+pub fn pair_fills(fills: &[PairedFill]) -> PairingResult {
+    let mut by_instrument: BTreeMap<&str, Vec<&PairedFill>> = BTreeMap::new();
+    for fill in fills {
+        by_instrument.entry(fill.instrument.as_str()).or_default().push(fill);
+    }
+
+    let mut closed: Vec<Episode> = Vec::new();
+    let mut opens: Vec<Episode> = Vec::new();
+    for bucket in by_instrument.values() {
+        let (mut episodes, open) = pair_instrument(bucket);
+        closed.append(&mut episodes);
+        if let Some(open) = open {
+            opens.push(open);
+        }
+    }
+
+    // fe: closed.sort(entryTs, exitTs); trips numbered over closed then opens;
+    // the final list re-sorts by entryTs. All three sorts are stable.
+    closed.sort_by_key(|episode| (episode.entry_ts, episode_exit_ts(episode)));
+    let mut trips: Vec<RoundTrip> = closed
+        .iter()
+        .enumerate()
+        .map(|(index, episode)| finalize_episode(episode, format!("trip-{}", index + 1), false))
+        .collect();
+
+    let closed_len = trips.len();
+    let mut open_positions = Vec::new();
+    for (index, episode) in opens.iter().enumerate() {
+        let id = format!("trip-{}", closed_len + index + 1);
+        trips.push(finalize_episode(episode, id, true));
+        if let Some(position) = open_position_of(episode) {
+            open_positions.push(position);
+        }
+    }
+
+    trips.sort_by_key(|trip| trip.entry_ts);
+    PairingResult {
+        fills: fills.to_vec(),
+        trips,
+        open_positions,
+        dropped: 0,
+    }
+}
+
+/// Wire trades → paired round trips in one call (`pairTrades`).
+pub fn pair_trades(trades: &[Trade]) -> PairingResult {
+    let (fills, dropped) = fills_from_trades(trades);
+    let mut result = pair_fills(&fills);
+    result.dropped = dropped;
+    result
+}
+
+/// Chart markers for a pairing: one marker per fill leg, plus a clearly
+/// labelled marker for any position still open at the run's end (derived, not
+/// a fill) (`markersFromPairing`). Markers are ordered by timestamp, ties
+/// keeping their emission order.
+pub fn markers_from_pairing(result: &PairingResult) -> Vec<TradeMarker> {
+    let mut markers: Vec<TradeMarker> = Vec::new();
+    for trip in &result.trips {
+        let marker_side = if trip.direction == Direction::Long {
+            FillSide::Buy
+        } else {
+            FillSide::Sell
+        };
+        let opposite_side = match marker_side {
+            FillSide::Buy => FillSide::Sell,
+            FillSide::Sell => FillSide::Buy,
+        };
+        for (index, leg) in trip.entry_fills.iter().enumerate() {
+            markers.push(TradeMarker {
+                key: format!("{}:entry:{}", trip.id, index),
+                ts: leg.ts,
+                side: marker_side,
+                kind: TradeMarkerKind::Entry,
+                price: leg.price,
+                quantity: leg.quantity,
+                trip_id: trip.id.clone(),
+                instrument: trip.instrument.clone(),
+                derived: false,
+            });
+        }
+        for (index, leg) in trip.exit_fills.iter().enumerate() {
+            markers.push(TradeMarker {
+                key: format!("{}:exit:{}", trip.id, index),
+                ts: leg.ts,
+                side: opposite_side,
+                kind: TradeMarkerKind::Exit,
+                price: leg.price,
+                quantity: leg.quantity,
+                trip_id: trip.id.clone(),
+                instrument: trip.instrument.clone(),
+                derived: false,
+            });
+        }
+        if trip.status == RoundTripStatus::Open && trip.open_quantity > EPSILON {
+            markers.push(TradeMarker {
+                key: format!("{}:open", trip.id),
+                ts: trip.exit_ts.unwrap_or(trip.entry_ts),
+                side: marker_side,
+                kind: TradeMarkerKind::Open,
+                price: trip.avg_entry,
+                quantity: trip.open_quantity,
+                trip_id: trip.id.clone(),
+                instrument: trip.instrument.clone(),
+                derived: true,
+            });
+        }
+    }
+    markers.sort_by_key(|marker| marker.ts);
+    markers
+}
+
+/// Look up the round trip a marker belongs to, for the chart tooltip
+/// (`tripForMarker`).
+pub fn trip_for_marker<'a>(
+    result: &'a PairingResult,
+    trip_id: Option<&str>,
+) -> Option<&'a RoundTrip> {
+    let trip_id = trip_id?;
+    result.trips.iter().find(|trip| trip.id == trip_id)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use honba_kao_client::wire::{
+        Currency, Exchange, InstrumentId, OrderId, WireMoney, WireOrderSide as OrderSide,
+        WireUnixNanos,
+    };
+
+    const JAN1: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC (fe's Date.UTC(2024, 0, 2))
+
+    fn ts(minute: i64) -> WireUnixNanos {
+        WireUnixNanos::from_u64((JAN1 + minute * 60) as u64 * 1_000_000_000)
+    }
+
+    fn fill(
+        side: OrderSide,
+        quantity: f64,
+        price: f64,
+        minute: i64,
+        costs: f64,
+        symbol: &str,
+    ) -> Trade {
+        Trade::new(
+            OrderId::new(format!("o-{:?}-{}", side, minute)),
+            InstrumentId::new(symbol, Exchange::new("NSE")),
+            side,
+            quantity,
+            price,
+            Currency::Inr,
+            ts(minute),
+            ts(minute),
+        )
+        .with_costs(WireMoney::from_major_f64(costs, Currency::Inr).expect("valid costs"))
+    }
+
+    fn buy(quantity: f64, price: f64, minute: i64) -> Trade {
+        fill(OrderSide::Buy, quantity, price, minute, 0.0, "TCS")
+    }
+
+    fn sell(quantity: f64, price: f64, minute: i64) -> Trade {
+        fill(OrderSide::Sell, quantity, price, minute, 0.0, "TCS")
+    }
+
+    #[test]
+    fn orders_fills_by_ts_event_and_keeps_wire_order_on_ties() {
+        let (fills, dropped) = fills_from_trades(&[sell(1.0, 110.0, 30), buy(1.0, 100.0, 10)]);
+        assert_eq!(
+            fills.iter().map(|f| (f.side, f.ts)).collect::<Vec<_>>(),
+            vec![(FillSide::Buy, JAN1 + 600), (FillSide::Sell, JAN1 + 1800)]
+        );
+        assert_eq!(dropped, 0);
+    }
+
+    #[test]
+    fn counts_the_epoch_placeholder_as_dropped() {
+        // fe's "drops fills it cannot pair" branch: side, size and price are
+        // guaranteed by the typed wire, but a 0 placeholder ts_event can't be
+        // used. Everything else in that vitest case is unrepresentable here.
+        let zero_ts = Trade::new(
+            OrderId::new("o-zero"),
+            InstrumentId::new("TCS", Exchange::new("NSE")),
+            OrderSide::Buy,
+            1.0,
+            100.0,
+            Currency::Inr,
+            WireUnixNanos::from_u64(0),
+            WireUnixNanos::from_u64(0),
+        );
+        let (fills, dropped) = fills_from_trades(&[zero_ts, buy(1.0, 100.0, 20)]);
+        assert_eq!(fills.len(), 1);
+        assert_eq!(dropped, 1);
+    }
+
+    // --- pairTrades — round trips ----------------------------------------------
+
+    #[test]
+    fn pairs_a_simple_long_round_trip_and_derives_pnl_net_of_fill_costs() {
+        let result = pair_trades(&[
+            fill(OrderSide::Buy, 100.0, 100.0, 10, 10.0, "TCS"),
+            fill(OrderSide::Sell, 100.0, 110.0, 60, 5.0, "TCS"),
+        ]);
+        assert_eq!(result.trips.len(), 1);
+        let trip = &result.trips[0];
+        assert_eq!(trip.direction, Direction::Long);
+        assert_eq!(trip.status, RoundTripStatus::Closed);
+        assert_eq!(trip.quantity, 100.0);
+        assert_eq!(trip.open_quantity, 0.0);
+        assert_eq!(trip.avg_entry, 100.0);
+        assert_eq!(trip.avg_exit, Some(110.0));
+        assert_eq!(trip.exit_reason, RoundTripExitReason::PositionClosed);
+        assert_eq!(trip.entry_fills.len(), 1);
+        assert_eq!(trip.exit_fills.len(), 1);
+        assert_eq!(trip.fees, 15.0);
+        assert!((trip.realized_pnl.unwrap() - (10.0 * 100.0 - 15.0)).abs() < 1e-6);
+        assert!((trip.return_pct.unwrap() - 0.0985).abs() < 1e-6);
+        assert!(result.open_positions.is_empty());
+    }
+
+    #[test]
+    fn aggregates_scale_in_fills_into_one_weighted_entry() {
+        let result = pair_trades(&[
+            buy(50.0, 100.0, 10),
+            buy(50.0, 110.0, 20),
+            sell(100.0, 120.0, 30),
+        ]);
+        assert_eq!(result.trips.len(), 1);
+        let trip = &result.trips[0];
+        assert_eq!(trip.quantity, 100.0);
+        assert_eq!(trip.avg_entry, 105.0);
+        assert_eq!(trip.avg_exit, Some(120.0));
+        assert_eq!(trip.entry_fills.len(), 2);
+        assert!((trip.realized_pnl.unwrap() - 1500.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn folds_scale_out_exits_into_one_trip_with_two_exit_legs() {
+        let result = pair_trades(&[
+            buy(100.0, 100.0, 10),
+            sell(50.0, 110.0, 20),
+            sell(50.0, 120.0, 30),
+        ]);
+        assert_eq!(result.trips.len(), 1);
+        let trip = &result.trips[0];
+        assert_eq!(trip.exit_fills.len(), 2);
+        assert_eq!(trip.quantity, 100.0);
+        assert_eq!(trip.avg_exit, Some(115.0));
+        assert_eq!(trip.exit_ts, Some(JAN1 + 1800));
+        assert!((trip.realized_pnl.unwrap() - 1500.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn leaves_a_partially_closed_position_open_charging_only_the_closed_share_of_entry_costs() {
+        let result = pair_trades(&[
+            fill(OrderSide::Buy, 100.0, 100.0, 10, 20.0, "TCS"),
+            fill(OrderSide::Sell, 40.0, 110.0, 60, 4.0, "TCS"),
+        ]);
+        let trip = &result.trips[0];
+        assert_eq!(trip.status, RoundTripStatus::Open);
+        assert_eq!(trip.exit_reason, RoundTripExitReason::OpenAtEnd);
+        assert_eq!(trip.open_quantity, 60.0);
+        assert_eq!(trip.exit_fills.len(), 1);
+        // 40 closed: (110-100) * 40 - (20 * 40/100 + 4)
+        assert!((trip.realized_pnl.unwrap() - (400.0 - 12.0)).abs() < 1e-6);
+        assert_eq!(
+            result.open_positions,
+            vec![OpenPosition {
+                instrument: "TCS.NSE".into(),
+                direction: Direction::Long,
+                quantity: 60.0,
+                avg_price: 100.0,
+                since_ts: JAN1 + 600,
+            }]
+        );
+    }
+
+    #[test]
+    fn treats_a_reversal_through_flat_as_two_trips_the_second_derived_as_a_flip() {
+        let result = pair_trades(&[buy(100.0, 100.0, 10), sell(150.0, 110.0, 20)]);
+        assert_eq!(result.trips.len(), 2);
+        assert_eq!(result.trips[0].direction, Direction::Long);
+        assert_eq!(result.trips[0].status, RoundTripStatus::Closed);
+        assert_eq!(result.trips[0].quantity, 100.0);
+        assert_eq!(result.trips[0].exit_reason, RoundTripExitReason::Flipped);
+        assert_eq!(result.trips[1].direction, Direction::Short);
+        assert_eq!(result.trips[1].status, RoundTripStatus::Open);
+        assert_eq!(result.trips[1].quantity, 50.0);
+        assert_eq!(result.trips[1].avg_entry, 110.0);
+        assert_eq!(result.trips[1].open_quantity, 50.0);
+        assert_eq!(result.trips[1].realized_pnl, None);
+        assert_eq!(result.open_positions.len(), 1);
+    }
+
+    #[test]
+    fn pairs_a_short_round_trip_with_the_short_sign_on_pnl() {
+        let result = pair_trades(&[sell(100.0, 200.0, 10), buy(100.0, 180.0, 40)]);
+        let trip = &result.trips[0];
+        assert_eq!(trip.direction, Direction::Short);
+        assert_eq!(trip.avg_entry, 200.0);
+        assert_eq!(trip.avg_exit, Some(180.0));
+        assert!((trip.realized_pnl.unwrap() - 2000.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn keeps_instruments_independent() {
+        let result = pair_trades(&[
+            fill(OrderSide::Buy, 10.0, 100.0, 10, 0.0, "TCS"),
+            fill(OrderSide::Buy, 20.0, 50.0, 11, 0.0, "INFY"),
+            fill(OrderSide::Sell, 10.0, 120.0, 40, 0.0, "TCS"),
+        ]);
+        assert_eq!(result.trips.len(), 2);
+        let mut instruments: Vec<&str> = result
+            .trips
+            .iter()
+            .map(|trip| trip.instrument.as_str())
+            .collect();
+        instruments.sort_unstable();
+        assert_eq!(instruments, ["INFY.NSE", "TCS.NSE"]);
+        let tcs = result.trips.iter().find(|t| t.instrument == "TCS.NSE").unwrap();
+        let infy = result.trips.iter().find(|t| t.instrument == "INFY.NSE").unwrap();
+        assert_eq!(tcs.status, RoundTripStatus::Closed);
+        assert_eq!(infy.status, RoundTripStatus::Open);
+    }
+
+    #[test]
+    fn numbers_trips_in_entry_order_and_reports_nothing_for_an_empty_journal() {
+        let result = pair_trades(&[buy(1.0, 100.0, 30), buy(1.0, 100.0, 10), sell(1.0, 110.0, 15)]);
+        let ids: Vec<&str> = result.trips.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(ids, ["trip-1", "trip-2"]);
+        assert!(pair_trades(&[]).trips.is_empty());
+        assert_eq!(pair_trades(&[]).dropped, 0);
+    }
+
+    // --- markersFromPairing -----------------------------------------------------
+
+    #[test]
+    fn places_an_entry_marker_per_entry_leg_and_an_exit_marker_per_exit_leg() {
+        let result = pair_trades(&[
+            buy(100.0, 100.0, 10),
+            sell(60.0, 110.0, 20),
+            sell(40.0, 120.0, 30),
+        ]);
+        let markers = markers_from_pairing(&result);
+        assert_eq!(
+            markers
+                .iter()
+                .map(|m| (m.kind, m.side, m.ts, m.quantity))
+                .collect::<Vec<_>>(),
+            vec![
+                (TradeMarkerKind::Entry, FillSide::Buy, JAN1 + 600, 100.0),
+                (TradeMarkerKind::Exit, FillSide::Sell, JAN1 + 1200, 60.0),
+                (TradeMarkerKind::Exit, FillSide::Sell, JAN1 + 1800, 40.0),
+            ]
+        );
+        assert!(markers.iter().all(|m| !m.derived));
+    }
+
+    #[test]
+    fn adds_one_clearly_derived_marker_for_a_position_still_open_at_the_run_end() {
+        let open = pair_trades(&[buy(50.0, 100.0, 10)]);
+        let markers = markers_from_pairing(&open);
+        // The fill is still marked as an entry; the open tail is added on top
+        // and is the only derived one.
+        assert_eq!(
+            markers.iter().map(|m| m.kind).collect::<Vec<_>>(),
+            vec![TradeMarkerKind::Entry, TradeMarkerKind::Open]
+        );
+        assert!(!markers[0].derived);
+        assert_eq!(markers[1].kind, TradeMarkerKind::Open);
+        assert!(markers[1].derived);
+        assert_eq!(markers[1].quantity, 50.0);
+        assert_eq!(markers[1].price, 100.0);
+        assert_eq!(markers[1].ts, JAN1 + 600);
+    }
+
+    #[test]
+    fn gives_every_marker_a_stable_key_its_round_trip_can_be_found_by() {
+        let result = pair_trades(&[
+            buy(100.0, 100.0, 10),
+            sell(60.0, 110.0, 20),
+            sell(40.0, 120.0, 30),
+        ]);
+        let markers = markers_from_pairing(&result);
+        let mut keys: Vec<&str> = markers.iter().map(|m| m.key.as_str()).collect();
+        keys.sort_unstable();
+        let unique = keys.len();
+        keys.dedup();
+        assert_eq!(keys.len(), unique);
+        assert_eq!(trip_for_marker(&result, Some(&markers[1].trip_id)).unwrap().id, "trip-1");
+        assert!(trip_for_marker(&result, Some("trip-99")).is_none());
+        assert!(trip_for_marker(&result, None).is_none());
+    }
+
+    // --- journal fixtures → markers on bars -------------------------------------
+    //
+    // Phase 7 acceptance criterion: buy/sell markers land on the correct *bar*
+    // timestamps. Journal fixtures are paired into round trips, converted to
+    // markers and snapped onto a real 5-minute bar series whose timestamps are
+    // skewed a few seconds off the fill instants — as a venue reports them.
+
+    #[test]
+    fn snapped_markers_land_on_the_bar_their_fill_belongs_to() {
+        use crate::sim::chart_data::{marker_tolerance_sec, snap_ts, ChartBar};
+        // 2024-01-02, 09:15 IST (the NSE session open) is 03:45 UTC.
+        let session_open = JAN1 + 3 * 3600 + 45 * 60;
+        let bar_times: Vec<i64> = [0, 5, 10, 15, 20, 25].iter().map(|m| session_open + m * 60).collect();
+        let bars: Vec<ChartBar> = bar_times
+            .iter()
+            .enumerate()
+            .map(|(index, &time)| ChartBar {
+                time,
+                open: 100.0 + index as f64,
+                high: 101.0 + index as f64,
+                low: 99.0 + index as f64,
+                close: 100.5 + index as f64,
+                volume: 1_000.0,
+            })
+            .collect();
+
+        let trade_at = |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
+            let seconds = bar_times[bar_index] + skew_sec;
+            Trade::new(
+                OrderId::new(format!("o-{:?}-{}", side, bar_index)),
+                InstrumentId::new("TCS", Exchange::new("NSE")),
+                side,
+                quantity,
+                price,
+                Currency::Inr,
+                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
+                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
+            )
+        };
+
+        // A long entered on the first bar and scaled out across two later bars.
+        let trades = [
+            trade_at(OrderSide::Buy, 100.0, 100.0, 0, 2),
+            trade_at(OrderSide::Sell, 60.0, 110.0, 3, 4),
+            trade_at(OrderSide::Sell, 40.0, 120.0, 5, 1),
+        ];
+        let tolerance = marker_tolerance_sec("5m");
+        let markers = markers_from_pairing(&pair_trades(&trades));
+        let times: Vec<i64> = snap_ts(
+            &markers.iter().map(|m| m.ts).collect::<Vec<_>>(),
+            &bars,
+            tolerance,
+        );
+
+        // Every marker lands exactly on a bar timestamp.
+        assert!(!times.is_empty());
+        assert!(times.iter().all(|ts| bar_times.contains(ts)));
+        // Each entry/exit keeps its bar, side intact.
+        let kinds: Vec<(TradeMarkerKind, FillSide, i64)> = markers
+            .iter()
+            .enumerate()
+            .map(|(index, m)| (m.kind, m.side, times[index]))
+            .collect();
+        assert_eq!(
+            kinds,
+            vec![
+                (TradeMarkerKind::Entry, FillSide::Buy, bar_times[0]),
+                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[3]),
+                (TradeMarkerKind::Exit, FillSide::Sell, bar_times[5]),
+            ]
+        );
+
+        // A fill with no skew still lands.
+        let exact = markers_from_pairing(&pair_trades(&[trade_at(OrderSide::Buy, 10.0, 100.0, 2, 0)]));
+        let exact_times = snap_ts(&[exact[0].ts], &bars, tolerance);
+        assert_eq!(exact_times, vec![bar_times[2]]);
+    }
+
+    #[test]
+    fn golden_journal_pairs_into_three_trips_like_the_fe_fixture() {
+        // The analytics.test.ts fixture journal (two winners, one loser),
+        // pausing here to pin pairing on it: +100−2, −50−2, +50−2.
+        let trades = vec![
+            fill(OrderSide::Buy, 10.0, 100.0, 10, 1.0, "TCS"),
+            fill(OrderSide::Sell, 10.0, 110.0, 10 + 10 * 1440, 1.0, "TCS"),
+            fill(OrderSide::Buy, 10.0, 100.0, 10 + 31 * 1440, 1.0, "TCS"),
+            fill(OrderSide::Sell, 10.0, 95.0, 10 + 40 * 1440, 1.0, "TCS"),
+            fill(OrderSide::Buy, 10.0, 100.0, 10 + 60 * 1440, 1.0, "TCS"),
+            fill(OrderSide::Sell, 10.0, 105.0, 10 + 70 * 1440, 1.0, "TCS"),
+        ];
+        let result = pair_trades(&trades);
+        let pnl: Vec<f64> = result.trips.iter().map(|t| t.realized_pnl.unwrap()).collect();
+        assert_eq!(pnl.len(), 3);
+        assert!((pnl[0] - 98.0).abs() < 1e-6);
+        assert!((pnl[1] + 52.0).abs() < 1e-6);
+        assert!((pnl[2] - 48.0).abs() < 1e-6);
+    }
+}

@@ -1,0 +1,69 @@
+{
+  "strategies": [
+    {
+      "id": "sha256:da444fa65e98325f2f440ca450eeddf0aa93b88a412589e5b0d6f3666c790fd0",
+      "ir": {
+        "schema_version": 4,
+        "strategy_api_version": "1.0.0",
+        "manifest": {
+          "api_version": "1.0.0",
+          "name": "sma",
+          "source_hash": "sha256:abc",
+          "universe": {
+            "explicit": [
+              {
+                "symbol": "TCS",
+                "exchange": "NSE"
+              }
+            ]
+          },
+          "subscriptions": {
+            "instruments": [
+              {
+                "symbol": "TCS",
+                "exchange": "NSE"
+              }
+            ],
+            "quotes": false,
+            "trades": false
+          },
+          "driving_timeframe": {
+            "interval": 5,
+            "aggregation": "minute"
+          },
+          "warmup_bars": 20
+        },
+        "universe": {
+          "named": null,
+          "instruments": [
+            {
+              "symbol": "TCS",
+              "exchange": "NSE"
+            }
+          ]
+        },
+        "subscriptions": {
+          "bars": [
+            {
+              "symbol": "TCS",
+              "exchange": "NSE"
+            }
+          ],
+          "quotes": [],
+          "trades": []
+        },
+        "driving_timeframe": {
+          "interval": 5,
+          "aggregation": "minute"
+        },
+        "timeframes": [
+          {
+            "interval": 5,
+            "aggregation": "minute"
+          }
+        ],
+        "warmup_bars": 20
+      }
+    }
+  ]
+}

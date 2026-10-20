@@ -347,75 +347,140 @@
   filter: brightness(1.06);
 }
 
-.header-bar__avatar {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--primary-0);
-  color: var(--primary-8);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-/* --- Account menu -------------------------------------------------------- */
-.user-menu {
-  position: relative;
-}
-
-.user-menu__trigger {
+/* --- Trading mode indicator (PAPER | LIVE) ------------------------------- */
+/* The header's togglable book indicator: segmented pill, amber dot for paper,
+   pulsing green for live. Lives in `hf-trading-mode-toggle` (ui-core). */
+.hf-trading-mode-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 36px;
-  padding: 0 6px;
+  height: 32px;
+  padding: 3px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.hf-trading-mode-toggle:focus-within {
+  outline: 2px solid var(--primary-1);
+  outline-offset: 2px;
+}
+
+.hf-trading-mode-toggle__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--shade-6);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
 }
 
-.user-menu__trigger:hover {
+.hf-trading-mode-toggle__option:hover {
+  color: var(--ink);
   background: var(--shade-0);
 }
 
-.user-menu__panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 60;
-  min-width: 232px;
-  padding: 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--darker-background-color);
-  box-shadow: 0 16px 56px rgba(25, 36, 52, 0.12);
+.hf-trading-mode-toggle__option.is-active.hf-trading-mode-toggle__option--paper {
+  background: color-mix(in srgb, var(--warning-color) 14%, transparent);
+  color: var(--warning-color);
 }
 
-.user-menu__head {
+.hf-trading-mode-toggle__option.is-active.hf-trading-mode-toggle__option--live {
+  background: color-mix(in srgb, var(--pnl-gain) 14%, transparent);
+  color: var(--pnl-gain);
+}
+
+.hf-trading-mode-toggle__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--shade-2);
+}
+
+.hf-trading-mode-toggle__option--paper .hf-trading-mode-toggle__dot {
+  background: var(--warning-color);
+}
+
+.hf-trading-mode-toggle__option.is-active.hf-trading-mode-toggle__option--paper .hf-trading-mode-toggle__dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning-color) 22%, transparent);
+}
+
+.hf-trading-mode-toggle__option--live .hf-trading-mode-toggle__dot {
+  background: var(--pnl-gain);
+}
+
+.hf-trading-mode-toggle__option.is-active.hf-trading-mode-toggle__option--live .hf-trading-mode-toggle__dot {
+  animation: hf-tm-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hf-tm-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pnl-gain) 45%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--pnl-gain) 28%, transparent); }
+}
+
+.hf-trading-mode-toggle__label {
+  line-height: 1;
+}
+
+/* --- Account menu -------------------------------------------------------- */
+/* The bottom-left rail avatar is the single account entry; its popover opens
+   upward from the rail column. Identity header + destinations + sign out. */
+.nav-rail__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary-0);
+  color: var(--primary-8);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+
+.nav-rail__avatar--lg {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.rail-user-menu {
+  min-width: 232px;
+}
+
+.rail-user-menu__head {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 10px 12px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--border-color);
 }
 
-.user-menu__identity {
+.rail-user-menu__identity {
   min-width: 0;
 }
 
-.user-menu__name {
+.rail-user-menu__name {
+  overflow: hidden;
   font-size: 13px;
   font-weight: 600;
   color: var(--shade-9);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.user-menu__email {
+.rail-user-menu__email {
   overflow: hidden;
   font-size: 11px;
   color: var(--shade-5);
@@ -423,42 +488,8 @@
   white-space: nowrap;
 }
 
-.user-menu__item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--shade-7);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.user-menu__item a {
-  width: 100%;
-  color: inherit;
-  text-decoration: none;
-}
-
-.user-menu__item:hover {
-  background: var(--shade-0);
-  color: var(--shade-9);
-}
-
-.user-menu__item--danger {
+.rail-user-menu__item--danger {
   color: var(--pnl-loss);
-}
-
-.user-menu__sep {
-  height: 1px;
-  margin: 6px 0;
-  background: var(--border-color);
 }
 
 /* --- Theme picker -------------------------------------------------------- */

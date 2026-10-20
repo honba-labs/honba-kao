@@ -9,10 +9,23 @@
 //! drift. Every response is enveloped (`honba_messages::ResponseEnvelope`;
 //! API `1.0.0`, schema `4`), and an unknown version axis is rejected here
 //! rather than decoded with the wrong shape.
+//! `POST /orders` uses; do not write bare-JSON decodes.
+//!
+//! Simulator surface (HBD-2026-DES-005 P0): `get_bars`, `get_strategies`,
+//! `post_strategies`, `post_backtests`, `get_backtest` and
+//! `get_backtest_journal` mirror the `honba-ya` runs/market/strategies routes,
+//! all through the same enveloped decode path. The run's event tail is SSE
+//! (`GET /backtests/{id}/events`); the transport choice is
+//! **`web_sys::EventSource`** (see `events.rs`): the server streams
+//! `StreamFrame`s as `data:` JSON without per-request auth headers, so the
+//! browser-native `EventSource` keeps reconnect semantics for free and needs
+//! no fetch-stream parsing. Application versions of the same decision live in
+//! `events.rs`' module doc.
 use gloo_net::http::{Request, RequestBuilder};
 use honba_api::{
-    DepthResponse, OrdersRequest, OrdersResponse, PortfolioPositionsResponse, QuotesResponse,
-    TradingStateChange, TradingStateRequest, TradingStateResponse,
+    BacktestRequest, BacktestResponse, BarsResponse, CompiledStrategy, DepthResponse,
+    OrdersRequest, OrdersResponse, PortfolioPositionsResponse, QuotesResponse, StrategiesResponse,
+    TradesResponse, TradingStateChange, TradingStateRequest, TradingStateResponse,
 };
 use honba_entities::PortfolioPosition;
 use honba_messages::{Order, QuoteTick, ResponseEnvelope, TradingState};
@@ -23,14 +36,30 @@ use thiserror::Error;
 /// responses into view models without taking the schema crates themselves.
 pub mod wire {
     pub use crate::StatusAck;
-    pub use honba_api::{OrdersRequest, OrdersResponse};
-    pub use honba_entities::{PortfolioPosition, PositionSide};
+    pub use honba_analytics::ValidationBlock;
+    pub use honba_api::{
+        BacktestEventsQuery, BacktestMetrics, BacktestRequest, BacktestResponse, BarsQuery,
+        BarsResponse, CompiledStrategy, OrdersRequest, OrdersResponse, DEFAULT_BAR_SPEC,
+        DEFAULT_INITIAL_CAPITAL, FILL_MODELS, MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS,
+        RunStatus, StreamFrame, StrategiesResponse, TradesResponse,
+    };
+    pub use honba_entities::{Currency, Money as WireMoney, PortfolioPosition, PositionSide, Trade};
+    pub use honba_messages::Exchange;
     pub use honba_messages::{
-        Exchange as WireExchange, InstrumentId, Order as WireOrder, OrderSide as WireOrderSide,
+        Bar, BarAggregation, BarSpecification, BarType, ErrorCode as WireErrorCode, ErrorCode,
+        ErrorDetail, Event as WireEvent, Event, Exchange as WireExchange, InstrumentId,
+        Message as WireMessage, Message, OrderId, PriceType, QuoteTick as WireQuoteTick,
+        Order as WireOrder, OrderSide as WireOrderSide,
         OrderStatus as WireOrderStatus, OrderStatus, OrderType as WireOrderType, OrderType,
-        Product as WireProduct, TimeInForce as WireTimeInForce, TradingState as WireTradingState,
+        Product as WireProduct, TimeInForce as WireTimeInForce,
+        TradingState as WireTradingState, UnixNanos as WireUnixNanos,
     };
 }
+
+/// The simulator/event-stream surface (SSE), feature-gated: only the wasm app
+/// opens an `EventSource`; host tests decode frames from fixtures instead.
+#[cfg(target_arch = "wasm32")]
+pub mod events;
 
 /// Semantic version of the API surface the client decodes.
 pub const API_VERSION: &str = honba_messages::API_VERSION;
@@ -45,7 +74,7 @@ pub struct StatusAck {
     pub status: String,
 }
 
-#[derive(Debug, Error)]
+#[derive(Clone, Debug, Error)]
 pub enum ClientError {
     #[error("network: {0}")]
     Network(String),
@@ -266,6 +295,85 @@ impl ApiClient {
         if let Some(levels) = levels {
             path.push_str(&format!("?depth={levels}"));
         }
+        self.send(Request::get, &path, None).await
+    }
+
+    // -- Simulator (HBD-2026-DES-005 P0) -------------------------------------
+
+    /// `GET /bars/{id}?tf=&from=&to=` — historical bars for one instrument,
+    /// ascending `ts_event`. `from`/`to` are `YYYY-MM-DD` (or RFC3339); `tf`
+    /// matches the server's `parse_timeframe` (`5m`, `1d`, …).
+    pub async fn get_bars(
+        &self,
+        id: &str,
+        tf: Option<&str>,
+        from: Option<&str>,
+        to: Option<&str>,
+    ) -> Result<BarsResponse, ClientError> {
+        let mut path = format!("/bars/{}", crate::encode_query(id));
+        let mut first = true;
+        for (key, value) in [("tf", tf), ("from", from), ("to", to)] {
+            if let Some(value) = value {
+                path.push(if first { '?' } else { '&' });
+                path.push_str(key);
+                path.push('=');
+                path.push_str(&crate::encode_query(value));
+                first = false;
+            }
+        }
+        self.send(Request::get, &path, None).await
+    }
+
+    /// `GET /strategies` — every strategy compiled by this server process,
+    /// ordered by content id.
+    pub async fn get_strategies(&self) -> Result<StrategiesResponse, ClientError> {
+        self.send(Request::get, "/strategies", None).await
+    }
+
+    /// `POST /strategies` — verify and compile one strategy manifest, keeping
+    /// it under a content id. The manifest is passed as raw JSON (the graph
+    /// shape authored in the strategy studio); source code is rejected by the
+    /// server, so nothing else is ever sent.
+    pub async fn post_strategies(
+        &self,
+        manifest: &serde_json::Value,
+    ) -> Result<CompiledStrategy, ClientError> {
+        let request = honba_api::StrategiesRequest {
+            manifest: serde_json::from_value(manifest.clone())
+                .map_err(|e| ClientError::Decode(format!("manifest: {e}")))?,
+        };
+        let body =
+            serde_json::to_string(&request).map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::post, "/strategies", Some(body)).await
+    }
+
+    /// `POST /backtests` — submit a run; the answer is the initial
+    /// `BacktestResponse` (often `pending`, never awaited to completion here —
+    /// the caller polls `get_backtest`).
+    ///
+    /// The request is serialized from the crate's own struct, so the server's
+    /// `deny_unknown_fields` never sees a typo.
+    pub async fn post_backtests(
+        &self,
+        request: &BacktestRequest,
+    ) -> Result<BacktestResponse, ClientError> {
+        let body =
+            serde_json::to_string(request).map_err(|e| ClientError::Decode(e.to_string()))?;
+        self.send(Request::post, "/backtests", Some(body)).await
+    }
+
+    /// `GET /backtests/{id}` — the run's current lifecycle state and, once
+    /// `completed`, its metrics/validation block.
+    pub async fn get_backtest(&self, id: &str) -> Result<BacktestResponse, ClientError> {
+        let path = format!("/backtests/{}", crate::encode_query(id));
+        self.send(Request::get, &path, None).await
+    }
+
+    /// `GET /backtests/{id}/journal` — the run's realized fills as a plain
+    /// JSON `TradesResponse`. (The on-disk journal is NDJSON; the server maps
+    /// it before answering.)
+    pub async fn get_backtest_journal(&self, id: &str) -> Result<TradesResponse, ClientError> {
+        let path = format!("/backtests/{}/journal", crate::encode_query(id));
         self.send(Request::get, &path, None).await
     }
 }

@@ -5,10 +5,14 @@
 //! content region, the site footer, and the login-required overlay whose open
 //! state is owned here. Pages like the landing screen compose the chrome
 //! themselves with `show_rail = false`.
+//!
+//! The chrome also owns the palette-studio modal so the rail's account cluster
+//! can summon it from any page.
 
 use leptos::prelude::*;
 
 use crate::components::common::{HeaderBar, LoginRequiredOverlay, NavRail, SiteFooter};
+use crate::components::modals::PaletteStudio;
 use crate::router::paths::Page;
 
 #[component]
@@ -30,6 +34,9 @@ pub fn AppChrome(
         login_open.set(true);
     });
 
+    // Chrome-level palette studio; the rail's account cluster opens it.
+    let palette_open = RwSignal::new(false);
+
     view! {
         <div
             class=if show_rail {
@@ -42,11 +49,19 @@ pub fn AppChrome(
             {show_rail
                 .then(|| {
                     view! {
-                        <NavRail current_page=current_page on_login_required=on_login_required />
+                        <NavRail
+                            current_page=current_page
+                            on_login_required=on_login_required
+                            palette_open=palette_open
+                        />
                     }
                 })}
             <main class="app-main">{children()}</main>
             {show_footer.then(|| view! { <SiteFooter /> })}
+            <PaletteStudio
+                is_open=Signal::derive(move || palette_open.get())
+                on_close=Callback::new(move |_| palette_open.set(false))
+            />
             <LoginRequiredOverlay is_open=login_open feature=feature />
         </div>
     }

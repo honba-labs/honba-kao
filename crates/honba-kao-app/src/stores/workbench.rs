@@ -18,7 +18,6 @@ use crate::api::http::client;
 use crate::components::charts::openalgo_chart::IndicatorDef;
 use crate::data::demo_data;
 use crate::data::symbol_search;
-use crate::types::Bar;
 
 // ---------------------------------------------------------------------------
 // Layout + chart pane configuration
@@ -728,37 +727,6 @@ pub fn instrument_price(symbol: &str) -> f64 {
         .iter()
         .find(|quote| quote.symbol.eq_ignore_ascii_case(symbol))
         .map_or(1000.0, |quote| quote.last)
-}
-
-/// Deterministic OHLCV bars for one pane, ending (within a tick) on the
-/// instrument's demo LTP so charts, tickets and depth agree.
-pub fn pane_bars(symbol: &str, timeframe: Timeframe) -> Vec<Bar> {
-    let price = instrument_price(symbol);
-    let mut bars = demo_data::demo_ohlc_bars(price, 360, timeframe.interval_seconds());
-
-    if let Some(last_close) = bars.last().map(|bar| bar.close)
-        && last_close.abs() > f64::EPSILON
-    {
-        let scale = price / last_close;
-        for bar in &mut bars {
-            bar.open = (bar.open * scale).round_to_paise();
-            bar.high = (bar.high * scale).round_to_paise();
-            bar.low = (bar.low * scale).round_to_paise();
-            bar.close = (bar.close * scale).round_to_paise();
-        }
-    }
-
-    bars
-}
-
-trait RoundPaise {
-    fn round_to_paise(self) -> f64;
-}
-
-impl RoundPaise for f64 {
-    fn round_to_paise(self) -> f64 {
-        (self * 100.0).round() / 100.0
-    }
 }
 
 // ---------------------------------------------------------------------------

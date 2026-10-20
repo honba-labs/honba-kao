@@ -1,21 +1,23 @@
-//! Top application bar: brand → spacer → actions → avatar menu.
-//! Navigation lives in the side icon rail (`nav_rail.rs`), so the bar only
-//! carries the brand block, the theme/language controls and account actions.
+//! Top application bar: brand → spacer → actions.
+//! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
+//! cluster is also rail-owned (bottom-left), so the bar carries only the brand
+//! block, the theme/language controls and the trading-mode indicator.
 //!
 //! Behaviours:
 //!   * sticky, and it lifts with a soft shadow once the page scrolls;
 //!   * transparent over the landing hero, solid once scrolled;
-//!   * account actions live in one avatar menu instead of separate buttons.
+//!   * the PAPER | LIVE indicator toggles the shared trading-mode store.
 
 use leptos::prelude::*;
 use leptos_router::components::A;
-use leptos_router::hooks::use_navigate;
 use wasm_bindgen::JsCast;
 
+use honba_kao_ui_core::{HfButton, HfButtonVariant, HfIconButton, HfTradingModeToggle, HfTradingModeType};
+
 use crate::components::common::BrandLogo;
-use crate::components::modals::PaletteStudio;
 use crate::contexts::{use_auth, use_language};
 use crate::router::paths::{Page, ROUTES};
+use crate::stores::{TradingMode, trading_mode::use_trading_mode};
 use crate::theme::{Mode, Preference, THEMES, ThemeContext};
 
 #[component]
@@ -23,15 +25,26 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
     let auth = use_auth();
     let language = use_language();
     let theme = expect_context::<ThemeContext>();
+    let trading = use_trading_mode();
 
     let is_theme_open = RwSignal::new(false);
-    let is_palette_open = RwSignal::new(false);
     let scrolled = RwSignal::new(false);
 
     install_scroll_listener(scrolled);
 
     // Translucent over the marketing hero, solid as soon as the page moves.
     let transparent = Memo::new(move |_| current_page == Page::Home && !scrolled.get());
+
+    // The store's TradingMode mapped onto the indicator's wire enum.
+    let widget_mode = Signal::derive(move || match trading.mode().get() {
+        TradingMode::Paper => HfTradingModeType::Sandbox,
+        TradingMode::Live => HfTradingModeType::Live,
+    });
+    let set_widget_mode =
+        Callback::new(move |next: HfTradingModeType| match next {
+            HfTradingModeType::Sandbox => trading.set(TradingMode::Paper),
+            HfTradingModeType::Live => trading.set(TradingMode::Live),
+        });
 
     view! {
         <header
@@ -57,53 +70,21 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
 
             <div class="header-bar__actions">
                 <div class="theme-picker">
-                    <button
-                        class="icon-button"
-                        title="Theme"
-                        aria-label="Theme"
-                        aria-haspopup="menu"
-                        aria-expanded=move || is_theme_open.get().to_string()
-                        on:click=move |_| is_theme_open.update(|open| *open = !*open)
-                    >
-                        {move || {
+                    <HfIconButton
+                        icon=Signal::derive(move || {
                             if theme.is_dark() {
-                                view! {
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                                    </svg>
-                                }
-                                    .into_any()
+                                honba_kao_ui_core::icons::outline::moon()
                             } else {
-                                view! {
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <circle cx="12" cy="12" r="4" />
-                                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                                    </svg>
-                                }
-                                    .into_any()
+                                honba_kao_ui_core::icons::outline::sun()
                             }
-                        }}
-                    </button>
+                        })
+                        size=16
+                        title="Theme"
+                        aria_expanded=Signal::derive(move || is_theme_open.get())
+                        on_click=Callback::new(move |_| {
+                            is_theme_open.update(|open| *open = !*open)
+                        })
+                    />
 
                     {move || {
                         is_theme_open
@@ -111,23 +92,20 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
                             .then(|| {
                                 view! {
                                     <div class="theme-menu" role="menu" aria-label="Theme">
-                                        <button
-                                            class=move || {
-                                                if theme.preference.get() == Preference::System {
-                                                    "theme-menu__item theme-menu__item--active"
-                                                } else {
-                                                    "theme-menu__item"
-                                                }
-                                            }
+                                        <HfButton
+                                            class="theme-menu__item"
                                             role="menuitemradio"
-                                            on:click=move |_| {
+                                            active=Signal::derive(move || {
+                                                theme.preference.get() == Preference::System
+                                            })
+                                            on_click=Callback::new(move |_| {
                                                 theme.set(Preference::System);
                                                 is_theme_open.set(false);
-                                            }
+                                            })
                                         >
                                             <span class="theme-menu__swatch theme-menu__swatch--auto" />
                                             <span class="theme-menu__label">"Follow system"</span>
-                                        </button>
+                                        </HfButton>
 
                                         {[Mode::Dark, Mode::Light]
                                             .into_iter()
@@ -145,23 +123,20 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
                                                         .map(|spec| {
                                                             let id = spec.id;
                                                             view! {
-                                                                <button
-                                                                    class=move || {
-                                                                        if theme.current().id == id {
-                                                                            "theme-menu__item theme-menu__item--active"
-                                                                        } else {
-                                                                            "theme-menu__item"
-                                                                        }
-                                                                    }
+                                                                <HfButton
+                                                                    class="theme-menu__item"
                                                                     role="menuitemradio"
-                                                                    on:click=move |_| {
+                                                                    active=Signal::derive(move || {
+                                                                        theme.current().id == id
+                                                                    })
+                                                                    on_click=Callback::new(move |_| {
                                                                         theme.set(Preference::Theme(id));
                                                                         is_theme_open.set(false);
-                                                                    }
+                                                                    })
                                                                 >
                                                                     <span class="theme-menu__swatch" data-theme=id />
                                                                     <span class="theme-menu__label">{spec.label}</span>
-                                                                </button>
+                                                                </HfButton>
                                                             }
                                                         })
                                                         .collect_view()}
@@ -174,17 +149,27 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
                     }}
                 </div>
 
-                <button
-                    class="icon-button header-bar__lang"
+                <HfButton
+                    variant=HfButtonVariant::Ghost
+                    class="header-bar__lang"
                     title="Language"
-                    aria-label="Language"
-                    on:click=move |_| language.toggle()
+                    on_click=Callback::new(move |_| language.toggle())
                 >
                     {move || language.language.get().label()}
-                </button>
+                </HfButton>
 
                 {move || if auth.is_authenticated() {
-                    view! { <UserMenu palette_open=is_palette_open /> }.into_any()
+                    // The single user entry point is the rail's bottom-left
+                    // account cluster (nav_rail.rs) — the header hosts only
+                    // the togglable paper/live book indicator.
+                    view! {
+                        <HfTradingModeToggle
+                            mode=widget_mode
+                            on_change=set_widget_mode
+                            class="header-bar__trading-mode"
+                        />
+                    }
+                        .into_any()
                 } else {
                     view! {
                         <span class="header-bar__cta">
@@ -194,106 +179,7 @@ pub fn HeaderBar(#[prop(default = Page::Home)] current_page: Page) -> impl IntoV
                         .into_any()
                 }}
             </div>
-
-            <PaletteStudio is_open=is_palette_open />
         </header>
-    }
-}
-
-/// Account menu: avatar trigger plus a panel with identity, settings and exit.
-#[component]
-fn UserMenu(palette_open: RwSignal<bool>) -> impl IntoView {
-    let auth = use_auth();
-    // Stored rather than captured so the menu view stays `FnMut`.
-    let navigate = StoredValue::new(use_navigate());
-    let open = RwSignal::new(false);
-
-    view! {
-        <div class="user-menu">
-            <button
-                class="user-menu__trigger"
-                aria-haspopup="menu"
-                aria-expanded=move || open.get().to_string()
-                aria-label="Account menu"
-                on:click=move |_| open.update(|value| *value = !*value)
-            >
-                <span class="header-bar__avatar">
-                    {move || crate::utils::text::initials(&auth.display_name())}
-                </span>
-                <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="m6 9 6 6 6-6" />
-                </svg>
-            </button>
-
-            {move || {
-                open.get()
-                    .then(|| {
-                        view! {
-                            <div class="user-menu__panel" role="menu">
-                                <div class="user-menu__head">
-                                    <span class="header-bar__avatar">
-                                        {crate::utils::text::initials(&auth.display_name())}
-                                    </span>
-                                    <div class="user-menu__identity">
-                                        <div class="user-menu__name">{move || auth.display_name()}</div>
-                                        <div class="user-menu__email">
-                                            {move || {
-                                                auth.user
-                                                    .get()
-                                                    .map(|user| user.email)
-                                                    .unwrap_or_else(|| "signed out".to_string())
-                                            }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="user-menu__item" on:click=move |_| open.set(false)>
-                                    <A href=ROUTES::SETTINGS>"Settings"</A>
-                                </div>
-                                <div class="user-menu__item" on:click=move |_| open.set(false)>
-                                    <A href=ROUTES::PORTFOLIO>"Portfolio"</A>
-                                </div>
-
-                                <button
-                                    class="user-menu__item"
-                                    on:click=move |_| {
-                                        open.set(false);
-                                        palette_open.set(true);
-                                    }
-                                >
-                                    "Palette studio"
-                                </button>
-
-                                <div class="user-menu__sep" />
-
-                                <button
-                                    class="user-menu__item user-menu__item--danger"
-                                    on:click=move |_| {
-                                        auth.logout();
-                                        open.set(false);
-                                        navigate
-                                            .with_value(|nav| {
-                                                nav(ROUTES::HOME, Default::default());
-                                            });
-                                    }
-                                >
-                                    "Sign out"
-                                </button>
-                            </div>
-                        }
-                    })
-            }}
-        </div>
     }
 }
 

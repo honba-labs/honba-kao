@@ -1,0 +1,70 @@
+{
+  "trades": [
+    {
+      "order_id": "BK-1-1700002205000000000",
+      "instrument_id": {
+        "symbol": "TCS",
+        "exchange": "NSE"
+      },
+      "side": "buy",
+      "quantity": 10.0,
+      "price": 22010.0,
+      "costs": {
+        "amount": 0,
+        "currency": "INR"
+      },
+      "ts_event": {
+        "iso": "2023-11-14T22:50:05.000000000Z",
+        "unix_nanos": "1700002205000000000"
+      },
+      "ts_init": {
+        "iso": "2023-11-14T22:50:05.000000000Z",
+        "unix_nanos": "1700002205000000000"
+      }
+    },
+    {
+      "order_id": "BK-1-1700006705000000000",
+      "instrument_id": {
+        "symbol": "TCS",
+        "exchange": "NSE"
+      },
+      "side": "sell",
+      "quantity": 10.0,
+      "price": 22060.0,
+      "costs": {
+        "amount": 0,
+        "currency": "INR"
+      },
+      "ts_event": {
+        "iso": "2023-11-15T00:05:05.000000000Z",
+        "unix_nanos": "1700006705000000000"
+      },
+      "ts_init": {
+        "iso": "2023-11-15T00:05:05.000000000Z",
+        "unix_nanos": "1700006705000000000"
+      }
+    },
+    {
+      "order_id": "BK-1-1700009705000000000",
+      "instrument_id": {
+        "symbol": "TCS",
+        "exchange": "NSE"
+      },
+      "side": "buy",
+      "quantity": 5.0,
+      "price": 21980.0,
+      "costs": {
+        "amount": 0,
+        "currency": "INR"
+      },
+      "ts_event": {
+        "iso": "2023-11-15T00:55:05.000000000Z",
+        "unix_nanos": "1700009705000000000"
+      },
+      "ts_init": {
+        "iso": "2023-11-15T00:55:05.000000000Z",
+        "unix_nanos": "1700009705000000000"
+      }
+    }
+  ]
+}

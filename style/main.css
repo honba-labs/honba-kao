@@ -425,6 +425,154 @@ textarea::placeholder {
 }
 
 /* ========================================================================= */
+/* UI Components: Hf primitives (honba-kao-ui-core)                         */
+/* Token-driven styling for the ui-core crate's HfButton/HfIconButton.      */
+/* ========================================================================= */
+
+.hf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.hf-button:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+.hf-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.hf-button[aria-pressed="true"] {
+  background: var(--primary-0);
+  border-color: var(--primary-1);
+  color: var(--primary-8);
+}
+
+.hf-button--green {
+  background: var(--button-green);
+  border-color: var(--button-green);
+  color: var(--on-accent);
+}
+
+.hf-button--red {
+  background: var(--button-red);
+  border-color: var(--button-red);
+  color: var(--on-accent);
+}
+
+.hf-button--blue {
+  background: var(--button-blue);
+  border-color: var(--button-blue);
+  color: var(--on-accent);
+}
+
+.hf-button--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--shade-6);
+}
+
+.hf-button--ghost:hover:not(:disabled) {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-button--sm {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+
+.hf-button--lg {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.hf-button--loading {
+  opacity: 0.7;
+}
+
+.hf-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hf-button__loader {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: hf-spin 0.6s linear infinite;
+}
+
+@keyframes hf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hf-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--shade-6);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.hf-icon-button:hover:not(:disabled) {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-icon-button:focus-visible {
+  outline: 2px solid var(--primary-1);
+  outline-offset: 2px;
+}
+
+.hf-icon-button[aria-expanded="true"],
+.hf-icon-button[aria-pressed="true"] {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hf-icon-button--sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+}
+
+.hf-icon-button--lg {
+  width: 40px;
+  height: 40px;
+}
+
+/* ========================================================================= */
 /* UI Components: PLNumber & Badges                                          */
 /* ========================================================================= */
 
