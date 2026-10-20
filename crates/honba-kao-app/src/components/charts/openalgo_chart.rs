@@ -1,10 +1,11 @@
-//! Rust ⇄ [openalgo-charts] bridge component.
+//! Rust ⇄ [openalgo-charts widget] bridge component.
 //!
-//! The engine is a dependency-free ESM bundle vendored under
+//! The widget tier is a dependency-free ESM bundle vendored under
 //! `/vendor/openalgo-charts` and loaded through `honba-bridge.js`, which owns
-//! the instances and maps the active CSS skin onto an openalgo `ChartTheme`.
-//! This component mounts one chart host per use, pushes its series once, and
-//! re-themes every chart when the app theme changes.
+//! the widget instances and maps the active CSS skin onto an openalgo `ChartTheme`.
+//! This component mounts one widget per use, and the widget provides the full
+//! OpenAlgo terminal: topbar, drawing rail, dialogs, indicator picker (502),
+//! objects panel, settings, snapshot, and layout persistence.
 //!
 //! [openalgo-charts]: https://github.com/marketcalls/openalgo-charts
 
@@ -12,24 +13,29 @@ use std::time::Duration;
 
 use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::JsFuture;
 
 use crate::types::{Bar, SeriesKind};
 
 #[wasm_bindgen]
 extern "C" {
+    // `catch`: until the bridge module has loaded, `window.honbaCharts` is
+    // undefined and the call throws; that must surface as an `Err` (so the
+    // mount effects retry) rather than a JS exception unwinding through wasm.
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = mount, catch)]
-    pub(crate) fn js_mount(element: &JsValue) -> Result<JsValue, JsValue>;
+    pub(crate) fn js_mount_with_options(
+        element: &JsValue,
+        symbol: &str,
+        timeframe: &str,
+        chart_mode: &str,
+        quantity: f64,
+    ) -> Result<js_sys::Promise, JsValue>;
+
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = mountStatic, catch)]
+    fn js_mount_static(element: &JsValue) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setSeries, catch)]
-    pub(crate) fn js_set_series(
-        id: f64,
-        kind: &str,
-        style: &str,
-        bars: &str,
-    ) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = updateLast, catch)]
-    pub(crate) fn js_update_last(id: f64, bar: &str) -> Result<JsValue, JsValue>;
+    fn js_set_series(id: f64, kind: &str, style: &str, bars: &str) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = addVolumeOverlay, catch)]
     pub(crate) fn js_add_volume_overlay(id: f64) -> Result<JsValue, JsValue>;
@@ -77,6 +83,11 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = removeIndicator, catch)]
     pub(crate) fn js_remove_indicator(id: f64, instance_id: &str) -> Result<JsValue, JsValue>;
+
+    // Widget-tier APIs (indicators / settings / objects / capture / chart
+    // type now come from the widget's native top bar, so no bindings here).
+    #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = registerCustomIndicatorPicker, catch)]
+    pub(crate) fn js_register_custom_indicator_picker(mount_fn: &JsValue) -> Result<JsValue, JsValue>;
 }
 
 /// The full registry of built-in indicators, as decoded [`IndicatorDef`]s.
@@ -120,31 +131,6 @@ pub(crate) fn add_indicator(
 /// Remove one live indicator instance (idempotent).
 pub(crate) fn remove_indicator(id: f64, instance_id: &str) {
     let _ = js_remove_indicator(id, instance_id);
-}
-
-/// Mount a chart host in the bridge, returning a numeric handle.
-///
-/// Shared with the workbench pane chart, which must remount charts as pane
-/// symbol/timeframe/mode change (the engine has no clear-series call).
-pub(crate) fn mount_chart(element: &JsValue) -> Result<f64, JsValue> {
-    js_mount(element).and_then(|id| id.as_f64().ok_or_else(JsValue::undefined))
-}
-
-/// Push one series onto a mounted chart.
-pub(crate) fn push_chart_series(
-    id: f64,
-    kind: &str,
-    style: &str,
-    bars: &str,
-) -> Result<(), JsValue> {
-    js_set_series(id, kind, style, bars).map(|_ok| ())
-}
-
-/// Update (or append) the in-flight bar of the live feed on a mounted chart.
-pub(crate) fn update_chart_last(id: f64, bar: &Bar) -> bool {
-    js_update_last(id, &serde_json::to_string(bar).unwrap_or_default())
-        .map(|ok| ok.as_bool().unwrap_or(false))
-        .unwrap_or(false)
 }
 
 /// Mount the volume histogram overlay in a chart's primary pane.
@@ -200,6 +186,28 @@ pub(crate) fn clear_drawings(id: f64) {
 /// Destroy a mounted chart (idempotent — the bridge answers `false`).
 pub(crate) fn destroy_chart(id: f64) {
     let _ = js_destroy(id);
+}
+
+/// Mount a chart host with widget options (symbol, timeframe, chart_mode, quantity).
+///
+/// The widget tier creates the full terminal: chart + rail + topbar + statusline.
+/// `mount()` on the JS side is async (it awaits `widget.ready`), so this awaits
+/// the returned Promise rather than treating the call as synchronous.
+pub(crate) async fn mount_chart_with_options(
+    element: &JsValue,
+    symbol: &str,
+    timeframe: &str,
+    chart_mode: &str,
+    quantity: i64,
+) -> Result<f64, JsValue> {
+    let promise = js_mount_with_options(element, symbol, timeframe, chart_mode, quantity as f64)?;
+    let resolved = JsFuture::from(promise).await?;
+    resolved.as_f64().ok_or_else(JsValue::undefined)
+}
+
+/// Register a custom indicator picker dialog (replaces the built-in one).
+pub(crate) fn register_custom_indicator_picker(mount_fn: &JsValue) {
+    let _ = js_register_custom_indicator_picker(mount_fn);
 }
 
 /// One series to draw, with the data the bridge should hand the engine.
@@ -301,22 +309,32 @@ pub struct LiveIndicator {
     pub name: String,
 }
 
-/// An openalgo-charts canvas bound to a `<div>`.
-///
-/// `class` carries the sizing (the host needs a height); `label` is the
-/// accessible name for the canvas.
+/// The OpenAlgoChart widget component — uses the widget tier for full terminal experience.
 #[component]
 pub fn OpenAlgoChart(
-    series: Vec<ChartSeries>,
+    #[prop(optional)] symbol: Option<String>,
+    #[prop(optional)] timeframe: Option<String>,
+    #[prop(optional)] chart_mode: Option<String>,
+    #[prop(optional)] quantity: Option<i64>,
+    #[prop(optional)] series: Option<Vec<ChartSeries>>,
     #[prop(optional, into)] class: String,
     #[prop(default = "Price chart")] label: &'static str,
 ) -> impl IntoView {
+    let symbol = symbol.unwrap_or_else(|| "RELIANCE".to_string());
+    let timeframe = timeframe.unwrap_or_else(|| "1d".to_string());
+    let chart_mode = chart_mode.unwrap_or_else(|| "candlestick".to_string());
+    let quantity = quantity.unwrap_or(25);
+    let series = series.unwrap_or_default();
+    // Callers that hand over their own series (equity curve, comparison)
+    // get a plain engine chart with exactly that data, not the feed-backed
+    // terminal widget.
+    let is_static = !series.is_empty();
+
     let host = NodeRef::<leptos::html::Div>::new();
     let handle = RwSignal::new(None::<f64>);
     let attempts = RwSignal::new(0u32);
+    let alive = RwSignal::new(true);
 
-    // Serialised once: the demo data is static per mount, and the bridge wants
-    // strings either way.
     let payload = StoredValue::new(serialize_series(&series));
 
     Effect::new(move |_| {
@@ -329,31 +347,61 @@ pub fn OpenAlgoChart(
             return;
         }
 
-        match js_mount(&JsValue::from(element)) {
-            Ok(id) => {
-                let id = id.as_f64().unwrap_or_default();
-                for (kind, style, bars) in payload.get_value() {
-                    let _ = js_set_series(id, &kind, &style, &bars);
+        if is_static {
+            match js_mount_static(&JsValue::from(element)) {
+                Ok(id) => {
+                    let id = id.as_f64().unwrap_or_default();
+                    for (kind, style, bars) in payload.get_value() {
+                        let _ = js_set_series(id, &kind, &style, &bars);
+                    }
+                    handle.set(Some(id));
                 }
-                handle.set(Some(id));
+                // The ESM module may still be fetching; retry briefly.
+                Err(_) if attempts.get_untracked() < 120 => {
+                    set_timeout(
+                        move || attempts.update(|count| *count += 1),
+                        Duration::from_millis(25),
+                    );
+                }
+                Err(error) => {
+                    leptos::logging::error!("openalgo-charts bridge unavailable: {error:?}");
+                }
             }
-            // The ESM module may still be fetching; retry briefly, then give up
-            // quietly rather than panic the app.
-            Err(_) if attempts.get_untracked() < 120 => {
-                set_timeout(
-                    move || attempts.update(|count| *count += 1),
-                    Duration::from_millis(25),
-                );
-            }
-            Err(error) => {
-                leptos::logging::error!("openalgo-charts bridge unavailable: {error:?}");
-            }
+            return;
         }
+
+        let symbol = symbol.clone();
+        let timeframe = timeframe.clone();
+        let chart_mode = chart_mode.clone();
+        let element = JsValue::from(element);
+
+        // The mount resolves asynchronously, possibly after this component
+        // (and with it these signals) was disposed: `try_get_untracked`, as a
+        // plain `get_untracked` on a disposed signal panics.
+        leptos::task::spawn_local(async move {
+            match mount_chart_with_options(&element, &symbol, &timeframe, &chart_mode, quantity).await {
+                Ok(id) => {
+                    if alive.try_get_untracked().unwrap_or(false) {
+                        handle.set(Some(id));
+                    } else {
+                        destroy_chart(id);
+                    }
+                }
+                Err(_) if attempts.try_get_untracked().is_some_and(|count| count < 120) => {
+                    set_timeout(
+                        move || attempts.update(|count| *count += 1),
+                        Duration::from_millis(25),
+                    );
+                }
+                Err(error) => {
+                    leptos::logging::error!("openalgo-charts widget unavailable: {error:?}");
+                }
+            }
+        });
     });
 
-    // Any skin change restyles every live chart: `ThemeContext::apply` asks the
-    // bridge to re-read the tokens, so this component does not subscribe.
     on_cleanup(move || {
+        alive.set(false);
         if let Some(id) = handle.get_untracked() {
             let _ = js_destroy(id);
         }
