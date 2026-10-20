@@ -6,6 +6,7 @@
 //!   ([`crate::features::simulator::kernel::selection::StrategyGraphShape`]).
 //! * [`components`] — the strategy library and grid risk panel.
 
+pub mod canvas;
 pub mod components;
 pub mod kernel;
 pub mod strategy_studio_page;
