@@ -8,8 +8,8 @@
  * The Rust side talks to window.honbaCharts.* (see openalgo_chart.rs).
  * ========================================================================== */
 
-import { createWidget, injectWidgetStyles, WIDGET_COMPONENT_CSS, WIDGET_DIALOGS, registerWidgetDialog, registerWidgetDialogs, themeMode, mountIndicatorPicker as mountBuiltinIndicatorPicker } from './openalgo-charts.widget.mjs';
-import { createChart, BuySellButtons, darkTheme, lightTheme, intervalParts, TickBarAggregator, getChartType, registeredSeriesTransforms } from './openalgo-charts.mjs';
+import { createWidget, injectWidgetStyles, WIDGET_COMPONENT_CSS, WIDGET_DIALOGS, registerWidgetDialog, registerWidgetDialogs, themeMode, openMenu, mountIndicatorPicker as mountBuiltinIndicatorPicker } from './openalgo-charts.widget.mjs';
+import { createChart, BuySellButtons, darkTheme, lightTheme, intervalParts, TickBarAggregator, getChartType, registeredSeriesTransforms, registerInterval, isKnownInterval } from './openalgo-charts.mjs';
 import './openalgo-charts.draw.mjs';
 import { DrawingController, InstrumentDrawings, instrumentDrawingsKey, registerBuiltinDrawingTools, webStorageDrawingStore } from './openalgo-charts.draw.mjs';
 import { BUILTIN_INDICATORS } from './openalgo-charts.indicators.mjs';
@@ -763,15 +763,59 @@ function attachTradingViewTimeFormatter(chart) {
 
 /* ---------- Widget mount / destroy ---------- */
 
-// honba-fe's workbench set (openalgo-chart.tsx INTERVAL_GROUPS) plus 2d/3d.
-// No month pill: this library build has no built-in month interval ("1M"
-// throws UnknownIntervalError at createWidget unless registerInterval()'d).
-const TOPBAR_INTERVALS = ['1m', '3m', '5m', '15m', '30m', '45m', '1h', '2h', '3h', '4h', '1d', '2d', '3d', '1w'];
+/* Calendar months are not a built-in token in this library build ("1M"
+   throws UnknownIntervalError at createWidget). They are registered as
+   calendar buckets under `<n>mo` codes, NOT `<n>M`: the registry matches
+   codes case-insensitively, so a registered "1M" shadows the built-in "1m"
+   and turns one-minute charts monthly. intervalParts('1mo') reads unit 'M',
+   which the feed maps to honba-ya's `mo`. Rust keeps saying "1M"; see
+   canonicalInterval / honbaInterval. Idempotent across module re-imports. */
+/** The `<count>mo` calendar-month code, registered on first use (a custom
+ *  "2M" picked in the widget comes back from Rust as "2M" on every later
+ *  remount, so registering only 1/3/6 here would fail those mounts). Null
+ *  when the code cannot be registered. */
+function ensureMonthInterval(count) {
+    const code = `${count}mo`;
+    try {
+        if (!isKnownInterval(code)) registerInterval({ code, bucketing: { mode: 'calendar', unit: 'month', count } });
+        return code;
+    } catch (error) {
+        console.warn('honbaCharts: could not register month interval', code, error);
+        return null;
+    }
+}
+for (const count of [1, 3, 6]) ensureMonthInterval(count);
 
-/** Library interval code for a honba-kao timeframe label (see mount()). */
+/* The four grouped interval menus that replace the native flat pill row
+   (the native top bar has no grouped or custom-interval control; see
+   mountIntervalGroups). `root` is the group's label when the chart's
+   interval is in another group. */
+const INTERVAL_GROUPS = [
+    { id: 'minutes', title: 'Minutes', root: '15m', units: ['s', 'm'], items: ['1m', '3m', '5m', '15m', '30m', '45m'], hint: '7m, 90s, or minutes as a number' },
+    { id: 'hours', title: 'Hours', root: '1h', units: ['h'], items: ['1h', '2h', '3h', '4h'], hint: '6h, 12h' },
+    { id: 'days', title: 'Days', root: '1d', units: ['D'], items: ['1d', '3d', '5d'], hint: '2d, 10d' },
+    { id: 'weeks', title: 'Weeks & months', root: '1w', units: ['W', 'M'], items: ['1w', '3w', '1mo', '3mo', '6mo'], hint: '2w, 2M' },
+];
+
+/* Every grouped code, handed to the widget as its interval list so its own
+   keyboard / state paths know them (the flat pill row itself is hidden). */
+const TOPBAR_INTERVALS = INTERVAL_GROUPS.flatMap((group) => group.items);
+
+/** Library interval code for a honba-kao timeframe label (see mount()):
+ *  lower-case, with honba's month labels ("1M") mapped onto the registered
+ *  calendar-month codes ("1mo"). */
 function canonicalInterval(code) {
     const raw = String(code).trim();
-    return /^\d*M$/.test(raw) ? raw : raw.toLowerCase();
+    const month = /^(\d*)M$/.exec(raw);
+    if (!month) return raw.toLowerCase();
+    const count = Math.max(1, Number(month[1] || 1));
+    return ensureMonthInterval(count) ?? `${count}mo`;
+}
+
+/** The reverse, for what goes back to Rust: "1mo" -> "1M" (Timeframe::from_id). */
+function honbaInterval(code) {
+    const month = /^(\d+)mo$/.exec(String(code));
+    return month ? `${month[1]}M` : code;
 }
 
 /** The widget chart type for a pane mode id (`ChartMode::as_id`): any
@@ -781,6 +825,170 @@ function initialChartTypeFor(mode) {
     try { if (getChartType(mode).isPriceSeries) return mode; } catch { /* unknown renderer */ }
     try { if (registeredSeriesTransforms().includes(mode)) return mode; } catch { /* ignore */ }
     return 'candlestick';
+}
+
+/** Short label for an interval code: `15m`, `1H`, `1D`, `1W`, `3M`. */
+function intervalChipLabel(code) {
+    const parts = intervalParts(code);
+    if (!parts) return code;
+    const unit = { s: 's', m: 'm', h: 'H', D: 'D', W: 'W', M: 'M' }[parts.unit];
+    return unit ? `${parts.multiplier}${unit}` : code;
+}
+
+/** Long label for a menu row: `15 minutes`, `1 hour`, `3 months`. */
+function intervalRowLabel(code) {
+    const parts = intervalParts(code);
+    if (!parts) return code;
+    const names = { s: 'second', m: 'minute', h: 'hour', D: 'day', W: 'week', M: 'month' };
+    const name = names[parts.unit];
+    if (!name) return code;
+    return `${parts.multiplier} ${name}${parts.multiplier === 1 ? '' : 's'}`;
+}
+
+/** The group an interval belongs to, by its unit (null for tick/volume bars). */
+function intervalGroupOf(code) {
+    const parts = intervalParts(code);
+    return parts ? INTERVAL_GROUPS.find((group) => group.units.includes(parts.unit)) ?? null : null;
+}
+
+/**
+ * Parse what a user typed into a "Custom…" row into a library interval code,
+ * or null. Accepts `7m`, `2H`, `3d`, `2w`, `2M` (capital M = months, any
+ * other unit case-insensitive), `90s`, and a bare number of minutes.
+ */
+function parseCustomInterval(text) {
+    const raw = String(text ?? '').trim();
+    const match = /^(\d+)\s*([a-zA-Z]*)$/.exec(raw);
+    if (!match) return null;
+    const count = Number(match[1]);
+    if (!Number.isInteger(count) || count < 1) return null;
+    const unit = match[2];
+    let code;
+    let unitSeconds;
+    if (unit === '') { code = `${count}m`; unitSeconds = 60; }
+    else if (unit === 'M' || /^mo(n(th)?s?)?$/i.test(unit)) { code = `${count}mo`; unitSeconds = 2_592_000; }
+    else if (/^(s|m|h|d|w)$/i.test(unit)) {
+        code = `${count}${unit.toLowerCase()}`;
+        unitSeconds = { s: 1, m: 60, h: 3_600, d: 86_400, w: 604_800 }[unit.toLowerCase()];
+    }
+    else return null;
+    /* The pane store's Timeframe::parse_custom only holds 1 s ..= 2 years
+       (months counted as 30 days); a longer code would come back to Rust as
+       an unparseable id and silently fall back to 1D in the saved pane. */
+    if (count * unitSeconds > 63_072_000) return null;
+    if (code.endsWith('mo') && ensureMonthInterval(count) === null) return null;
+    return isKnownInterval(code) ? code : null;
+}
+
+/**
+ * Replace the native top bar's flat interval pills with four grouped menus
+ * (15m / 1H / 1D / 1W), each listing its siblings plus a "Custom…" entry.
+ * Everything else in the native top bar stays as the library renders it.
+ * Selection goes through `widget.setInterval`, so the widget's own
+ * 'interval' event (and the honba-chart-spec store sync) fire as before.
+ * Menus are the library's own `openMenu`; the custom input is a panel on
+ * the widget's overlay stack, so Escape / outside-press / focus behave like
+ * every other popover in the widget.
+ */
+function mountIntervalGroups(widget, alive) {
+    const topbar = widget.root.querySelector('.oac-topbar');
+    const pills = topbar && topbar.querySelector('.oac-pills');
+    if (!topbar || !pills) return;
+    const doc = widget.root.ownerDocument;
+    const ctx = widget.context;
+
+    const bar = doc.createElement('div');
+    bar.className = 'oac-pills honba-tf';
+    bar.setAttribute('role', 'group');
+    bar.setAttribute('aria-label', 'Interval');
+    pills.parentNode.insertBefore(bar, pills);
+
+    const setInterval = (code) => {
+        if (!alive()) return;
+        try { widget.setInterval(code); } catch (error) { console.warn('honbaCharts: interval refused', code, error); }
+    };
+
+    const openCustom = (button, group) => {
+        const panel = doc.createElement('div');
+        panel.className = 'oac-pop honba-tf-custom';
+        const label = doc.createElement('label');
+        label.textContent = `Custom interval (${group.hint})`;
+        const row = doc.createElement('div');
+        row.className = 'honba-tf-custom__row';
+        const input = doc.createElement('input');
+        input.type = 'text';
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+        input.placeholder = group.hint;
+        input.setAttribute('aria-label', 'Custom interval');
+        const ok = doc.createElement('button');
+        ok.type = 'button';
+        ok.className = 'oac-btn';
+        ok.textContent = 'Apply';
+        const error = doc.createElement('p');
+        error.className = 'honba-tf-custom__error';
+        error.hidden = true;
+        row.append(input, ok);
+        label.appendChild(row);
+        panel.append(label, error);
+
+        let close = () => {};
+        const commit = () => {
+            const code = parseCustomInterval(input.value);
+            if (!code) {
+                error.textContent = 'Use a number and a unit: s, m, h, d, w or M (months)';
+                error.hidden = false;
+                input.focus();
+                return;
+            }
+            close();
+            setInterval(code);
+        };
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') { event.preventDefault(); commit(); }
+        });
+        ok.addEventListener('click', commit);
+        close = ctx.openOverlay(panel, { anchor: button, placement: 'below', dismissOnOutside: true, initialFocus: input });
+    };
+
+    const chips = INTERVAL_GROUPS.map((group) => {
+        const button = doc.createElement('button');
+        button.type = 'button';
+        button.dataset.group = group.id;
+        button.setAttribute('aria-haspopup', 'menu');
+        const text = doc.createElement('span');
+        const chev = doc.createElement('span');
+        chev.className = 'honba-tf__chev';
+        chev.setAttribute('aria-hidden', 'true');
+        chev.textContent = '▾';
+        button.append(text, chev);
+        button.addEventListener('click', () => {
+            const current = widget.interval();
+            const rows = group.items
+                .filter((code) => isKnownInterval(code))
+                .map((code) => ({ label: intervalRowLabel(code), key: intervalChipLabel(code), on: code === current, onSelect: () => setInterval(code) }));
+            if (!group.items.includes(current) && intervalGroupOf(current) === group) {
+                rows.push({ label: intervalRowLabel(current), key: intervalChipLabel(current), on: true, onSelect: () => {} });
+            }
+            rows.push({ label: 'Custom…', onSelect: () => openCustom(button, group) });
+            openMenu(ctx, button, [group.title, ...rows], { ariaLabel: `${group.title} intervals` });
+        });
+        bar.appendChild(button);
+        return { group, button, text };
+    });
+
+    const refresh = () => {
+        const current = widget.interval();
+        const owner = intervalGroupOf(current);
+        for (const { group, button, text } of chips) {
+            const active = owner === group;
+            text.textContent = intervalChipLabel(active ? current : group.root);
+            button.setAttribute('aria-pressed', String(active));
+            button.title = active ? `Interval: ${intervalRowLabel(current)}` : `${group.title} intervals`;
+        }
+    };
+    refresh();
+    widget.on('interval', refresh);
 }
 
 async function mount(element, options = {}) {
@@ -815,6 +1023,10 @@ async function mount(element, options = {}) {
         // The pills the native top bar shows (TOPBAR_INTERVALS). Without this
         // the library shows its short default list only.
         intervals: TOPBAR_INTERVALS,
+        // No "Chart by OpenAlgo" link in the top bar (nor the OpenAlgo corner
+        // mark): the documented ChartOptions.branding switch. The top bar's
+        // link is derived from these branding options and drops when false.
+        branding: false,
         // honba-kao is a desktop terminal: a narrow pane (2x2 grid, ticket
         // open) must keep the desktop rail and top bar instead of switching to
         // the phone chrome, which floats its controls over the chart.
@@ -854,7 +1066,7 @@ async function mount(element, options = {}) {
         if (!widgets.has(id)) return;
         entry.symbol = (widget.symbol() || '').toUpperCase();
         window.dispatchEvent(new CustomEvent('honba-chart-spec', {
-            detail: { chartId: id, symbol: entry.symbol, interval: widget.interval(), chartType: widget.chartType() },
+            detail: { chartId: id, symbol: entry.symbol, interval: honbaInterval(widget.interval()), chartType: widget.chartType() },
         }));
     };
     /* One theme: the chart follows honba-kao's app theme (refreshThemeAll on
@@ -875,6 +1087,13 @@ async function mount(element, options = {}) {
         });
     } catch (error) {
         console.warn('honbaCharts: theme event unavailable', error);
+    }
+
+    /* Grouped interval menus in place of the native pill row. */
+    try {
+        mountIntervalGroups(widget, () => widgets.has(id));
+    } catch (error) {
+        console.warn('honbaCharts: interval menus unavailable', error);
     }
 
     try {

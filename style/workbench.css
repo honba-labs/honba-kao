@@ -1688,3 +1688,60 @@ div.wb-menu__custom-row input {
     position: static;
   }
 }
+
+/* Grouped interval menus (bridge mountIntervalGroups) replace the native flat
+   interval pills; the library has no grouped / custom-interval control. The
+   native row stays in the DOM (the widget refreshes it) but is not shown. */
+.wb-pane__chart-host .oac-widget .oac-topbar > .oac-pills:not(.honba-tf) {
+  display: none;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf__chev {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom {
+  width: 240px;
+  padding: 10px;
+  border: 1px solid var(--oac-bd);
+  border-radius: 7px;
+  background: var(--oac-elev);
+  color: var(--oac-tx);
+  box-shadow: var(--oac-shadow);
+  font-size: 12px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--oac-mut);
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__row {
+  display: flex;
+  gap: 6px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__row input {
+  flex: 1;
+  min-width: 0;
+  height: var(--oac-ctl-h, 26px);
+  padding: 0 8px;
+  border: 1px solid var(--oac-bd);
+  border-radius: var(--oac-radius, 4px);
+  background: var(--oac-bg, transparent);
+  color: var(--oac-tx);
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__error {
+  margin: 6px 0 0;
+  color: var(--oac-danger);
+}
