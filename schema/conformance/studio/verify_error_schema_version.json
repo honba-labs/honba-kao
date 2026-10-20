@@ -1,0 +1,10 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "error": {
+    "code": "validation_invalid_request",
+    "message": "manifest schema version mismatch",
+    "retryable": false,
+    "context": { "reason": "schema_version" }
+  }
+}

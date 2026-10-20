@@ -1,0 +1,14 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "data": {
+    "strategy_ir": {
+      "id": "sha256:abc123def456",
+      "manifest_hash": "fnv1a64:abc123",
+      "name": "sma_crossover",
+      "parameters": { "fast": 3, "slow": 8 },
+      "verification_status": "verified",
+      "context": { "reason": "no errors" }
+    }
+  }
+}

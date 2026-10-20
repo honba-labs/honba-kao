@@ -1,0 +1,30 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "data": {
+    "schema_version": 4,
+    "strategy_api_version": "1.0.0",
+    "manifest": {
+      "api_version": "1.0.0",
+      "name": "incomplete_manifest",
+      "source_hash": "fnv1a64:",
+      "universe": null,
+      "subscriptions": {
+        "instruments": [],
+        "quotes": false,
+        "trades": false
+      },
+      "driving_timeframe": { "interval": 5, "aggregation": "minute" },
+      "warmup_bars": 20
+    },
+    "universe": null,
+    "subscriptions": {
+      "bars": [],
+      "quotes": [],
+      "trades": []
+    },
+    "driving_timeframe": { "interval": 5, "aggregation": "minute" },
+    "timeframes": [],
+    "warmup_bars": 20
+  }
+}

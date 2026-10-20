@@ -1,0 +1,13 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "error": {
+    "code": "validation_invalid_request",
+    "message": "the manifest does not compile",
+    "retryable": false,
+    "context": {
+      "reason": "invalid_timeframe",
+      "details": "timeframe must be one of: 1m, 5m, 15m, 1h, 4h, 1d, 1w, 1M"
+    }
+  }
+}

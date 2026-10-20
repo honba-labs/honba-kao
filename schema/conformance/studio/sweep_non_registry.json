@@ -1,0 +1,11 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "data": {
+    "job_id": "01JGSWM2YY4VYBZ2BTFEFTQY9C",
+    "status": "blocked",
+    "error": "no_rust_implementation",
+    "message": "Graph 'unknown_strategy' has no Rust implementation; cannot run backtest. Blocked until a Strategy for the catalog is available.",
+    "blocked_at": "2026-01-15T10:30:00Z"
+  }
+}

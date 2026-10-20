@@ -1,0 +1,33 @@
+{
+  "api_version": "1.0.0",
+  "schema_version": 4,
+  "data": {
+    "schema_version": 4,
+    "strategy_api_version": "1.0.0",
+    "manifest": {
+      "api_version": "1.0.0",
+      "name": "sma_crossover",
+      "source_hash": "fnv1a64:abc123",
+      "universe": { "explicit": [ { "symbol": "TCS", "exchange": "NSE" } ] },
+      "subscriptions": {
+        "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ],
+        "quotes": false,
+        "trades": false
+      },
+      "driving_timeframe": { "interval": 5, "aggregation": "minute" },
+      "warmup_bars": 20
+    },
+    "universe": {
+      "named": null,
+      "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ]
+    },
+    "subscriptions": {
+      "bars": [ { "symbol": "TCS", "exchange": "NSE" } ],
+      "quotes": [],
+      "trades": []
+    },
+    "driving_timeframe": { "interval": 5, "aggregation": "minute" },
+    "timeframes": [ { "interval": 5, "aggregation": "minute" } ],
+    "warmup_bars": 20
+  }
+}
