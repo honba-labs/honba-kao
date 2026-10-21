@@ -558,12 +558,23 @@ All scripts green.
 
 ### Phase 4: Screener, Strategy Studio, Simulator (Week 9-10)
 - [ ] **4.1** Screener: `HfDataTable` with virtualized rows, column visibility, presets
-- [ ] **4.2** Strategy Studio: Node editor with `HfCommand` palette
-      — see `honba-docs/docs/architecture/strategy_studio.md`
-      (HBD-2026-DES-006) for the AI-native studio + auto-researcher design
-- [ ] **4.3** Simulator: Paper trading with `HfOrderTicket` + mock fills
-      — supersedes this bullet see `honba-docs/docs/architecture/kao_simulator_port.md`
-      (HBD-2026-DES-005) for the audited phased port of honba-fe's simulator
+- [ ] **4.2** Strategy Studio (Leptos CSR Visual Canvas & Auto-Researcher)
+      — see `honba-docs/docs/architecture/strategy_studio.md` (HBD-2026-DES-006)
+  - [x] Task 1: 16px grid-snap node positioning on drop (COMPLETED)
+  - [x] Task 2: Edge creation between typed input/output ports with validation (COMPLETED)
+  - [x] Task 3: Debounced (200ms) StudioStore persistence to localStorage (COMPLETED)
+  - [x] Task 4: CSS category color variable mapping (--studio-cat-*) (COMPLETED)
+  - [ ] Task 5: AI Co-Pilot chat drawer, candidate diff cards, and apply/discard actions
+  - [ ] Task 6: Autonomous Researcher browser mode: up to 1000-iteration closed-loop mutation
+- [ ] **4.3** Simulator Workbench (Leptos 0.7 CSR Port)
+      — see `honba-docs/docs/architecture/kao_simulator_port.md` (HBD-2026-DES-005)
+  - [ ] Strategy hand-off from Strategy Studio via sessionStorage / query parameter
+  - [ ] Run configuration controls (symbol, date range, capital, fill model, slippage)
+  - [ ] Candle chart + strategy indicator overlay via openalgo-charts bridge
+  - [ ] Metrics ribbon: Total Return, Sharpe, Sortino, Max Drawdown, Calmar, Win Rate
+  - [ ] Equity and drawdown curve with NIFTY 50 benchmark overlay
+  - [ ] Filterable trade journal table with RFC-4180 CSV export and monthly PnL heatmap
+  - [ ] Statistical validation trust badges (DSR, PBO, Walk-Forward Efficiency)
 - [ ] **4.4** Tradebook: `HfDataTable` with filters, export
 
 ### Phase 5: Quality, Testing, Polish (Week 11-12)

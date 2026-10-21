@@ -18,11 +18,6 @@ tracing.workspace = true
 tracing-wasm.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-honba-indicators.workspace = true
-honba-kao-api-wasm.workspace = true
-honba-kao-client.workspace = true
-honba-kao-ui-core = { path = "../honba-kao-ui-core" }
-openalgo-charts    = { package = "openalgo-charts-rs", path = "../openalgo-charts-rs" }
 web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlInputElement", "MouseEvent", "Storage", "MediaQueryList", "Event", "EventTarget", "CustomEvent", "Blob", "BlobPropertyBag", "Url"] }
 flow-rs-leptos = "0.1.0-beta.2"
 flow-rs-core = "0.1.0-beta.2"

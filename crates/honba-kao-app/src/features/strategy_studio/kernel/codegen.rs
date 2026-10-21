@@ -598,10 +598,15 @@ fn split_args(text: &str) -> Option<Vec<(String, Value)>> {
     let mut args = Vec::new();
     let mut rest = text.trim();
     while !rest.is_empty() {
-        let (key, after) = parse_literal(rest)?;
-        let key = key.as_str()?.to_string();
-        let after = after.trim_start().strip_prefix('=')?;
-        let (value, tail) = parse_literal(after)?;
+        // The key is a bare Python identifier, never a `literal()` spelling;
+        // isolate it up to the separating `=` instead of parsing it as one.
+        let eq = rest.find('=')?;
+        let key = rest[..eq].trim();
+        if key.is_empty() || !key.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '_') {
+            return None;
+        }
+        let key = key.to_string();
+        let (value, tail) = parse_literal(&rest[eq + 1..])?;
         args.push((key, value));
         rest = tail.trim_start().trim_start_matches(',').trim_start();
     }
@@ -690,6 +695,10 @@ pub fn recognize(source: &str) -> Recognition {
     let mut index = marker_index + 1;
     let mut builder_ok = true;
     let mut closed = false;
+    // The nested `_graph.StrategyGraph.build(...)` call closes with its own
+    // bare `)` line before `.node()`/`.edge()`/the real block close — track
+    // it so that inner close isn't mistaken for the end of `GRAPH = (...)`.
+    let mut in_build_call = false;
 
     let arg = |args: &[(String, Value)], name: &str| -> Option<Value> {
         args.iter().find(|(key, _)| key == name).map(|(_, value)| value.clone())
@@ -698,6 +707,11 @@ pub fn recognize(source: &str) -> Recognition {
     while index < lines.len() {
         let trimmed = lines[index].trim();
         if trimmed == ")" {
+            if in_build_call {
+                in_build_call = false;
+                index += 1;
+                continue;
+            }
             closed = true;
             break;
         }
@@ -755,12 +769,13 @@ pub fn recognize(source: &str) -> Recognition {
                 }
             } else if trimmed == "GRAPH = ("
                 || trimmed.starts_with("from ")
-                || trimmed.starts_with("_graph.StrategyGraph.build(")
                 || trimmed.starts_with(".with_subscriptions(")
             {
                 // Structural: the builder opener, the import block, and the
                 // subscriptions line (fixed False/False, pinned by the
                 // manifest) carry no graph data.
+            } else if trimmed.starts_with("_graph.StrategyGraph.build(") {
+                in_build_call = true;
             } else {
                 builder_ok = false;
             }
@@ -788,7 +803,9 @@ pub fn recognize(source: &str) -> Recognition {
             reason: "docstring".to_string(),
         });
     }
-    let after_block = index as u32 + 1; // the line after the closing `)`
+    // `index` is a 0-based line index pointing at the closing `)` itself;
+    // the first line after it is one past its 1-based line number (index+1).
+    let after_block = index as u32 + 2;
     if after_block <= lines.len() as u32 {
         spans.push(CodeSpan {
             start: after_block,
@@ -831,10 +848,27 @@ mod tests {
             .iter()
             .position(|l| l.trim() == GRAPH_MARKER)
             .expect("marker");
-        1 + lines[start..]
-            .iter()
-            .take_while(|l| l.trim() != ")" && !(l.trim()).starts_with(GENERATED_MARKER))
-            .count() as u32
+        // Mirrors `recognize`'s own build-call-close tracking: the nested
+        // `.build(...)` call's `)` doesn't end the block, only the real one does.
+        let mut in_build_call = false;
+        let mut count = 0u32;
+        for line in &lines[start..] {
+            let trimmed = line.trim();
+            if trimmed.starts_with(GENERATED_MARKER) {
+                break;
+            }
+            count += 1;
+            if trimmed == ")" {
+                if in_build_call {
+                    in_build_call = false;
+                } else {
+                    break;
+                }
+            } else if trimmed.starts_with("_graph.StrategyGraph.build(") {
+                in_build_call = true;
+            }
+        }
+        count
     }
 
     #[test]
