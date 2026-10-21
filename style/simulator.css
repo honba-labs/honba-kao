@@ -1086,3 +1086,1113 @@
 .sim-signals__table td.sim-signals__details {
   color: var(--muted);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Command bar, replay cluster, KPI grid, params drawer, report pane. */
+/*                                                                     */
+/*  Ported from honba-fe's `SimulatorView.css` (flat `sim-*` names, no */
+/*  BEM — these classes are the page's own chrome, not a results-      */
+/*  surface component, so they keep fe's exact spelling). Every value  */
+/*  below is fe's literal px/value with fe's CSS variable swapped for  */
+/*  the matching kao token (--bg-page→--surface, --bg-card→--surface-2,*/
+/*  --bg-surface/--bg-input→--surface-3, --border*→--hair,             */
+/*  --fg-primary/--text-primary→--ink, --fg-secondary/--text-secondary */
+/*  →--ink-2, --fg-muted/--text-muted→--muted, --accent-primary/       */
+/*  --primary→--brand, --bullish/--bearish→--pnl-gain/--pnl-loss).      */
+/* ------------------------------------------------------------------ */
+
+.color-bullish {
+  color: var(--pnl-gain);
+}
+
+.color-bearish {
+  color: var(--pnl-loss);
+}
+
+.simulator-view-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+/* -- 1. Command bar -------------------------------------------------- */
+
+.sim-command-bar {
+  height: 56px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 14px;
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--hair);
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+.sim-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sim-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-field-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-header-select {
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.sim-header-select:hover {
+  border-color: var(--brand);
+}
+
+.sim-symbol-wrap,
+.sim-timeframe-wrap,
+.sim-date-range-wrap {
+  position: relative;
+}
+
+.sim-symbol-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.sim-symbol-badge-btn:hover {
+  border-color: var(--brand);
+}
+
+.sim-symbol-search-icon {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.sim-symbol-text {
+  font-family: var(--mono-font, monospace);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sim-symbol-hint {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.sim-symbol-caret,
+.sim-tf-caret {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.sim-tf-icon {
+  color: var(--ink-2);
+}
+
+.sim-date-range-icon {
+  color: var(--brand);
+}
+
+.sim-drawer-title-icon {
+  color: var(--brand);
+}
+
+.sim-symbol-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  width: 220px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sim-symbol-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sim-timeframe-btn,
+.sim-date-range-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.sim-timeframe-btn:hover,
+.sim-date-range-btn:hover {
+  border-color: var(--brand);
+}
+
+.sim-tf-val {
+  font-family: var(--mono-font, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-timeframe-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  width: 290px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 12px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sim-tf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-tf-group-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+
+.sim-tf-chips-row,
+.sim-preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.sim-tf-chip,
+.sim-preset-chip {
+  appearance: none;
+  padding: 3px 8px;
+  font-family: var(--mono-font, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.sim-tf-chip:hover,
+.sim-preset-chip:hover {
+  color: var(--ink);
+  border-color: var(--brand);
+}
+
+.sim-tf-chip.active,
+.sim-preset-chip.active {
+  background-color: var(--brand);
+  color: var(--brand-on);
+  border-color: var(--brand);
+  font-weight: 700;
+}
+
+.sim-date-range-preset-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--brand-tint);
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.sim-date-range-dates {
+  font-family: var(--mono-font, monospace);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.sim-date-range-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  background-color: var(--surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  padding: 14px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sim-date-range-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--hair);
+  padding-bottom: 8px;
+}
+
+.sim-date-range-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.sim-apply-btn {
+  appearance: none;
+  background-color: var(--brand);
+  color: var(--brand-on);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sim-apply-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sim-date-inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sim-date-input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-date-input-lbl {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sim-date-native-input {
+  background: var(--surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 4px 6px;
+  color: var(--ink);
+  font-size: 11px;
+  font-family: var(--mono-font, monospace);
+  outline: none;
+  width: 100%;
+}
+
+.sim-date-native-input:focus {
+  border-color: var(--brand);
+}
+
+/* -- 1b. Center replay cluster ---------------------------------------- */
+
+.sim-replay-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  padding: 4px 14px;
+}
+
+.sim-play-pulse-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--brand);
+  color: var(--brand-on);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-play-pulse-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.sim-play-pulse-btn.active-playing {
+  background-color: var(--warning-color);
+}
+
+.sim-play-pulse-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sim-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sim-ctrl-btn:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.sim-ctrl-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sim-instant-btn:hover:not(:disabled) {
+  color: var(--brand);
+}
+
+.sim-speed-pill-group {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface-2);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--hair);
+}
+
+.sim-speed-pill {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 2px 7px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-speed-pill.active {
+  background-color: var(--brand);
+  color: var(--brand-on);
+}
+
+.sim-scrub-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 170px;
+  padding: 0 4px;
+}
+
+.sim-scrub-slider {
+  width: 100%;
+  height: 5px;
+  background: var(--hair);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sim-scrub-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--mono-font, monospace);
+}
+
+.sim-scrub-time {
+  color: var(--ink-2);
+}
+
+/* -- 1c. Right zone ----------------------------------------------------- */
+
+.sim-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sim-live-pnl-chip,
+.sim-confluence-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.sim-confluence-pill {
+  border-radius: 999px;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sim-pnl-lbl {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sim-pnl-val {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--mono-font, monospace);
+}
+
+.sim-bull-count {
+  color: var(--pnl-gain);
+}
+
+.sim-bear-count {
+  color: var(--pnl-loss);
+}
+
+.sim-sep {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.sim-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-header-btn:hover {
+  color: var(--ink);
+  border-color: var(--brand);
+}
+
+.sim-header-btn[aria-pressed="true"] {
+  color: var(--brand-on);
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+
+.sim-header-btn--icon {
+  padding: 5px 7px;
+}
+
+/* -- 2. Main workspace body ------------------------------------------- */
+
+.sim-workspace-body {
+  flex: 1 1 58%;
+  min-height: 280px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+}
+
+.sim-chart-arena {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+}
+
+.sim-chart-wrapper {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* -- 2b. Collapsible parameters drawer --------------------------------- */
+
+.sim-params-drawer {
+  width: 320px;
+  min-width: 320px;
+  background-color: var(--surface-2);
+  border-left: 1px solid var(--hair);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 30;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.sim-drawer-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hair);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--surface-2);
+}
+
+.sim-drawer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-drawer-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sim-drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sim-drawer-close-btn:hover {
+  color: var(--ink);
+}
+
+.sim-drawer-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.sim-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sim-controls__strategy {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.sim-controls__origin {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sim-controls__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-controls__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sim-controls__label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-controls__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sim-controls__input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-controls__input {
+  width: 100%;
+  background: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 5px 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-family: var(--mono-font, monospace);
+  outline: none;
+}
+
+.sim-controls__input:focus {
+  border-color: var(--brand);
+}
+
+.sim-controls__input--readonly {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.sim-controls__suffix {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sim-controls__hint {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.sim-controls__badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: var(--brand-tint);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sim-controls__issues {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--pnl-loss);
+}
+
+.sim-controls__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hair);
+}
+
+.sim-run-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--brand);
+  color: var(--brand-on);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sim-run-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sim-controls__secondary {
+  display: flex;
+  gap: 8px;
+}
+
+.sim-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sim-ghost-btn:hover {
+  color: var(--ink);
+  border-color: var(--brand);
+}
+
+/* -- 3. Bottom dock nav ------------------------------------------------- */
+
+.sim-bottom-dock {
+  flex: 0 0 42%;
+  min-height: 250px;
+  max-height: 50%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-2);
+  border-top: 1px solid var(--hair);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.sim-dock-nav {
+  height: 38px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--surface-3);
+  border-bottom: 1px solid var(--hair);
+}
+
+/* `.sim-dock-tabs`/`.sim-dock-body` are shared with the pre-command-bar
+   dock shell (`.sim-dock`, now unused — the bottom dock owns its own
+   flex sizing on `.sim-bottom-dock`); these redeclare fe's values for
+   the tab strip nested in `.sim-dock-nav` and the scroll body nested in
+   `.sim-bottom-dock`, overriding the earlier, now-stale rules above by
+   source order. */
+.sim-dock-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  border-bottom: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.sim-dock-body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding: 14px 18px;
+  background-color: var(--surface);
+}
+
+.sim-dock-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.sim-dock-tab-btn:hover {
+  color: var(--ink);
+}
+
+.sim-dock-tab-btn[aria-pressed="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--brand);
+}
+
+.sim-badge-ready {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--pnl-gain);
+  background-color: color-mix(in srgb, var(--pnl-gain) 15%, transparent);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.sim-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* -- 3b. Overview pane: KPI grid + split grid --------------------------- */
+
+.sim-overview-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sim-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.sim-kpi-card {
+  padding: 14px 16px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-kpi-lbl {
+  font-size: 11px;
+  color: var(--ink-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sim-kpi-val {
+  font-family: var(--mono-font, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.sim-kpi-val-aside {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.sim-kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sim-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.sim-chart-card,
+.sim-heatmap-card {
+  padding: 14px 16px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+
+.sim-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.sim-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.sim-card-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.sim-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sim-pill--bullish {
+  color: var(--pnl-gain);
+  background-color: color-mix(in srgb, var(--pnl-gain) 15%, transparent);
+}
+
+.sim-pill--bearish {
+  color: var(--pnl-loss);
+  background-color: color-mix(in srgb, var(--pnl-loss) 15%, transparent);
+}
+
+@media (max-width: 1200px) {
+  .sim-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sim-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -- 3c. Signals pane header --------------------------------------------- */
+
+.sim-signals-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+}
+
+.sim-signals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sim-signals-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-signals-stamp {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* -- 3d. Report pane (fe's `results-panel.tsx`) -------------------------- */
+
+.sim-report-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sim-report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sim-report-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-report-run-id {
+  font-family: var(--mono-font, monospace);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.sim-run-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--pnl-loss);
+  color: var(--pnl-loss);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.sim-report-card {
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 12px;
+  background-color: var(--surface-3);
+}
+
+.sim-report-card__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.sim-report-card__note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
