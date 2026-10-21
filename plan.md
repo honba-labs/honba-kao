@@ -566,6 +566,8 @@ All scripts green.
   - [x] Task 4: CSS category color variable mapping (--studio-cat-*) (COMPLETED)
   - [ ] Task 5: AI Co-Pilot chat drawer, candidate diff cards, and apply/discard actions
   - [ ] Task 6: Autonomous Researcher browser mode: up to 1000-iteration closed-loop mutation
+  - [ ] Task 7: StockSharp 100+ Indicator Palette (Visual canvas nodes for all Trend, Momentum, Volatility, Volume, Depth, and Pattern indicators)
+  - [ ] Task 8: StockSharp Odysseus Genetic Generator Workbench (Visual rule tree inspector, generation-by-generation evolution monitor, interactive Pareto frontier chart)
 - [ ] **4.3** Simulator Workbench (Leptos 0.7 CSR Port)
       — see `honba-docs/docs/architecture/kao_simulator_port.md` (HBD-2026-DES-005)
   - [ ] Strategy hand-off from Strategy Studio via sessionStorage / query parameter
