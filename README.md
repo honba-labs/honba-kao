@@ -70,7 +70,7 @@ All builds explicitly resort to either `dev` or `prod` profiles (instead of unop
 - **Dev Profile (`dev`) — Default**:
   - `make build` / `make build-dev` (via Trunk) or `cargo check --profile dev --workspace`
   - Optimized for fast iterative compilation and interactive debugging with `opt-level = 1`.
-  - `make serve` / `trunk serve` runs on `http://127.0.0.1:8080` with `/api/*` proxied to `:8000`.
+  - `make dev` / `trunk serve` runs on `http://127.0.0.1:8080` with `/api/*` proxied to `:8000`.
 
 - **Production build (`release`, mirrored by `prod`)**:
   - `make build-prod` (`trunk build --release`) or `cargo check --profile prod --workspace`
@@ -84,7 +84,7 @@ All builds explicitly resort to either `dev` or `prod` profiles (instead of unop
     cd honba-ya && cargo run -p honba-ya-cli -- serve
 
     # Terminal 2 — frontend
-    make serve            # http://127.0.0.1:8080 (dev profile)
+    make dev              # http://127.0.0.1:8080 (dev profile)
                           # /api/* proxied to :8000
 
 ## Release Workflow

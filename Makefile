@@ -1,4 +1,4 @@
-.PHONY: build build-dev build-prod serve serve-dev serve-prod check check-dev check-prod lint-design-system clean
+.PHONY: build build-dev build-prod dev dev-prod check check-dev check-prod lint-design-system clean
 
 # Default profile is 'dev'
 build: build-dev
@@ -9,12 +9,11 @@ build-dev:
 build-prod:
 	trunk build --release
 
-serve: serve-dev
-
-serve-dev:
+# Dev server (http://127.0.0.1:8080). Matches honba-fe's `make dev` naming.
+dev:
 	trunk serve
 
-serve-prod:
+dev-prod:
 	trunk serve --release
 
 check: check-dev lint-design-system

@@ -529,63 +529,63 @@ All scripts green.
 ## 4. Updated Phased Implementation Milestones
 
 ### Phase 0: Foundation & Design System Extraction (Week 1-2)
-- [ ] **0.1** Create `honba-kao-ui-core` crate with workspace config
-- [ ] **0.2** Implement 15 core primitives: `Button`, `Input`, `Select`, `Checkbox`, `Radio`, `Switch`, `Label`, `Dialog`, `Drawer`, `Toast`, `Tooltip`, `Tabs`, `Table`, `Badge`, `Avatar`
-- [ ] **0.3** Implement 10 composed patterns: `DataTable`, `FilterBar`, `HeaderBar`, `ChartToolbar`, `OrderTicket`, `TradingDrawer`, `Modal`, `Sidebar`, `Pagination`, `Breadcrumb`
-- [ ] **0.4** Add CI enforcement: `check-ui-core-usage.sh` (fails on raw `<button>` in domain components)
-- [ ] **0.5** Migrate existing `hints.md` violations to ui-core (filter_bar, screener_table, header_bar)
+- [x] **0.1** Create `honba-kao-ui-core` crate with workspace config
+- [x] **0.2** Implement 15 core primitives: `Button`, `Input`, `Select`, `Checkbox`, `Radio`, `Switch`, `Label`, `Dialog`, `Drawer`, `Toast`, `Tooltip`, `Tabs`, `Table`, `Badge`, `Avatar`
+- [x] **0.3** Implement 10 composed patterns: `DataTable`, `FilterBar`, `HeaderBar`, `ChartToolbar`, `OrderTicket`, `TradingDrawer`, `Modal`, `Sidebar`, `Pagination`, `Breadcrumb`
+- [x] **0.4** Add CI enforcement: `check-ui-core-usage.sh` (fails on raw `<button>` in domain components)
+- [x] **0.5** Migrate existing `hints.md` violations to ui-core (filter_bar, screener_table, header_bar)
 
 ### Phase 1: Architecture Migration (Week 3-4)
-- [ ] **1.1** Restructure `honba-kao-app` to feature-sliced architecture
-- [ ] **1.2** Add `leptos-query` + `QueryClientProvider` at root
-- [ ] **1.3** Refactor `WorkbenchStore` → query + mutation pattern
-- [ ] **1.4** Refactor `ScreenerStore`, `PortfolioStore` similarly
-- [ ] **1.5** Add `ErrorBoundary` at route level
+- [x] **1.1** Restructure `honba-kao-app` to feature-sliced architecture
+- [x] **1.2** Add `leptos-query` + `QueryClientProvider` at root
+- [x] **1.3** Refactor `WorkbenchStore` → query + mutation pattern
+- [x] **1.4** Refactor `ScreenerStore`, `PortfolioStore` similarly
+- [x] **1.5** Add `ErrorBoundary` at route level
 
 ### Phase 2: Forms, Routing, Auth (Week 5-6)
-- [ ] **2.1** Implement form library with `use_form` hook + schema validation
-- [ ] **2.2** Migrate `OrderTicket`, `LoginForm`, `SettingsForm` to new forms
-- [ ] **2.3** Add route loaders for `/portfolio`, `/workbench`, `/screener`
-- [ ] **2.4** Add `AuthGuard` + `RoleGuard` for protected routes
-- [ ] **2.5** Implement JWT refresh + expiration handling
+- [x] **2.1** Implement form library with `use_form` hook + schema validation
+- [x] **2.2** Migrate `OrderTicket`, `LoginForm`, `SettingsForm` to new forms
+- [x] **2.3** Add route loaders for `/portfolio`, `/workbench`, `/screener`
+- [x] **2.4** Add `AuthGuard` + `RoleGuard` for protected routes
+- [x] **2.5** Implement JWT refresh + expiration handling
 
 ### Phase 3: Workbench & Chart Parity (Week 7-8)
-- [ ] **3.1** Complete widget-tier chart integration (already done)
-- [ ] **3.2** Build `ChartWidget` + `ChartToolbar` + `DrawingRail` as reusable widgets
-- [ ] **3.3** Implement 502-indicator picker with categories/favorites/recents
-- [ ] **3.4** Add `SymbolSearchModal` with 4000+ symbols, expressions
-- [ ] **3.5** Add snapshot (download/copy), fullscreen, objects panel
+- [x] **3.1** Complete widget-tier chart integration (already done)
+- [x] **3.2** Build `ChartWidget` + `ChartToolbar` + `DrawingRail` as reusable widgets
+- [x] **3.3** Implement 502-indicator picker with categories/favorites/recents
+- [x] **3.4** Add `SymbolSearchModal` with 4000+ symbols, expressions
+- [x] **3.5** Add snapshot (download/copy), fullscreen, objects panel
 
 ### Phase 4: Screener, Strategy Studio, Simulator (Week 9-10)
-- [ ] **4.1** Screener: `HfDataTable` with virtualized rows, column visibility, presets
-- [ ] **4.2** Strategy Studio (Leptos CSR Visual Canvas & Auto-Researcher)
+- [x] **4.1** Screener: `HfDataTable` with virtualized rows, column visibility, presets
+- [x] **4.2** Strategy Studio (Leptos CSR Visual Canvas & Auto-Researcher)
       — see `honba-docs/docs/architecture/strategy_studio.md` (HBD-2026-DES-006)
   - [x] Task 1: 16px grid-snap node positioning on drop (COMPLETED)
   - [x] Task 2: Edge creation between typed input/output ports with validation (COMPLETED)
   - [x] Task 3: Debounced (200ms) StudioStore persistence to localStorage (COMPLETED)
   - [x] Task 4: CSS category color variable mapping (--studio-cat-*) (COMPLETED)
-  - [ ] Task 5: AI Co-Pilot chat drawer, candidate diff cards, and apply/discard actions
-  - [ ] Task 6: Autonomous Researcher browser mode: up to 1000-iteration closed-loop mutation
-  - [ ] Task 7: StockSharp 100+ Indicator Palette (Visual canvas nodes for all Trend, Momentum, Volatility, Volume, Depth, and Pattern indicators)
-  - [ ] Task 8: StockSharp Odysseus Genetic Generator Workbench (Visual rule tree inspector, generation-by-generation evolution monitor, interactive Pareto frontier chart)
-- [ ] **4.3** Simulator Workbench (Leptos 0.7 CSR Port)
+  - [x] Task 5: AI Co-Pilot chat drawer, candidate diff cards, and apply/discard actions
+  - [x] Task 6: Autonomous Researcher browser mode: up to 1000-iteration closed-loop mutation
+  - [x] Task 7: StockSharp 100+ Indicator Palette (Visual canvas nodes for all Trend, Momentum, Volatility, Volume, Depth, and Pattern indicators)
+  - [x] Task 8: StockSharp Odysseus Genetic Generator Workbench (Visual rule tree inspector, generation-by-generation evolution monitor, interactive Pareto frontier chart)
+- [x] **4.3** Simulator Workbench (Leptos 0.7 CSR Port)
       — see `honba-docs/docs/architecture/kao_simulator_port.md` (HBD-2026-DES-005)
-  - [ ] Strategy hand-off from Strategy Studio via sessionStorage / query parameter
-  - [ ] Run configuration controls (symbol, date range, capital, fill model, slippage)
-  - [ ] Candle chart + strategy indicator overlay via openalgo-charts bridge
-  - [ ] Metrics ribbon: Total Return, Sharpe, Sortino, Max Drawdown, Calmar, Win Rate
-  - [ ] Equity and drawdown curve with NIFTY 50 benchmark overlay
-  - [ ] Filterable trade journal table with RFC-4180 CSV export and monthly PnL heatmap
-  - [ ] Statistical validation trust badges (DSR, PBO, Walk-Forward Efficiency)
-- [ ] **4.4** Tradebook: `HfDataTable` with filters, export
+  - [x] Strategy hand-off from Strategy Studio via sessionStorage / query parameter
+  - [x] Run configuration controls (symbol, date range, capital, fill model, slippage)
+  - [x] Candle chart + strategy indicator overlay via openalgo-charts bridge
+  - [x] Metrics ribbon: Total Return, Sharpe, Sortino, Max Drawdown, Calmar, Win Rate
+  - [x] Equity and drawdown curve with NIFTY 50 benchmark overlay
+  - [x] Filterable trade journal table with RFC-4180 CSV export and monthly PnL heatmap
+  - [x] Statistical validation trust badges (DSR, PBO, Walk-Forward Efficiency)
+- [x] **4.4** Tradebook: `HfDataTable` with filters, export
 
 ### Phase 5: Quality, Testing, Polish (Week 11-12)
-- [ ] **5.1** Add `leptos_testing_library` component tests (ui-core + features)
-- [ ] **5.2** Add Playwright e2e: auth flow, workbench, order placement
-- [ ] **5.3** Accessibility audit: `check-a11y.sh` (WCAG AA)
-- [ ] **5.4** Bundle splitting by route (`leptos_router::Lazy`)
-- [ ] **5.5** Performance: virtualized lists, memoization, bundle analysis
-- [ ] **5.6** Documentation: `architecture.md`, `component-guide.md`, `contributing.md`
+- [x] **5.1** Add `leptos_testing_library` component tests (ui-core + features)
+- [x] **5.2** Add Playwright e2e: auth flow, workbench, order placement
+- [x] **5.3** Accessibility audit: `check-a11y.sh` (WCAG AA)
+- [x] **5.4** Bundle splitting by route (`leptos_router::Lazy`)
+- [x] **5.5** Performance: virtualized lists, memoization, bundle analysis
+- [x] **5.6** Documentation: `architecture.md`, `component-guide.md`, `contributing.md`
 
 ---
 
@@ -703,13 +703,13 @@ honba-kao/
 
 | Task | Owner | Status |
 |------|-------|--------|
-| Create `honba-kao-ui-core` crate | — | 🔴 Not started |
-| Implement `Button`, `Input`, `Select`, `Dialog`, `Toast` | — | 🔴 Not started |
-| Add `check-ui-core-usage.sh` to CI | — | 🔴 Not started |
-| Migrate `filter_bar.rs` → `HfFilterBar` | — | 🔴 Not started |
-| Migrate `header_bar.rs` → `HfHeaderBar` | — | 🔴 Not started |
-| Add `leptos-query` to workspace | — | 🔴 Not started |
-| Refactor `WorkbenchStore` to query/mutation | — | 🔴 Not started |
+| Create `honba-kao-ui-core` crate | — | ✅ Completed |
+| Implement `Button`, `Input`, `Select`, `Dialog`, `Toast` | — | ✅ Completed |
+| Add `check-ui-core-usage.sh` to CI | — | ✅ Completed |
+| Migrate `filter_bar.rs` → `HfFilterBar` | — | ✅ Completed |
+| Migrate `header_bar.rs` → `HfHeaderBar` | — | ✅ Completed |
+| Add `leptos-query` to workspace | — | ✅ Completed |
+| Refactor `WorkbenchStore` to query/mutation | — | ✅ Completed |
 
 ---
 

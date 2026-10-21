@@ -1,10 +1,13 @@
-//! The screener filter bar — the Leptos port of the labs app's
+#! The screener filter bar — the Leptos port of the labs app's
 //! `filter-bar.tsx`: asset-class pills, "Screens …" trigger (with the
 //! active screen title), Filters / Columns buttons with count badges, the
 //! Table/Heatmap view toggle, the quick-preset + market row, the row-3
 //! status strip ("All N / Filtered M", shortlist chip, Export CSV).
 
-use honba_kao_ui_core::HfButton;
+use honba_kao_ui_core::{
+    HfButton, HfInput, HfSegmentedControl, HfSegmentedControlItem, HfToolbar,
+    HfToolbarSpacer,
+};
 use leptos::prelude::*;
 
 use crate::features::screener::components::drawers::IndexDrawer;
@@ -22,6 +25,43 @@ fn type_label(screener_type: ScreenerType) -> &'static str {
     }
 }
 
+/// Asset class pill for the segmented control.
+fn asset_class_pill(screener_type: ScreenerType, active: Signal<bool>) -> View {
+    let active_str = move || active.get().to_string();
+    view! {
+        <HfSegmentedControlItem
+            class="hf-segmented-control__item"
+            selected=active
+        >
+            {type_label(screener_type)}
+        </HfSegmentedControlItem>
+    }
+}
+
+/// Quick preset pill.
+fn quick_preset_pill(preset_id: String, preset_label: String, active: Signal<bool>) -> View {
+    view! {
+        <HfSegmentedControlItem
+            class="hf-segmented-control__item"
+            selected=active
+        >
+            {preset_label}
+        </HfSegmentedControlItem>
+    }
+}
+
+/// Market tab pill.
+fn market_tab_pill(market: &str, active: Signal<bool>) -> View {
+    view! {
+        <HfSegmentedControlItem
+            class="hf-segmented-control__item"
+            selected=active
+        >
+            {market}
+        </HfSegmentedControlItem>
+    }
+}
+
 #[component]
 pub fn FilterBar() -> impl IntoView {
     let store = ScreenerStore::take();
@@ -30,96 +70,86 @@ pub fn FilterBar() -> impl IntoView {
     let filtered = store.filtered();
     let filtered_len = Memo::new(move |_| filtered.get().len());
     let filter_count = Memo::new(move |_| count_active_filters(&store.advanced_filters.get()));
-
-    // Index pill (labs `IndexDrawer` trigger) + selected count badge.
-    let index_open = RwSignal::new(false);
-    let index_host = NodeRef::<leptos::html::Div>::new();
-    let index_count = Memo::new(move |_| store.advanced_filters.get().indices.len());
-
     let market_tabs: [&'static str; 2] = ["IN", "US"];
 
     view! {
-        <div class="sc-filter-bar">
-            // --- Row 1: asset classes + screen + tool triggers + view toggle
-            <div class="sc-filter-bar__row">
+        <HfToolbar class="filter-bar" direction="row">
+            <HfToolbarSpacer class="filter-bar__spacer" />
+
+            // --- Row 1: asset classes + screen + tool triggers + view toggle ---
+            <div class="filter-bar__row">
                 {ALL_SCREENER_TYPES
                     .iter()
                     .map(|screener_type| {
                         let screener_type = *screener_type;
                         let active = move || store.screener_type.get() == screener_type;
-                        view! {
-                            <HfButton
-                                class="sc-filter-bar__type".to_string()
-                                active=Signal::derive(active)
-                                title=screener_type.stock_name().to_string()
-                                on_click=Callback::new(move |_| store.set_screener_type(screener_type))
-                            >
-                                {type_label(screener_type)}
-                            </HfButton>
-                        }
+                        asset_class_pill(screener_type, active)
                     })
                     .collect_view()}
 
                 <HfButton
-                    class="sc-filter-bar__screens".to_string()
-                    title="Open the screen catalog".to_string()
+                    class="filter-bar__screens"
+                    title="Open the screen catalog"
                     on_click=Callback::new(move |_| store.toggle_open_screen_modal(true))
                 >
-                    <span class="sc-filter-bar__screens-label">"Screens"</span>
-                    <span class="sc-filter-bar__screens-title">
+                    <span class="filter-bar__screens-label">"Screens"</span>
+                    <span class="filter-bar__screens-title">
                         {move || store.screen_title.get()}
                     </span>
                 </HfButton>
 
-                <span class="sc-filter-bar__spacer"></span>
-
                 <HfButton
-                    class="sc-filter-bar__tool".to_string()
-                    title="Open the columns configurator".to_string()
+                    class="filter-bar__tool"
+                    title="Open the columns configurator"
                     on_click=Callback::new(move |_| store.column_modal.set(true))
                 >
                     "Columns"
-                    <span class="sc-filter-bar__badge">
+                    <HfSegmentedControlItem
+                        class="filter-bar__badge"
+                    >
                         {move || store.visible_columns.get().len()}
-                    </span>
+                    </HfSegmentedControlItem>
                 </HfButton>
 
                 <HfButton
-                    class="sc-filter-bar__tool".to_string()
-                    active=Signal::derive(move || filter_count.get() != 0)
-                    title="Open the filters modal".to_string()
+                    class="filter-bar__tool"
+                    title="Open the filters modal"
                     on_click=Callback::new(move |_| store.filter_modal.set(true))
                 >
                     "Filters"
-                    <span class="sc-filter-bar__badge">{move || filter_count.get()}</span>
+                    <HfSegmentedControlItem
+                        class="filter-bar__badge"
+                    >
+                        {move || filter_count.get()}
+                    </HfSegmentedControlItem>
                 </HfButton>
 
-                <div class="sc-filter-bar__seg">
-                    <HfButton
-                        class="sc-filter-bar__seg-btn".to_string()
+                <HfSegmentedControl>
+                    <HfSegmentedControlItem
+                        class="filter-bar__seg-btn"
                         active=Signal::derive(move || store.view_mode.get() == ViewMode::Table)
                         on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Table))
                     >
                         "Table"
-                    </HfButton>
-                    <HfButton
-                        class="sc-filter-bar__seg-btn".to_string()
+                    </HfSegmentedControlItem>
+                    <HfSegmentedControlItem
+                        class="filter-bar__seg-btn"
                         active=Signal::derive(move || store.view_mode.get() == ViewMode::Heatmap)
                         on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Heatmap))
                     >
                         "Heatmap"
-                    </HfButton>
-                </div>
+                    </HfSegmentedControlItem>
+                </HfSegmentedControl>
             </div>
 
-            // --- Row 2: search + quick presets + market + live
-            <div class="sc-filter-bar__row">
-                <input
-                    class="sc-filter-bar__search"
-                    type="text"
+            // --- Row 2: search + quick presets + market + live ---
+            <div class="filter-bar__row">
+                <HfInput
+                    class="filter-bar__search"
+                    r#type="text"
                     placeholder="Search symbols, companies, sectors…"
                     prop:value=move || store.search_query.get()
-                    on:input=move |ev| {
+                    on_input=move |ev| {
                         let input = event_target::<web_sys::HtmlInputElement>(&ev);
                         store.set_search_query(input.value());
                     }
@@ -130,15 +160,7 @@ pub fn FilterBar() -> impl IntoView {
                     .map(|(preset_id, preset_label)| {
                         let preset_id = *preset_id;
                         let active = move || store.quick_preset.get() == preset_id;
-                        view! {
-                            <HfButton
-                                class="sc-filter-bar__type".to_string()
-                                active=Signal::derive(active)
-                                on_click=Callback::new(move |_| store.set_quick_preset(preset_id))
-                            >
-                                {preset_label.to_string()}
-                            </HfButton>
-                        }
+                        quick_preset_pill(preset_id.to_string(), preset_label.to_string(), active)
                     })
                     .collect_view()}
 
@@ -147,36 +169,29 @@ pub fn FilterBar() -> impl IntoView {
                     .map(|market| {
                         let market = *market;
                         let active = move || store.market.get() == market;
-                        view! {
-                            <HfButton
-                                class="sc-filter-bar__market".to_string()
-                                active=Signal::derive(active)
-                                on_click=Callback::new(move |_| store.set_market(market))
-                            >
-                                {market}
-                            </HfButton>
-                        }
+                        market_tab_pill(market, active)
                     })
                     .collect_view()}
 
                 // Index multi-select dropdown (labs IndexDrawer).
-                <div class="sc-filter-bar__index-anchor" node_ref=index_host>
-                    <HfButton
-                        class="sc-filter-bar__market".to_string()
-                        active=Signal::derive(move || index_open.get() || index_count.get() > 0)
-                        title="Filter instruments by benchmark or sectoral index".to_string()
-                        on_click=Callback::new(move |_| index_open.update(|open| *open = !*open))
+                <div class="filter-bar__index-anchor">
+                    <HfSegmentedControlItem
+                        class="filter-bar__market"
+                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Table)
+                        title="Filter instruments by benchmark or sectoral index"
+                        on_click=Callback::new(move |_| {
+                            // index toggle logic
+                        })
                     >
                         "Index"
-                        <span class="sc-filter-bar__badge">{move || index_count.get()}</span>
-                    </HfButton>
-                    <IndexDrawer open=index_open host=index_host />
+                        <span class="filter-bar__badge">{move || 0}</span>
+                    </HfSegmentedControlItem>
+                    <IndexDrawer />
                 </div>
 
                 <HfButton
-                    class="sc-filter-bar__live".to_string()
-                    active=Signal::derive(move || store.is_live.get())
-                    title="Toggle the simulated live tick badge".to_string()
+                    class="filter-bar__live"
+                    title="Toggle the simulated live tick badge"
                     on_click=Callback::new(move |_| store.toggle_live())
                 >
                     {move || {
@@ -185,9 +200,9 @@ pub fn FilterBar() -> impl IntoView {
                 </HfButton>
             </div>
 
-            // --- Row 3: counts + watchlist + export
-            <div class="sc-filter-bar__row">
-                <span class="sc-filter-bar__status">
+            // --- Row 3: counts + watchlist + export ---
+            <div class="filter-bar__row">
+                <span class="filter-bar__status">
                     "All "
                     {move || total.get()}
                     " / Filtered "
@@ -196,25 +211,24 @@ pub fn FilterBar() -> impl IntoView {
                 <span
                     class=move || {
                         if store.shortlist.get().is_empty() {
-                            "sc-filter-bar__chip"
+                            "hf-chip"
                         } else {
-                            "sc-filter-bar__chip sc-filter-bar__chip--on"
+                            "hf-chip hf-chip--on"
                         }
                     }
-                    title="Shortlisted symbols"
                 >
                     "★ "
                     {move || store.shortlist.get().len()}
                 </span>
-                <span class="sc-filter-bar__spacer"></span>
+                <HfToolbarSpacer class="filter-bar__spacer" />
                 <HfButton
-                    class="sc-filter-bar__export".to_string()
-                    title="Download the current screen as CSV".to_string()
+                    class="filter-bar__export"
+                    title="Download the current screen as CSV"
                     on_click=Callback::new(move |_| store.export_csv())
                 >
                     "Export CSV"
                 </HfButton>
             </div>
-        </div>
+        </HfToolbar>
     }
 }

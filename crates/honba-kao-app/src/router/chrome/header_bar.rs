@@ -1,5 +1,5 @@
-//! Top application bar: brand → spacer → actions.
-//! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
+#! Top application bar: brand → spacer → actions.
+#! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
 //! cluster is also rail-owned (bottom-left), so the bar carries only the brand
 //! block, the theme/language controls and the trading-mode indicator.
 //!
@@ -8,10 +8,11 @@
 //!   * transparent over the landing hero, solid once scrolled;
 //!   * the PAPER | LIVE indicator toggles the shared trading-mode store.
 
+use honba_kao_ui_core::{
+    HfButton, HfButtonVariant, HfIconButton, HfTradingModeToggle, HfTradingModeType,
+};
 use leptos::prelude::*;
 use leptos_router::components::A;
-
-use honba_kao_ui_core::{HfButton, HfButtonVariant, HfIconButton, HfTradingModeToggle, HfTradingModeType};
 
 use crate::shared::components::BrandLogo;
 use crate::shared::contexts::{use_auth, use_language};
@@ -118,46 +119,23 @@ pub fn HeaderBar(
                                                             Mode::Light => "Light",
                                                         }}
                                                     </div>
-                                                    {THEMES
-                                                        .iter()
-                                                        .filter(move |spec| spec.mode == mode)
-                                                        .map(|spec| {
-                                                            let id = spec.id;
-                                                            view! {
-                                                                <HfButton
-                                                                    class="theme-menu__item"
-                                                                    role="menuitemradio"
-                                                                    active=Signal::derive(move || {
-                                                                        theme.current().id == id
-                                                                    })
-                                                                    on_click=Callback::new(move |_| {
-                                                                        theme.set(Preference::Theme(id));
-                                                                        is_theme_open.set(false);
-                                                                    })
-                                                                >
-                                                                    <span class="theme-menu__swatch" data-theme=id />
-                                                                    <span class="theme-menu__label">{spec.label}</span>
-                                                                </HfButton>
-                                                            }
-                                                        })
-                                                        .collect_view()}
                                                 }
+                                                .collect_view()}
                                             })
                                             .collect_view()}
                                     </div>
                                 }
                             })
-                    }}
+                            .collect_view()}
                 </div>
 
-                <HfButton
-                    variant=HfButtonVariant::Ghost
+                <HfIconButton
                     class="header-bar__lang"
                     title="Language"
                     on_click=Callback::new(move |_| language.toggle())
                 >
                     {move || language.language.get().label()}
-                </HfButton>
+                </HfIconButton>
 
                 {move || if auth.is_authenticated() {
                     // The single user entry point is the rail's bottom-left
@@ -170,14 +148,15 @@ pub fn HeaderBar(
                             class="header-bar__trading-mode"
                         />
                     }
-                        .into_any()
                 } else {
                     view! {
-                        <span class="header-bar__cta">
-                            <A href=ROUTES::LOGIN>{move || language.t("auth.sign_in")}</A>
-                        </span>
+                        <HfButton
+                            class="header-bar__cta"
+                            href=ROUTES::LOGIN
+                        >
+                            {move || language.t("auth.sign_in")}
+                        </HfButton>
                     }
-                        .into_any()
                 }}
             </div>
         </header>
