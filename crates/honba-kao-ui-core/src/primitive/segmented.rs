@@ -71,7 +71,6 @@ pub fn HfSegmentedControlItem(
     view! {
         <div
             class=item_class
-            disabled=disabled
             role="button"
             tabindex=if disabled { "-1" } else { "0" }
             aria-disabled=disabled

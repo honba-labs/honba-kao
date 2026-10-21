@@ -71,7 +71,7 @@ pub fn HfToast(
             </div>
             <button
                 class="hf-toast__action"
-                onclick=move |_| {
+                on:click=move |_| {
                     // dispatch dismiss event or remove from viewport
                 }
             >
@@ -87,10 +87,11 @@ pub fn HfToastProvider(
     /// Children rendered inside the toast viewport.
     children: Children,
     /// Maximum number of concurrent toasts.
+    #[prop(optional)]
     max_toasts: Option<usize>,
 ) -> impl IntoView {
     view! {
-        <div class="hf-toast-viewport">
+        <div class="hf-toast-viewport" data-max-toasts=max_toasts.map(|max| max.to_string())>
             {children()}
         </div>
     }

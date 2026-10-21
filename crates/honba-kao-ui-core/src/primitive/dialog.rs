@@ -48,7 +48,10 @@ pub fn HfDialog(
         <div
             class=format!("hf-dialog {overlay_variant_class} {class}").trim().to_string()
         >
-            <div class="hf-dialog__overlay" aria-hidden="true" />
+            <div
+                class=format!("hf-dialog__overlay {overlay_class}").trim().to_string()
+                aria-hidden="true"
+            />
             <div class="hf-dialog__content">{children()}</div>
         </div>
     }
@@ -72,10 +75,13 @@ pub fn HfDialogTrigger(
         <button
             class=format!("hf-dialog-trigger {class}").trim().to_string()
             on:click=move |ev| {
-                if !ev.target_dyn_ref::<web_sys::HtmlElement>()
-                    .map(|e| e.disabled())
-                    .unwrap_or(false)
-                {
+                use wasm_bindgen::JsCast;
+                let is_disabled = ev
+                    .target()
+                    .and_then(|target| target.dyn_into::<web_sys::HtmlButtonElement>().ok())
+                    .map(|button| button.disabled())
+                    .unwrap_or(false);
+                if !is_disabled {
                     on_click.run(ev);
                 }
             }
@@ -103,12 +109,9 @@ pub fn HfDialogAction(
 
     view! {
         <button
-            class=format!("hf-dialog-action {action_variant_class} {class}").trim().to_string()
+            class=format!("hf-dialog-action {action_class} {class}").trim().to_string()
         >
             {children()}
         </button>
     }
 }
-
-/* Note: `action_variant_class` is intentionally unused in this snippet —
-   the full implementation would match on `variant` similarly to `HfDialog`. */

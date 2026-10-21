@@ -281,3 +281,46 @@ pub const fn signal() -> &'static str { "M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 2
 
 /// Lucide `file-text` — paper trade documents / paper mode.
 pub const fn file_text() -> &'static str { "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7zM14 2v5h5M9 12h6M9 16h6M9 8h1" }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Simulator Command Bar / Bottom Dock Icons
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// Lucide `clock` — timeframe picker trigger.
+pub const fn clock() -> &'static str { "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2" }
+
+/// Lucide `calendar` — date-range picker trigger.
+pub const fn calendar() -> &'static str { "M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM16 2v4M8 2v4M3 10h18" }
+
+/// Lucide `external-link` — open in Strategy Studio.
+pub const fn external_link() -> &'static str { "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" }
+
+/// Lucide `activity` — signal confluence dock tab.
+pub const fn activity() -> &'static str { "M22 12h-4l-3 9L9 3l-3 9H2" }
+
+/// Lucide `bar-chart-2` — overview & performance dock tab.
+pub const fn bar_chart_2() -> &'static str { "M18 20V10M12 20V4M6 20v-6" }
+
+/// Lucide `file-spreadsheet` — trade journal dock tab.
+pub const fn file_spreadsheet() -> &'static str { "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h2M14 13h2M8 17h2M14 17h2" }
+
+/// Lucide `scroll-text` — execution logs dock tab.
+pub const fn scroll_text() -> &'static str { "M19 17V5a2 2 0 0 0-2-2H4M8 21h11a2 2 0 0 0 2-2v-2H8M4 17a2 2 0 0 0 2 2h2v-4H4a2 2 0 1 0 0 4z" }
+
+/// Lucide `shield-check` — server backtest report dock tab.
+pub const fn shield_check() -> &'static str { "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" }
+
+/// Lucide `play` (solid triangle outline) — run backtest action.
+pub const fn play() -> &'static str { "M5 3l16 9-16 9V3z" }
+
+/// Lucide `pause` — replay transport.
+pub const fn pause() -> &'static str { "M6 4h4v16H6zM14 4h4v16h-4z" }
+
+/// Lucide `skip-forward` — step one bar.
+pub const fn skip_forward() -> &'static str { "M5 4l10 8-10 8V4zM19 5v14" }
+
+/// Lucide `zap` — instant-complete replay.
+pub const fn zap() -> &'static str { "M13 2 3 14h9l-1 8 10-12h-9z" }
+
+/// Lucide `rotate-ccw` — reset replay.
+pub const fn rotate_ccw() -> &'static str { "M3 12a9 9 0 1 0 2.64-6.36L3 8M3 3v5h5" }
