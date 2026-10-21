@@ -99,43 +99,65 @@ pub struct SimAnalytics {
 // The dock tabs
 // ---------------------------------------------------------------------------
 
-/// The bottom dock's tab strip (fe's `dockTab` union, shaped like the
-/// screener's `DetailTab` enum). The `signals`/`portfolio` tabs fe also
-/// carried arrive with the replay engine (P7).
+/// The bottom dock's tab strip — fe's exact `dockTab` union in
+/// `SimulatorView.tsx` (`'overview' | 'trades' | 'portfolio' | 'signals' |
+/// 'logs' | 'report'`). The heatmap/validation/payload tabs this build
+/// briefly carried as separate dock tabs are folded into `Overview`
+/// (equity + heatmap, like fe's live overview) and `Report` (the
+/// `ReportPanel` — status, ribbon, validation badges, the raw payload —
+/// the Leptos port of fe's `results-panel.tsx`), so the strip now spells
+/// fe's six tabs one-for-one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum SimTab {
     /// Metrics, header, actions.
     #[default]
     Overview,
-    /// The trade journal table.
-    Journal,
-    /// The replay engine's confluence detail (P7; fe's `signals` dock).
-    Signals,
-    /// The sandbox-local book — engine trips + open position (P7; fe's
+    /// The trade journal table (fe's `trades` dock).
+    Trades,
+    /// The sandbox-local book — engine trips + open position (fe's
     /// `portfolio` dock).
     Portfolio,
-    /// The month × year heatmap.
-    Heatmap,
-    /// Trust badges + not-modelled assumptions.
-    Validation,
-    /// Run log + SSE event tail.
+    /// The replay engine's confluence detail (fe's `signals` dock).
+    Signals,
+    /// Run log + SSE event tail (fe's `logs` dock).
     Logs,
-    /// The raw request payload.
-    Payload,
+    /// The server backtest report: status, ribbon, validation, payload
+    /// (fe's `report` dock / `results-panel.tsx`).
+    Report,
 }
 
 impl SimTab {
-    /// fe's spelling, shown in the strip.
+    /// Every tab, in fe's strip order.
+    pub const ALL: [SimTab; 6] = [
+        SimTab::Overview,
+        SimTab::Trades,
+        SimTab::Portfolio,
+        SimTab::Signals,
+        SimTab::Logs,
+        SimTab::Report,
+    ];
+
+    /// fe's spelling, shown in the strip / read by tests and persistence.
     pub const fn as_str(self) -> &'static str {
         match self {
             SimTab::Overview => "overview",
-            SimTab::Journal => "journal",
-            SimTab::Signals => "signals",
+            SimTab::Trades => "trades",
             SimTab::Portfolio => "portfolio",
-            SimTab::Heatmap => "heatmap",
-            SimTab::Validation => "validation",
+            SimTab::Signals => "signals",
             SimTab::Logs => "logs",
-            SimTab::Payload => "payload",
+            SimTab::Report => "report",
+        }
+    }
+
+    /// The tab button's label text (fe's JSX label next to the icon).
+    pub const fn label(self) -> &'static str {
+        match self {
+            SimTab::Overview => "Overview & Performance",
+            SimTab::Trades => "Trade Journal",
+            SimTab::Portfolio => "Sandboxed Portfolio",
+            SimTab::Signals => "Signal Confluence",
+            SimTab::Logs => "Execution Logs",
+            SimTab::Report => "Server Backtest Report",
         }
     }
 }
@@ -162,6 +184,8 @@ pub struct SimulatorStore {
     pub tab: RwSignal<SimTab>,
     /// The analytics bundle for the results surface.
     pub analytics_bundle: Memo<SimAnalytics>,
+    /// The collapsible parameters drawer's open state (fe's `isParamsOpen`).
+    pub is_params_open: RwSignal<bool>,
 }
 
 impl SimulatorStore {
@@ -226,6 +250,7 @@ impl SimulatorStore {
             replay,
             tab,
             analytics_bundle,
+            is_params_open: RwSignal::new(false),
         }
     }
 
@@ -675,5 +700,8 @@ mod tests {
     fn the_dock_tabs_spell_fes_dock_names() {
         assert_eq!(SimTab::Signals.as_str(), "signals");
         assert_eq!(SimTab::Portfolio.as_str(), "portfolio");
+        assert_eq!(SimTab::Trades.as_str(), "trades");
+        assert_eq!(SimTab::Report.as_str(), "report");
+        assert_eq!(SimTab::ALL.len(), 6);
     }
 }

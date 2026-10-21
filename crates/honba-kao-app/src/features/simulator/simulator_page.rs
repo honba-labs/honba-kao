@@ -1,18 +1,19 @@
-//! Simulator — the strategy runner / backtester (port phase P5).
+//! Simulator — the strategy runner / backtester.
 //!
-//! The Leptos port of honba-fe's `SimulatorView` results surface: the run
-//! toolbar (selection, live request plan, execute action), the empty chart
-//! arena (P6 places the candle chart there; the realised **equity card**
-//! with its labelled benchmark overlay already reads the journal from the
-//! overview tab) and the bottom dock with the
-//! `overview | journal | heatmap | validation | logs | payload` tabs —
-//! fe's `signals`/`portfolio` docks follow with the replay engine (P7).
+//! The Leptos port of honba-fe's `SimulatorView`: the 56px replay command
+//! bar (strategy/symbol/timeframe/date-range pickers, the compact replay
+//! transport, the live P&L + confluence chips, the Parameters toggle), the
+//! chart arena with its collapsible parameters drawer, and the six-tab
+//! institutional bottom dock (`overview | trades | portfolio | signals |
+//! logs | report`) — fe's exact `dockTab` union (see
+//! [`SimTab`](crate::features::simulator::stores::simulator_store::SimTab)).
 //!
 //! The page owns a page-scoped [`SimulatorStore`]; every component below
-//! reads the same signals, so the run header, ribbon, journal and heat map
-//! stay consistent through the execute lifecycle (blocked → running →
-//! terminal → journal). A debug-build fixture replays a recorded run so the
-//! page renders honestly against real wire shapes without a server.
+//! reads the same signals, so the command bar, the chart, the drawer and
+//! the dock stay consistent through the execute lifecycle (blocked →
+//! running → terminal → journal) and the replay lifecycle (idle → playing
+//! → paused → completed). A debug-build fixture replays a recorded run so
+//! the page renders honestly against real wire shapes without a server.
 
 use std::sync::Arc;
 
@@ -20,17 +21,10 @@ use leptos::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 use crate::shared::api::http::client;
-use crate::features::simulator::components::equity_card::EquityCard;
-use crate::features::simulator::components::journal_table::JournalTable;
-use crate::features::simulator::components::metrics_ribbon::MetricsRibbon;
-use crate::features::simulator::components::monthly_heatmap::MonthlyHeatmap;
-use crate::features::simulator::components::portfolio_panel::PortfolioPanel;
-use crate::features::simulator::components::replay_controls::ReplayControls;
-use crate::features::simulator::components::run_log::RunLogDrawer;
-use crate::features::simulator::components::signals_panel::SignalsPanel;
+use crate::features::simulator::components::bottom_dock::BottomDock;
+use crate::features::simulator::components::command_bar::SimCommandBar;
+use crate::features::simulator::components::params_drawer::ParamsDrawer;
 use crate::features::simulator::components::simulator_chart::SimulatorChart;
-use crate::features::simulator::components::validation_badges::ValidationBadges;
-use honba_kao_ui_core::HfPageHeader;
 #[cfg(debug_assertions)]
 use crate::features::simulator::kernel::journal::{JournalState, JournalStatus};
 use crate::features::simulator::kernel::persistence::LocalStorage;
@@ -42,7 +36,7 @@ use crate::features::simulator::kernel::selection::universe_string;
 use crate::features::simulator::stores::controls_store::utc_today;
 #[cfg(target_arch = "wasm32")]
 use crate::features::simulator::stores::run_store::{BrowserClock, run_options};
-use crate::features::simulator::stores::simulator_store::{SimTab, SimulatorStore};
+use crate::features::simulator::stores::simulator_store::SimulatorStore;
 
 /// The debug fixture's completed run payload (the client crate's
 /// `backtest_response_completed.json` shapes, embedded verbatim — no
@@ -161,23 +155,9 @@ pub fn SimulatorPage() -> impl IntoView {
     let store = SimulatorStore::new(today, Some(Arc::new(LocalStorage)));
     store.controls.hydrate();
 
-    // -- Derived reads the components consume --------------------------------
-    let analytics = store.analytics_bundle;
-    let metrics = Memo::new(move |_| analytics.with(|bundle| bundle.ribbon.clone()));
-    let heatmap = Memo::new(move |_| analytics.with(|bundle| bundle.heatmap.clone()));
-    let wire_total_return = Memo::new(move |_| {
-        analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.total_return))
-    });
-    let rows = Memo::new(move |_| analytics.with(|bundle| bundle.rows.clone()));
-    let export_name = Memo::new(move |_| store.controls.strategy_name.with(|name| name.clone()));
-
-    // -- Equity card inputs (P6) -------------------------------------------
-    let run_generation = store.run.run_generation;
+    // -- Chart inputs -------------------------------------------------------
     let controls = store.controls.panel;
     let strategy = store.controls.strategy;
-    let equity_series = Memo::new(move |_| analytics.with(|bundle| bundle.equity_series.clone()));
-    let run_window = Memo::new(move |_| analytics.with(|bundle| bundle.window.clone()));
-    let benchmark_label = Memo::new(move |_| controls.with(|controls| controls.benchmark.clone()));
     let bar_spec_line = Memo::new(move |_| controls.with(|controls| controls.timeframe.clone()));
     // The chart's bar window rides the plan (the panel's resolved range), not
     // the run: fe's chart is useful before anything was simulated.
@@ -207,7 +187,7 @@ pub fn SimulatorPage() -> impl IntoView {
         })
     });
 
-    // -- Replay wiring (P7) ------------------------------------------------
+    // -- Replay wiring ------------------------------------------------------
     // The chart publishes its loaded dataset into the store; the engine is
     // (re-)initialised whenever the fe initKey tuple moves: the bars fold,
     // the instrument, the timeframe and the execution controls. Every
@@ -240,67 +220,31 @@ pub fn SimulatorPage() -> impl IntoView {
     // interval timer in the same position).
     on_cleanup(move || store.replay.driver.update(|token| *token += 1));
 
+    // The page's one engine-state memo — the command bar's replay cluster,
+    // live P&L chip and confluence pill, the overview KPI cards and the
+    // dock's tab counts all track the same replay generation (fe's
+    // `engineState` from `useSimulationEngine`), so a bar tick repaints
+    // every surface from one source instead of re-deriving the controller's
+    // state per reader.
+    let replay = store.replay;
+    let engine_state = Memo::new(move |_| {
+        replay.generation.track();
+        replay.state()
+    });
+
     #[cfg(target_arch = "wasm32")]
     let bars_seam: Option<crate::features::simulator::components::equity_card::BarsSeamRef> =
         Some(Arc::new(client()));
     #[cfg(not(target_arch = "wasm32"))]
     let bars_seam: Option<crate::features::simulator::components::equity_card::BarsSeamRef> = None;
 
-    // The validation slice off the run response; nothing is inferred when a
-    // payload carried no block.
-    let run = store.run.state;
-    let validation = Memo::new(move |_| {
-        run.with(|state| {
-            state
-                .response
-                .as_ref()
-                .and_then(|response| response.validation.clone())
-        })
-    });
-    let not_modelled = Memo::new(move |_| {
-        run.with(|state| {
-            state
-                .response
-                .as_ref()
-                .and_then(|response| response.assumptions.clone())
-        })
-        .and_then(|assumptions| assumptions.get("not_modelled").cloned())
-        .and_then(|value| serde_json::from_value::<Vec<String>>(value).ok())
-        .unwrap_or_default()
-    });
-
-    // -- Toolbar readouts ------------------------------------------------
-    let name = store.controls.strategy_name;
-    let controls = store.controls.panel;
-    let status_line = Memo::new(move |_| run.with(|state| state.status.as_str().to_string()));
-    let running = Memo::new(move |_| run.with(|state| state.status == SimRunStatus::Running));
-    let run_id_line =
-        Memo::new(move |_| run.with(|state| state.run_id.clone().unwrap_or_default()));
-    let error_line = Memo::new(move |_| run.with(|state| state.error.clone().unwrap_or_default()));
-    let last_plan = store.run.last_plan;
-    let plan_window = Memo::new(move |_| {
-        last_plan.with(|plan| {
-            plan.as_ref()
-                .map(|plan| format!("{} → {}", plan.range.0, plan.range.1))
-        })
-    });
-    let blocked = Memo::new(move |_| {
-        last_plan.with(|plan| {
-            plan.as_ref()
-                .map(|plan| !plan.issues.is_empty())
-                .unwrap_or(false)
-        })
-    });
-
-    // -- Execute wiring ----------------------------------------------------
+    // -- Execute wiring -------------------------------------------------------
     // The lifecycle runs on the browser's task queue and dies with the page;
     // `on_cleanup` aborts an in-flight loop exactly like fe's
-    // `AbortController` teardown did (the fold lands in `failed`). The Run
-    // button starts the spawn; the closure stays Fn because only the spawn
-    // future owns the store clone.
+    // `AbortController` teardown did (the fold lands in `failed`).
     let abort_flag = RwSignal::new(None::<RunAbort>);
     let exec_store = store.clone();
-    let on_run = move || {
+    let on_run = Callback::new(move |()| {
         if let Some(previous) = abort_flag.get_untracked() {
             previous.abort();
         }
@@ -323,10 +267,17 @@ pub fn SimulatorPage() -> impl IntoView {
         }
         #[cfg(not(target_arch = "wasm32"))]
         let _ = (&store, &abort);
-    };
+    });
     let reset_store = store.clone();
+    let on_clear = Callback::new(move |()| reset_store.run.reset());
+
     #[cfg(debug_assertions)]
-    let demo_store = RwSignal::new(store.clone());
+    let on_demo = {
+        let demo_store = RwSignal::new(store.clone());
+        Some(Callback::new(move |()| demo_store.with_untracked(load_demo_run)))
+    };
+    #[cfg(not(debug_assertions))]
+    let on_demo: Option<Callback<()>> = None;
 
     on_cleanup(move || {
         if let Some(abort) = abort_flag.get_untracked() {
@@ -334,213 +285,46 @@ pub fn SimulatorPage() -> impl IntoView {
         }
     });
 
-    // Copyable handles for the view closures.
-    let tab = store.tab;
+    let is_params_open = store.is_params_open;
 
     view! {
-        <div class="console">
-            <HfPageHeader
-                title="Simulator"
-                subtitle="Backtester · run the active strategy, journal its fills, read the results"
-            />
-
-            // -- Toolbar: selection + run lifecycle + execute ---------------
-            <div class="sim-toolbar">
-                <span class="sim-toolbar__title">{move || name.get()}</span>
-                <span class="sim-toolbar__meta">
-                    {move || controls.get().symbol.clone()}
-                    " · "
-                    {move || {
-                        plan_window.get().unwrap_or_else(|| "window unresolved".to_string())
-                    }}
-                </span>
-                <span class=move || {
-                    format!("sim-status sim-status--{}", status_line.get())
-                }>
-                    {move || status_line.get()}
-                </span>
-                <Show when=move || !run_id_line.get().is_empty()>
-                    <span class="sim-toolbar__meta">{move || run_id_line.get()}</span>
-                </Show>
-                <span class="sim-toolbar__actions">
-                    <button
-                        type="button"
-                        class="sim-toolbar__btn"
-                        disabled=move || running.get()
-                        on:click=move |_| on_run()
-                    >
-                        "Run"
-                    </button>
-                    <button
-                        type="button"
-                        class="sim-toolbar__btn sim-toolbar__btn--ghost"
-                        title="Clear the run and journal"
-                        on:click=move |_| reset_store.run.reset()
-                    >
-                        "Clear"
-                    </button>
-                    <Show
-                        when=move || cfg!(debug_assertions)
-                        fallback=move || view! { <span /> }
-                    >
-                        <button
-                            type="button"
-                            class="sim-toolbar__btn sim-toolbar__btn--ghost"
-                            title="Debug: replay a recorded completed run"
-                            on:click=move |_| demo_store.with_untracked(load_demo_run)
-                        >
-                            "Demo fixture"
-                        </button>                    </Show>
-                </span>
-            </div>
-            <Show when=move || !error_line.get().is_empty()>
-                <div class="sim-run-error">{move || error_line.get()}</div>
-            </Show>
-            <Show when=move || blocked.get()>
-                <div class="sim-run-error">
-                    "The panel is incomplete and the request is blocked — nothing was sent."
-                </div>
-            </Show>
-
-            // -- Chart arena (P6): bar container; volume pane, indicator
-            // overlays and markers follow the bridge work. The P7 replay
-            // wiring hands the loaded dataset to the store (one fetch,
-            // shared — fe read the chart's dataLayer bars) and lets the
-            // engine's visible slice replace the candles while a replay
-            // holds the view.
-            <SimulatorChart
+        <div class="simulator-view-root">
+            // -- Command bar: selection + replay transport + run lifecycle --
+            <SimCommandBar
+                store=store.clone()
+                engine_state=engine_state
                 instrument_id=instrument_id
-                bars_window=bars_window
-                bar_spec=bar_spec_line
-                status_note=chart_status
-                strategy=strategy
-                bars=bars_seam.clone()
-                on_bars=Callback::new(move |state| engine_bars.set(state))
-                replay_bars=replay_visible_signal
             />
 
-            // -- Replay transport (P7) -------------------------------------
-            <ReplayControls store=store.clone() />
-
-            // -- Bottom dock ------------------------------------------------
-            <div class="sim-dock">
-                <div class="sim-dock-tabs" role="tablist">
-                    {[
-                        SimTab::Overview,
-                        SimTab::Journal,
-                        SimTab::Signals,
-                        SimTab::Portfolio,
-                        SimTab::Heatmap,
-                        SimTab::Validation,
-                        SimTab::Logs,
-                        SimTab::Payload,
-                    ]
-                        .iter()
-                        .map(|side| {
-                            let key = *side;
-                            view! {
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    class=move || {
-                                        if tab.get() == key {
-                                            "sim-dock-tab sim-dock-tab--active".to_string()
-                                        } else {
-                                            "sim-dock-tab".to_string()
-                                        }
-                                    }
-                                    on:click=move |_| tab.set(key)
-                                >
-                                    {key.as_str()}
-                                </button>
-                            }
-                        })
-                        .collect_view()}
+            // -- Main workspace: chart arena + collapsible params drawer ----
+            <section class="sim-workspace-body">
+                <div class="sim-chart-arena">
+                    <div class="sim-chart-wrapper">
+                        <SimulatorChart
+                            instrument_id=instrument_id
+                            bars_window=bars_window
+                            bar_spec=bar_spec_line
+                            status_note=chart_status
+                            strategy=strategy
+                            bars=bars_seam.clone()
+                            on_bars=Callback::new(move |state| engine_bars.set(state))
+                            replay_bars=replay_visible_signal
+                        />
+                    </div>
                 </div>
 
-                {move || match tab.get() {
-                    SimTab::Overview => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <MetricsRibbon metrics=metrics />
-                            <EquityCard
-                                equity=equity_series
-                                window=run_window
-                                benchmark_label=benchmark_label
-                                bar_spec=bar_spec_line
-                                run_generation=run_generation
-                                bars=bars_seam.clone()
-                            />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Journal => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <JournalTable rows=rows export_name=export_name />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Signals => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <SignalsPanel store=store.clone() />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Portfolio => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <PortfolioPanel store=store.clone() />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Heatmap => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <MonthlyHeatmap heatmap=heatmap wire_total_return=wire_total_return />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Validation => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <ValidationBadges validation=validation not_modelled=not_modelled />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Logs => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <RunLogDrawer run=run />
-                        </div>
-                    }
-                        .into_any(),
-                    SimTab::Payload => view! {
-                        <div class="sim-dock-body" role="tabpanel">
-                            <PayloadPreview last_plan />
-                        </div>
-                    }
-                        .into_any(),
-                }}
-            </div>
-        </div>
-    }
-}
+                <Show when=move || is_params_open.get()>
+                    <ParamsDrawer
+                        store=store.clone()
+                        on_run=on_run
+                        on_clear=on_clear
+                        on_demo=on_demo
+                    />
+                </Show>
+            </section>
 
-/// The raw request the last execute submitted — fe showed
-/// `JSON.stringify(lastPlan?.request, null, 2)`; until an execute has run
-/// this tab reports the absence rather than inventing a request.
-#[component]
-fn PayloadPreview(
-    /// `store.run.last_plan` — the submitted plan, or `None` before any run.
-    last_plan: RwSignal<Option<crate::features::simulator::kernel::controls::SimulationRequestPlan>>,
-) -> impl IntoView {
-    view! {
-        {move || {
-            last_plan
-                .get()
-                .and_then(|plan| serde_json::to_string_pretty(&plan.request).ok())
-                .map(|payload| {
-                    view! { <pre class="sim-payload">{payload}</pre> }.into_any()
-                })
-                .unwrap_or_else(|| {
-                    view! { <div class="sim-empty">"No request has been submitted yet."</div> }
-                        .into_any()
-                })
-        }}
+            // -- Bottom dock: fe's exact six tabs ---------------------------
+            <BottomDock store=store.clone() engine_state=engine_state bars=bars_seam.clone() />
+        </div>
     }
 }

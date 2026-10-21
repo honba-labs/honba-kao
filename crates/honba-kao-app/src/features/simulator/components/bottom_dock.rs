@@ -26,7 +26,7 @@ use crate::features::simulator::components::kpi_cards::KpiCards;
 use crate::features::simulator::components::monthly_heatmap::MonthlyHeatmap;
 use crate::features::simulator::components::portfolio_panel::PortfolioPanel;
 use crate::features::simulator::components::report_panel::ReportPanel;
-use crate::features::simulator::components::run_log::ExecutionLog;
+use crate::features::simulator::components::run_log::RunLogDrawer;
 use crate::features::simulator::components::signals_panel::SignalsPanel;
 use crate::features::simulator::kernel::engine::controller::SimulationEngineState;
 use crate::features::simulator::stores::simulator_store::{SimTab, SimulatorStore};
@@ -229,7 +229,7 @@ pub fn BottomDock(
                     }
                         .into_any(),
                     SimTab::Logs => view! {
-                        <ExecutionLog run=run history=history />
+                        <RunLogDrawer run=run />
                     }
                         .into_any(),
                     SimTab::Report => view! {

@@ -27,6 +27,8 @@
 //! renders `NaN%` on a one-bar dataset; here a single bar reads `0%`
 //! (`total <= 1` guards the division) — pinned, deliberate.
 
+use honba_kao_ui_core::SvgIcon;
+use honba_kao_ui_core::icons::outline::{pause, play, rotate_ccw, skip_forward, zap};
 use leptos::prelude::*;
 use wasm_bindgen::JsCast;
 
@@ -54,6 +56,25 @@ pub(crate) fn pnl_token(value: f64) -> &'static str {
     } else {
         "flat"
     }
+}
+
+/// `₹` + sign + two decimals, grouped (fe's live-P&L chip:
+/// `₹{pnl.toLocaleString('en-IN', {minimumFractionDigits:2,
+/// maximumFractionDigits:2})}`). Used by the command bar's live P&L chip
+/// and the overview KPI cards' net-P&L tile.
+pub(crate) fn money_signed_grouped(value: f64) -> String {
+    let sign = if value < 0.0 { "\u{2212}" } else { "+" };
+    let whole = value.abs().trunc() as i64;
+    let cents = ((value.abs() - whole as f64) * 100.0).round() as i64;
+    let digits = whole.to_string();
+    let mut grouped = String::new();
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) {
+            grouped.push(',');
+        }
+        grouped.push(digit);
+    }
+    format!("\u{20b9}{sign}{grouped}.{cents:02}")
 }
 
 /// fe's equity readout shape: `toLocaleString(maximumFractionDigits: 0)`
@@ -409,4 +430,172 @@ fn confluence_action(confluence: &ConfluenceSnapshot) -> Option<&'static str> {
 /// score, `{:.2}` would read `1.00` where fe read `1`.
 fn formatted_score(score: f64) -> String {
     format!("{score}")
+}
+
+// ---------------------------------------------------------------------------
+// The compact header cluster (fe's `.sim-replay-cluster`)
+// ---------------------------------------------------------------------------
+
+/// fe's `<div className="sim-replay-cluster">` — the command bar's center
+/// zone: reset, play/pause, step, instant-complete, the speed pill row and
+/// the scrub slider, all in one compact pill. [`ReplayControls`] above is
+/// the fuller 4-row transport (signal HUD + sandbox book ticker included)
+/// that sat below the chart before the command-bar port; this cluster
+/// carries only what fe's header actually shows — the HUD and book detail
+/// live on their own dock tabs (`Signals`/`Portfolio`), not duplicated here.
+#[component]
+pub fn ReplayCluster(
+    /// The simulator store — every transport method the buttons call.
+    store: SimulatorStore,
+    /// The page's engine-state memo (shared with the command bar's right
+    /// zone and the overview KPI cards, so it is read once per frame).
+    #[prop(into)]
+    engine_state: Signal<SimulationEngineState>,
+) -> impl IntoView {
+    let status = Memo::new(move |_| engine_state.get().status);
+    let has_bars = Memo::new(move |_| engine_state.get().total_bars > 0);
+    let is_playing = Memo::new(move |_| status.get() == ReplayStatus::Playing);
+    let progress = Memo::new(move |_| {
+        let state = engine_state.get();
+        if state.total_bars > 1 {
+            (state.current_bar_index as f64) / (state.total_bars - 1) as f64 * 100.0
+        } else {
+            0.0
+        }
+    });
+    let scrub_max = Memo::new(move |_| engine_state.get().total_bars.saturating_sub(1));
+
+    let reset_store = store.clone();
+    let play_store = store.clone();
+    let step_store = store.clone();
+    let instant_store = store.clone();
+    let scrub_store = store.clone();
+
+    view! {
+        <div class="sim-replay-cluster">
+            <button
+                type="button"
+                class="sim-ctrl-btn"
+                title="Reset Simulation & Tables"
+                disabled=move || !has_bars.get()
+                on:click=move |_| reset_store.replay.reset()
+            >
+                <SvgIcon path=rotate_ccw() size=14 />
+            </button>
+
+            <button
+                type="button"
+                class=move || {
+                    if is_playing.get() {
+                        "sim-play-pulse-btn active-playing".to_string()
+                    } else {
+                        "sim-play-pulse-btn".to_string()
+                    }
+                }
+                title=move || if is_playing.get() { "Pause Replay" } else { "Play Simulation Replay" }
+                disabled=move || !has_bars.get()
+                on:click=move |_| {
+                    if is_playing.get() {
+                        play_store.replay.pause();
+                    } else {
+                        play_store.replay.play();
+                    }
+                }
+            >
+                {move || {
+                    if is_playing.get() {
+                        view! { <SvgIcon path=pause() size=16 /> }.into_any()
+                    } else {
+                        view! { <SvgIcon path=play() size=16 /> }.into_any()
+                    }
+                }}
+            </button>
+
+            <button
+                type="button"
+                class="sim-ctrl-btn"
+                title="Step Forward 1 Bar"
+                disabled=move || !has_bars.get() || is_playing.get()
+                on:click=move |_| step_store.replay.step()
+            >
+                <SvgIcon path=skip_forward() size=14 />
+            </button>
+
+            <button
+                type="button"
+                class="sim-ctrl-btn sim-instant-btn"
+                title="Instant Complete (Fast-forward to End)"
+                disabled=move || !has_bars.get()
+                on:click=move |_| instant_store.replay.instant()
+            >
+                <SvgIcon path=zap() size=14 />
+            </button>
+
+            <div class="sim-speed-pill-group">
+                {SPEEDS
+                    .iter()
+                    .map(|speed| {
+                        let value = *speed;
+                        let store = store.clone();
+                        view! {
+                            <button
+                                type="button"
+                                class=move || {
+                                    if engine_state.get().speed == value {
+                                        "sim-speed-pill active".to_string()
+                                    } else {
+                                        "sim-speed-pill".to_string()
+                                    }
+                                }
+                                on:click=move |_| store.replay.set_speed(value)
+                            >
+                                {format!("{}x", value as i64)}
+                            </button>
+                        }
+                    })
+                    .collect_view()}
+            </div>
+
+            <div class="sim-scrub-container">
+                <input
+                    type="range"
+                    min="0"
+                    max=move || scrub_max.get().to_string()
+                    value=move || engine_state.get().current_bar_index.to_string()
+                    disabled=move || !has_bars.get()
+                    on:change=move |event: leptos::ev::Event| {
+                        use wasm_bindgen::JsCast;
+                        let input = event
+                            .target()
+                            .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok());
+                        if let Some(input) = input
+                            && let Ok(value) = input.value().parse::<usize>()
+                        {
+                            scrub_store.replay.jump(value);
+                        }
+                    }
+                    class="sim-scrub-slider"
+                    title="Scrub through the replay"
+                />
+                <div class="sim-scrub-meta">
+                    <span>
+                        {move || {
+                            let state = engine_state.get();
+                            let shown = if state.total_bars > 0 { state.current_bar_index + 1 } else { 0 };
+                            format!("Bar {shown} / {} ({:.0}%)", state.total_bars, progress.get())
+                        }}
+                    </span>
+                    {move || {
+                        engine_state
+                            .get()
+                            .current_tick
+                            .as_ref()
+                            .map(|tick| tick.time_str.clone())
+                            .filter(|time| !time.is_empty())
+                            .map(|time| view! { <span class="sim-scrub-time">{format!("{time} IST")}</span> })
+                    }}
+                </div>
+            </div>
+        </div>
+    }
 }

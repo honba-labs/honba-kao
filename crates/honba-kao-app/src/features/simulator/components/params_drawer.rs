@@ -19,7 +19,7 @@
 //!   in debug builds the recorded `Demo fixture`.
 
 use honba_kao_ui_core::icons::outline::{play, sliders, x_close};
-use honba_kao_ui_core::{HfButton, HfIconButton, HfInput, HfSelect, SvgIcon};
+use honba_kao_ui_core::{HfButton, HfIconButton, SvgIcon};
 use leptos::prelude::*;
 
 use crate::features::simulator::kernel::defaults::{FILL_MODEL_DESCRIPTORS, fill_model_descriptor};
@@ -51,16 +51,15 @@ fn NumberField(
         <label class="sim-controls__field">
             <span class="sim-controls__label">{label}</span>
             <div class="sim-controls__input-row">
-                <HfInput
+                <input
                     r#type="number"
-                    unstyled=true
                     class="sim-controls__input"
-                    value=Signal::derive(move || Some(value.get().to_string()))
-                    on_input=Callback::new(move |event: web_sys::Event| {
+                    prop:value=move || value.get().to_string()
+                    on:input=move |event: web_sys::Event| {
                         if let Some(number) = parse_number(&event) {
                             on_value.run(number);
                         }
-                    })
+                    }
                 />
                 {suffix.map(|suffix| view! { <span class="sim-controls__suffix">{suffix}</span> })}
             </div>
@@ -146,10 +145,9 @@ pub fn ParamsDrawer(
 
                     <label class="sim-controls__field">
                         <span class="sim-controls__label">"Sandboxed Portfolio"</span>
-                        <HfInput
-                            unstyled=true
+                        <input
                             class="sim-controls__input sim-controls__input--readonly"
-                            value=format!("Sandbox Primary ({DEFAULT_ACCOUNT_ID})")
+                            prop:value=format!("Sandbox Primary ({DEFAULT_ACCOUNT_ID})")
                             disabled=true
                         />
                         <span class="sim-controls__hint">
@@ -159,11 +157,10 @@ pub fn ParamsDrawer(
 
                     <label class="sim-controls__field">
                         <span class="sim-controls__label">"Benchmark"</span>
-                        <HfInput
-                            unstyled=true
+                        <input
                             class="sim-controls__input"
-                            value=Signal::derive(move || Some(panel.with(|panel| panel.benchmark.clone())))
-                            on_input=patch_benchmark
+                            prop:value=move || panel.with(|panel| panel.benchmark.clone())
+                            on:input=move |event: web_sys::Event| patch_benchmark.run(event)
                         />
                     </label>
 
@@ -198,11 +195,9 @@ pub fn ParamsDrawer(
                                 }}
                             </span>
                         </div>
-                        <HfSelect
-                            unstyled=true
+                        <select
                             class="sim-controls__input"
-                            value=Signal::derive(move || Some(fill_model.get()))
-                            on_change=patch_fill_model
+                            on:change=move |event: web_sys::Event| patch_fill_model.run(event)
                         >
                             {FILL_MODEL_DESCRIPTORS
                                 .iter()
@@ -215,7 +210,7 @@ pub fn ParamsDrawer(
                                     }
                                 })
                                 .collect_view()}
-                        </HfSelect>
+                        </select>
                         <span class="sim-controls__hint">
                             {move || {
                                 fill_model_descriptor(&fill_model.get())

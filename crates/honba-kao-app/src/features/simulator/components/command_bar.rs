@@ -4,7 +4,8 @@
 //! Three zones, in fe's order:
 //! - **left** (`.sim-header-left`): strategy select, symbol badge,
 //!   grouped timeframe popover, date-range popover;
-//! - **center**: the [`ReplayCluster`] transport;
+//! - **center**: the [`ReplayCluster`](super::replay_controls::ReplayCluster)
+//!   transport;
 //! - **right** (`.sim-header-right`): live P&L chip, confluence pill,
 //!   Parameters drawer toggle and the Strategy Studio link.
 //!
@@ -17,15 +18,18 @@
 //!   symbol + exchange popover instead of importing across features;
 //! - a preset chip only switches `period` (the window then resolves from
 //!   today, as kao's plan always has); `Custom` seeds the date inputs from
-//!   the current window exactly like fe.
+//!   the current window exactly like fe;
+//! - the picker/popover chips (exchange, timeframe, period preset) are
+//!   plain reactive `<button>` elements, like fe's own `onClick` chips —
+//!   `honba-kao-ui-core` does not yet carry a segmented-control primitive
+//!   with a bindable `value`/`on_change`, so this port does not invent one
+//!   ahead of that primitive landing; the chip markup/classes still match
+//!   fe's (`.sim-tf-chip`, `.sim-preset-chip`) byte for byte.
 
 use honba_kao_ui_core::icons::outline::{
     calendar, chevron_down, clock, external_link, search, sliders, x_close,
 };
-use honba_kao_ui_core::{
-    HfButton, HfIconButton, HfInput, HfSegment, HfSegmentedControl, HfSelect, SvgIcon,
-    dismiss_on_outside_click,
-};
+use honba_kao_ui_core::{HfButton, HfIconButton, SvgIcon, dismiss_on_outside_click};
 use leptos::prelude::*;
 use leptos_router::components::A;
 
@@ -184,17 +188,15 @@ fn StrategySelect(store: SimulatorStore) -> impl IntoView {
     view! {
         <div class="sim-select-wrap">
             <span class="sim-field-label">"Strategy"</span>
-            <HfSelect
-                unstyled=true
+            <select
                 class="sim-header-select"
-                aria_label="Strategy".to_string()
-                value=Signal::derive(move || Some(name.get()))
-                on_change=Callback::new(move |event: web_sys::Event| {
+                aria-label="Strategy"
+                on:change=move |event: web_sys::Event| {
                     if event_target_value(&event) == template_name {
                         let (graph, label) = builtin_template();
                         controls.select(graph, label, SelectionOrigin::Template);
                     }
-                })
+                }
             >
                 {active_group}
                 <optgroup label="Global Library (Institutional & OpenAlgo)">
@@ -205,7 +207,7 @@ fn StrategySelect(store: SimulatorStore) -> impl IntoView {
                         {format!("{template_name} ({template_symbol})")}
                     </option>
                 </optgroup>
-            </HfSelect>
+            </select>
         </div>
     }
 }
@@ -244,7 +246,7 @@ fn SymbolBadge(
         }
         open.update(|value| *value = !*value);
     };
-    let apply = Callback::new(move |_: web_sys::MouseEvent| {
+    let apply = move |_: web_sys::MouseEvent| {
         let symbol = draft_symbol.get_untracked().trim().to_uppercase();
         if symbol.is_empty() {
             return;
@@ -255,21 +257,21 @@ fn SymbolBadge(
             ..Default::default()
         });
         open.set(false);
-    });
+    };
 
     view! {
         <div class="sim-symbol-wrap" node_ref=host>
-            <HfButton
-                unstyled=true
+            <button
+                type="button"
                 class="sim-symbol-badge-btn"
                 title="Change instrument — test this strategy against any other NSE/BSE stock or index"
-                on_click=Callback::new(toggle)
+                on:click=toggle
             >
                 <SvgIcon path=search() size=12 class="sim-symbol-search-icon" />
                 <span class="sim-symbol-text">{move || instrument_id.get()}</span>
                 <span class="sim-symbol-hint">"(Change Symbol)"</span>
                 <SvgIcon path=chevron_down() size=11 class="sim-symbol-caret" />
-            </HfButton>
+            </button>
 
             <Show when=move || open.get()>
                 <div class="sim-symbol-popover">
@@ -277,40 +279,49 @@ fn SymbolBadge(
                     <div class="sim-symbol-form">
                         <div class="sim-date-input-field">
                             <span class="sim-date-input-lbl">"Symbol"</span>
-                            <HfInput
-                                unstyled=true
+                            <input
                                 class="sim-date-native-input"
                                 placeholder="e.g. RELIANCE"
-                                aria_label="Symbol".to_string()
-                                value=draft_symbol
-                                on_input=Callback::new(move |event: web_sys::Event| {
+                                aria-label="Symbol"
+                                prop:value=move || draft_symbol.get()
+                                on:input=move |event: web_sys::Event| {
                                     draft_symbol.set(event_target_value(&event));
-                                })
+                                }
                             />
                         </div>
-                        <HfSegmentedControl
-                            value=draft_exchange
-                            on_change=Callback::new(move |exchange: String| draft_exchange.set(exchange))
-                            options=EXCHANGES
+                        <div class="sim-preset-chips">
+                            {EXCHANGES
                                 .iter()
                                 .map(|exchange| {
-                                    HfSegment::new(exchange.to_string(), *exchange)
-                                        .with_class("sim-preset-chip")
+                                    let exchange = *exchange;
+                                    view! {
+                                        <button
+                                            type="button"
+                                            class=move || {
+                                                if draft_exchange.get() == exchange {
+                                                    "sim-preset-chip active".to_string()
+                                                } else {
+                                                    "sim-preset-chip".to_string()
+                                                }
+                                            }
+                                            on:click=move |_| draft_exchange.set(exchange.to_string())
+                                        >
+                                            {exchange}
+                                        </button>
+                                    }
                                 })
-                                .collect()
-                            class="sim-preset-chips"
-                            aria_label="Exchange"
-                        />
+                                .collect_view()}
+                        </div>
                     </div>
                     <div class="sim-popover-footer">
-                        <HfButton
-                            unstyled=true
+                        <button
+                            type="button"
                             class="sim-apply-btn"
-                            disabled=Signal::derive(move || draft_symbol.get().trim().is_empty())
-                            on_click=apply
+                            disabled=move || draft_symbol.get().trim().is_empty()
+                            on:click=apply
                         >
                             "Apply Symbol"
-                        </HfButton>
+                        </button>
                     </div>
                 </div>
             </Show>
@@ -332,26 +343,38 @@ fn TimeframePicker(store: SimulatorStore) -> impl IntoView {
         .iter()
         .map(|(label, frames)| {
             let controls = controls.clone();
-            let options = frames
+            let chips = frames
                 .iter()
-                .map(|frame| HfSegment::new(frame.to_string(), *frame).with_class("sim-tf-chip"))
-                .collect();
+                .map(|frame| {
+                    let frame = *frame;
+                    let controls = controls.clone();
+                    view! {
+                        <button
+                            type="button"
+                            class=move || {
+                                if timeframe.get() == frame {
+                                    "sim-tf-chip active".to_string()
+                                } else {
+                                    "sim-tf-chip".to_string()
+                                }
+                            }
+                            on:click=move |_| {
+                                controls.patch(ControlsPatch {
+                                    timeframe: Some(frame.to_string()),
+                                    ..Default::default()
+                                });
+                                open.set(false);
+                            }
+                        >
+                            {frame}
+                        </button>
+                    }
+                })
+                .collect_view();
             view! {
                 <div class="sim-tf-group">
                     <span class="sim-tf-group-lbl">{*label}</span>
-                    <HfSegmentedControl
-                        value=timeframe
-                        on_change=Callback::new(move |frame: String| {
-                            controls.patch(ControlsPatch {
-                                timeframe: Some(frame),
-                                ..Default::default()
-                            });
-                            open.set(false);
-                        })
-                        options=options
-                        class="sim-tf-chips-row"
-                        aria_label=*label
-                    />
+                    <div class="sim-tf-chips-row">{chips}</div>
                 </div>
             }
         })
@@ -359,17 +382,16 @@ fn TimeframePicker(store: SimulatorStore) -> impl IntoView {
 
     view! {
         <div class="sim-timeframe-wrap" node_ref=host>
-            <HfButton
-                unstyled=true
+            <button
+                type="button"
                 class="sim-timeframe-btn"
                 title="Select Timeframe"
-                active=open
-                on_click=Callback::new(move |_| open.update(|value| *value = !*value))
+                on:click=move |_| open.update(|value| *value = !*value)
             >
                 <SvgIcon path=clock() size=12 class="sim-tf-icon" />
                 <span class="sim-tf-val">{move || timeframe.get()}</span>
                 <SvgIcon path=chevron_down() size=11 class="sim-tf-caret" />
-            </HfButton>
+            </button>
             <div class="sim-timeframe-popover" style:display=move || if open.get() { "flex" } else { "none" }>
                 {groups}
             </div>
@@ -392,7 +414,7 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
 
     let on_preset = {
         let controls = controls.clone();
-        Callback::new(move |preset: PeriodPreset| {
+        move |preset: PeriodPreset| {
             if preset == PeriodPreset::Custom {
                 let (start, end) = range.get_untracked();
                 controls.patch(ControlsPatch {
@@ -407,11 +429,11 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                     ..Default::default()
                 });
             }
-        })
+        }
     };
     let on_start = {
         let controls = controls.clone();
-        Callback::new(move |event: web_sys::Event| {
+        move |event: web_sys::Event| {
             let value = event_target_value(&event);
             controls.patch(ControlsPatch {
                 period: Some(PeriodPreset::Custom),
@@ -419,9 +441,9 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                 end: Some(Some(range.get_untracked().1)),
                 ..Default::default()
             });
-        })
+        }
     };
-    let on_end = Callback::new(move |event: web_sys::Event| {
+    let on_end = move |event: web_sys::Event| {
         let value = event_target_value(&event);
         controls.patch(ControlsPatch {
             period: Some(PeriodPreset::Custom),
@@ -429,16 +451,15 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
             end: Some((!value.is_empty()).then_some(value)),
             ..Default::default()
         });
-    });
+    };
 
     view! {
         <div class="sim-date-range-wrap" node_ref=host>
-            <HfButton
-                unstyled=true
+            <button
+                type="button"
                 class="sim-date-range-btn"
                 title="Configure Simulation Date Range"
-                active=open
-                on_click=Callback::new(move |_| open.update(|value| *value = !*value))
+                on:click=move |_| open.update(|value| *value = !*value)
             >
                 <SvgIcon path=calendar() size=13 class="sim-date-range-icon" />
                 <span class="sim-date-range-preset-pill">{move || period.get().label()}</span>
@@ -449,7 +470,7 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                     }}
                 </span>
                 <SvgIcon path=chevron_down() size=11 class="sim-tf-caret" />
-            </HfButton>
+            </button>
 
             <Show when=move || open.get()>
                 <div class="sim-date-range-popover">
@@ -468,50 +489,62 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                         />
                     </div>
 
-                    <HfSegmentedControl
-                        value=period
-                        on_change=on_preset
-                        options=PeriodPreset::ALL
+                    <div class="sim-preset-chips">
+                        {PeriodPreset::ALL
                             .iter()
-                            .map(|preset| HfSegment::new(*preset, preset.label()).with_class("sim-preset-chip"))
-                            .collect()
-                        class="sim-preset-chips"
-                        aria_label="Period preset"
-                    />
+                            .map(|preset| {
+                                let preset = *preset;
+                                let on_preset = on_preset.clone();
+                                view! {
+                                    <button
+                                        type="button"
+                                        class=move || {
+                                            if period.get() == preset {
+                                                "sim-preset-chip active".to_string()
+                                            } else {
+                                                "sim-preset-chip".to_string()
+                                            }
+                                        }
+                                        on:click=move |_| on_preset(preset)
+                                    >
+                                        {preset.label()}
+                                    </button>
+                                }
+                            })
+                            .collect_view()}
+                    </div>
 
                     <div class="sim-date-inputs-row">
                         <div class="sim-date-input-field">
                             <span class="sim-date-input-lbl">"Start Date"</span>
-                            <HfInput
-                                r#type="date"
-                                unstyled=true
+                            <input
+                                type="date"
                                 class="sim-date-native-input"
-                                aria_label="Start Date".to_string()
-                                value=Signal::derive(move || Some(range.get().0))
-                                on_change=on_start
+                                aria-label="Start Date"
+                                prop:value=move || range.get().0
+                                on:change=on_start
                             />
                         </div>
                         <div class="sim-date-input-field">
                             <span class="sim-date-input-lbl">"End Date"</span>
-                            <HfInput
-                                r#type="date"
-                                unstyled=true
+                            <input
+                                type="date"
                                 class="sim-date-native-input"
-                                aria_label="End Date".to_string()
-                                value=Signal::derive(move || Some(range.get().1))
-                                on_change=on_end
+                                aria-label="End Date"
+                                prop:value=move || range.get().1
+                                on:change=on_end
                             />
                         </div>
                     </div>
 
                     <div class="sim-popover-footer">
-                        <HfButton
-                            unstyled=true
+                        <button
+                            type="button"
                             class="sim-apply-btn"
-                            on_click=Callback::new(move |_| open.set(false))
+                            on:click=move |_| open.set(false)
                         >
                             "Apply Range"
-                        </HfButton>
+                        </button>
                     </div>
                 </div>
             </Show>
