@@ -29,12 +29,9 @@ impl HfDialogVariant {
 /// are provided via `HfDialogAction` or composed in `HfConfirmDialog`.
 #[component]
 pub fn HfDialog(
-    #[prop(optional)]
-    variant: Option<HfDialogVariant>,
-    #[prop(optional)]
-    class: String,
-    #[prop(optional, into)]
-    overlay_class: String,
+    #[prop(optional)] variant: Option<HfDialogVariant>,
+    #[prop(optional)] class: String,
+    #[prop(optional, into)] overlay_class: String,
     children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfDialogVariant::Default);
@@ -60,16 +57,13 @@ pub fn HfDialog(
 /// HfDialogTrigger — button that opens the dialog.
 #[component]
 pub fn HfDialogTrigger(
-    #[prop(optional)]
-    class: String,
-    #[prop(optional, into)]
-    title: String,
-    #[prop(optional)]
-    variant: Option<HfDialogVariant>,
+    #[prop(optional)] class: String,
+    #[prop(optional, into)] title: String,
+    #[prop(optional)] variant: Option<HfDialogVariant>,
     on_click: Callback<web_sys::MouseEvent>,
     children: Children,
 ) -> impl IntoView {
-    let variant = variant.unwrap_or(HfDialogVariant::Default);
+    let _variant = variant.unwrap_or(HfDialogVariant::Default);
 
     view! {
         <button
@@ -87,17 +81,57 @@ pub fn HfDialogTrigger(
             }
         >
             {title}
+            {children()}
         </button>
+    }
+}
+
+/// HfDialogContent — accessible dialog surface (`role="dialog"`, `aria-modal="true"`).
+#[component]
+pub fn HfDialogContent(
+    #[prop(optional, into)] class: String,
+    #[prop(optional, into)] aria_labelledby: String,
+    children: Children,
+) -> impl IntoView {
+    let aria_labelledby = (!aria_labelledby.is_empty()).then_some(aria_labelledby);
+
+    view! {
+        <div
+            class=format!("hf-dialog__body {class}").trim().to_string()
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby=aria_labelledby
+        >
+            {children()}
+        </div>
+    }
+}
+
+/// HfDialogHeader — top title/description region of a dialog.
+#[component]
+pub fn HfDialogHeader(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
+    view! {
+        <header class=format!("hf-dialog__header {class}").trim().to_string()>
+            {children()}
+        </header>
+    }
+}
+
+/// HfDialogFooter — bottom action bar of a dialog.
+#[component]
+pub fn HfDialogFooter(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
+    view! {
+        <footer class=format!("hf-dialog__footer {class}").trim().to_string()>
+            {children()}
+        </footer>
     }
 }
 
 /// HfDialogAction — action button within a dialog.
 #[component]
 pub fn HfDialogAction(
-    #[prop(optional)]
-    variant: Option<HfDialogVariant>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional)] variant: Option<HfDialogVariant>,
+    #[prop(optional, into)] class: String,
     children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfDialogVariant::Default);

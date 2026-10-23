@@ -14,7 +14,8 @@ leptos_router.workspace = true
 wasm-bindgen.workspace = true
 web-sys = { version = "0.3", features = [
     "Window", "Document", "Element", "Node", "Event", "EventTarget",
-    "HtmlElement", "HtmlInputElement", "MouseEvent", "KeyboardEvent", "FocusEvent",
+    "HtmlElement", "HtmlInputElement", "HtmlButtonElement",
+    "MouseEvent", "KeyboardEvent", "FocusEvent", "SubmitEvent",
     "SvgElement", "SvgsvgElement", "SvgPathElement",
     "MediaQueryList", "Storage", "WebSocket", "MessageEvent", "ResizeObserver",
 ] }

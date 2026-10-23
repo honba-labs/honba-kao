@@ -26,23 +26,18 @@ impl HfToastVariant {
 /// Toast action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HfToastAction {
-   Dismiss,
-   Confirm,
+    Dismiss,
+    Confirm,
 }
 
 /// HfToast — individual toast notification.
 #[component]
 pub fn HfToast(
-    #[prop(optional)]
-    variant: Option<HfToastVariant>,
-    #[prop(optional, into)]
-    title: String,
-    #[prop(optional, into)]
-    description: String,
-    #[prop(optional)]
-    action: Option<HfToastAction>,
-    #[prop(optional)]
-    duration: Option<u32>,
+    #[prop(optional)] variant: Option<HfToastVariant>,
+    #[prop(optional, into)] title: String,
+    #[prop(optional, into)] description: String,
+    #[prop(optional)] action: Option<HfToastAction>,
+    #[prop(optional)] duration: Option<u32>,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfToastVariant::Info);
     let action_str = match action {
@@ -50,12 +45,9 @@ pub fn HfToast(
         Some(HfToastAction::Confirm) => "confirm",
         None => "",
     };
-    let dur = duration.unwrap_or(5000);
+    let _dur = duration.unwrap_or(5000);
 
-    let classes = format!(
-        "hf-toast hf-toast--{}",
-        variant.as_str()
-    );
+    let classes = format!("hf-toast hf-toast--{}", variant.as_str());
 
     view! {
         <div
@@ -78,6 +70,29 @@ pub fn HfToast(
                 {action_str}
             </button>
         </div>
+    }
+}
+
+/// HfToastTitle — standalone toast title element for custom toast layouts.
+#[component]
+pub fn HfToastTitle(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
+    view! {
+        <strong class=format!("hf-toast__title {class}").trim().to_string()>
+            {children()}
+        </strong>
+    }
+}
+
+/// HfToastDescription — standalone toast body element for custom toast layouts.
+#[component]
+pub fn HfToastDescription(
+    #[prop(optional, into)] class: String,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <p class=format!("hf-toast__description {class}").trim().to_string()>
+            {children()}
+        </p>
     }
 }
 
