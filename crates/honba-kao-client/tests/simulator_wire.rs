@@ -13,7 +13,7 @@ use std::path::Path;
 use honba_kao_client::wire::{
     BacktestResponse, BarsResponse, RunStatus, StrategiesResponse, StreamFrame, TradesResponse,
 };
-use honba_messages::{ResponseEnvelope, ApiResponse};
+use honba_api::{ApiResponse, ResponseEnvelope};
 
 const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures");
 

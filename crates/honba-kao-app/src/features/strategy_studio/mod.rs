@@ -1,4 +1,4 @@
-#! Strategy studio — the strategy library and the strategy-graph editor.
+//! Strategy studio — the strategy library and the strategy-graph editor.
 //
 // * [`kernel`] — the pure strategy-graph kernel (validation, hashing,
 //   diffing) and the code⇄graph Python codegen; no DOM, no signals. It runs

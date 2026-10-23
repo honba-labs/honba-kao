@@ -33,14 +33,12 @@ honba-kao-ui-core  = { path = "crates/honba-kao-ui-core" }
 openalgo-charts    = { package = "openalgo-charts-rs", path = "crates/openalgo-charts-rs" }
 
 honba-api-wasm     = { package = "honba-kao-api-wasm", path = "crates/honba-kao-api-wasm" }
-honba-messages     = { package = "honba-kokoro-messages", path = "../honba-kokoro/crates/honba-kokoro-messages" }
-honba-entities     = { package = "honba-kokoro-entities", path = "../honba-kokoro/crates/honba-kokoro-entities" }
+honba-core         = { path = "../honba-core" }
 honba-api          = { package = "honba-ya-api", path = "../honba-ya/crates/honba-ya-api" }
 console_error_panic_hook = "0.1"
 tracing-wasm = "0.2"
 tracing = "0.1"
 thiserror = "1"
-honba-kokoro-types = { path = "../honba-kokoro/crates/honba-kokoro-types" }
 honba-engine       = { package = "honba-ya-engine", path = "../honba-ya/crates/honba-ya-engine" }
 honba-indicators   = { package = "honba-me-indicators", path = "../honba-me/crates/honba-me-indicators" }
 honba-analytics    = { package = "honba-nou-analytics", path = "../honba-nou/crates/honba-nou-analytics" }

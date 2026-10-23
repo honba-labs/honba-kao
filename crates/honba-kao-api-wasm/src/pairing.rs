@@ -65,14 +65,15 @@ impl FillSide {
         }
     }
 
-    /// fe's `isSide` guard: `None` for a sideless fill. (A parsed wire
-    /// [`Trade`] never carries [`OrderSide::NoOrderSide`] — its own
-    /// validate rejects it — but an in-memory one can, so the guard stays.)
+    /// fe's `isSide` guard.
+    ///
+    /// `honba_core::OrderSide` is a closed `{Buy, Sell}` enum (the legacy wire
+    /// type's `NoOrderSide` sentinel doesn't exist here), so this is total —
+    /// kept as `Option` for call-site compatibility.
     pub fn from_order_side(side: OrderSide) -> Option<FillSide> {
         match side {
             OrderSide::Buy => Some(FillSide::Buy),
             OrderSide::Sell => Some(FillSide::Sell),
-            _ => None,
         }
     }
 }

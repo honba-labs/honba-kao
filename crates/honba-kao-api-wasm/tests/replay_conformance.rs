@@ -7,8 +7,8 @@
 //! `lifecycle` and `trading_state` — to the engine's replay.
 
 use honba_api_wasm::replay::{journal_header_json, journal_record_count, replay_journal_json};
+use honba_core::OrderEventKind;
 use honba_engine::{AuditKind, AuditLog, JournalHeader, JournalV1, ReplayState, TradingState};
-use honba_messages::OrderEventKind;
 use serde_json::Value;
 
 fn header() -> JournalHeader {
@@ -79,18 +79,19 @@ fn ndjson_of(header: &JournalHeader, log: &AuditLog) -> String {
 }
 
 fn lifecycle_str(kind: Option<OrderEventKind>) -> Value {
+    // `OrderEventKind` has no `Display` impl; its own `#[serde(rename_all =
+    // "snake_case")]` is the actual wire spelling the wasm side produces, so
+    // mirror that exactly instead of inventing a second string mapping here.
     match kind {
-        Some(k) => Value::String(k.to_string()),
+        Some(k) => serde_json::to_value(k).expect("OrderEventKind serializes"),
         None => Value::Null,
     }
 }
 
-fn side_str(side: honba_messages::OrderSide) -> &'static str {
+fn side_str(side: honba_core::OrderSide) -> &'static str {
     match side {
-        honba_messages::OrderSide::Buy => "buy",
-        honba_messages::OrderSide::Sell => "sell",
-        honba_messages::OrderSide::NoOrderSide => "no_order_side",
-        _ => "no_order_side",
+        honba_core::OrderSide::Buy => "buy",
+        honba_core::OrderSide::Sell => "sell",
     }
 }
 

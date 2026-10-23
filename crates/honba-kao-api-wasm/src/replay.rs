@@ -30,7 +30,8 @@ use std::collections::BTreeMap;
 use std::io::BufReader;
 
 use honba_engine::{AuditKind, AuditLog, JournalHeader, JournalV1, ReplayState};
-use honba_messages::{OrderEventKind, OrderSide, TradingState};
+use honba_core::{OrderEventKind, OrderSide};
+use honba_api::TradingState;
 use serde_json::{Value, json};
 
 /// Why a journal request was refused: a stable `reason` in a `reason: message` pair
@@ -159,12 +160,12 @@ fn number(x: f64) -> Value {
 }
 
 fn side_str(side: OrderSide) -> &'static str {
+    // `honba_core::OrderSide` is a closed `{Buy, Sell}` enum (no `NoOrderSide`
+    // sentinel, unlike the legacy wire type this replaced), so this match is
+    // already exhaustive.
     match side {
         OrderSide::Buy => "buy",
         OrderSide::Sell => "sell",
-        OrderSide::NoOrderSide => "no_order_side",
-        // `OrderSide` is `#[non_exhaustive]`; an unknown side reads as no side.
-        _ => "no_order_side",
     }
 }
 

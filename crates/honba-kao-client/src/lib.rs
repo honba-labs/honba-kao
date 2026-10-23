@@ -6,7 +6,7 @@
 //! Wire types come straight from `honba-kokoro-messages` (the envelope, the
 //! order book) and `honba-ya-api` (the request/response DTOs) — the same
 //! crates the server serializes with, so there is no client-side mirror to
-//! drift. Every response is enveloped (`honba_messages::ResponseEnvelope`;
+//! drift. Every response is enveloped (`honba_api::ResponseEnvelope`;
 //! API `1.0.0`, schema `4`), and an unknown version axis is rejected here
 //! rather than decoded with the wrong shape.
 //! `POST /orders` uses; do not write bare-JSON decodes.
@@ -28,13 +28,22 @@ use honba_api::{
     ProfileRevision, QuotesResponse, StrategiesResponse, SweepRequest, SweepResponse,
     TradesResponse, TradingStateChange, TradingStateRequest, TradingStateResponse,
 };
-use honba_entities::PortfolioPosition;
-use honba_messages::{Order, QuoteTick, ResponseEnvelope, TradingState};
+use honba_api::wire::{Order, PortfolioPosition, QuoteTick};
+use honba_api::{ResponseEnvelope, TradingState};
 use serde::de::DeserializeOwned;
 use thiserror::Error;
 
 /// Re-exports of the wire types this client speaks, so consumers can map
 /// responses into view models without taking the schema crates themselves.
+///
+/// Wire types now come from `honba-ya-api` (the `wire` module owns the
+/// envelope, error taxonomy, and transport read models; domain values like
+/// `Bar`/`OrderSide`/`Currency` are `honba-ya-api`'s own re-export of
+/// `honba-core`) instead of the removed `honba-kokoro-{entities,messages}`
+/// marker crates. `Order` and `Trade` are now plain aliases for
+/// `honba_core::OrderRequest`/`FillReport`; there is no more separate
+/// `OrderId`/`UnixNanos`/`Product`/`BarType` — ids are bare `String`/`Uuid`
+/// and timestamps are `chrono::DateTime<Utc>` throughout.
 pub mod wire {
     pub use crate::StatusAck;
     pub use honba_analytics::ValidationBlock;
@@ -45,16 +54,18 @@ pub mod wire {
         MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS, RunStatus, StreamFrame, StrategiesResponse,
         SweepRequest, SweepResponse, TradesResponse,
     };
-    pub use honba_entities::{Currency, Money as WireMoney, PortfolioPosition, PositionSide, Trade};
-    pub use honba_messages::Exchange;
-    pub use honba_messages::{
-        Bar, BarAggregation, BarSpecification, BarType, ErrorCode as WireErrorCode, ErrorCode,
-        ErrorDetail, Event as WireEvent, Event, Exchange as WireExchange, InstrumentId,
-        Message as WireMessage, Message, OrderId, PriceType, QuoteTick as WireQuoteTick,
-        Order as WireOrder, OrderSide as WireOrderSide,
-        OrderStatus as WireOrderStatus, OrderStatus, OrderType as WireOrderType, OrderType,
-        Product as WireProduct, TimeInForce as WireTimeInForce,
-        TradingState as WireTradingState, UnixNanos as WireUnixNanos,
+    pub use honba_api::{
+        ErrorCode as WireErrorCode, ErrorCode, ErrorDetail, Event as WireEvent, Event,
+        Message as WireMessage, Message, TradingState as WireTradingState,
+    };
+    pub use honba_api::wire::{
+        BarAggregation, BarSpecification, Order as WireOrder, Position, PortfolioAccount,
+        PortfolioHolding, PortfolioPosition, PriceType, QuoteTick as WireQuoteTick, Trade,
+    };
+    pub use honba_core::{
+        Currency, Exchange as WireExchange, Exchange, InstrumentId, Money as WireMoney,
+        OrderSide as WireOrderSide, OrderSide, OrderStatus as WireOrderStatus, OrderStatus,
+        OrderType as WireOrderType, OrderType, PositionSide, TimeInForce as WireTimeInForce,
     };
 }
 
@@ -64,9 +75,9 @@ pub mod wire {
 pub mod events;
 
 /// Semantic version of the API surface the client decodes.
-pub const API_VERSION: &str = honba_messages::API_VERSION;
-/// Integer version of the wire shape the client decodes.
-pub const SCHEMA_VERSION: u32 = honba_messages::SCHEMA_VERSION;
+pub const API_VERSION: &str = honba_api::API_VERSION;
+/// Version of the wire shape the client decodes.
+pub const SCHEMA_VERSION: &str = honba_api::SCHEMA_VERSION;
 
 /// The `{"status": "..."}` ack body the write routes answer with
 /// (`DELETE /orders/{id}`, `POST /positions/close`).
@@ -467,8 +478,8 @@ fn encode_query(value: &str) -> String {
     out
 }
 
-/// The stable snake_case code of an [`honba_messages::ErrorCode`].
-fn error_code_str(code: &honba_messages::ErrorCode) -> String {
+/// The stable snake_case code of an [`honba_api::ErrorCode`].
+fn error_code_str(code: &honba_api::ErrorCode) -> String {
     let Ok(json) = serde_json::to_string(code) else {
         return "unknown".to_string();
     };
@@ -488,8 +499,8 @@ mod tests {
 
     #[test]
     fn api_errors_are_not_marked_retryable_by_construction() {
-        let detail = honba_messages::ErrorDetail::new(
-            honba_messages::ErrorCode::OrderRejected,
+        let detail = honba_api::ErrorDetail::new(
+            honba_api::ErrorCode::ValidationInvalidRequest,
             "no_position",
         );
         let error = ClientError::Api {
@@ -497,7 +508,10 @@ mod tests {
             message: detail.message.clone(),
             retryable: detail.retryable,
         };
-        assert_eq!(error.to_string(), "api: order_rejected: no_position");
+        assert_eq!(
+            error.to_string(),
+            "api: validation_invalid_request: no_position"
+        );
         assert!(!error.retryable());
     }
 
@@ -521,9 +535,9 @@ mod tests {
     /// can read it, without any shape drift.
     fn decode_fixture<T: serde::de::DeserializeOwned>(
         name: &str,
-    ) -> Result<T, honba_messages::ErrorDetail> {
+    ) -> Result<T, honba_api::ErrorDetail> {
         let text = std::fs::read_to_string(fixture(name)).expect("fixture file");
-        let envelope: honba_messages::ResponseEnvelope<T> =
+        let envelope: honba_api::ResponseEnvelope<T> =
             serde_json::from_str(&text).expect("fixture envelope decodes");
         envelope.into_result()
     }
@@ -550,7 +564,7 @@ mod tests {
         // without parsing the human message (honba-ya verify.rs).
         let text = std::fs::read_to_string(fixture("verify_error_no_subscriptions"))
             .expect("fixture file");
-        let envelope: honba_messages::ResponseEnvelope<serde_json::Value> =
+        let envelope: honba_api::ResponseEnvelope<serde_json::Value> =
             serde_json::from_str(&text).expect("fixture envelope decodes");
         let detail = envelope.into_result().expect_err("verify refused");
         let context = detail.context.expect("verify attaches context");

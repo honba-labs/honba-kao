@@ -1,5 +1,5 @@
-#! Top application bar: brand → spacer → actions.
-#! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
+//! Top application bar: brand → spacer → actions.
+//! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
 //! cluster is also rail-owned (bottom-left), so the bar carries only the brand
 //! block, the theme/language controls and the trading-mode indicator.
 //!
@@ -120,13 +120,13 @@ pub fn HeaderBar(
                                                         }}
                                                     </div>
                                                 }
-                                                .collect_view()}
                                             })
                                             .collect_view()}
                                     </div>
                                 }
                             })
-                            .collect_view()}
+                            .collect_view()
+                    }}
                 </div>
 
                 <HfIconButton

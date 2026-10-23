@@ -4,20 +4,21 @@
 //! simulator buckets by — no `Intl`, no time-zone database. UTC+5:30 has no DST, so a fixed
 //! offset is exact.
 
-use honba_messages::UnixNanos;
+use honba_core::chrono::{DateTime, Utc};
 
 /// IST is the session the Simulator charts; UTC+5:30 has no DST.
 pub const IST_OFFSET_SECONDS: i64 = 5 * 3600 + 1800;
 
-/// `ts_event` → whole UTC seconds, by exact integer division. `None` only for the epoch
-/// placeholder.
+/// A wire timestamp → whole UTC seconds. `None` only for the epoch
+/// placeholder (timestamps no longer carry raw nanos on the wire; this is
+/// `DateTime<Utc>`'s own whole-second component).
 #[must_use]
-pub fn unix_nanos_to_seconds(ts: UnixNanos) -> Option<i64> {
-    let nanos = ts.as_u64();
-    if nanos == 0 {
+pub fn unix_nanos_to_seconds(ts: DateTime<Utc>) -> Option<i64> {
+    let seconds = ts.timestamp();
+    if seconds == 0 && ts.timestamp_subsec_nanos() == 0 {
         return None;
     }
-    Some((nanos / 1_000_000_000) as i64)
+    Some(seconds)
 }
 
 /// Civil date (year, month 1-12, day 1-31) of the day index
@@ -59,12 +60,11 @@ mod tests {
 
     #[test]
     fn reads_whole_seconds_off_the_wire_timestamps() {
-        // 1.7e18 ns is a u64 — the seconds are an exact integer division on
-        // the Rust side (fe sliced the string to dodge Number precision).
-        let ts = UnixNanos::from_u64(1_700_000_000_250_000_000);
+        let ts = DateTime::<Utc>::from_timestamp_nanos(1_700_000_000_250_000_000);
         assert_eq!(unix_nanos_to_seconds(ts), Some(1_700_000_000));
         // The epoch placeholder reads as absent.
-        assert_eq!(unix_nanos_to_seconds(UnixNanos::from_u64(0)), None);
+        let epoch = DateTime::<Utc>::from_timestamp_nanos(0);
+        assert_eq!(unix_nanos_to_seconds(epoch), None);
     }
 
     #[test]

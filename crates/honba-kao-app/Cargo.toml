@@ -8,6 +8,11 @@ license.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+honba-kao-client.workspace = true
+honba-kao-ui-core.workspace = true
+honba-api-wasm.workspace = true
+honba-indicators.workspace = true
+openalgo-charts.workspace = true
 leptos.workspace = true
 leptos_router.workspace = true
 wasm-bindgen.workspace = true

@@ -1,4 +1,4 @@
-#! The screener filter bar — the Leptos port of the labs app's
+//! The screener filter bar — the Leptos port of the labs app's
 //! `filter-bar.tsx`: asset-class pills, "Screens …" trigger (with the
 //! active screen title), Filters / Columns buttons with count badges, the
 //! Table/Heatmap view toggle, the quick-preset + market row, the row-3

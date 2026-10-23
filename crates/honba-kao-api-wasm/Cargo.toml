@@ -19,10 +19,10 @@ default = ["js"]
 js = ["dep:wasm-bindgen"]
 
 [dependencies]
-honba-entities.workspace = true
+honba-api.workspace = true
+honba-core.workspace = true
 honba-engine.workspace = true
 honba-indicators.workspace = true
-honba-messages.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 wasm-bindgen = { version = "0.2", optional = true }
