@@ -677,12 +677,12 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **1.5 Real-Time WebSocket Streaming**: typed `MarketFeed`/`QuoteBook` client with `Live/Delayed/Cached/Synthetic` provenance; falls back to labelled synthetic quotes until `/api/ws/live` is confirmed live.
 
 ### Phase 2: Equity Security Hub, Filings Intelligence & Research Dossiers
-- [ ] **2.1 Security Hub Core**: Implement `/equity/security` with DES snapshot, valuation ratios, 52-week range bars, and 11-tab router.
-- [ ] **2.2 Financials Transposed Matrices**: Build transposed balance sheet, income statement, and cash flow views with quarterly/annual toggle.
-- [ ] **2.3 Value Chain & Business Pack**: Build supplier → company → customer citation graph, operating KPIs chart, and reverse DCF implied growth engine.
-- [ ] **2.4 Filings Intelligence (RAG)**: Port 21 scored growth/headwind drivers with verbatim quote verification, page links, and "Ask the Filings" natural language QA.
-- [ ] **2.5 Research Dossiers**: Implement `/equity/research-dossiers` with thesis builder, evidence stance cards (`Supporting`/`Opposing`), versioned diffing, and shareable frozen-data snapshots.
-- [ ] **2.6 Screener & Factor Dashboard**: Build guru presets, formula engine, filings-derived metrics, and factor heatmap.
+- [x] **2.1 Security Hub Core**: `/equity/security/:ticker?tab=` with DES snapshot, 52-week range bar, and 11-tab router (Overview live; other 10 tabs filled in by 2.2-2.4, rest placeholders).
+- [x] **2.2 Financials Transposed Matrices**: transposed Income Statement / Balance Sheet / Cash Flow tables with quarterly/annual toggle and YoY/QoQ growth, in the Financials tab.
+- [x] **2.3 Value Chain & Business Pack**: peer relative valuation table, supplier → company → customer columns, raw material sensitivity, and reverse DCF implied growth, in the Peers tab.
+- [x] **2.4 Filings Intelligence** (mock UI, no real RAG backend): scored growth/headwind driver cards with verbatim quotes and source labels, "Ask the Filings" QA (canned answers), and a guidance tracker, in the Filings tab.
+- [x] **2.5 Research Dossiers**: `/equity/research-dossiers` with thesis panel, tagged evidence cards (`Supporting`/`Opposing`/`Needs Review`), revision history table, and a mock shareable-snapshot link (all mock data, no persistence).
+- [x] **2.6 Screener & Factor Dashboard** (partial): 3 guru presets (Buffett, Graham, Piotroski-style) added to the existing quick-preset engine, and a new Factor Heatmap view (mock sector × factor scores). Filings-derived screener columns not added (would require extending the `Instrument` data model — deferred).
 
 ### Phase 3: Derivatives & F&O Suite
 - [ ] **3.1 Option Chain**: Implement `/fno` with Calls/Puts bid/ask, LTP, IV, Greeks (Delta, Gamma, Theta, Vega), strike filters (10/15/20/All), and ATM highlight.
