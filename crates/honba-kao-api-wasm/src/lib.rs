@@ -4,16 +4,23 @@
 
 //! WASM compute surface for Honba frontend.
 //!
-//! Pure compute only: indicators (close-only and OHLC), screener evaluation, Journal v1
-//! backtest replay, fill → round-trip pairing and run analytics. No tokio, no filesystem, no
-//! network. Depends only on pure L0-L4 crates.
+//! Pure compute only: indicators (close-only and OHLC), screener evaluation, fill → round-trip
+//! pairing and run analytics. No tokio, no filesystem, no network. Depends only on pure L0-L4
+//! crates.
 //!
-//! The logic lives in plain Rust modules ([`indicators`], [`screener`], [`replay`],
-//! [`pairing`], [`analytics`], [`calendar`]) that are tested natively and expose **typed** Rust
+//! The logic lives in plain Rust modules ([`indicators`], [`screener`], [`pairing`],
+//! [`analytics`], [`calendar`]) that are tested natively and expose **typed** Rust
 //! APIs: same-workspace Rust callers (the Leptos app) call those directly with plain structs, no
 //! JSON round trip. With the default `js` feature, this file adds the `wasm-bindgen` layer for
-//! external JS callers on top: series cross that boundary as `Float64Array`; a screen result and a
-//! journal replay cross as JSON strings rendered from the typed results.
+//! external JS callers on top: series cross that boundary as `Float64Array`; a screen result
+//! crosses as a JSON string rendered from the typed result.
+//!
+//! `replay` (Journal v1 NDJSON backtest replay) is disabled: it depended on `honba-ya-engine`
+//! (`AuditKind`/`AuditLog`/`JournalHeader`/`JournalV1`/`ReplayState`), which honba-ya removed in
+//! commit `864b8d3` with no successor reducer. The module source is still at `src/replay.rs` and
+//! `src/tests/replay.rs` for reference, just not wired into the crate. Re-enable once honba-ya
+//! exposes an equivalent (either a client-side-replayable journal format, or a REST endpoint to
+//! call instead of reducing it in WASM).
 
 #[cfg(feature = "js")]
 use wasm_bindgen::prelude::*;
@@ -22,7 +29,6 @@ pub mod analytics;
 pub mod calendar;
 pub mod indicators;
 pub mod pairing;
-pub mod replay;
 pub mod screener;
 
 /// Renders an indicator failure as a `reason: message` pair (ADR 0012 rule 4) for the
@@ -116,31 +122,6 @@ pub fn screener_scan_group(
 ) -> Result<String, JsError> {
     screener::scan_group_json(group_json, open, high, low, close, volume)
         .map_err(|e| JsError::new(&e))
-}
-
-/// Parses a Journal v1 NDJSON stream and returns its provenance header as JSON.
-///
-/// `journal_ndjson` is the whole journal in memory (the first non-empty line is the header,
-/// `type: "header"`; the rest are audit records). Returns the `JournalHeader` object as JSON.
-/// Throws a JavaScript `Error` on an empty stream, a missing or malformed header, a malformed
-/// record line, or an unsupported journal version.
-#[cfg(feature = "js")]
-#[wasm_bindgen]
-pub fn journal_header(journal_ndjson: &str) -> Result<String, JsError> {
-    replay::journal_header_json(journal_ndjson).map_err(|e| JsError::new(&e))
-}
-
-/// Replays a Journal v1 NDJSON stream and returns the reconstructed state as compact JSON.
-///
-/// `journal_ndjson` is the whole journal in memory. Returns the stable shape
-/// `{"header": <JournalHeader>, "replay": {"trading_state", "dispatches", "positions", "orders",
-/// "rejections"}}`, with `positions`/`orders` sorted and `rejections` keyed by order id, so the
-/// frontend can show a backtest journal offline. Throws a JavaScript `Error` on the same inputs
-/// as [`journal_header`].
-#[cfg(feature = "js")]
-#[wasm_bindgen]
-pub fn replay_journal(journal_ndjson: &str) -> Result<String, JsError> {
-    replay::replay_journal_json(journal_ndjson).map_err(|e| JsError::new(&e))
 }
 
 #[cfg(test)]

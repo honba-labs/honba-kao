@@ -39,7 +39,6 @@ console_error_panic_hook = "0.1"
 tracing-wasm = "0.2"
 tracing = "0.1"
 thiserror = "1"
-honba-engine       = { package = "honba-ya-engine", path = "../honba-ya/crates/honba-ya-engine" }
 honba-indicators   = { package = "honba-me-indicators", path = "../honba-me/crates/honba-me-indicators" }
 honba-analytics    = { package = "honba-nou-analytics", path = "../honba-nou/crates/honba-nou-analytics" }
 

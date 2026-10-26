@@ -21,7 +21,6 @@ js = ["dep:wasm-bindgen"]
 [dependencies]
 honba-api.workspace = true
 honba-core.workspace = true
-honba-engine.workspace = true
 honba-indicators.workspace = true
 serde.workspace = true
 serde_json.workspace = true

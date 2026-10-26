@@ -3,6 +3,7 @@
 mod edge_cases;
 mod indicators;
 mod ohlc;
-mod replay;
 mod screener;
 mod wasm_error_codes;
+
+// `replay` is disabled: see the module-level doc comment in `lib.rs`.
