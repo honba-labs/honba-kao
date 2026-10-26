@@ -18,6 +18,7 @@ use leptos_router::path;
 use crate::shared::contexts::use_auth;
 use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
+use crate::features::chart_workstation::ChartWorkstationPage;
 use crate::features::dossiers::DossiersPage;
 use crate::features::fno::{
     FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, OptionGreeksPage,
@@ -59,6 +60,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/fno/futures") view=FuturesPage />
                 <Route path=path!("/fno/flow") view=FlowPage />
                 <Route path=path!("/equity/option-greeks") view=OptionGreeksPage />
+                <Route path=path!("/equity/chart-workstation") view=ChartWorkstationPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

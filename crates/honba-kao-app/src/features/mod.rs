@@ -4,6 +4,7 @@
 
 pub mod account;
 pub mod auth;
+pub mod chart_workstation;
 pub mod dossiers;
 pub mod fno;
 pub mod landing;
