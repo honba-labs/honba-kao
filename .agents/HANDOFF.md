@@ -15,7 +15,7 @@ Commits (honba-kao):
 - 05dbad6 feat(kao): add typed live stream client with provenance feed (Phase 1.5)
 
 Sub-items:
-- 1.1 Persistent shell: already satisfied by the existing AppShell/AppChrome (HeaderBar, NavRail, `<Outlet/>`). OpenTerminalUI's TickerTape is NOT added; partial.
+- 1.1 Persistent shell: done. AppChrome (HeaderBar, TickerTape, NavRail, `<Outlet/>`). TickerTape lives in `router/chrome/ticker_tape.rs`, mounted under HeaderBar, reading `MarketFeed` over `MOCK_SYMBOLS` (`.ticker-tape` CSS in `style/app.css`).
 - 1.2 CommandBar: done. Ported from OpenTerminalUI commanding.ts / CommandBar.tsx. Grammar, fuzzy score, ticker hints, history key `ot:gobar:history:v1`. Preview uses MOCK symbols.
 - 1.3 CommandPalette: done. NAV/ASSET/FUNC/CMD rows, Ctrl+K. Uses HfModal.
 - 1.4 Link groups: done in-process. Colour groups (red/blue/green/yellow, OpenTerminalUI model) labelled A-D. Pop-out BroadcastChannel sync NOT ported.

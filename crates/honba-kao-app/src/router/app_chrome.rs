@@ -11,7 +11,7 @@
 
 use leptos::prelude::*;
 
-use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
+use crate::router::chrome::{HeaderBar, NavRail, SiteFooter, TickerTape};
 use crate::router::paths::Page;
 use crate::shared::components::{CommandBar, CommandPalette, LoginRequiredOverlay, PaletteStudio};
 use crate::shared::contexts::SymbolLinkContext;
@@ -56,6 +56,7 @@ pub fn AppChrome(
             }
         >
             <HeaderBar current_page=current_page />
+            <TickerTape />
             {show_rail
                 .then(|| {
                     view! {
