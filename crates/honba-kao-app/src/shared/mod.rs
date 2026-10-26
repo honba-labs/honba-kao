@@ -21,6 +21,7 @@ pub mod data;
 pub mod hooks;
 pub mod i18n;
 pub mod stores;
+pub mod stream;
 pub mod theme;
 pub mod types;
 pub mod utils;

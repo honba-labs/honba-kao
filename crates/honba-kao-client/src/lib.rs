@@ -21,6 +21,8 @@
 //! browser-native `EventSource` keeps reconnect semantics for free and needs
 //! no fetch-stream parsing. Application versions of the same decision live in
 //! `events.rs`' module doc.
+pub mod stream;
+
 use gloo_net::http::{Request, RequestBuilder};
 use honba_api::{
     BacktestRequest, BacktestResponse, BarsResponse, CompiledStrategy, DepthResponse,

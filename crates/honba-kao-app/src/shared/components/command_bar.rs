@@ -16,7 +16,7 @@
 use honba_kao_ui_core::composed::command_bar::{
     CommandSuggestion, HfAssetPreviewCard, HfCommandBar, HfCommandBarInput, HfCommandSuggestions,
 };
-use honba_kao_ui_core::trading::ProvenanceQuality;
+use honba_kao_ui_core::trading::{HfProvenanceChip, ProvenanceQuality};
 use leptos::html;
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
@@ -27,6 +27,7 @@ use crate::shared::command::commanding::{
     route_for, ticker_hints,
 };
 use crate::shared::command::symbols::{self, MockSymbol};
+use crate::shared::stream::feed::MarketFeed;
 
 /// localStorage key, same name as OpenTerminalUI's gobar history.
 pub const HISTORY_KEY: &str = "ot:gobar:history:v1";
@@ -147,6 +148,7 @@ fn preview_symbol(query: &str) -> Option<MockSymbol> {
 #[component]
 pub fn CommandBar() -> impl IntoView {
     let navigate = use_navigate();
+    let feed = use_context::<MarketFeed>();
     let value = RwSignal::new(String::new());
     let input_ref = NodeRef::<html::Input>::new();
     let is_open = RwSignal::new(false);
@@ -289,6 +291,12 @@ pub fn CommandBar() -> impl IntoView {
                 on_focus=Callback::new(move |_| is_open.set(true))
                 on_blur=Callback::new(move |_| is_open.set(false))
             />
+            {move || {
+                feed.map(|f| {
+                    let quality = f.quality().get();
+                    view! { <HfProvenanceChip quality=quality compact=true title="Market feed provenance" /> }
+                })
+            }}
             <span class="hf-command-bar__hint">"Ctrl+K palette"</span>
             <Show when=move || is_open.get()>
                 <div class="app-command-bar__dropdown">
@@ -302,16 +310,22 @@ pub fn CommandBar() -> impl IntoView {
                         preview
                             .get()
                             .map(|s| {
+                                // Live quote when the feed has one; otherwise the mock table row.
+                                let live = feed.and_then(|f| f.snapshot(s.ticker));
+                                let (ltp, change, quality) = match live {
+                                    Some(q) => (q.ltp, q.change_pct, q.quality),
+                                    None => (s.ltp.to_string(), s.change_pct.to_string(), ProvenanceQuality::Synthetic),
+                                };
                                 view! {
                                     <HfAssetPreviewCard
                                         ticker=s.ticker.to_string()
                                         name=s.name.to_string()
                                         exchange=s.exchange.to_string()
                                         asset_class=s.asset_class.to_string()
-                                        ltp=s.ltp.to_string()
-                                        change_pct=s.change_pct.to_string()
+                                        ltp=ltp
+                                        change_pct=change
                                         series=s.series.to_vec()
-                                        quality=ProvenanceQuality::Synthetic
+                                        quality=quality
                                     />
                                 }
                             })

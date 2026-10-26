@@ -15,6 +15,7 @@ use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
 use crate::router::paths::Page;
 use crate::shared::components::{CommandBar, CommandPalette, LoginRequiredOverlay, PaletteStudio};
 use crate::shared::contexts::SymbolLinkContext;
+use crate::shared::stream::feed::start_market_feed;
 
 #[component]
 pub fn AppChrome(
@@ -33,6 +34,8 @@ pub fn AppChrome(
 ) -> impl IntoView {
     // Symbol link groups (A–D) shared by every panel in the chrome.
     SymbolLinkContext::new().provide();
+    // Live quotes for the command bar and panels; synthetic until the socket delivers.
+    start_market_feed().provide();
 
     let login_open = RwSignal::new(false);
     let feature = RwSignal::new(String::new());
