@@ -2394,4 +2394,17 @@
 .fno__scroll { overflow-x: auto; }
 .fno__strike { font-weight: 600; text-align: center; }
 .fno__row--atm > td { background: var(--hair-accent); }
+
+/* Strategy Builder (Phase 3.3) */
+.fno__legs .fno__qty { width: 88px; text-align: right; }
+.fno__badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--hair); color: var(--ink-2); }
+.fno__badge--buy { color: var(--button-green); }
+.fno__badge--sell { color: var(--button-red); }
+.fno__chart { display: block; width: 100%; height: auto; }
+.fno__zero { stroke: var(--ink-3); stroke-dasharray: 4 4; stroke-width: 1; }
+.fno__line { stroke-width: 2; stroke-linejoin: round; }
+.fno__line--profit { stroke: var(--button-green); }
+.fno__line--loss { stroke: var(--button-red); }
+.fno__axis { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7; padding-top: 4px; }
+.fno__pop { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hair); align-self: center; }
 @media (max-width: 768px) { .fno__kpis { gap: 10px; } }
