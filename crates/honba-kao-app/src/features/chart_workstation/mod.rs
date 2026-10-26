@@ -4,5 +4,7 @@
 //! snapshot store. Charts mount through the shared openalgo-charts bridge.
 
 mod chart_workstation_page;
+mod openscript_panel;
 
 pub use chart_workstation_page::ChartWorkstationPage;
+pub use openscript_panel::OpenScriptPanel;

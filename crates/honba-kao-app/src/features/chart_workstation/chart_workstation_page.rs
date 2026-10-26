@@ -13,6 +13,7 @@ use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 
+use super::openscript_panel::OpenScriptPanel;
 use crate::shared::components::charts::openalgo_chart as bridge;
 
 const SNAPSHOT_KEY: &str = "cw:snapshot:v1";
@@ -245,6 +246,10 @@ pub fn ChartWorkstationPage() -> impl IntoView {
     let status = RwSignal::new(String::new());
     let synced_time = RwSignal::new(None::<f64>);
     provide_context(synced_time);
+    let show_openscript = RwSignal::new(false);
+    let on_toggle_openscript = Callback::new(move |_: web_sys::MouseEvent| {
+        show_openscript.update(|shown| *shown = !*shown);
+    });
 
     let panes: [PaneState; PANE_COUNT] = std::array::from_fn(|index| PaneState {
         symbol: RwSignal::new(DEFAULT_SYMBOLS[index].to_string()),
@@ -301,6 +306,7 @@ pub fn ChartWorkstationPage() -> impl IntoView {
             </HfToggleGroup>
             <HfButton on_click=on_save>"Save layout"</HfButton>
             <HfButton on_click=on_load>"Load layout"</HfButton>
+            <HfButton on_click=on_toggle_openscript>"OpenScript Editor"</HfButton>
             <HfKpi label="Crosshair">
                 {move || match synced_time.get() {
                     Some(fraction) => format!("{:.0}%", fraction * 100.0),
@@ -309,6 +315,8 @@ pub fn ChartWorkstationPage() -> impl IntoView {
             </HfKpi>
             <HfKpi label="Status">{move || status.get()}</HfKpi>
         </HfPanel>
+
+        {move || show_openscript.get().then(|| view! { <OpenScriptPanel /> })}
 
         {move || {
             let current = layout.get();
