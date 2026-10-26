@@ -8,6 +8,7 @@ pub mod chart_workstation;
 pub mod dossiers;
 pub mod fno;
 pub mod landing;
+pub mod mta;
 pub mod portfolio;
 pub mod screener;
 pub mod security_hub;

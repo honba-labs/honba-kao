@@ -40,6 +40,8 @@ pub mod routes {
     pub const OPTION_GREEKS: &str = "/equity/option-greeks";
     /// Chart Workstation (Phase 4.1) — multi-pane charts.
     pub const CHART_WORKSTATION: &str = "/equity/chart-workstation";
+    /// Multi-Timeframe Analysis (Phase 4.3) — four panes, one symbol.
+    pub const MTA: &str = "/equity/mta";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -68,6 +70,7 @@ pub enum Page {
     Flow,
     OptionGreeksCalc,
     ChartWorkstation,
+    MultiTimeframe,
     Workbench,
     Strategy,
     Simulator,
@@ -95,6 +98,7 @@ impl Page {
             Page::Flow => "flow",
             Page::OptionGreeksCalc => "option_greeks_calc",
             Page::ChartWorkstation => "chart_workstation",
+            Page::MultiTimeframe => "multi_timeframe",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -122,6 +126,7 @@ impl Page {
             Page::Flow => "Options Flow",
             Page::OptionGreeksCalc => "Option Greeks Calculator",
             Page::ChartWorkstation => "Chart Workstation",
+            Page::MultiTimeframe => "Multi-Timeframe Analysis",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -153,6 +158,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::FNO_FLOW => Some(Page::Flow),
         r if r == ROUTES::OPTION_GREEKS => Some(Page::OptionGreeksCalc),
         r if r == ROUTES::CHART_WORKSTATION => Some(Page::ChartWorkstation),
+        r if r == ROUTES::MTA => Some(Page::MultiTimeframe),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),

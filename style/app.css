@@ -2445,10 +2445,18 @@
 .cw-pane__toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 8px; }
 .cw-pane__symbol { width: 120px; }
 .cw-pane__chart { flex: 1 1 auto; min-height: 240px; min-width: 0; }
+/* Multi-Timeframe Analysis (Phase 4.3) — /equity/mta */
+.mta-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 8px 12px; margin-bottom: 8px; }
+.mta-toolbar__symbol { width: 140px; }
+.mta-grid { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); height: calc(100vh - 260px); min-height: 640px; }
+.mta-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.mta-pane__tf { font-size: 0.85em; opacity: 0.75; }
+.mta-pane__chart { flex: 1 1 auto; min-height: 240px; min-width: 0; }
 .openscript { display: flex; flex-direction: column; gap: 8px; padding: 8px 12px; margin-bottom: 8px; }
 .openscript__editor { font-family: monospace; width: 100%; }
 .openscript__diagnostics { margin: 0; padding-left: 18px; font-size: 0.85em; }
 @media (max-width: 720px) {
   .cw-grid { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(360px, auto); }
   .cw-pane__symbol { width: 100%; }
+  .mta-grid { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(360px, auto); }
 }

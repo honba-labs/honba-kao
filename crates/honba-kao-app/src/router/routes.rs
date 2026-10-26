@@ -25,6 +25,7 @@ use crate::features::fno::{
     StrategyBuilderPage,
 };
 use crate::features::landing::LandingPage;
+use crate::features::mta::MtaPage;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::screener::ScreenerPage;
 use crate::features::security_hub::SecurityHubPage;
@@ -61,6 +62,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/fno/flow") view=FlowPage />
                 <Route path=path!("/equity/option-greeks") view=OptionGreeksPage />
                 <Route path=path!("/equity/chart-workstation") view=ChartWorkstationPage />
+                <Route path=path!("/equity/mta") view=MtaPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />
