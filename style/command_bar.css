@@ -178,3 +178,20 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
 }
+
+/* Symbol link group tag (A–D); colours mirror the OpenTerminalUI link palette. */
+.hf-link-tag__chip {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--on-accent);
+  background: var(--muted);
+}
+.hf-link-tag__chip--red { background: #e5484d; }
+.hf-link-tag__chip--blue { background: #3b82f6; }
+.hf-link-tag__chip--green { background: #30a46c; }
+.hf-link-tag__chip--yellow { background: #f5a524; }

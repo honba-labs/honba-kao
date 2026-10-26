@@ -14,6 +14,7 @@ use leptos::prelude::*;
 use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
 use crate::router::paths::Page;
 use crate::shared::components::{CommandBar, CommandPalette, LoginRequiredOverlay, PaletteStudio};
+use crate::shared::contexts::SymbolLinkContext;
 
 #[component]
 pub fn AppChrome(
@@ -30,6 +31,9 @@ pub fn AppChrome(
     show_footer: bool,
     children: Children,
 ) -> impl IntoView {
+    // Symbol link groups (A–D) shared by every panel in the chrome.
+    SymbolLinkContext::new().provide();
+
     let login_open = RwSignal::new(false);
     let feature = RwSignal::new(String::new());
     let on_login_required = Callback::new(move |requested_feature: String| {
