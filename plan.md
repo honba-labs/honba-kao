@@ -663,8 +663,8 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 ```
 
 ### Phase 0: Design System Primitives (`honba-kao-ui-core`)
-- [ ] **0.1 Primitives Expansion** (partial): shadcn-parity primitives exist; still missing a virtualized `DataTable` over `table.rs` and a `PanelChrome` header (LinkGroup selector + Popout action) over `panel.rs`.
-- [ ] **0.2 Financial Primitives** (partial): `HfPLNumber`, `MiniSparkline`, `MiniRangeBar` done (`trading/pl_number.rs`, `sparkline.rs`, `range_bar.rs`). `SentimentBadge`, `SentimentChart`, `EmotionIndicator`, `AiInsightCard`, `MarketStatusBar` not started.
+- [x] **0.1 Primitives Expansion**: virtualized `HfDataTable` over `table.rs` and `HfPanelChrome` header (LinkGroup selector + Popout action) over `panel.rs` added.
+- [x] **0.2 Financial Primitives**: `HfPLNumber`, `MiniSparkline`, `MiniRangeBar`, `SentimentBadge`, `SentimentChart`, `EmotionIndicator`, `AiInsightCard`, `MarketStatusBar` all implemented in `ui-core/trading`.
 - [x] **0.3 Table Virtualization**: `use_virtual_rows` implemented in `ui-core/hooks` and wired into the screener table.
 - [x] **0.4 Procedural Outline Icons**: broad procedural SVG set in `icons/outline.rs` (87 glyphs) covering theme, nav, and trading icons; not yet formally audited against all 8 domains.
 - [x] **0.5 CI Guardrails**: `make lint-design-system` enforces zero raw `<button>`/`<input>` in feature crates.
