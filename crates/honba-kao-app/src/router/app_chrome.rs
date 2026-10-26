@@ -13,7 +13,7 @@ use leptos::prelude::*;
 
 use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
 use crate::router::paths::Page;
-use crate::shared::components::{LoginRequiredOverlay, PaletteStudio};
+use crate::shared::components::{CommandBar, LoginRequiredOverlay, PaletteStudio};
 
 #[component]
 pub fn AppChrome(
@@ -59,7 +59,11 @@ pub fn AppChrome(
                         />
                     }
                 })}
-            <main class="app-main">{children()}</main>
+            <main class="app-main">
+                // Persistent GO bar (Ctrl+G); lives in the chrome so it survives navigation.
+                <CommandBar />
+                {children()}
+            </main>
             {show_footer.then(|| view! { <SiteFooter /> })}
             <PaletteStudio
                 is_open=Signal::derive(move || palette_open.get())

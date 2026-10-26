@@ -13,6 +13,7 @@
 //! * [`utils`] — formatting, indicator and text helpers.
 
 pub mod api;
+pub mod command;
 pub mod components;
 pub mod constants;
 pub mod contexts;
