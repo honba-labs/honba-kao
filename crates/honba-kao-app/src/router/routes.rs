@@ -26,6 +26,7 @@ use crate::features::fno::{
     StrategyBuilderPage,
 };
 use crate::features::landing::LandingPage;
+use crate::features::launchpad::{LaunchpadPage, PopoutPage};
 use crate::features::mta::MtaPage;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::screener::ScreenerPage;
@@ -49,6 +50,8 @@ pub fn AppRoutes() -> impl IntoView {
             <Route path=path!("/register") view=|| view! { <RegisterPage /> } />
             <Route path=path!("/reset-password") view=|| view! { <ResetPasswordPage /> } />
             <Route path=path!("/setup") view=|| view! { <SetupPage /> } />
+            // Pop-out window: a bare single panel, no shell chrome.
+            <Route path=path!("/equity/launchpad/popout") view=|| view! { <PopoutPage /> } />
 
             // --- Gated workspace (persistent chrome) --------------------------
             <ParentRoute path=path!("") view=AppShell>
@@ -67,6 +70,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/equity/mta") view=MtaPage />
                 <Route path=path!("/equity/dom") view=DomPage />
                 <Route path=path!("/equity/tape") view=TapePage />
+                <Route path=path!("/equity/launchpad") view=LaunchpadPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

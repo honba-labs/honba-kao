@@ -9,6 +9,7 @@ pub mod dom;
 pub mod dossiers;
 pub mod fno;
 pub mod landing;
+pub mod launchpad;
 pub mod mta;
 pub mod portfolio;
 pub mod screener;

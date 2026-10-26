@@ -46,6 +46,10 @@ pub mod routes {
     pub const DOM: &str = "/equity/dom";
     /// Time & Sales print tape (Phase 4.4) — mock-data page.
     pub const TAPE: &str = "/equity/tape";
+    /// Launchpad (Phase 4.5) — mosaic workspace, mock-data page.
+    pub const LAUNCHPAD: &str = "/equity/launchpad";
+    /// Launchpad pop-out window (Phase 4.5) — `?panel=<slug>`, outside the shell.
+    pub const LAUNCHPAD_POPOUT: &str = "/equity/launchpad/popout";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -77,6 +81,7 @@ pub enum Page {
     MultiTimeframe,
     Dom,
     Tape,
+    Launchpad,
     Workbench,
     Strategy,
     Simulator,
@@ -107,6 +112,7 @@ impl Page {
             Page::MultiTimeframe => "multi_timeframe",
             Page::Dom => "dom",
             Page::Tape => "tape",
+            Page::Launchpad => "launchpad",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -137,6 +143,7 @@ impl Page {
             Page::MultiTimeframe => "Multi-Timeframe Analysis",
             Page::Dom => "DOM Depth Ladder",
             Page::Tape => "Time & Sales",
+            Page::Launchpad => "Launchpad",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -171,6 +178,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::MTA => Some(Page::MultiTimeframe),
         r if r == ROUTES::DOM => Some(Page::Dom),
         r if r == ROUTES::TAPE => Some(Page::Tape),
+        r if r == ROUTES::LAUNCHPAD => Some(Page::Launchpad),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),

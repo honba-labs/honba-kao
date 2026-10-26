@@ -2475,3 +2475,63 @@
 .tape-side--buy { color: var(--pnl-gain); }
 .tape-side--sell { color: var(--pnl-loss); }
 .tape-side--mid { opacity: 0.6; }
+
+/* --- Launchpad (Phase 4.5): mosaic split panes and pop-out slot ------------- */
+.launchpad {
+  height: 100%;
+  min-height: 0;
+}
+
+.launchpad__group {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 420px;
+  gap: 0;
+}
+
+.hf-resizable-group {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.hf-resizable-group--horizontal { flex-direction: row; }
+.hf-resizable-group--vertical { flex-direction: column; }
+
+.hf-resizable-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.hf-resizable-handle {
+  flex: 0 0 6px;
+  background: var(--border, rgba(128, 128, 128, 0.25));
+}
+
+.hf-resizable-group--horizontal > .hf-resizable-handle { cursor: col-resize; }
+.hf-resizable-group--vertical > .hf-resizable-handle { cursor: row-resize; }
+
+.launchpad__slot {
+  height: 100%;
+  min-height: 0;
+}
+
+.launchpad__body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.launchpad-popout {
+  height: 100vh;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.launchpad-popout .launchpad__slot--popout {
+  height: 100%;
+}
