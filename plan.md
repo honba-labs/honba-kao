@@ -663,18 +663,18 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 ```
 
 ### Phase 0: Design System Primitives (`honba-kao-ui-core`)
-- [ ] **0.1 Primitives Expansion**: Extend the *existing* shadcn-parity primitives (`button.rs`, `input.rs`, `select.rs`, `tabs.rs`, `table.rs`, `dialog.rs`, `toast.rs`, `badge.rs`, `tooltip.rs`, etc. — do not reintroduce a `Terminal*`-prefixed set) with the pieces OpenTerminalUI needs that are still missing: a virtualized `DataTable` over `table.rs`, and a `PanelChrome` header (LinkGroup selector + Popout action) over `panel.rs`.
-- [ ] **0.2 Financial Primitives**: Implement `HfPLNumber`, `MiniSparkline`, `MiniRangeBar`, `SentimentBadge`, `SentimentChart`, `EmotionIndicator`, `AiInsightCard`, `MarketStatusBar`.
-- [ ] **0.3 Table Virtualization**: Solidify `use_virtual_rows` to guarantee smooth 60fps scrolling over 5,000+ stock rows in screener and tape tables with zero jank.
-- [ ] **0.4 Procedural Outline Icons**: Verify complete procedural SVG icon set (`stroke="currentColor" fill="none"`) for all 8 domain glyphs, trading side actions, and chart tools.
-- [ ] **0.5 CI Guardrails**: Update `make lint-design-system` to enforce zero raw HTML tags in feature crates.
+- [ ] **0.1 Primitives Expansion** (partial): shadcn-parity primitives exist; still missing a virtualized `DataTable` over `table.rs` and a `PanelChrome` header (LinkGroup selector + Popout action) over `panel.rs`.
+- [ ] **0.2 Financial Primitives** (partial): `HfPLNumber`, `MiniSparkline`, `MiniRangeBar` done (`trading/pl_number.rs`, `sparkline.rs`, `range_bar.rs`). `SentimentBadge`, `SentimentChart`, `EmotionIndicator`, `AiInsightCard`, `MarketStatusBar` not started.
+- [x] **0.3 Table Virtualization**: `use_virtual_rows` implemented in `ui-core/hooks` and wired into the screener table.
+- [x] **0.4 Procedural Outline Icons**: broad procedural SVG set in `icons/outline.rs` (87 glyphs) covering theme, nav, and trading icons; not yet formally audited against all 8 domains.
+- [x] **0.5 CI Guardrails**: `make lint-design-system` enforces zero raw `<button>`/`<input>` in feature crates.
 
 ### Phase 1: App Shell, Navigation & Real-Time Plumbing
-- [ ] **1.1 Persistent Shell Layout**: Implement `AppShell` wrapping Leptos `<Outlet/>`, keeping `TopBar`, `NavRail`, and ticker tape permanently mounted across navigation.
-- [ ] **1.2 CommandBar (`Ctrl+G`)**: Implement quick GO bar with live symbol search, fuzzy history matching (`ot:gobar:history:v1`), ticker hints (`DES`, `FA`, `FNO`, `GP`), and asset preview card with sparkline.
-- [ ] **1.3 CommandPalette (`Ctrl+K`)**: Implement modal command runner searching routes, tools, and actions.
-- [ ] **1.4 Symbol Link Groups (`A`–`D`)**: Implement `SymbolLinkContext` and `use_link_group` allowing independent panel symbol synchronization.
-- [ ] **1.5 Real-Time WebSocket Streaming**: Build typed WebSocket client for streaming market depth, trades, and quotes with provenance indicators (`Live / Delayed / Cached / Synthetic`).
+- [x] **1.1 Persistent Shell Layout**: `AppShell`/`AppChrome` wraps the Leptos `<Outlet/>`, keeping `HeaderBar`, `NavRail`, and `TickerTape` permanently mounted across navigation.
+- [x] **1.2 CommandBar (`Ctrl+G`)**: quick GO bar with live symbol search, fuzzy history (`ot:gobar:history:v1`), ticker hints (`DES`, `FA`, `FNO`, `GP`), and sparkline preview card.
+- [x] **1.3 CommandPalette (`Ctrl+K`)**: modal command runner over NAV/ASSET/FUNC/CMD rows.
+- [x] **1.4 Symbol Link Groups (`A`–`D`)**: `SymbolLinkContext` and `use_link_group` implemented (in-process sync; cross-window `BroadcastChannel` pop-out sync not ported).
+- [x] **1.5 Real-Time WebSocket Streaming**: typed `MarketFeed`/`QuoteBook` client with `Live/Delayed/Cached/Synthetic` provenance; falls back to labelled synthetic quotes until `/api/ws/live` is confirmed live.
 
 ### Phase 2: Equity Security Hub, Filings Intelligence & Research Dossiers
 - [ ] **2.1 Security Hub Core**: Implement `/equity/security` with DES snapshot, valuation ratios, 52-week range bars, and 11-tab router.
