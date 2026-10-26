@@ -2185,3 +2185,158 @@
   }
 }
 
+/* --- Phase 0 primitives: DataTable, PanelChrome, financial widgets --------- */
+
+.hf-data-table {
+  overflow: auto;
+  max-height: 100%;
+  contain: strict;
+}
+
+.hf-data-table__spacer td {
+  padding: 0;
+  border: 0;
+}
+
+.hf-panel-chrome__groups {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hf-panel-chrome__group {
+  min-width: 22px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.hf-panel-chrome__group[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--shade-0);
+}
+
+.hf-sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hf-sentiment-badge--bullish {
+  color: var(--pnl-gain);
+  background: color-mix(in srgb, var(--pnl-gain) 14%, transparent);
+}
+
+.hf-sentiment-badge--bearish {
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 14%, transparent);
+}
+
+.hf-sentiment-badge--neutral {
+  color: var(--muted);
+  background: var(--shade-0);
+}
+
+.hf-sentiment-chart {
+  display: grid;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.hf-sentiment-chart__track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+
+.hf-sentiment-chart__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--pnl-gain) 60%, transparent);
+}
+
+.hf-sentiment-chart__marker {
+  position: absolute;
+  top: -3px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--surface);
+}
+
+.hf-sentiment-chart__scale {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hf-emotion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hf-emotion--confident { color: var(--pnl-gain); }
+.hf-emotion--fearful { color: var(--pnl-loss); }
+.hf-emotion--greedy { color: var(--warning-color); }
+.hf-emotion--neutral { color: var(--muted); }
+
+.hf-ai-insight-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.hf-ai-insight-card__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hf-ai-insight-card__list {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.hf-market-status-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.hf-market-status-bar__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--surface);
+}
+

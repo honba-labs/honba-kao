@@ -36,6 +36,7 @@ pub use primitive::checkbox::*;
 pub use primitive::collapsible::*;
 pub use primitive::command::*;
 pub use primitive::context_menu::*;
+pub use primitive::data_table::*;
 pub use primitive::dialog::*;
 pub use primitive::drawer::*;
 pub use primitive::form::*;
