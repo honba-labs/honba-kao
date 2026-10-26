@@ -12,6 +12,7 @@
 
 pub mod column_modal;
 pub mod drawers;
+pub mod factor_heatmap;
 pub mod filter_bar;
 pub mod filters_modal;
 pub mod heatmap;

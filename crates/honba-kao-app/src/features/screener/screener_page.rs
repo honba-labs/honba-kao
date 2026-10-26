@@ -13,6 +13,7 @@ use leptos::prelude::*;
 
 use crate::features::screener::components::column_modal::ColumnModal;
 use crate::features::screener::components::drawers::SymbolDetailDrawer;
+use crate::features::screener::components::factor_heatmap::FactorHeatmap;
 use crate::features::screener::components::filter_bar::FilterBar;
 use crate::features::screener::components::filters_modal::FiltersModal;
 use crate::features::screener::components::heatmap::ScreenerHeatmap;
@@ -128,10 +129,10 @@ pub fn ScreenerPage() -> impl IntoView {
             <div class="sc-view__body">
                 <div class="sc-workspace__primary">
                     {move || {
-                        if store.view_mode.get() == ViewMode::Heatmap {
-                            view! { <ScreenerHeatmap /> }.into_any()
-                        } else {
-                            view! { <ScreenerTable /> }.into_any()
+                        match store.view_mode.get() {
+                            ViewMode::Heatmap => view! { <ScreenerHeatmap /> }.into_any(),
+                            ViewMode::FactorHeatmap => view! { <FactorHeatmap /> }.into_any(),
+                            ViewMode::Table => view! { <ScreenerTable /> }.into_any(),
                         }
                     }}
                 </div>

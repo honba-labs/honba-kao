@@ -332,7 +332,7 @@ impl SortDirection {
 // ---------------------------------------------------------------------------
 
 /// Quick preset ids surfaced on the filter bar.
-pub const QUICK_PRESETS: [(&str, &str); 11] = [
+pub const QUICK_PRESETS: [(&str, &str); 14] = [
     ("all", "All"),
     ("watchlist", "Watchlist"),
     ("gainers", "Gainers"),
@@ -344,6 +344,9 @@ pub const QUICK_PRESETS: [(&str, &str); 11] = [
     ("dividend", "Dividend"),
     ("value", "Value"),
     ("momentum", "Momentum"),
+    ("buffett", "Buffett Quality"),
+    ("graham", "Graham Value"),
+    ("piotroski", "Quality Momentum"),
 ];
 
 /// The full screener filter pipeline — the faithful port of the labs
@@ -385,6 +388,13 @@ pub fn filter_instruments(
                 "momentum"
                     if inst.technical_rating != "Strong Buy" && inst.technical_rating != "Buy" =>
                 {
+                    return false;
+                }
+                "buffett" if inst.pe > 25.0 || inst.pb > 4.0 || inst.dividend_yield <= 0.0 => {
+                    return false;
+                }
+                "graham" if inst.pe > 15.0 || inst.pb > 1.5 => return false,
+                "piotroski" if inst.perf1y < 15.0 || inst.rsi14 < 50.0 || inst.rsi14 > 70.0 => {
                     return false;
                 }
                 _ => {}

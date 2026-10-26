@@ -456,6 +456,7 @@ pub enum ViewMode {
     #[default]
     Table,
     Heatmap,
+    FactorHeatmap,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

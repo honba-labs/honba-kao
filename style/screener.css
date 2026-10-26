@@ -2066,3 +2066,37 @@
   padding: 24px;
   color: var(--muted);
 }
+
+/* Factor heatmap (sector × factor mock scores) */
+.sc-fh { padding: 12px; overflow: auto; height: 100%; }
+.sc-fh__grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.6fr) repeat(4, minmax(72px, 1fr));
+  gap: 4px;
+}
+.sc-fh__corner,
+.sc-fh__head {
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 4px 8px;
+  text-align: center;
+}
+.sc-fh__corner { text-align: left; }
+.sc-fh__sector {
+  font-size: 13px;
+  padding: 10px 8px;
+  align-self: center;
+}
+.sc-fh__cell {
+  border-radius: 4px;
+  padding: 10px 8px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.sc-fh__cell--s1 { background: color-mix(in srgb, var(--pnl-loss) 85%, var(--surface-2)); }
+.sc-fh__cell--s2 { background: color-mix(in srgb, var(--pnl-loss) 40%, var(--surface-2)); }
+.sc-fh__cell--s3 { background: var(--surface-3); color: var(--ink-3); }
+.sc-fh__cell--s4 { background: color-mix(in srgb, var(--pnl-gain) 40%, var(--surface-2)); }
+.sc-fh__cell--s5 { background: color-mix(in srgb, var(--pnl-gain) 85%, var(--surface-2)); }
+.sc-fh__legend { margin-top: 12px; font-size: 12px; color: var(--ink-3); }

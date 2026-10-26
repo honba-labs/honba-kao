@@ -139,6 +139,13 @@ pub fn FilterBar() -> impl IntoView {
                     >
                         "Heatmap"
                     </HfSegmentedControlItem>
+                    <HfSegmentedControlItem
+                        class="filter-bar__seg-btn"
+                        active=Signal::derive(move || store.view_mode.get() == ViewMode::FactorHeatmap)
+                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::FactorHeatmap))
+                    >
+                        "Factors"
+                    </HfSegmentedControlItem>
                 </HfSegmentedControl>
             </div>
 
