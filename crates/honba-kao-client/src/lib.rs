@@ -182,7 +182,9 @@ impl ApiClient {
             .await
             .map_err(|e| ClientError::Network(e.to_string()))?;
 
-        let envelope = serde_json::from_str::<ResponseEnvelope<T>>(&text)
+        let value = serde_json::from_str::<serde_json::Value>(&text)
+            .map_err(|e| ClientError::Decode(format!("envelope: {e}")))?;
+        let envelope = decode_envelope::<T>(value)
             .map_err(|e| ClientError::Decode(format!("envelope: {e}")))?;
 
         check_versions(&envelope)?;
@@ -442,6 +444,42 @@ impl ApiClient {
             .map_err(|e| ClientError::Decode(e.to_string()))?;
         self.send(Request::put, &path, Some(body)).await
     }
+}
+
+/// Decode a [`ResponseEnvelope`] from an already-parsed JSON value.
+///
+/// The derived `Deserialize` for `ResponseEnvelope<T>` requires `T: Default`
+/// (serde's `#[serde(default)]` bound on the `data` field), which response
+/// payloads do not all satisfy. The defaulted envelope fields are therefore
+/// decoded by hand; `data` is an `Option<T>` and needs no default.
+fn decode_envelope<T: DeserializeOwned>(
+    value: serde_json::Value,
+) -> Result<ResponseEnvelope<T>, serde_json::Error> {
+    use honba_api::wire::{ApiVersion, ErrorDetail, SCHEMA_VERSION};
+
+    let field = |name: &str| value.get(name).filter(|v| !v.is_null()).cloned();
+    let api_version = match field("api_version") {
+        Some(v) => serde_json::from_value::<ApiVersion>(v)?,
+        None => ApiVersion::default(),
+    };
+    let schema_version = match field("schema_version") {
+        Some(v) => serde_json::from_value::<String>(v)?,
+        None => SCHEMA_VERSION.to_owned(),
+    };
+    let data = match field("data") {
+        Some(v) => Some(serde_json::from_value::<T>(v)?),
+        None => None,
+    };
+    let error = match field("error") {
+        Some(v) => Some(serde_json::from_value::<ErrorDetail>(v)?),
+        None => None,
+    };
+    Ok(ResponseEnvelope {
+        api_version,
+        schema_version,
+        data,
+        error,
+    })
 }
 
 /// Reject an envelope that does not speak the client's wire shape.
