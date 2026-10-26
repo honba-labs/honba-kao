@@ -691,11 +691,11 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **3.4 Derivatives Analytics**: `/fno/oi` (OI table + bar viz), `/fno/greeks` (Greeks heatmap), `/fno/futures` (term structure & basis), `/fno/flow` (options flow feed) — all mock data — and `/equity/option-greeks` (real Black-Scholes-Merton pricing + Greeks + bisection IV solver, with unit tests in `tests/black_scholes.rs`).
 
 ### Phase 4: Chart Workstation, Multi-Timeframe, DOM & Execution Tape
-- [ ] **4.1 Chart Workstation**: Implement `/equity/chart-workstation` with multi-pane grid layouts (`1x1`, `1x2`, `2x2`, `1+2`), Crosshair sync, and workspace snapshot export/import.
-- [ ] **4.2 OpenScript IDE**: Embed client-side custom indicator scripting editor with compilation, error diagnostics, and indicator library.
-- [ ] **4.3 Multi-Timeframe Analysis (MTA)**: Implement `/equity/mta` with 4 synchronized charts for Position, Swing, Day-Trade, and Scalp presets.
-- [ ] **4.4 DOM Ladder & Time & Sales**: Implement `/equity/dom` (10-level interactive depth ladder with 1-click execution) and `/equity/tape` (sub-millisecond print tape with size filtering).
-- [ ] **4.5 Launchpad & Pop-Outs**: Build customizable mosaic workspace grid and independent pop-out window dispatch (`/equity/launchpad/popout`).
+- [x] **4.1 Chart Workstation**: `/equity/chart-workstation` with 4 layout presets (1x1/1+2 cols/1+2 rows/2x2), real chart mounts via the existing openalgo-charts bridge, an approximate shared crosshair signal, and JSON workspace snapshot save/load to localStorage.
+- [x] **4.2 OpenScript IDE** (mock editor, no real compiler): toggleable panel on Chart Workstation with a code editor, a "Compile" button producing fabricated diagnostics, and a static indicator library list.
+- [x] **4.3 Multi-Timeframe Analysis (MTA)**: `/equity/mta` with a 2x2 grid of real chart mounts and Position/Swing/Day-Trade/Scalp presets (not cross-pane synchronized beyond sharing one symbol).
+- [x] **4.4 DOM Ladder & Time & Sales** (mock data, mock order buttons): `/equity/dom` (10-level bid/ask ladder) and `/equity/tape` (print tape with min-size filter).
+- [x] **4.5 Launchpad & Pop-Outs** (partial — panels are static placeholders, not draggable; `HfResizable*` in ui-core has no drag handlers yet): `/equity/launchpad` mosaic grid and `/equity/launchpad/popout` pop-out window with `BroadcastChannel` plumbing (logs only, no real symbol sync).
 
 ### Phase 5: Quant Suite, Backtesting, Model Lab & Portfolio Lab
 - [ ] **5.1 Backtesting Deck**: Implement `/backtesting` with 16+ canonical strategy templates, execution slippage models, equity/drawdown curves, monthly PnL heatmaps, and Monte Carlo bootstrap (1,000+ paths).
