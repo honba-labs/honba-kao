@@ -1,5 +1,7 @@
 plan-restructure.md v2.0: M1,2,3,4 done+committed (features/ reorg landed). Next: M5 (simulator UI/UX redesign per docs/simulator-design-20-Oct.md), then M6 (A11y/HfDataGrid).
 
+Bg agent a6887e3 doing plan.md Phase1&2. No Terminal* components — port real OpenTerminalUI components into Leptos using existing shadcn ui-core primitives.
+
 ## Phase 1 & 2 (plan.md roadmap)
 
 Status at stop (Phase 1 partly done, Phase 2 not started).
