@@ -169,3 +169,12 @@
 .hf-provenance--info { color: var(--brand); }
 .hf-provenance--mock { color: var(--warning-color); }
 .hf-provenance--warn { color: var(--pnl-loss); }
+
+.app-command-palette {
+  width: min(640px, 92vw);
+}
+.app-command-palette .hf-command-bar__input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
