@@ -2350,3 +2350,22 @@
 .value-chain-tab__columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .value-chain-tab__list { margin: 0; padding: 0 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
 @media (max-width: 768px) { .value-chain-tab__columns { grid-template-columns: 1fr; } }
+
+/* Security Hub · Filings Intelligence (Phase 2.4) */
+.filings-tab { display: flex; flex-direction: column; gap: 12px; }
+.filings-tab__section { display: flex; flex-direction: column; gap: 8px; }
+.filings-tab__heading { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.filings-tab__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.filings-tab__card-head { display: flex; align-items: baseline; gap: 10px; }
+.filings-tab__score { font-weight: 700; font-size: 18px; }
+.filings-tab__score--gain { color: var(--pnl-gain); }
+.filings-tab__score--loss { color: var(--pnl-loss); }
+.filings-tab__card-title { font-weight: 600; }
+.filings-tab__quote { margin: 8px 0 6px; padding-left: 10px; border-left: 2px solid currentColor; opacity: 0.85; font-style: italic; }
+.filings-tab__source { font-size: 11px; opacity: 0.7; }
+.filings-tab__ask { display: flex; gap: 8px; align-items: center; padding: 8px 0; }
+.filings-tab__ask-input { flex: 1; min-width: 0; }
+.filings-tab__answer { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.filings-tab__answer-q { font-weight: 600; }
+.filings-tab__answer-text { margin: 0; }
+@media (max-width: 768px) { .filings-tab__cards { grid-template-columns: 1fr; } }
