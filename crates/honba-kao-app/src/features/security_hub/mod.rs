@@ -5,7 +5,9 @@
 
 pub mod financials_tab;
 pub mod security_hub_page;
+pub mod value_chain_tab;
 
 pub use financials_tab::FinancialsTab;
+pub use value_chain_tab::ValueChainTab;
 
 pub use security_hub_page::SecurityHubPage;

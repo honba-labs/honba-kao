@@ -2344,3 +2344,9 @@
 /* Security Hub · Financials (Phase 2.2) */
 .financials-tab { display: flex; flex-direction: column; gap: 12px; }
 .financials-tab__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* Security Hub · Peers & Value Chain (Phase 2.3) */
+.value-chain-tab { display: flex; flex-direction: column; gap: 12px; }
+.value-chain-tab__columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.value-chain-tab__list { margin: 0; padding: 0 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 768px) { .value-chain-tab__columns { grid-template-columns: 1fr; } }

@@ -14,6 +14,7 @@ use leptos_router::NavigateOptions;
 use leptos_router::hooks::{use_navigate, use_params_map, use_query_map};
 
 use super::financials_tab::FinancialsTab;
+use super::value_chain_tab::ValueChainTab;
 use crate::shared::command::symbols::{MockSymbol, lookup};
 
 /// Tab ids, in display order. Ids match `security_tab_for` in `commanding.rs`
@@ -206,6 +207,8 @@ pub fn SecurityHubPage() -> impl IntoView {
                     .into_any()
                 } else if tab == "financials" {
                     view! { <FinancialsTab /> }.into_any()
+                } else if tab == "peers" {
+                    view! { <ValueChainTab /> }.into_any()
                 } else {
                     view! {
                         <HfPanel>
