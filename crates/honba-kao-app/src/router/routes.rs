@@ -21,6 +21,7 @@ use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPag
 use crate::features::landing::LandingPage;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::screener::ScreenerPage;
+use crate::features::security_hub::SecurityHubPage;
 use crate::features::simulator::SimulatorPage;
 use crate::features::strategy_studio::StrategyStudioPage;
 use crate::features::tradebook::TradebookPage;
@@ -44,6 +45,7 @@ pub fn AppRoutes() -> impl IntoView {
             <ParentRoute path=path!("") view=AppShell>
                 <Route path=path!("/portfolio") view=PortfolioPage />
                 <Route path=path!("/screener") view=ScreenerPage />
+                <Route path=path!("/equity/security/:ticker") view=SecurityHubPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

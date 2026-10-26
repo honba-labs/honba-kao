@@ -23,6 +23,8 @@ pub mod routes {
     pub const SETUP: &str = "/setup";
     pub const PORTFOLIO: &str = "/portfolio";
     pub const SCREENER: &str = "/screener";
+    /// Security Hub base; the page itself is `{SECURITY_HUB}/:ticker?tab=...`.
+    pub const SECURITY_HUB: &str = "/equity/security";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -41,6 +43,7 @@ pub enum Page {
     Home,
     Portfolio,
     Screener,
+    SecurityHub,
     Workbench,
     Strategy,
     Simulator,
@@ -58,6 +61,7 @@ impl Page {
             Page::Home => "home",
             Page::Portfolio => "portfolio",
             Page::Screener => "screener",
+            Page::SecurityHub => "security_hub",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -75,6 +79,7 @@ impl Page {
             Page::Home => "Home",
             Page::Portfolio => "Portfolio",
             Page::Screener => "Screener",
+            Page::SecurityHub => "Security Hub",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -94,6 +99,9 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::PORTFOLIO => Some(Page::Portfolio),
         r if r == ROUTES::SCREENER => Some(Page::Screener),
         r if r == ROUTES::WORKBENCH => Some(Page::Workbench),
+        r if r == ROUTES::SECURITY_HUB || r.starts_with("/equity/security/") => {
+            Some(Page::SecurityHub)
+        }
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),

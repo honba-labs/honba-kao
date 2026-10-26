@@ -7,6 +7,7 @@ pub mod auth;
 pub mod landing;
 pub mod portfolio;
 pub mod screener;
+pub mod security_hub;
 pub mod simulator;
 pub mod strategy_studio;
 pub mod tradebook;
