@@ -19,7 +19,9 @@ use crate::shared::contexts::use_auth;
 use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
 use crate::features::dossiers::DossiersPage;
-use crate::features::fno::{OptionChainPage, StrategyBuilderPage};
+use crate::features::fno::{
+    FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, StrategyBuilderPage,
+};
 use crate::features::landing::LandingPage;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::screener::ScreenerPage;
@@ -51,6 +53,10 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/equity/research-dossiers") view=DossiersPage />
                 <Route path=path!("/fno") view=OptionChainPage />
                 <Route path=path!("/fno/strategy") view=StrategyBuilderPage />
+                <Route path=path!("/fno/oi") view=OiPage />
+                <Route path=path!("/fno/greeks") view=GreeksHeatmapPage />
+                <Route path=path!("/fno/futures") view=FuturesPage />
+                <Route path=path!("/fno/flow") view=FlowPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

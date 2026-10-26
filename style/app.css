@@ -2407,4 +2407,23 @@
 .fno__line--loss { stroke: var(--button-red); }
 .fno__axis { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7; padding-top: 4px; }
 .fno__pop { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hair); align-self: center; }
+/* Derivatives Analytics (Phase 3.4a): OI, Greeks heatmap, Futures, Flow */
+.fno__pos { color: var(--pnl-gain); }
+.fno__neg { color: var(--pnl-loss); }
+.fno__bar-track { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
+.fno__bar { height: 6px; border-radius: 3px; max-width: 100%; }
+.fno__bar--call { background: var(--pnl-gain); }
+.fno__bar--put { background: var(--pnl-loss); }
+.fno__heat { text-align: center; }
+.fno__heat--s1 { background: color-mix(in srgb, var(--pnl-gain) 8%, transparent); }
+.fno__heat--s2 { background: color-mix(in srgb, var(--pnl-gain) 20%, transparent); }
+.fno__heat--s3 { background: color-mix(in srgb, var(--pnl-gain) 34%, transparent); }
+.fno__heat--s4 { background: color-mix(in srgb, var(--pnl-gain) 50%, transparent); }
+.fno__heat--s5 { background: color-mix(in srgb, var(--pnl-gain) 68%, transparent); }
+.fno__legend { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.fno__legend-label { opacity: 0.7; padding: 0 4px; }
+.fno__swatch { display: inline-block; width: 18px; height: 12px; border-radius: 2px; }
+.fno__tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--hair); }
+.fno__tag--block { background: var(--hair-accent); color: var(--ink-1); }
+.fno__tag--sweep { color: var(--ink-2); }
 @media (max-width: 768px) { .fno__kpis { gap: 10px; } }

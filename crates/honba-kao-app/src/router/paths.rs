@@ -31,6 +31,11 @@ pub mod routes {
     pub const FNO: &str = "/fno";
     /// Multi-Leg Strategy Builder (Phase 3.3) — mock-data page.
     pub const FNO_STRATEGY: &str = "/fno/strategy";
+    /// Derivatives analytics (Phase 3.4a) — mock-data pages.
+    pub const FNO_OI: &str = "/fno/oi";
+    pub const FNO_GREEKS: &str = "/fno/greeks";
+    pub const FNO_FUTURES: &str = "/fno/futures";
+    pub const FNO_FLOW: &str = "/fno/flow";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -53,6 +58,10 @@ pub enum Page {
     Dossiers,
     OptionChain,
     StrategyBuilder,
+    OiAnalysis,
+    GreeksHeatmap,
+    Futures,
+    Flow,
     Workbench,
     Strategy,
     Simulator,
@@ -74,6 +83,10 @@ impl Page {
             Page::Dossiers => "dossiers",
             Page::OptionChain => "option_chain",
             Page::StrategyBuilder => "strategy_builder",
+            Page::OiAnalysis => "oi_analysis",
+            Page::GreeksHeatmap => "greeks_heatmap",
+            Page::Futures => "futures",
+            Page::Flow => "flow",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -95,6 +108,10 @@ impl Page {
             Page::Dossiers => "Research Dossiers",
             Page::OptionChain => "Option Chain",
             Page::StrategyBuilder => "Strategy Builder",
+            Page::OiAnalysis => "Open Interest",
+            Page::GreeksHeatmap => "Greeks Heatmap",
+            Page::Futures => "Futures",
+            Page::Flow => "Options Flow",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -120,6 +137,10 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::RESEARCH_DOSSIERS => Some(Page::Dossiers),
         r if r == ROUTES::FNO => Some(Page::OptionChain),
         r if r == ROUTES::FNO_STRATEGY => Some(Page::StrategyBuilder),
+        r if r == ROUTES::FNO_OI => Some(Page::OiAnalysis),
+        r if r == ROUTES::FNO_GREEKS => Some(Page::GreeksHeatmap),
+        r if r == ROUTES::FNO_FUTURES => Some(Page::Futures),
+        r if r == ROUTES::FNO_FLOW => Some(Page::Flow),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
