@@ -5,6 +5,7 @@
 pub mod account;
 pub mod auth;
 pub mod dossiers;
+pub mod fno;
 pub mod landing;
 pub mod portfolio;
 pub mod screener;

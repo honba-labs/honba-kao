@@ -2386,3 +2386,12 @@
 .dossiers__snapshot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-top: 8px; }
 .dossiers__snapshot-link { font-size: 12px; overflow-wrap: anywhere; }
 @media (max-width: 768px) { .dossiers__kpis { gap: 10px; } }
+
+/* Derivatives · Option Chain & Strike Summary (Phase 3.1-3.2) */
+.fno { display: flex; flex-direction: column; gap: 12px; }
+.fno__kpis { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 8px; }
+.fno__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 8px; }
+.fno__scroll { overflow-x: auto; }
+.fno__strike { font-weight: 600; text-align: center; }
+.fno__row--atm > td { background: var(--hair-accent); }
+@media (max-width: 768px) { .fno__kpis { gap: 10px; } }

@@ -27,6 +27,8 @@ pub mod routes {
     pub const SECURITY_HUB: &str = "/equity/security";
     /// Research Dossiers (Phase 2.5) — mock-data page.
     pub const RESEARCH_DOSSIERS: &str = "/equity/research-dossiers";
+    /// Derivatives & F&O (Phase 3) — Option Chain, mock-data page.
+    pub const FNO: &str = "/fno";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -47,6 +49,7 @@ pub enum Page {
     Screener,
     SecurityHub,
     Dossiers,
+    OptionChain,
     Workbench,
     Strategy,
     Simulator,
@@ -66,6 +69,7 @@ impl Page {
             Page::Screener => "screener",
             Page::SecurityHub => "security_hub",
             Page::Dossiers => "dossiers",
+            Page::OptionChain => "option_chain",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -85,6 +89,7 @@ impl Page {
             Page::Screener => "Screener",
             Page::SecurityHub => "Security Hub",
             Page::Dossiers => "Research Dossiers",
+            Page::OptionChain => "Option Chain",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -108,6 +113,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
             Some(Page::SecurityHub)
         }
         r if r == ROUTES::RESEARCH_DOSSIERS => Some(Page::Dossiers),
+        r if r == ROUTES::FNO => Some(Page::OptionChain),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
