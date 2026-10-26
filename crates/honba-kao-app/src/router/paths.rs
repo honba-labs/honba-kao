@@ -42,6 +42,10 @@ pub mod routes {
     pub const CHART_WORKSTATION: &str = "/equity/chart-workstation";
     /// Multi-Timeframe Analysis (Phase 4.3) — four panes, one symbol.
     pub const MTA: &str = "/equity/mta";
+    /// DOM Depth Ladder (Phase 4.4) — mock-data page.
+    pub const DOM: &str = "/equity/dom";
+    /// Time & Sales print tape (Phase 4.4) — mock-data page.
+    pub const TAPE: &str = "/equity/tape";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -71,6 +75,8 @@ pub enum Page {
     OptionGreeksCalc,
     ChartWorkstation,
     MultiTimeframe,
+    Dom,
+    Tape,
     Workbench,
     Strategy,
     Simulator,
@@ -99,6 +105,8 @@ impl Page {
             Page::OptionGreeksCalc => "option_greeks_calc",
             Page::ChartWorkstation => "chart_workstation",
             Page::MultiTimeframe => "multi_timeframe",
+            Page::Dom => "dom",
+            Page::Tape => "tape",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -127,6 +135,8 @@ impl Page {
             Page::OptionGreeksCalc => "Option Greeks Calculator",
             Page::ChartWorkstation => "Chart Workstation",
             Page::MultiTimeframe => "Multi-Timeframe Analysis",
+            Page::Dom => "DOM Depth Ladder",
+            Page::Tape => "Time & Sales",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -159,6 +169,8 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::OPTION_GREEKS => Some(Page::OptionGreeksCalc),
         r if r == ROUTES::CHART_WORKSTATION => Some(Page::ChartWorkstation),
         r if r == ROUTES::MTA => Some(Page::MultiTimeframe),
+        r if r == ROUTES::DOM => Some(Page::Dom),
+        r if r == ROUTES::TAPE => Some(Page::Tape),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),

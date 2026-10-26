@@ -20,6 +20,7 @@ use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
 use crate::features::chart_workstation::ChartWorkstationPage;
 use crate::features::dossiers::DossiersPage;
+use crate::features::dom::DomPage;
 use crate::features::fno::{
     FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, OptionGreeksPage,
     StrategyBuilderPage,
@@ -31,6 +32,7 @@ use crate::features::screener::ScreenerPage;
 use crate::features::security_hub::SecurityHubPage;
 use crate::features::simulator::SimulatorPage;
 use crate::features::strategy_studio::StrategyStudioPage;
+use crate::features::tape::TapePage;
 use crate::features::tradebook::TradebookPage;
 use crate::features::workbench::WorkbenchPage;
 use crate::router::app_chrome::AppChrome;
@@ -63,6 +65,8 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/equity/option-greeks") view=OptionGreeksPage />
                 <Route path=path!("/equity/chart-workstation") view=ChartWorkstationPage />
                 <Route path=path!("/equity/mta") view=MtaPage />
+                <Route path=path!("/equity/dom") view=DomPage />
+                <Route path=path!("/equity/tape") view=TapePage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

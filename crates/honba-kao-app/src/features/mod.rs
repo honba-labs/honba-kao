@@ -5,6 +5,7 @@
 pub mod account;
 pub mod auth;
 pub mod chart_workstation;
+pub mod dom;
 pub mod dossiers;
 pub mod fno;
 pub mod landing;
@@ -14,5 +15,6 @@ pub mod screener;
 pub mod security_hub;
 pub mod simulator;
 pub mod strategy_studio;
+pub mod tape;
 pub mod tradebook;
 pub mod workbench;
