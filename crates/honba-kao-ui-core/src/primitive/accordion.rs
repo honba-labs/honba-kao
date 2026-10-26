@@ -96,7 +96,14 @@ pub fn HfAccordionContent(
     let item_key = use_context::<AccordionItemKey>()
         .map(|k| k.0)
         .unwrap_or_else(|| value.unwrap_or("").to_string());
-    let is_open = move || active.get() == item_key;
+    let is_open = {
+        let item_key = item_key.clone();
+        move || active.get() == item_key
+    };
+    let is_open_aria = {
+        let item_key = item_key.clone();
+        move || active.get() != item_key
+    };
 
     view! {
         <div
@@ -109,7 +116,7 @@ pub fn HfAccordionContent(
                 .trim()
                 .to_string()
             }
-            aria-hidden=move || (!is_open()).to_string()
+            aria-hidden=move || is_open_aria().to_string()
         >
             {children()}
         </div>
