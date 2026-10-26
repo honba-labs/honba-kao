@@ -20,7 +20,8 @@ use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
 use crate::features::dossiers::DossiersPage;
 use crate::features::fno::{
-    FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, StrategyBuilderPage,
+    FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, OptionGreeksPage,
+    StrategyBuilderPage,
 };
 use crate::features::landing::LandingPage;
 use crate::features::portfolio::PortfolioPage;
@@ -57,6 +58,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/fno/greeks") view=GreeksHeatmapPage />
                 <Route path=path!("/fno/futures") view=FuturesPage />
                 <Route path=path!("/fno/flow") view=FlowPage />
+                <Route path=path!("/equity/option-greeks") view=OptionGreeksPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

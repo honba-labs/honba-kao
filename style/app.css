@@ -2427,3 +2427,8 @@
 .fno__tag--block { background: var(--hair-accent); color: var(--ink-1); }
 .fno__tag--sweep { color: var(--ink-2); }
 @media (max-width: 768px) { .fno__kpis { gap: 10px; } }
+
+/* Option Greeks Calculator (Phase 3.4b) */
+.greeks__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding-top: 8px; }
+.greeks__field { display: flex; flex-direction: column; gap: 4px; }
+.greeks__iv { font-size: 12px; color: var(--ink-2); }

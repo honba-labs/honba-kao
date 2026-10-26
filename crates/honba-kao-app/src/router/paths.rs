@@ -36,6 +36,8 @@ pub mod routes {
     pub const FNO_GREEKS: &str = "/fno/greeks";
     pub const FNO_FUTURES: &str = "/fno/futures";
     pub const FNO_FLOW: &str = "/fno/flow";
+    /// Black-Scholes Option Greeks Calculator (Phase 3.4b) — live calculator.
+    pub const OPTION_GREEKS: &str = "/equity/option-greeks";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -62,6 +64,7 @@ pub enum Page {
     GreeksHeatmap,
     Futures,
     Flow,
+    OptionGreeksCalc,
     Workbench,
     Strategy,
     Simulator,
@@ -87,6 +90,7 @@ impl Page {
             Page::GreeksHeatmap => "greeks_heatmap",
             Page::Futures => "futures",
             Page::Flow => "flow",
+            Page::OptionGreeksCalc => "option_greeks_calc",
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
@@ -112,6 +116,7 @@ impl Page {
             Page::GreeksHeatmap => "Greeks Heatmap",
             Page::Futures => "Futures",
             Page::Flow => "Options Flow",
+            Page::OptionGreeksCalc => "Option Greeks Calculator",
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
@@ -141,6 +146,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::FNO_GREEKS => Some(Page::GreeksHeatmap),
         r if r == ROUTES::FNO_FUTURES => Some(Page::Futures),
         r if r == ROUTES::FNO_FLOW => Some(Page::Flow),
+        r if r == ROUTES::OPTION_GREEKS => Some(Page::OptionGreeksCalc),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
