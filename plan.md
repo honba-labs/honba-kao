@@ -685,10 +685,10 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **2.6 Screener & Factor Dashboard** (partial): 3 guru presets (Buffett, Graham, Piotroski-style) added to the existing quick-preset engine, and a new Factor Heatmap view (mock sector × factor scores). Filings-derived screener columns not added (would require extending the `Instrument` data model — deferred).
 
 ### Phase 3: Derivatives & F&O Suite
-- [ ] **3.1 Option Chain**: Implement `/fno` with Calls/Puts bid/ask, LTP, IV, Greeks (Delta, Gamma, Theta, Vega), strike filters (10/15/20/All), and ATM highlight.
-- [ ] **3.2 Strike Summary Bar**: Render real-time spot price, PCR (OI & Volume), Max Pain strike, and ATM IV.
-- [ ] **3.3 Multi-Leg Strategy Builder**: Build `/fno/strategy` with 10+ standard strategy presets (Bull/Bear spreads, Straddles, Iron Condor), interactive payoff graph at expiry & T+0, POP, and max profit/loss calculations.
-- [ ] **3.4 Derivatives Analytics**: Implement `/fno/oi` (OI bar charts), `/fno/greeks` (Greeks heatmap), `/fno/futures` (term structure & basis curve), `/fno/flow` (unusual options activity), and `/equity/option-greeks` (Black-Scholes solver).
+- [x] **3.1 Option Chain** (mock data): `/fno` with Calls/Puts bid/ask, LTP, IV, Greeks, strike filters (10/15/20/All), and ATM highlight.
+- [x] **3.2 Strike Summary Bar** (mock data, no live feed): spot price, PCR (OI & Volume), Max Pain strike, and ATM IV on `/fno`.
+- [x] **3.3 Multi-Leg Strategy Builder** (partial — expiry payoff only, no T+0 Greeks-adjusted curve; POP is a placeholder): `/fno/strategy` with 6 presets (Bull Call/Bear Put Spread, Long Straddle, Short Strangle, Iron Condor, Iron Butterfly), editable legs, SVG payoff curve, Max Profit/Loss/Breakeven/Net Debit-Credit.
+- [x] **3.4 Derivatives Analytics**: `/fno/oi` (OI table + bar viz), `/fno/greeks` (Greeks heatmap), `/fno/futures` (term structure & basis), `/fno/flow` (options flow feed) — all mock data — and `/equity/option-greeks` (real Black-Scholes-Merton pricing + Greeks + bisection IV solver, with unit tests in `tests/black_scholes.rs`).
 
 ### Phase 4: Chart Workstation, Multi-Timeframe, DOM & Execution Tape
 - [ ] **4.1 Chart Workstation**: Implement `/equity/chart-workstation` with multi-pane grid layouts (`1x1`, `1x2`, `2x2`, `1+2`), Crosshair sync, and workspace snapshot export/import.
