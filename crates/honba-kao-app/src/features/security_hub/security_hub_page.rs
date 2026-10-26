@@ -3,7 +3,7 @@
 //! The DES header (ticker, LTP, change, session range, placeholder valuation
 //! ratios) sits above an 11-tab row. The tab is carried in `?tab=` so the
 //! command bar's `security_tab_for` mapping deep-links straight into a tab.
-//! Only Overview has content; the other tabs are "Coming soon" placeholders.
+//! Overview and Financials have content; the other tabs are "Coming soon" placeholders.
 
 use honba_kao_ui_core::{
     HfKpi, HfMiniRangeBar, HfPLNumber, HfPLNumberFormat, HfPageHeader, HfPanel, HfPanelHeader,
@@ -13,6 +13,7 @@ use leptos::prelude::*;
 use leptos_router::NavigateOptions;
 use leptos_router::hooks::{use_navigate, use_params_map, use_query_map};
 
+use super::financials_tab::FinancialsTab;
 use crate::shared::command::symbols::{MockSymbol, lookup};
 
 /// Tab ids, in display order. Ids match `security_tab_for` in `commanding.rs`
@@ -203,6 +204,8 @@ pub fn SecurityHubPage() -> impl IntoView {
                         </HfPanel>
                     }
                     .into_any()
+                } else if tab == "financials" {
+                    view! { <FinancialsTab /> }.into_any()
                 } else {
                     view! {
                         <HfPanel>
