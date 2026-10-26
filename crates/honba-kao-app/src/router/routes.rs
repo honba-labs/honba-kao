@@ -18,6 +18,7 @@ use leptos_router::path;
 use crate::shared::contexts::use_auth;
 use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
+use crate::features::dossiers::DossiersPage;
 use crate::features::landing::LandingPage;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::screener::ScreenerPage;
@@ -46,6 +47,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/portfolio") view=PortfolioPage />
                 <Route path=path!("/screener") view=ScreenerPage />
                 <Route path=path!("/equity/security/:ticker") view=SecurityHubPage />
+                <Route path=path!("/equity/research-dossiers") view=DossiersPage />
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />

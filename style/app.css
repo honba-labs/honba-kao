@@ -2369,3 +2369,20 @@
 .filings-tab__answer-q { font-weight: 600; }
 .filings-tab__answer-text { margin: 0; }
 @media (max-width: 768px) { .filings-tab__cards { grid-template-columns: 1fr; } }
+
+/* Research Dossiers (Phase 2.5) */
+.dossiers { display: flex; flex-direction: column; gap: 12px; }
+.dossiers__identity-name { display: flex; gap: 12px; align-items: baseline; }
+.dossiers__kpis { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 8px; }
+.dossiers__thesis { display: flex; flex-direction: column; gap: 8px; }
+.dossiers__label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.04em; }
+.dossiers__list { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.dossiers__section { display: flex; flex-direction: column; gap: 8px; }
+.dossiers__heading { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.dossiers__claim-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dossiers__claim-text { font-weight: 600; }
+.dossiers__quote { margin: 8px 0 6px; padding-left: 10px; border-left: 2px solid currentColor; opacity: 0.85; font-style: italic; }
+.dossiers__claim-meta { display: flex; gap: 12px; font-size: 11px; opacity: 0.7; }
+.dossiers__snapshot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-top: 8px; }
+.dossiers__snapshot-link { font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 768px) { .dossiers__kpis { gap: 10px; } }
