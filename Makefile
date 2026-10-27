@@ -1,12 +1,8 @@
 .PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod lint-design-system lint-a11y clean
 
-# Default profile is 'dev'
-default: dev
-build: build-dev
-
-dev: build-dev
-build-dev:
-	trunk build
+# Default profile is 'prod' (no debug build unless asked for specifically)
+default: prod
+build: build-prod
 
 prod: build-prod
 build-prod:
@@ -16,19 +12,25 @@ release: build-release
 build-release:
 	trunk build --release
 
+dev: build-dev
+build-dev:
+	trunk build
+
 # Debug build is explicit and not run unless asked
 debug: build-debug
 build-debug:
 	trunk build
 
-# Dev server (http://127.0.0.1:8080). Matches honba-fe's `make dev` naming.
-serve:
-	trunk serve
+# Dev server (http://127.0.0.1:8080). Defaults to release mode.
+serve: serve-prod
 
 serve-prod:
 	trunk serve --release
 
-check: check-dev lint-design-system lint-a11y
+serve-dev:
+	trunk serve
+
+check: check-prod lint-design-system lint-a11y
 
 check-dev:
 	cargo check --profile dev --workspace

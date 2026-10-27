@@ -7,7 +7,6 @@ members = [
   "crates/honba-kao-ui-core",
   "crates/openalgo-charts-rs",
 ]
-default-members = []
 
 [workspace.package]
 version = "0.1.0"
@@ -45,9 +44,22 @@ honba-analytics    = { package = "honba-nou-analytics", path = "../honba-nou/cra
 
 [profile.dev]
 opt-level = 1
+debug = false
+strip = "debuginfo"
 
 # Production tuning. `trunk build --release` selects cargo's `release` profile,
 # so the settings live here; `prod` mirrors them for `cargo check --profile prod`.
+
+[profile.test]
+opt-level = 1
+debug = false
+strip = "debuginfo"
+
+[profile.dbg]
+inherits = "dev"
+debug = 2
+strip = "none"
+
 [profile.release]
 opt-level = 3
 lto = true
