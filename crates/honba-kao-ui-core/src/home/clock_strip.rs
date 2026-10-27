@@ -84,11 +84,10 @@ fn format_clock_wasm(millis: f64, time_zone: &str) -> Option<String> {
     let locales = js_sys::Array::new();
     locales.push(&"en-US".into());
 
-    if let Ok(formatter) = js_sys::Intl::DateTimeFormat::new(&locales, &opts) {
-        let formatted = formatter.format(&date);
-        return Some(String::from(formatted));
-    }
-    None
+    let formatter = js_sys::Intl::DateTimeFormat::new(&locales, &opts);
+    let format_fn = formatter.format();
+    let formatted = format_fn.call1(&wasm_bindgen::JsValue::NULL, &date).ok()?;
+    formatted.as_string()
 }
 
 /// Formats a UTC timestamp into HH:MM:SS for the requested IANA timezone string.
