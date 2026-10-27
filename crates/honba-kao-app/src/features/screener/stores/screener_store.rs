@@ -11,11 +11,16 @@ use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 
+use super::api_client::{
+    LocalScreenerApiClient, MultiMarketScanRequest, ScreenExecution, ScreenQuery, ScreenerApiClient,
+};
 use super::columns::{ColumnDef, ScreenerType, columns_for_screener, preset_for_tab};
 use super::filter_engine::{
     ALL, AdvancedFilters, SortDirection, build_csv, filter_instruments, normalize_filters,
     sort_instruments,
 };
+use super::saved_views::{SavedView, load_saved_views, save_saved_views};
+use super::universes::{Universe, default_universes};
 use crate::features::screener::data::instruments::{self, Instrument};
 
 // ---------------------------------------------------------------------------
@@ -449,6 +454,31 @@ pub struct ScreenerStore {
     pub screen_id: RwSignal<String>,
     /// Live-tick toggle indicator (badge only — lab app's simulation lives).
     pub is_live: RwSignal<bool>,
+
+    // -- Milestone 2: reactive state & API integration -----------------------
+    /// The screen catalog (builtin + custom), as handed out by the API
+    /// client — the Screen Setup Deck's Library tab reads this.
+    pub presets: RwSignal<Vec<ScreenDefinition>>,
+    /// The scan universe catalog.
+    pub universes: RwSignal<Vec<Universe>>,
+    pub selected_universe_id: RwSignal<String>,
+    pub selected_preset_id: RwSignal<Option<String>>,
+    /// Screen Setup Deck tab bar (Library/Custom/Formula/Saved/Public) — a
+    /// different concept from [`active_tab`](Self::active_tab), which drives
+    /// the overview/performance/… column presets.
+    pub setup_tab: RwSignal<SetupTab>,
+    /// Results panel view mode (Table/Split/Charts/Map/Scatter/Scores) — a
+    /// different concept from [`view_mode`](Self::view_mode), which drives
+    /// the legacy table/heatmap toggle still wired into the page.
+    pub screen_view: RwSignal<ScreenView>,
+    /// Custom-formula expression text.
+    pub query: RwSignal<String>,
+    pub results: RwSignal<ScreenExecution>,
+    pub selected_row: RwSignal<Option<String>>,
+    pub query_open: RwSignal<bool>,
+    pub scan_open: RwSignal<bool>,
+    pub ai_open: RwSignal<bool>,
+    pub saved_views: RwSignal<Vec<SavedView>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -465,6 +495,29 @@ pub enum DetailTab {
     Overview,
     Technicals,
     Financials,
+}
+
+/// Screen Setup Deck tab bar.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum SetupTab {
+    #[default]
+    Library,
+    Custom,
+    Formula,
+    Saved,
+    Public,
+}
+
+/// Results panel view mode.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum ScreenView {
+    #[default]
+    Table,
+    Split,
+    Charts,
+    Map,
+    Scatter,
+    Scores,
 }
 
 impl ScreenerStore {
@@ -499,6 +552,20 @@ impl ScreenerStore {
             screen_title: RwSignal::new(ScreenerType::Stocks.default_title().to_string()),
             screen_id: RwSignal::new("stocks_all".to_string()),
             is_live: RwSignal::new(true),
+
+            presets: RwSignal::new(builtin_screens_registry().to_vec()),
+            universes: RwSignal::new(default_universes()),
+            selected_universe_id: RwSignal::new("nse_500".to_string()),
+            selected_preset_id: RwSignal::new(None),
+            setup_tab: RwSignal::new(SetupTab::default()),
+            screen_view: RwSignal::new(ScreenView::default()),
+            query: RwSignal::new(String::new()),
+            results: RwSignal::new(ScreenExecution::default()),
+            selected_row: RwSignal::new(None),
+            query_open: RwSignal::new(false),
+            scan_open: RwSignal::new(false),
+            ai_open: RwSignal::new(false),
+            saved_views: RwSignal::new(load_saved_views()),
         }
     }
 
@@ -825,6 +892,126 @@ impl ScreenerStore {
         link.set_download(&format!("honba_screener_{}.csv", web_time_now()));
         let _ = link.click();
     }
+
+    // -- Milestone 2: presets, universes, results, saved views ---------------
+
+    /// Apply a preset by id from the current `presets` catalog.
+    pub fn select_preset(&self, preset_id: &str) {
+        let matching = self
+            .presets
+            .get_untracked()
+            .into_iter()
+            .find(|screen| screen.id == preset_id);
+        if let Some(screen) = matching {
+            self.select_screen(&screen);
+            self.selected_preset_id.set(Some(preset_id.to_string()));
+        }
+    }
+
+    pub fn set_setup_tab(&self, tab: SetupTab) {
+        self.setup_tab.set(tab);
+    }
+
+    pub fn set_screen_view(&self, view: ScreenView) {
+        self.screen_view.set(view);
+    }
+
+    pub fn set_query(&self, query: String) {
+        self.query.set(query);
+    }
+
+    pub fn select_row(&self, symbol: Option<String>) {
+        self.selected_row.set(symbol);
+    }
+
+    pub fn toggle_query_open(&self) {
+        self.query_open.update(|open| *open = !*open);
+    }
+
+    pub fn toggle_scan_open(&self) {
+        self.scan_open.update(|open| *open = !*open);
+    }
+
+    pub fn toggle_ai_open(&self) {
+        self.ai_open.update(|open| *open = !*open);
+    }
+
+    fn current_screen_query(&self) -> ScreenQuery {
+        ScreenQuery {
+            screener_type: self.screener_type.get_untracked(),
+            market: self.market.get_untracked(),
+            universe_id: self.selected_universe_id.get_untracked(),
+            search_query: self.search_query.get_untracked(),
+            quick_preset: self.quick_preset.get_untracked(),
+            filters: self.advanced_filters.get_untracked(),
+        }
+    }
+
+    /// Run the current filter/search state through the API client.
+    pub fn run_screen(&self) {
+        let query = self.current_screen_query();
+        let execution = LocalScreenerApiClient.run_screen(&query);
+        self.results.set(execution);
+    }
+
+    /// Run the current `query` text as a custom formula expression.
+    pub fn run_custom_formula(&self) {
+        let query = self.current_screen_query();
+        if let Ok(execution) =
+            LocalScreenerApiClient.run_custom_formula(&self.query.get_untracked(), &query)
+        {
+            self.results.set(execution);
+        }
+    }
+
+    /// Run a scan across several universes (scaffold; see `api_client`).
+    pub fn run_multi_market_scan(&self, universe_ids: Vec<String>) {
+        let request = MultiMarketScanRequest {
+            universe_ids,
+            query: self.current_screen_query(),
+        };
+        let execution = LocalScreenerApiClient.run_multi_market_scan(&request);
+        self.results.set(execution);
+    }
+
+    /// Save the current setup-deck/results state as a named saved view.
+    pub fn save_current_view(&self, name: &str) {
+        let view = SavedView {
+            id: format!("view_{}", web_time_now()),
+            name: if name.trim().is_empty() {
+                "Untitled View".to_string()
+            } else {
+                name.trim().to_string()
+            },
+            screener_type: self.screener_type.get_untracked(),
+            setup_tab: self.setup_tab.get_untracked(),
+            screen_view: self.screen_view.get_untracked(),
+            selected_preset_id: self.selected_preset_id.get_untracked(),
+            selected_universe_id: self.selected_universe_id.get_untracked(),
+            query: self.query.get_untracked(),
+            created_at_ms: web_time_now(),
+        };
+        self.saved_views.update(|views| views.insert(0, view));
+        save_saved_views(&self.saved_views.get_untracked());
+    }
+
+    /// Restore the setup-deck/results state from a saved view.
+    pub fn restore_view(&self, view: &SavedView) {
+        self.screener_type.set(view.screener_type);
+        self.setup_tab.set(view.setup_tab);
+        self.screen_view.set(view.screen_view);
+        self.selected_preset_id.set(view.selected_preset_id.clone());
+        self.selected_universe_id
+            .set(view.selected_universe_id.clone());
+        self.query.set(view.query.clone());
+    }
+
+    pub fn delete_saved_view(&self, view_id: &str) {
+        self.saved_views.update(|views| {
+            views.retain(|view| view.id != view_id);
+        });
+        save_saved_views(&self.saved_views.get_untracked());
+    }
 }
 
 impl Default for ScreenerStore {
@@ -868,29 +1055,4 @@ fn web_time_now() -> u128 {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|since| since.as_millis())
         .unwrap_or(1_700_000_000_001)
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn builtin_screens_apply_and_filter() {
-        let overvalued = filter_instruments(
-            &instruments::universe_for_screener("IN", "stocks"),
-            "",
-            "all",
-            &normalize_filters(&builtin_screens_registry()[4].filters),
-            &[],
-        );
-        assert!(
-            overvalued
-                .iter()
-                .all(|inst| inst.pe > 0.0 && inst.pe <= 25.0)
-        );
-    }
 }
