@@ -2,6 +2,8 @@
 //! /equity/stat-lab and /equity/pair-trading — cointegration testing, ADF unit root
 //! tests, half-life mean-reversion, and z-score spread tracking.
 
+pub mod stat_lab_page;
+
 use leptos::prelude::*;
 
 /// Statistical Lab entry point page.

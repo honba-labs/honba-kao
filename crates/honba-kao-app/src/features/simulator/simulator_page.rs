@@ -286,12 +286,15 @@ pub fn SimulatorPage() -> impl IntoView {
     });
 
     let is_params_open = store.is_params_open;
+    let store_cmd = store.clone();
+    let store_params = store.clone();
+    let store_dock = store.clone();
 
     view! {
         <div class="simulator-view-root">
             // -- Command bar: selection + replay transport + run lifecycle --
             <SimCommandBar
-                store=store.clone()
+                store=store_cmd
                 engine_state=engine_state
                 instrument_id=instrument_id
             />
@@ -315,7 +318,7 @@ pub fn SimulatorPage() -> impl IntoView {
 
                 <Show when=move || is_params_open.get()>
                     <ParamsDrawer
-                        store=store.clone()
+                        store=store_params.clone()
                         on_run=on_run
                         on_clear=on_clear
                         on_demo=on_demo
@@ -324,7 +327,7 @@ pub fn SimulatorPage() -> impl IntoView {
             </section>
 
             // -- Bottom dock: fe's exact six tabs ---------------------------
-            <BottomDock store=store.clone() engine_state=engine_state bars=bars_seam.clone() />
+            <BottomDock store=store_dock engine_state=engine_state bars=bars_seam.clone() />
         </div>
     }
 }

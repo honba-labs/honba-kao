@@ -874,7 +874,7 @@ mod tests {
     #[test]
     fn a_hand_edit_recovers_an_edited_param() {
         let graph = builtin_template().0;
-        let code = generate_code(&builtin_template().0, "sha256:x");
+        let code = generate_code(&graph, "sha256:x");
         // A hand edit: fast period 5 → 7, exactly the panel's edit shape.
         let edited = code.replacen(
             "params={\"period\": 5}",

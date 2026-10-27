@@ -2,6 +2,8 @@
 //! /backtesting/model-lab — experiment versioning registry, versioned run reports,
 //! leaderboard, and model comparison view.
 
+pub mod model_lab_page;
+
 use leptos::prelude::*;
 
 /// Model Lab entry point page.

@@ -9,7 +9,7 @@
 //!   * the PAPER | LIVE indicator toggles the shared trading-mode store.
 
 use honba_kao_ui_core::{
-    HfButton, HfButtonVariant, HfIconButton, HfTradingModeToggle, HfTradingModeType,
+    HfButton, HfIconButton, HfTradingModeToggle, HfTradingModeType,
 };
 use leptos::prelude::*;
 use leptos_router::components::A;
@@ -18,7 +18,7 @@ use crate::shared::components::BrandLogo;
 use crate::shared::contexts::{use_auth, use_language};
 use crate::router::paths::{Page, ROUTES};
 use crate::shared::stores::{TradingMode, trading_mode::use_trading_mode};
-use crate::shared::theme::{Mode, Preference, THEMES, ThemeContext};
+use crate::shared::theme::{Mode, Preference, ThemeContext};
 
 #[component]
 pub fn HeaderBar(
@@ -130,34 +130,33 @@ pub fn HeaderBar(
                 </div>
 
                 <HfIconButton
+                    icon=Signal::derive(move || honba_kao_ui_core::icons::outline::search())
                     class="header-bar__lang"
                     title="Language"
                     on_click=Callback::new(move |_| language.toggle())
-                >
-                    {move || language.language.get().label()}
-                </HfIconButton>
+                />
 
-                {move || if auth.is_authenticated() {
+                <Show when=move || auth.is_authenticated()>
                     // The single user entry point is the rail's bottom-left
                     // account cluster (nav_rail.rs) — the header hosts only
                     // the togglable paper/live book indicator.
-                    view! {
+                    <span class="header-bar__trading-mode-wrap">
                         <HfTradingModeToggle
                             mode=widget_mode
                             on_change=set_widget_mode
                             class="header-bar__trading-mode"
                         />
-                    }
-                } else {
-                    view! {
-                        <HfButton
-                            class="header-bar__cta"
-                            href=ROUTES::LOGIN
-                        >
-                            {move || language.t("auth.sign_in")}
-                        </HfButton>
-                    }
-                }}
+                    </span>
+                </Show>
+                <Show when=move || !auth.is_authenticated()>
+                    <span class="header-bar__cta-wrap">
+                        <span class="header-bar__cta">
+                            <A href=ROUTES::LOGIN>
+                                {move || language.t("auth.sign_in")}
+                            </A>
+                        </span>
+                    </span>
+                </Show>
             </div>
         </header>
     }

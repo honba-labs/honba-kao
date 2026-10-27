@@ -59,11 +59,13 @@ pub(crate) fn remove_indicator(id: f64, instance_id: &str) {
 }
 
 /// Mount the volume histogram overlay in a chart's primary pane.
+#[allow(dead_code)]
 pub(crate) fn add_volume_overlay(id: f64) {
     let _ = openalgo_charts::sys::bridge_add_volume_overlay(id);
 }
 
 /// Mount the corner Buy/Sell bubble; its clicks surface as `honba-order-click` DOM events.
+#[allow(dead_code)]
 pub(crate) fn add_buy_sell_bubble(id: f64, quantity: i64, symbol: &str) {
     let _ = openalgo_charts::sys::bridge_add_buy_sell(id, quantity as f64, symbol);
 }
@@ -74,6 +76,7 @@ pub(crate) fn set_bubble_quantity(id: f64, quantity: i64) {
 }
 
 /// Publish the pane's instrument so drawings persist per symbol.
+#[allow(dead_code)]
 pub(crate) fn set_symbol_context(id: f64, symbol: &str) {
     openalgo_charts::drawing::set_symbol_context(id, symbol);
 }
@@ -90,6 +93,7 @@ pub(crate) fn destroy_chart(id: f64) {
 
 /// Encode one series into the `(kind, style, bars)` JSON triple the bridge's
 /// `setSeries` accepts. Shared with the workbench pane chart.
+#[allow(dead_code)]
 pub(crate) fn encode_series(series: &ChartSeries) -> (String, String, String) {
     let style = serde_json::json!({
         "color": series.color,
@@ -103,6 +107,7 @@ pub(crate) fn encode_series(series: &ChartSeries) -> (String, String, String) {
 }
 
 /// Encode just the OHLCV bars.
+#[allow(dead_code)]
 pub(crate) fn encode_bars(bars: &[Bar]) -> String {
     serde_json::to_string(bars).unwrap_or_else(|_| "[]".to_string())
 }

@@ -1,6 +1,8 @@
 //! Pair Trading Lab (Phase 5.6)
 //! /equity/pair-trading — cointegration testing, spread analysis, and signal generation.
 
+pub mod pair_trading_page;
+
 use leptos::prelude::*;
 
 /// Pair Trading entry point page.

@@ -8,12 +8,11 @@ use core::time::Duration;
 use leptos::prelude::*;
 
 use honba_kao_ui_core::icons::outline::x_close;
-use honba_kao_ui_core::{HfButton, HfIconButton, HfSegmentedControl};
+use honba_kao_ui_core::{HfButton, HfIconButton};
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
-use super::order_ticket::side_segments;
 use crate::features::workbench::stores::book_store::TradingState;
-use crate::features::workbench::stores::order_draft_store::{OrderType, Product, TicketField, TimeInForce};
+use crate::features::workbench::stores::order_draft_store::{OrderSide, OrderType, Product, TicketField, TimeInForce};
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
 use crate::shared::utils::currency;
 
@@ -122,14 +121,33 @@ pub fn WorkbenchOrderModal() -> impl IntoView {
                         </Show>
 
                         // -- Side toggle ------------------------------------------
-                        <HfSegmentedControl
-                            class="wb-toggle-grid wb-toggle-grid--modal"
-                            active_class="wb-side--on"
-                            aria_label="Order side"
-                            value=Signal::derive(move || store.draft.ticket.get().side)
-                            on_change=Callback::new(move |side| store.draft.set_ticket_field(TicketField::Side(side)))
-                            options=side_segments(|side| format!("⚡ {}", side.label()))
-                        />
+                        <div class="wb-toggle-grid wb-toggle-grid--modal">
+                            {[
+                                OrderSide::Buy,
+                                OrderSide::Sell,
+                            ]
+                            .into_iter()
+                            .map(|side| {
+                                view! {
+                                    <button
+                                        class=move || {
+                                            if store.draft.ticket.get().side == side {
+                                                "wb-toggle-grid__item wb-toggle-grid__item--on"
+                                            } else {
+                                                "wb-toggle-grid__item"
+                                            }
+                                        }
+                                        on:click=move |_| {
+                                            store.draft.set_ticket_field(TicketField::Side(side))
+                                        }
+                                    >
+                                        {format!("⚡ {}", side.label())}
+                                    </button>
+                                }
+                            })
+                            .collect_view()
+                        }
+                        </div>
 
                         // -- Product cards ------------------------------------------
                         <div class="wb-field">

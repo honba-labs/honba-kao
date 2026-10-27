@@ -206,7 +206,7 @@ fn fmt_opt_pnl(value: Option<i64>) -> String {
 
 /// Payoff polyline in the fixed viewBox, split at the zero line by clipping
 /// the same polyline twice: green above zero, red below.
-fn payoff_chart(points: &[(i64, i64)]) -> impl IntoView {
+fn payoff_chart(points: &[(i64, i64)]) -> impl IntoView + use<> {
     let steps = (points.len().saturating_sub(1)).max(1) as f64;
     let hi = points.iter().map(|p| p.1).max().unwrap_or(0).max(0);
     let lo = points.iter().map(|p| p.1).min().unwrap_or(0).min(0);

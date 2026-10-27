@@ -4,7 +4,6 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{HfSegment, HfSegmentedControl};
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
 use crate::features::workbench::stores::book_store::TradingState;
@@ -68,14 +67,33 @@ pub fn OrderTicketPanel() -> impl IntoView {
             </Show>
 
             // -- Buy / Sell -------------------------------------------------
-            <HfSegmentedControl
-                class="wb-toggle-grid"
-                active_class="wb-side--on"
-                aria_label="Order side"
-                value=Signal::derive(move || store.draft.ticket.get().side)
-                on_change=Callback::new(move |side| store.draft.set_ticket_field(TicketField::Side(side)))
-                options=side_segments(|side| side.label().to_string())
-            />
+            <div class="wb-toggle-grid">
+                {[
+                    OrderSide::Buy,
+                    OrderSide::Sell,
+                ]
+                .into_iter()
+                .map(|side| {
+                    view! {
+                        <button
+                            class=move || {
+                                if store.draft.ticket.get().side == side {
+                                    "wb-toggle-grid__item wb-toggle-grid__item--on"
+                                } else {
+                                    "wb-toggle-grid__item"
+                                }
+                            }
+                            on:click=move |_| {
+                                store.draft.set_ticket_field(TicketField::Side(side))
+                            }
+                        >
+                            {side.label()}
+                        </button>
+                    }
+                })
+                .collect_view()
+            }
+            </div>
 
             // -- Product ----------------------------------------------------
             <div class="wb-field">
@@ -227,18 +245,6 @@ fn TicketDepth() -> impl IntoView {
             view! { <MarketDepth symbol=symbol /> }
         }}
     }
-}
-
-/// Buy / sell pills for the side toggle (shared with the order modal);
-/// `label` renders each side's caption.
-pub(super) fn side_segments(label: impl Fn(OrderSide) -> String) -> Vec<HfSegment<OrderSide>> {
-    [OrderSide::Buy, OrderSide::Sell]
-        .into_iter()
-        .map(|side| {
-            let class = if side.is_buy() { "wb-side wb-side--buy" } else { "wb-side wb-side--sell" };
-            HfSegment::new(side, label(side)).with_class(class)
-        })
-        .collect()
 }
 
 #[component]

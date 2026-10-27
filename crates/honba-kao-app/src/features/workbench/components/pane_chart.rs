@@ -72,6 +72,7 @@ pub(crate) fn ChartPane(index: usize, store: WorkbenchStore) -> impl IntoView {
 // Pane header: symbol / timeframe pills / chart-type / indicator chips
 // ---------------------------------------------------------------------------
 
+#[allow(dead_code)]
 #[component]
 fn PaneHeader(
     store: WorkbenchStore,
@@ -643,6 +644,7 @@ fn PaneChart(
 }
 
 /// Map a pane's series mode onto `(addSeries kind, style JSON)`.
+#[allow(dead_code)]
 fn series_style(mode: ChartMode) -> (String, String) {
     let style = match mode {
         // Candle-ish kinds take the theme up/down colours; an empty override

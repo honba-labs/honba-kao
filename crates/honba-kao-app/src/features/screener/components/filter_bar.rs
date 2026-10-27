@@ -26,8 +26,7 @@ fn type_label(screener_type: ScreenerType) -> &'static str {
 }
 
 /// Asset class pill for the segmented control.
-fn asset_class_pill(screener_type: ScreenerType, active: Signal<bool>) -> View {
-    let active_str = move || active.get().to_string();
+fn asset_class_pill(screener_type: ScreenerType, active: bool) -> impl IntoView {
     view! {
         <HfSegmentedControlItem
             class="hf-segmented-control__item"
@@ -39,7 +38,7 @@ fn asset_class_pill(screener_type: ScreenerType, active: Signal<bool>) -> View {
 }
 
 /// Quick preset pill.
-fn quick_preset_pill(preset_id: String, preset_label: String, active: Signal<bool>) -> View {
+fn quick_preset_pill(_preset_id: String, preset_label: String, active: bool) -> impl IntoView {
     view! {
         <HfSegmentedControlItem
             class="hf-segmented-control__item"
@@ -51,7 +50,7 @@ fn quick_preset_pill(preset_id: String, preset_label: String, active: Signal<boo
 }
 
 /// Market tab pill.
-fn market_tab_pill(market: &str, active: Signal<bool>) -> View {
+fn market_tab_pill(market: &'static str, active: bool) -> impl IntoView {
     view! {
         <HfSegmentedControlItem
             class="hf-segmented-control__item"
@@ -71,6 +70,8 @@ pub fn FilterBar() -> impl IntoView {
     let filtered_len = Memo::new(move |_| filtered.get().len());
     let filter_count = Memo::new(move |_| count_active_filters(&store.advanced_filters.get()));
     let market_tabs: [&'static str; 2] = ["IN", "US"];
+    let index_drawer_open = RwSignal::new(false);
+    let index_drawer_host = NodeRef::<leptos::html::Div>::new();
 
     view! {
         <HfToolbar class="filter-bar" direction="row">
@@ -82,8 +83,7 @@ pub fn FilterBar() -> impl IntoView {
                     .iter()
                     .map(|screener_type| {
                         let screener_type = *screener_type;
-                        let active = move || store.screener_type.get() == screener_type;
-                        asset_class_pill(screener_type, active)
+                        asset_class_pill(screener_type, store.screener_type.get() == screener_type)
                     })
                     .collect_view()}
 
@@ -127,22 +127,19 @@ pub fn FilterBar() -> impl IntoView {
                 <HfSegmentedControl>
                     <HfSegmentedControlItem
                         class="filter-bar__seg-btn"
-                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Table)
-                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Table))
+                        selected=store.view_mode.get() == ViewMode::Table
                     >
                         "Table"
                     </HfSegmentedControlItem>
                     <HfSegmentedControlItem
                         class="filter-bar__seg-btn"
-                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Heatmap)
-                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::Heatmap))
+                        selected=store.view_mode.get() == ViewMode::Heatmap
                     >
                         "Heatmap"
                     </HfSegmentedControlItem>
                     <HfSegmentedControlItem
                         class="filter-bar__seg-btn"
-                        active=Signal::derive(move || store.view_mode.get() == ViewMode::FactorHeatmap)
-                        on_click=Callback::new(move |_| store.view_mode.set(ViewMode::FactorHeatmap))
+                        selected=store.view_mode.get() == ViewMode::FactorHeatmap
                     >
                         "Factors"
                     </HfSegmentedControlItem>
@@ -156,18 +153,21 @@ pub fn FilterBar() -> impl IntoView {
                     r#type="text"
                     placeholder="Search symbols, companies, sectors…"
                     prop:value=move || store.search_query.get()
-                    on_input=move |ev| {
+                    on_input=Callback::new(move |ev| {
                         let input = event_target::<web_sys::HtmlInputElement>(&ev);
                         store.set_search_query(input.value());
-                    }
+                    })
                 />
 
                 {QUICK_PRESETS
                     .iter()
                     .map(|(preset_id, preset_label)| {
                         let preset_id = *preset_id;
-                        let active = move || store.quick_preset.get() == preset_id;
-                        quick_preset_pill(preset_id.to_string(), preset_label.to_string(), active)
+                        quick_preset_pill(
+                            preset_id.to_string(),
+                            preset_label.to_string(),
+                            store.quick_preset.get() == preset_id,
+                        )
                     })
                     .collect_view()}
 
@@ -175,8 +175,7 @@ pub fn FilterBar() -> impl IntoView {
                     .iter()
                     .map(|market| {
                         let market = *market;
-                        let active = move || store.market.get() == market;
-                        market_tab_pill(market, active)
+                        market_tab_pill(market, store.market.get() == market)
                     })
                     .collect_view()}
 
@@ -184,16 +183,12 @@ pub fn FilterBar() -> impl IntoView {
                 <div class="filter-bar__index-anchor">
                     <HfSegmentedControlItem
                         class="filter-bar__market"
-                        active=Signal::derive(move || store.view_mode.get() == ViewMode::Table)
-                        title="Filter instruments by benchmark or sectoral index"
-                        on_click=Callback::new(move |_| {
-                            // index toggle logic
-                        })
+                        selected=index_drawer_open.get()
                     >
                         "Index"
                         <span class="filter-bar__badge">{move || 0}</span>
                     </HfSegmentedControlItem>
-                    <IndexDrawer />
+                    <IndexDrawer open=index_drawer_open host=index_drawer_host />
                 </div>
 
                 <HfButton

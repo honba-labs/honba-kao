@@ -26,7 +26,7 @@ pub fn ShadowAccountPage() -> impl IntoView {
                 </div>
                 <div class="col-span-full p-4 border rounded elevated">
                     <h3 class="font-semibold text-muted mb-2">Reconciliation Status</h3>
-                    <p class="text-sm">Pending • Completed • With violations • Up to date</p>
+                    <p class="text-sm">Pending / Completed / With violations / Up to date</p>
                 </div>
             </div>
         </section>

@@ -246,15 +246,20 @@ fn SymbolBadge(
         }
         open.update(|value| *value = !*value);
     };
+    let panel = controls.panel;
+    let draft_exchange_apply = draft_exchange;
     let apply = move |_: web_sys::MouseEvent| {
         let symbol = draft_symbol.get_untracked().trim().to_uppercase();
         if symbol.is_empty() {
             return;
         }
-        controls.patch(ControlsPatch {
-            symbol: Some(symbol),
-            exchange: Some(draft_exchange.get_untracked()),
-            ..Default::default()
+        panel.update(|controls| {
+            ControlsPatch {
+                symbol: Some(symbol),
+                exchange: Some(draft_exchange_apply.get_untracked()),
+                ..Default::default()
+            }
+            .apply(controls);
         });
         open.set(false);
     };
@@ -318,7 +323,7 @@ fn SymbolBadge(
                             type="button"
                             class="sim-apply-btn"
                             disabled=move || draft_symbol.get().trim().is_empty()
-                            on:click=apply
+                            on:click=move |ev| apply(ev)
                         >
                             "Apply Symbol"
                         </button>
@@ -431,25 +436,29 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
             }
         }
     };
-    let on_start = {
-        let controls = controls.clone();
-        move |event: web_sys::Event| {
-            let value = event_target_value(&event);
-            controls.patch(ControlsPatch {
+    let panel = controls.panel;
+    let on_start = move |event: web_sys::Event| {
+        let value = event_target_value(&event);
+        panel.update(|controls| {
+            ControlsPatch {
                 period: Some(PeriodPreset::Custom),
                 start: Some((!value.is_empty()).then_some(value)),
                 end: Some(Some(range.get_untracked().1)),
                 ..Default::default()
-            });
-        }
+            }
+            .apply(controls);
+        });
     };
     let on_end = move |event: web_sys::Event| {
         let value = event_target_value(&event);
-        controls.patch(ControlsPatch {
-            period: Some(PeriodPreset::Custom),
-            start: Some(Some(range.get_untracked().0)),
-            end: Some((!value.is_empty()).then_some(value)),
-            ..Default::default()
+        panel.update(|controls| {
+            ControlsPatch {
+                period: Some(PeriodPreset::Custom),
+                start: Some(Some(range.get_untracked().0)),
+                end: Some((!value.is_empty()).then_some(value)),
+                ..Default::default()
+            }
+            .apply(controls);
         });
     };
 
@@ -522,7 +531,7 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                                 class="sim-date-native-input"
                                 aria-label="Start Date"
                                 prop:value=move || range.get().0
-                                on:change=on_start
+                                on:change=move |ev| on_start(ev)
                             />
                         </div>
                         <div class="sim-date-input-field">
@@ -532,7 +541,7 @@ fn DateRangePicker(store: SimulatorStore) -> impl IntoView {
                                 class="sim-date-native-input"
                                 aria-label="End Date"
                                 prop:value=move || range.get().1
-                                on:change=on_end
+                                on:change=move |ev| on_end(ev)
                             />
                         </div>
                     </div>

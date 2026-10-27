@@ -109,6 +109,7 @@ fn rail_tool_of(engine_tool: &str) -> Option<&'static str> {
 }
 
 /// The drawing rail for one pane's chart.
+#[allow(dead_code)]
 #[component]
 pub(crate) fn DrawingRail(chart_handle: RwSignal<Option<f64>>) -> impl IntoView {
     // The armed tool id (`None` = cursor). The engine resets it after every

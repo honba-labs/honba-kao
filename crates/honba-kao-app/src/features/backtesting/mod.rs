@@ -4,6 +4,8 @@
 //! Walk-Forward Optimization (WFO) timelines, statistical robustness badges (DSR, PBO),
 //! 3D visualization panels, and strategy export.
 
+pub mod backtesting_page;
+
 use leptos::prelude::*;
 
 /// Backtesting entry point page.
