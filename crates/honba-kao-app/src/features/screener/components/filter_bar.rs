@@ -73,11 +73,11 @@ pub fn FilterBar() -> impl IntoView {
     let index_drawer_host = NodeRef::<leptos::html::Div>::new();
 
     view! {
-        <HfToolbar class="filter-bar" direction="row">
-            <HfToolbarSpacer class="filter-bar__spacer" />
+        <HfToolbar class="sc-filter-bar" direction="row">
+            <HfToolbarSpacer class="sc-filter-bar__spacer" />
 
             // --- Row 1: asset classes + screen + tool triggers + view toggle ---
-            <div class="filter-bar__row">
+            <div class="sc-filter-bar__row">
                 {ALL_SCREENER_TYPES
                     .iter()
                     .map(|screener_type| {
@@ -87,37 +87,37 @@ pub fn FilterBar() -> impl IntoView {
                     .collect_view()}
 
                 <HfButton
-                    class="filter-bar__screens"
+                    class="sc-filter-bar__screens"
                     title="Open the screen catalog"
                     on_click=Callback::new(move |_| store.toggle_open_screen_modal(true))
                 >
-                    <span class="filter-bar__screens-label">"Screens"</span>
-                    <span class="filter-bar__screens-title">
+                    <span class="sc-filter-bar__screens-label">"Screens"</span>
+                    <span class="sc-filter-bar__screens-title">
                         {move || store.screen_title.get()}
                     </span>
                 </HfButton>
 
                 <HfButton
-                    class="filter-bar__tool"
+                    class="sc-filter-bar__tool"
                     title="Open the columns configurator"
                     on_click=Callback::new(move |_| store.column_modal.set(true))
                 >
                     "Columns"
                     <HfSegmentedControlItem
-                        class="filter-bar__badge"
+                        class="sc-filter-bar__badge"
                     >
                         {move || store.visible_columns.get().len()}
                     </HfSegmentedControlItem>
                 </HfButton>
 
                 <HfButton
-                    class="filter-bar__tool"
+                    class="sc-filter-bar__tool"
                     title="Open the filters modal"
                     on_click=Callback::new(move |_| store.filter_modal.set(true))
                 >
                     "Filters"
                     <HfSegmentedControlItem
-                        class="filter-bar__badge"
+                        class="sc-filter-bar__badge"
                     >
                         {move || filter_count.get()}
                     </HfSegmentedControlItem>
@@ -125,19 +125,19 @@ pub fn FilterBar() -> impl IntoView {
 
                 <HfSegmentedControl>
                     <HfSegmentedControlItem
-                        class="filter-bar__seg-btn"
+                        class="sc-filter-bar__seg-btn"
                         selected=store.view_mode.get() == ViewMode::Table
                     >
                         "Table"
                     </HfSegmentedControlItem>
                     <HfSegmentedControlItem
-                        class="filter-bar__seg-btn"
+                        class="sc-filter-bar__seg-btn"
                         selected=store.view_mode.get() == ViewMode::Heatmap
                     >
                         "Heatmap"
                     </HfSegmentedControlItem>
                     <HfSegmentedControlItem
-                        class="filter-bar__seg-btn"
+                        class="sc-filter-bar__seg-btn"
                         selected=store.view_mode.get() == ViewMode::FactorHeatmap
                     >
                         "Factors"
@@ -146,9 +146,9 @@ pub fn FilterBar() -> impl IntoView {
             </div>
 
             // --- Row 2: search + quick presets + market + live ---
-            <div class="filter-bar__row">
+            <div class="sc-filter-bar__row">
                 <HfInput
-                    class="filter-bar__search"
+                    class="sc-filter-bar__search"
                     r#type="text"
                     placeholder="Search symbols, companies, sectors…"
                     prop:value=move || store.search_query.get()
@@ -179,19 +179,19 @@ pub fn FilterBar() -> impl IntoView {
                     .collect_view()}
 
                 // Index multi-select dropdown (labs IndexDrawer).
-                <div class="filter-bar__index-anchor">
+                <div class="sc-filter-bar__index-anchor">
                     <HfSegmentedControlItem
-                        class="filter-bar__market"
+                        class="sc-filter-bar__market"
                         selected=index_drawer_open.get()
                     >
                         "Index"
-                        <span class="filter-bar__badge">{move || 0}</span>
+                        <span class="sc-filter-bar__badge">{move || 0}</span>
                     </HfSegmentedControlItem>
                     <IndexDrawer open=index_drawer_open host=index_drawer_host />
                 </div>
 
                 <HfButton
-                    class="filter-bar__live"
+                    class="sc-filter-bar__live"
                     title="Toggle the simulated live tick badge"
                     on_click=Callback::new(move |_| store.toggle_live())
                 >
@@ -202,8 +202,8 @@ pub fn FilterBar() -> impl IntoView {
             </div>
 
             // --- Row 3: counts + watchlist + export ---
-            <div class="filter-bar__row">
-                <span class="filter-bar__status">
+            <div class="sc-filter-bar__row">
+                <span class="sc-filter-bar__status">
                     "All "
                     {move || total.get()}
                     " / Filtered "
@@ -221,9 +221,9 @@ pub fn FilterBar() -> impl IntoView {
                     "★ "
                     {move || store.shortlist.get().len()}
                 </span>
-                <HfToolbarSpacer class="filter-bar__spacer" />
+                <HfToolbarSpacer class="sc-filter-bar__spacer" />
                 <HfButton
-                    class="filter-bar__export"
+                    class="sc-filter-bar__export"
                     title="Download the current screen as CSV"
                     on_click=Callback::new(move |_| store.export_csv())
                 >

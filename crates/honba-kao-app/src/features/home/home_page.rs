@@ -11,19 +11,17 @@ use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
 
 use honba_kao_ui_core::{
-    HfButton, HfButtonSize, HfButtonVariant,
-    LiveClockStrip,
-    MarketHeatStrip, MarketHeatStripItem, MarketFlash,
-    MetricCard, MetricCardDelta, MetricCardDetail, MetricTone,
-    SystemHealthBar, SystemHealthItem, SystemHealthTone,
-    QuickNavGrid, QuickNavSection, QuickNavItem,
+    HfButton, HfButtonSize, HfButtonVariant, LiveClockStrip, MarketFlash, MarketHeatStrip,
+    MarketHeatStripItem, MetricCard, MetricCardDelta, MetricCardDetail, MetricTone, QuickNavGrid,
+    QuickNavItem, QuickNavSection, SystemHealthBar, SystemHealthItem, SystemHealthTone,
 };
 
-use crate::features::home::components::{
-    IntelWire, IntelWireItem, IntelSentimentScore, IntelSentiment,
-    PortfolioMiniChart,
-};
 use crate::features::home::components::portfolio_mini_chart::ChartPoint;
+use crate::features::home::components::{
+    AiInsightCard, EarningsScorecard, IdeaSignal, IdeaSignalCategory, IdeasRadar, InsightData,
+    InsightSection, InsightTone, IntelSentiment, IntelSentimentScore, IntelWire, IntelWireItem,
+    IntelligenceTimeline, PortfolioMiniChart, ResultsSummaryCards, TimelineItem, TimelineKind,
+};
 use crate::router::paths::ROUTES;
 use crate::shared::contexts::use_auth;
 
@@ -126,6 +124,110 @@ pub fn HomePage() -> impl IntoView {
         IntelWireItem::new("n5", "CNBC", "IT stocks lead broad market rally")
             .with_published_at("2026-01-15T07:20:00Z")
             .with_sentiment(IntelSentimentScore::new(IntelSentiment::Bullish, 0.69)),
+    ];
+
+    // 3.4 AI Insight — on-demand macro outlook (lazy fetcher, mock payload)
+    let ai_insight_fetcher = Callback::new(move |_: ()| -> Result<InsightData, String> {
+        Ok(InsightData::new("lm-studio")
+            .with_model("qwen2.5-14b-instruct")
+            .with_summary(
+                "Global risk sentiment is cautiously constructive: US equities hold near highs \
+                 while INR majors consolidate ahead of the RBI policy review.",
+            )
+            .with_sections(vec![
+                InsightSection::new(
+                    "Regime Classification",
+                    InsightTone::Positive,
+                    vec![
+                        "Nifty 50 trending above its 50-DMA with low realized volatility."
+                            .to_string(),
+                        "Bank Nifty showing relative strength versus the broader index."
+                            .to_string(),
+                    ],
+                ),
+                InsightSection::new(
+                    "Institutional Flows",
+                    InsightTone::Neutral,
+                    vec![
+                        "FIIs net sellers for the third session; DIIs continue to absorb supply."
+                            .to_string(),
+                        "F&O open interest build is concentrated in near-month index options."
+                            .to_string(),
+                    ],
+                ),
+            ]))
+    });
+
+    // 3.5 Ideas Radar — algorithmic signal cards (mock signals)
+    let idea_signals = vec![
+        IdeaSignal::new(
+            "idea-1",
+            IdeaSignalCategory::VolumeShockers,
+            "RELIANCE breaks out on a volume shock",
+        )
+        .with_symbol("RELIANCE")
+        .with_trigger("+3.8x vol")
+        .with_date("2026-01-15"),
+        IdeaSignal::new(
+            "idea-2",
+            IdeaSignalCategory::Breakout52W,
+            "TCS clears its 52-week high",
+        )
+        .with_symbol("TCS")
+        .with_trigger("+4.2% momentum")
+        .with_date("2026-01-15"),
+        IdeaSignal::new(
+            "idea-3",
+            IdeaSignalCategory::MeanReversion,
+            "HDFCBANK reverts toward VWAP",
+        )
+        .with_symbol("HDFCBANK")
+        .with_trigger("-2.1% RSI")
+        .with_date("2026-01-14"),
+    ];
+
+    // 3.6 Dashboard Intelligence — earnings scorecards + unified timeline
+    let scorecards = vec![
+        EarningsScorecard::new("TCS", "Tata Consultancy Services", "Q3 FY26")
+            .with_revenue(62_250.0, 2.1, 6.8)
+            .with_pat(12_450.0, 1.4, 9.2),
+        EarningsScorecard::new("INFY", "Infosys", "Q3 FY26")
+            .with_revenue(41_300.0, -1.2, 4.1)
+            .with_pat(6_850.0, -1.9, 3.5),
+    ];
+
+    let timeline_items = vec![
+        TimelineItem::new(
+            "timeline-1",
+            TimelineKind::Earnings,
+            "TCS Q3 FY26 results beat consensus PAT estimates",
+        )
+        .with_symbol("TCS")
+        .with_timestamp("2026-01-15T07:30:00Z")
+        .with_source("Exchange Filing"),
+        TimelineItem::new(
+            "timeline-2",
+            TimelineKind::CorporateAction,
+            "RELIANCE board approves bonus share issue",
+        )
+        .with_symbol("RELIANCE")
+        .with_timestamp("2026-01-15T06:10:00Z")
+        .with_source("BSE Announcements")
+        .with_sentiment("Bullish"),
+        TimelineItem::new(
+            "timeline-3",
+            TimelineKind::Alert,
+            "Watchlist alert triggered: HDFCBANK crossed ₹1,650",
+        )
+        .with_symbol("HDFCBANK")
+        .with_timestamp("2026-01-15T05:45:00Z"),
+        TimelineItem::new(
+            "timeline-4",
+            TimelineKind::ModelSignal,
+            "Mean reversion model flagged BANKNIFTY constituents",
+        )
+        .with_timestamp("2026-01-14T23:00:00Z")
+        .with_source("Model Lab"),
     ];
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -293,7 +395,17 @@ pub fn HomePage() -> impl IntoView {
                 <MarketHeatStrip items=heat_items />
             </div>
 
-            {/* 3.3 Grid Layout */}
+            {/* 3.4 AI Insight — on-demand macro outlook */}
+            <AiInsightCard
+                title="AI Market Outlook"
+                description="AI assessment of global market themes and regime."
+                fetcher=ai_insight_fetcher
+            />
+
+            {/* 3.5 Ideas Radar — algorithmic signal cards */}
+            <IdeasRadar signals=idea_signals market="IN" />
+
+            {/* 3.3 Grid Layout — Portfolio HQ */}
             <div class="ot-home-widget-grid">
                 <div class="ot-home-grid-left">
                     <MetricCard
@@ -313,9 +425,16 @@ pub fn HomePage() -> impl IntoView {
                     <SystemHealthBar items=health_items />
                     <IntelWire items=intel_items limit=5 />
                 </div>
-                <div class="ot-home-grid-bottom">
-                    <QuickNavGrid sections=sections />
-                </div>
+            </div>
+
+            {/* 3.6 Dashboard Intelligence — earnings scorecards + unified timeline */}
+            <section class="ot-home-widget-intelligence-grid" aria-label="Dashboard Intelligence">
+                <ResultsSummaryCards scorecards=scorecards />
+                <IntelligenceTimeline items=timeline_items title="Home Intelligence Timeline" />
+            </section>
+
+            <div class="ot-home-grid-bottom">
+                <QuickNavGrid sections=sections />
             </div>
         </div>
     }

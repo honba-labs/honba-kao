@@ -6,10 +6,8 @@ pub mod header_bar;
 pub mod nav_rail;
 pub mod site_footer;
 pub mod status_bar;
-pub mod ticker_tape;
 
 pub use header_bar::HeaderBar;
 pub use nav_rail::NavRail;
 pub use site_footer::SiteFooter;
 pub use status_bar::StatusBar;
-pub use ticker_tape::TickerTape;
