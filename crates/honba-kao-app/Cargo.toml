@@ -30,3 +30,10 @@ flow-rs-core = "0.1.0-beta.2"
 rust_decimal = "1.43"
 chrono = "0.4"
 num-traits = "0.2"
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "realtime_feed"
+harness = false

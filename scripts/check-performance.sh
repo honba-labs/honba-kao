@@ -8,7 +8,9 @@
 #
 # `wasm-opt` is not installed in this environment, so this script reports the
 # targets, checks whether `wasm-opt` is available, and (once `trunk build`
-# produces dist/) reports the WASM artifact size. Exits 0.
+# produces dist/) reports the WASM artifact size — those checks are
+# informational. It also runs the automated tick-ingestion throughput/latency
+# gate (tests/realtime_performance.rs); only that gate failing exits non-zero.
 
 set -euo pipefail
 
@@ -50,13 +52,34 @@ else
   done <<< "$WASM_FILES"
 fi
 
-# --- 3. TTI / 60fps note ---------------------------------------------------
+# --- 3. Tick-ingestion throughput / latency (automated, DoD #5) -------------
+# Runs the native regression gate in crates/honba-kao-app/tests/
+# realtime_performance.rs (parse_frame + QuoteBook::apply_frame over a burst
+# of multi-symbol quote frames). A failure here is a real regression and makes
+# this script exit non-zero. Detailed numbers: cargo bench -p honba-kao-app
+# --bench realtime_feed
 echo ""
-echo "  TTI & 60fps: verify with Chrome DevTools Performance / Lighthouse against"
-echo "  http://127.0.0.1:8080 (trunk serve). Sub-100ms TTI and 60fps tick"
-echo "  ingestion require the market-feed WebSocket to render through ui-core"
+echo "  Checking tick-ingestion throughput & latency (DoD #5: 100+ ticks/sec)..."
+INGEST_OK=1
+if INGEST_OUT=$(cd "$ROOT" && cargo test --release -p honba-kao-app --test realtime_performance -- --nocapture 2>&1); then
+  echo "    ✅ ingestion gate passed"
+else
+  echo "    ❌ ingestion gate FAILED"
+  INGEST_OK=0
+fi
+echo "$INGEST_OUT" | grep -E '^realtime_performance:|panicked|ticks/sec below|latency .* exceeds|^error'| sed 's/^/       /' || true
+
+# --- 4. TTI / 60fps note (still manual: needs a real browser) ---------------
+echo ""
+echo "  TTI & 60fps rendering: verify with Chrome DevTools Performance / Lighthouse"
+echo "  against http://127.0.0.1:8080 (trunk serve). Sub-100ms TTI and 60fps"
+echo "  rendering require the market-feed WebSocket to render through ui-core"
 echo "  primitives without full-page reflow (no React-style virtual DOM)."
 
 echo ""
+if [ "$INGEST_OK" -ne 1 ]; then
+  echo "❌ Performance verification failed (tick-ingestion regression)"
+  exit 1
+fi
 echo "✅ Performance verification complete"
 exit 0
