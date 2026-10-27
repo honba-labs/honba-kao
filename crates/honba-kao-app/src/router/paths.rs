@@ -68,6 +68,8 @@ pub mod routes {
     pub const OMS: &str = "/equity/oms";
     /// Operations Console (Phase 6.3) — multi-desk dashboard, kill switches, feed health.
     pub const OPS: &str = "/equity/ops";
+    /// Position Sizer (Phase 6.4) — dynamic sizing with Fixed Fractional, Kelly, Volatility Target, Equal Risk Contribution, wired to honba-core::sizing.
+    pub const POSITION_SIZER: &str = "/equity/position-sizer";
 }
 
 /// Alias so call sites read `ROUTES::PORTFOLIO`.
@@ -138,6 +140,7 @@ impl Page {
             Page::Risk => "risk",
             Page::OMS => "OMS",
             Page::OPS => "ops",
+            Page::POSITION_SIZER => "position_sizer",
             Page::Tradebook => "tradebook",
             Page::Settings => "settings",
             Page::Funds => "funds",
@@ -217,6 +220,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::RISK => Some(Page::Risk),
         r if r == ROUTES::OMS => Some(Page::OMS),
         r if r == ROUTES::OPS => Some(Page::OPS),
+        r if r == ROUTES::POSITION_SIZER => Some(Page::POSITION_SIZER),
         r if r == ROUTES::LOGIN => Some(Page::Login),
         r if r == ROUTES::REGISTER => Some(Page::Register),
         _ => None,
