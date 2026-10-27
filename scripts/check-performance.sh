@@ -6,11 +6,13 @@
 #   * 60fps tick ingestion without frame reflow
 #   * WASM binary size optimization via `wasm-opt` (binaryen)
 #
-# `wasm-opt` is not installed in this environment, so this script reports the
-# targets, checks whether `wasm-opt` is available, and (once `trunk build`
-# produces dist/) reports the WASM artifact size — those checks are
-# informational. It also runs the automated tick-ingestion throughput/latency
-# gate (tests/realtime_performance.rs); only that gate failing exits non-zero.
+# Reports the targets, checks whether `wasm-opt` is available, and (once
+# `trunk build --release` produces dist/) reports the WASM artifact size and,
+# when `wasm-opt` is installed (CI installs binaryen; the local dev env may
+# not), the size after an `-Oz` pass into a temp file — dist/ is left as-is.
+# Those checks are informational. It also runs the automated tick-ingestion
+# throughput/latency gate (tests/realtime_performance.rs); only that gate
+# failing exits non-zero.
 
 set -euo pipefail
 
@@ -36,8 +38,7 @@ fi
 echo "  Checking WASM artifact size in dist/..."
 WASM_FILES=$(find "$DIST" -maxdepth 1 -name '*.wasm' -type f 2>/dev/null || true)
 if [ -z "$WASM_FILES" ]; then
-  echo "    ℹ️  No WASM artifacts in dist/ yet (run trunk build first — honba-kao-app"
-  echo "       currently has pre-existing compile errors blocking the build)."
+  echo "    ℹ️  No WASM artifacts in dist/ yet (run trunk build --release first)."
 else
   while IFS= read -r f; do
     [ -n "$f" ] || continue
@@ -48,6 +49,17 @@ else
       echo "       ⚠️  exceeds 5 MiB uncompressed — run wasm-opt -O4 and enable gzip/brotli"
     else
       echo "       ✅ within 5 MiB uncompressed target"
+    fi
+    if [ "$WASM_OPT" -eq 1 ]; then
+      OPT_OUT="$(mktemp --suffix=.wasm 2>/dev/null || mktemp)"
+      if wasm-opt -Oz --all-features -o "$OPT_OUT" "$f" 2>/dev/null; then
+        opt_size=$(stat -c %s "$OPT_OUT" 2>/dev/null || stat -f %z "$OPT_OUT" 2>/dev/null || echo 0)
+        opt_mb=$(awk -v b="$opt_size" 'BEGIN{printf "%.2f", b/1048576}')
+        echo "       🔧 after wasm-opt -Oz: ${opt_mb} MiB (not written back to dist/)"
+      else
+        echo "       ⚠️  wasm-opt -Oz failed on $(basename "$f") (informational)"
+      fi
+      rm -f "$OPT_OUT"
     fi
   done <<< "$WASM_FILES"
 fi
