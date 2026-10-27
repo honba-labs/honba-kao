@@ -107,14 +107,14 @@ honba-kao/
   - Corporate quarterly earnings scorecards (QoQ / YoY revenue & PAT growth) and corporate filings feed.
 
 ### Milestone 3: Mission Control Dashboard Page (`HomePage`)
-- [ ] **3.1 Header Ribbon**:
+- [x] **3.1 Header Ribbon**:
   - "MISSION CONTROL" kicker and title.
   - Metadata badges: Desk user name, Market pill (`IN` / `US`), Preset indicator (`General` / `Equities` / `F&O`), Currency (`INR`), and Refresh cadence.
   - Action buttons: `Portfolio HQ` (`/portfolio`), `Launchpad` (`/equity/launchpad`), `Intel Wire` (`/equity/news`), `Workstation` (`/equity/chart-workstation`).
   - Mount `LiveClockStrip` in top right.
-- [ ] **3.2 Market Heat Strip Integration**:
+- [x] **3.2 Market Heat Strip Integration**:
   - Mount `MarketHeatStrip` beneath header ribbon with indices (`NIFTY 50`, `SENSEX`, `BANKNIFTY`, `NASDAQ`, `S&P 500`, `GOLD`, `CRUDE OIL`).
-- [ ] **3.3 Grid Layout**:
+- [x] **3.3 Grid Layout**:
   - 2-column responsive layout:
     - Left (1.85fr): Net Liquidation MetricCard + PortfolioMiniChart.
     - Right (1fr): SystemHealthBar + Intel Wire feed.
