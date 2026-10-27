@@ -74,6 +74,13 @@
   --broker-angel: #f58220;
   --broker-fyers: #2fa8ff;
   --broker-groww: #00b884;
+
+  /* Home dashboard semantic aliases (plan-1.md Milestone 5.1). Resolved once
+     in :root so every skin inherits them automatically. */
+  --card-background-color: var(--surface);
+  --accent-color: var(--primary-8);
+  --color-up: var(--pnl-gain);
+  --color-down: var(--pnl-loss);
 }
 
 :root[data-mode="dark"] {

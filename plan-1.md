@@ -121,20 +121,20 @@ honba-kao/
   - Bottom section: Launch Matrix `QuickNavGrid` organized by domain (Markets, Derivatives, Research, Labs, Portfolio, Intel, Workspace).
 
 ### Milestone 4: Routing, Navigation & Session Policy
-- [ ] **4.1 Router Constants (`paths.rs`)**:
+- [x] **4.1 Router Constants (`paths.rs`)**:
   - Define `pub const HOME: &str = "/home";`.
-- [ ] **4.2 Route Table (`routes.rs`)**:
+- [x] **4.2 Route Table (`routes.rs`)**:
   - Add `<Route path=path!("/home") view=HomePage />` inside the authenticated `AppShell` parent route.
   - Update `RootRoute` (`/`):
     - Authenticated -> redirect to `ROUTES::HOME`.
     - Guest -> show public marketing `LandingPage`.
-- [ ] **4.3 Auth Redirect (`login_page.rs`)**:
+- [x] **4.3 Auth Redirect (`login_page.rs`)**:
   - Update `LoginPage` on submit success: `navigate(ROUTES::HOME, Default::default())`.
-- [ ] **4.4 Navigation Rail (`nav_rail.rs`)**:
+- [x] **4.4 Navigation Rail (`nav_rail.rs`)**:
   - Add `HM` (Home / Mission Control) as the top anchor item (`outline::home()` glyph) pointing to `ROUTES::HOME`.
 
 ### Milestone 5: Stylesheet & Theme Token Integration
-- [ ] **5.1 Port CSS Tokens**:
+- [x] **5.1 Port CSS Tokens**:
   - Create `honba-kao/style/home.css` with `.ot-home-widget-*` selectors from OpenTerminalUI.
   - Bind colors to semantic theme variables (`--background-color`, `--card-background-color`, `--text-color`, `--border-color`, `--accent-color`, `--color-up`, `--color-down`).
   - Import `home.css` in `main.css`.
