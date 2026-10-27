@@ -8,41 +8,45 @@
 //!
 //! The evaluator itself is `honba_indicators::screener` (L3); this module is the thin adaptation
 //! from the frontend's column-oriented arrays (`open`/`high`/`low`/`close`/`volume`) to the
-//! chronological [`Bar`] history the evaluator reads, plus the JSON encoding of the outcome.
-//! Nothing is reimplemented: a metric, operator or filter error surfaces as the evaluator's own
-//! message.
+//! chronological [`Bar`] history the evaluator reads, plus the JSON encoding of the outcome and
+//! the translation from the wire's flat predicate/group JSON (`{"key","op","value"}`,
+//! `{"operator","items"}`) into the evaluator's own typed [`ScreenerFilterPredicate`] /
+//! [`ScreenerFilterGroup`].
 //!
 //! # Wire contract
 //!
 //! A scan returns the JSON string `{"result": bool, "metrics": {key: number|null}}`. `null` is a
 //! metric still in warm-up (the evaluator returns `None`), which is distinct from a missing key.
 //!
+//! A predicate is `{"key": "<metric>", "op": "<op>", "value": <number>}`; a group is
+//! `{"operator": "AND"|"OR", "items": [predicate | group, ...]}`. The evaluator's own
+//! [`ScreenerFilterPredicate::value`] is a plain numeric scalar, so operators whose wire form
+//! needs a non-numeric operand (`like`/`has` against a string, `between`/`in`/`not_in` against an
+//! array, or crossing against another metric's series) are accepted as valid JSON but always
+//! evaluate against the operand's bare numeric reading — a known limitation of the evaluator
+//! this module adapts, not reimplemented here.
+//!
 //! Invalid input is refused with a message rather than answered, matching the indicator exports: a
-//! malformed filter JSON, unequal series lengths, a non-finite value, an inconsistent OHLC row, an
-//! unsupported metric, an operator/operand mismatch, or an out-of-limits filter tree all throw a
-//! JavaScript `Error` carrying the message. In particular a bar-only dataset never reports an
-//! unsupported (e.g. fundamental) metric as a non-match.
+//! malformed filter JSON, unequal series lengths, a non-finite value, an inconsistent OHLC row, or
+//! an unsupported/invalid filter all throw a JavaScript `Error` carrying the message.
 
 use std::collections::BTreeMap;
 use std::fmt;
 
-use honba_entities::{ScreenerFilterGroup, ScreenerFilterPredicate};
+use honba_api::wire::ErrorCode;
+use honba_core::rust_decimal::Decimal;
+use honba_core::{Bar, Exchange, InstrumentId, Price, Quantity};
 use honba_indicators::screener::{
-    ScreenerError, evaluate_group, evaluate_predicate, group_metric_keys, latest_metrics,
+    FilterOp, MetricRef, ScreenerError, ScreenerFilterGroup, ScreenerFilterPredicate,
+    evaluate_group, evaluate_predicate, latest_metrics,
 };
-use honba_messages::{
-    Bar, BarAggregation, BarSpecification, BarType, ErrorCode, Exchange, InstrumentId, PriceType,
-    UnixNanos,
-};
+use serde::Deserialize;
 use serde_json::{Value, json};
-
-/// Nanoseconds in one day; the bars carry a synthetic one-day-apart timestamp.
-const DAY_NANOS: u64 = 86_400_000_000_000;
 
 /// Why a screener request over column-oriented arrays was refused.
 ///
 /// [`reason`](Self::reason) is the stable machine-readable half of the refusal.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum WasmScreenerError {
     /// A predicate or group JSON document is malformed (unknown fields, bad types, ...).
     InvalidJson {
@@ -72,7 +76,7 @@ pub enum WasmScreenerError {
         index: usize,
     },
     /// A row cannot be a valid bar (`low > high`, `open`/`close` outside the range, negative
-    /// volume). Kept out of [`Bar::new`], whose debug assertion would otherwise panic.
+    /// volume).
     InvalidBar {
         /// Index of the offending row.
         index: usize,
@@ -81,6 +85,16 @@ pub enum WasmScreenerError {
     },
     /// The filter itself cannot be evaluated; the evaluator's own message is reused.
     Screener(ScreenerError),
+}
+
+/// The stable `reason` for one [`ScreenerError`] (ADR 0012 rule 4); the evaluator itself has no
+/// such method.
+fn screener_error_reason(error: &ScreenerError) -> &'static str {
+    match error {
+        ScreenerError::UnsupportedMetric { .. } => "unsupported_metric",
+        ScreenerError::InvalidOperand { .. } => "invalid_operand",
+        ScreenerError::InvalidFilter { .. } => "invalid_filter",
+    }
 }
 
 impl WasmScreenerError {
@@ -98,7 +112,7 @@ impl WasmScreenerError {
             | Self::LengthMismatch { .. }
             | Self::NonFiniteInput { .. }
             | Self::InvalidBar { .. } => ErrorCode::ValidationInvalidRequest.as_str(),
-            Self::Screener(error) => error.reason(),
+            Self::Screener(error) => screener_error_reason(error),
         }
     }
 }
@@ -124,6 +138,11 @@ impl fmt::Display for WasmScreenerError {
             Self::InvalidBar { index, message } => {
                 write!(f, "invalid bar at index {index}: {message}")
             }
+            // The evaluator's own message ("unsupported metric: {key}") doesn't say why a
+            // metric is unsupported; made explicit for the caller here.
+            Self::Screener(ScreenerError::UnsupportedMetric { key }) => {
+                write!(f, "metric {key:?} cannot be computed from bars")
+            }
             Self::Screener(e) => write!(f, "{e}"),
         }
     }
@@ -142,16 +161,24 @@ fn error_pair(error: impl Into<WasmScreenerError>) -> String {
     format!("{}: {error}", error.reason())
 }
 
-/// The stable identity of the synthetic bars: instrument `X` on `NSE`, one-day `Last` bars.
+/// The stable identity of the synthetic bars: instrument `X` on `NSE`.
 ///
 /// The evaluator derives `price_52_week_high`/`price_52_week_low` from a 252-bar window count, so
-/// the exact timestamps do not matter; this identity matches the native evaluator's conformance
-/// test so both surfaces read the same bars.
-fn bar_type() -> BarType {
-    BarType::new(
-        InstrumentId::new("X", Exchange::new("NSE")),
-        BarSpecification::new(1, BarAggregation::Day, PriceType::Last),
-    )
+/// the exact timestamps do not matter; only their relative order (one synthetic day apart) does.
+fn synthetic_instrument() -> InstrumentId {
+    InstrumentId::new(Exchange::Nse, "X")
+}
+
+/// An input value as an exact [`Decimal`], or `0` if it cannot be represented (unreachable for
+/// anything [`finite_series`] has already let through).
+fn decimal(x: f64) -> Decimal {
+    Decimal::try_from(x).unwrap_or(Decimal::ZERO)
+}
+
+/// The synthetic bar timestamp at `index`: one UTC day apart, starting at the epoch.
+fn bar_timestamp(index: usize) -> honba_core::chrono::DateTime<honba_core::chrono::Utc> {
+    honba_core::chrono::DateTime::from_timestamp(index as i64 * 86_400, 0)
+        .expect("in-range synthetic timestamp")
 }
 
 fn finite_series(name: &'static str, series: &[f64]) -> Result<(), WasmScreenerError> {
@@ -195,7 +222,7 @@ fn bars_from_arrays(
     ] {
         finite_series(name, series)?;
     }
-    let bar_type = bar_type();
+    let instrument = synthetic_instrument();
     let mut bars = Vec::with_capacity(open.len());
     for i in 0..open.len() {
         let (o, h, l, c, v) = (open[i], high[i], low[i], close[i], volume[i]);
@@ -213,33 +240,163 @@ fn bars_from_arrays(
         if let Some(message) = message {
             return Err(WasmScreenerError::InvalidBar { index: i, message });
         }
-        let ts = UnixNanos::from_u64(i as u64 * DAY_NANOS);
-        bars.push(Bar::new(bar_type.clone(), o, h, l, c, v, ts, ts));
+        bars.push(Bar {
+            instrument: instrument.clone(),
+            open: Price(decimal(o)),
+            high: Price(decimal(h)),
+            low: Price(decimal(l)),
+            close: Price(decimal(c)),
+            volume: Quantity(decimal(v)),
+            timestamp: bar_timestamp(i),
+        });
     }
     Ok(bars)
 }
 
-fn parse_predicate(predicate_json: &str) -> Result<ScreenerFilterPredicate, WasmScreenerError> {
-    serde_json::from_str(predicate_json).map_err(|e| WasmScreenerError::InvalidJson {
-        what: "predicate",
-        message: e.to_string(),
+/// The wire spelling of a [`FilterOp`] (lower snake case), the reverse of what the evaluator's
+/// own `Deserialize` derive expects (its Rust variant names).
+fn parse_filter_op(op: &str) -> Result<FilterOp, WasmScreenerError> {
+    Ok(match op {
+        "eq" => FilterOp::Eq,
+        "ne" => FilterOp::Ne,
+        "neq" => FilterOp::Neq,
+        "gt" => FilterOp::Gt,
+        "gte" => FilterOp::Gte,
+        "lt" => FilterOp::Lt,
+        "lte" => FilterOp::Lte,
+        "between" => FilterOp::Between,
+        "in" => FilterOp::In,
+        "not_in" => FilterOp::NotIn,
+        "like" => FilterOp::Like,
+        "has" => FilterOp::Has,
+        "crosses_above" => FilterOp::CrossesAbove,
+        "crosses_below" => FilterOp::CrossesBelow,
+        other => {
+            return Err(WasmScreenerError::InvalidJson {
+                what: "predicate",
+                message: format!("unknown op {other:?}"),
+            });
+        }
     })
+}
+
+/// A predicate's operand as the evaluator reads it: a bare numeric scalar (see the module doc on
+/// the evaluator's non-numeric-operand limitation). A string parses as its numeric value when it
+/// has one; anything else (an array, an object, `null`, a non-numeric string) is `0.0`.
+fn operand_scalar(value: &Value) -> f64 {
+    match value {
+        Value::Number(n) => n.as_f64().unwrap_or(0.0),
+        Value::String(s) => s.parse().unwrap_or(0.0),
+        Value::Bool(b) => f64::from(u8::from(*b)),
+        _ => 0.0,
+    }
+}
+
+/// One wire predicate: `{"key", "op", "value"}`.
+#[derive(Deserialize)]
+struct WirePredicate {
+    key: String,
+    op: String,
+    #[serde(default)]
+    value: Value,
+}
+
+/// One wire group item: a predicate or a nested group, distinguished structurally (`key`/`op`
+/// marks a predicate, `operator`/`items` a group).
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum WireItem {
+    Predicate(WirePredicate),
+    Group(WireGroup),
+}
+
+/// One wire group: `{"operator": "AND"|"OR", "items": [...]}`.
+#[derive(Deserialize)]
+struct WireGroup {
+    operator: String,
+    items: Vec<WireItem>,
+}
+
+fn translate_predicate(wire: WirePredicate) -> Result<ScreenerFilterPredicate, WasmScreenerError> {
+    Ok(ScreenerFilterPredicate {
+        metric: MetricRef {
+            key: wire.key,
+            period: None,
+        },
+        op: parse_filter_op(&wire.op)?,
+        value: operand_scalar(&wire.value),
+    })
+}
+
+fn translate_item(item: WireItem) -> Result<ScreenerFilterGroup, WasmScreenerError> {
+    match item {
+        WireItem::Predicate(p) => Ok(ScreenerFilterGroup::Predicate(translate_predicate(p)?)),
+        WireItem::Group(g) => translate_group(g),
+    }
+}
+
+fn translate_group(wire: WireGroup) -> Result<ScreenerFilterGroup, WasmScreenerError> {
+    let items = wire
+        .items
+        .into_iter()
+        .map(translate_item)
+        .collect::<Result<Vec<_>, _>>()?;
+    match wire.operator.as_str() {
+        "AND" => Ok(ScreenerFilterGroup::And(items)),
+        "OR" => Ok(ScreenerFilterGroup::Or(items)),
+        other => Err(WasmScreenerError::InvalidJson {
+            what: "group",
+            message: format!("unknown operator {other:?}; expected \"AND\" or \"OR\""),
+        }),
+    }
+}
+
+fn parse_predicate(predicate_json: &str) -> Result<ScreenerFilterPredicate, WasmScreenerError> {
+    let wire: WirePredicate =
+        serde_json::from_str(predicate_json).map_err(|e| WasmScreenerError::InvalidJson {
+            what: "predicate",
+            message: e.to_string(),
+        })?;
+    translate_predicate(wire)
 }
 
 fn parse_group(group_json: &str) -> Result<ScreenerFilterGroup, WasmScreenerError> {
-    serde_json::from_str(group_json).map_err(|e| WasmScreenerError::InvalidJson {
-        what: "group",
-        message: e.to_string(),
-    })
+    let wire: WireGroup =
+        serde_json::from_str(group_json).map_err(|e| WasmScreenerError::InvalidJson {
+            what: "group",
+            message: e.to_string(),
+        })?;
+    translate_group(wire)
 }
 
-/// Every metric key a predicate reads: its left side, then a right-side metric reference.
+/// The one metric key a predicate reads.
 fn predicate_keys(pred: &ScreenerFilterPredicate) -> Vec<String> {
-    let mut keys = vec![pred.key.clone()];
-    if let Some(reference) = pred.metric_ref() {
-        keys.push(reference.key);
-    }
+    vec![pred.metric.key.clone()]
+}
+
+/// Every metric key a group reads, in first-seen order, de-duplicated. The evaluator has no
+/// equivalent of its own.
+fn group_metric_keys(group: &ScreenerFilterGroup) -> Vec<String> {
+    let mut keys = Vec::new();
+    collect_group_keys(group, &mut keys);
     keys
+}
+
+fn collect_group_keys(group: &ScreenerFilterGroup, keys: &mut Vec<String>) {
+    match group {
+        ScreenerFilterGroup::And(groups) | ScreenerFilterGroup::Or(groups) => {
+            for g in groups {
+                collect_group_keys(g, keys);
+            }
+        }
+        ScreenerFilterGroup::Predicate(pred) => {
+            for key in predicate_keys(pred) {
+                if !keys.contains(&key) {
+                    keys.push(key);
+                }
+            }
+        }
+    }
 }
 
 fn f64_value(x: f64) -> Value {
@@ -304,8 +461,7 @@ pub fn group_matches(
     Ok(evaluate_group(group, &bars)?)
 }
 
-/// Evaluates a typed predicate and reports both its `result` and the latest `metrics` it reads:
-/// its key and any right-hand metric reference.
+/// Evaluates a typed predicate and reports both its `result` and the latest `metrics` it reads.
 ///
 /// # Errors
 ///
@@ -340,20 +496,19 @@ pub fn scan_group(
 ) -> Result<ScanOutcome, WasmScreenerError> {
     let bars = bars_from_arrays(open, high, low, close, volume)?;
     let result = evaluate_group(group, &bars)?;
-    let keys = group_metric_keys(group)?;
+    let keys = group_metric_keys(group);
     let metrics = latest_metrics(&keys, &bars)?;
     Ok(ScanOutcome { result, metrics })
 }
 
 /// Evaluates one predicate JSON document: the wire form of [`predicate_matches`].
 ///
-/// `predicate_json` is the wire form of a `ScreenerFilterPredicate`, e.g.
-/// `{"key":"close","op":"gt","value":10}`.
+/// `predicate_json` is `{"key":"close","op":"gt","value":10}`.
 ///
 /// # Errors
 ///
 /// A `reason: message` pair for malformed predicate JSON, unequal lengths, non-finite input, an
-/// inconsistent OHLC row, or an [`ScreenerError`] (unknown/unsupported metric, bad operand, bad
+/// inconsistent OHLC row, or a [`ScreenerError`] (unknown/unsupported metric, bad operand, bad
 /// filter tree). The `reason` is the stable [`WasmScreenerError::reason`] string.
 pub fn evaluate_predicate_json(
     predicate_json: &str,

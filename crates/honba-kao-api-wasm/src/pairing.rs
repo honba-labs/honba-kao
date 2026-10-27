@@ -542,7 +542,9 @@ fn finalize_episode(episode: &Episode, id: String, open: bool) -> RoundTrip {
         exit_fills: episode.exit_fills.clone(),
         fees: round(episode.entry_costs + episode.exit_costs, 10),
         realized_pnl: realized_pnl.map(|value| round(value, 10)),
-        return_pct: realized_pnl.filter(|_| capital > 0.0).map(|value| round(value / capital, 10)),
+        return_pct: realized_pnl
+            .filter(|_| capital > 0.0)
+            .map(|value| round(value / capital, 10)),
         exit_reason: if open {
             RoundTripExitReason::OpenAtEnd
         } else {
@@ -577,7 +579,10 @@ fn open_position_of(episode: &Episode) -> Option<OpenPosition> {
 pub fn pair_fills(fills: &[PairedFill]) -> PairingResult {
     let mut by_instrument: BTreeMap<&str, Vec<&PairedFill>> = BTreeMap::new();
     for fill in fills {
-        by_instrument.entry(fill.instrument.as_str()).or_default().push(fill);
+        by_instrument
+            .entry(fill.instrument.as_str())
+            .or_default()
+            .push(fill);
     }
 
     let mut closed: Vec<Episode> = Vec::new();
