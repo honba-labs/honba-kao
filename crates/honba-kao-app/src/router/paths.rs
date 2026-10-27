@@ -64,6 +64,8 @@ pub mod routes {
     pub const FUNDS: &str = "/funds";
     /// Risk Dashboard (Phase 6.1) — VaR/CVaR, EWMA vol, PCA, stress scenarios.
     pub const RISK: &str = "/equity/risk";
+    /// OMS & Pre-Trade Compliance (Phase 6.2) — order screening, throttle rates, circuit filters, restricted symbols, audit log.
+    pub const OMS: &str = "/equity/oms";
 }
 
 /// Alias so call sites read `ROUTES::PORTFOLIO`.
@@ -132,6 +134,7 @@ impl Page {
             Page::ModelLab => "model_lab",
             Page::PortfolioLab => "portfolio_lab",
             Page::Risk => "risk",
+            Page::OMS => "OMS",
             Page::Tradebook => "tradebook",
             Page::Settings => "settings",
             Page::Funds => "funds",
@@ -209,6 +212,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::SETTINGS => Some(Page::Settings),
         r if r == ROUTES::FUNDS => Some(Page::Funds),
         r if r == ROUTES::RISK => Some(Page::Risk),
+        r if r == ROUTES::OMS => Some(Page::OMS),
         r if r == ROUTES::LOGIN => Some(Page::Login),
         r if r == ROUTES::REGISTER => Some(Page::Register),
         _ => None,
