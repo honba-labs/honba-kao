@@ -2,13 +2,15 @@
 //!
 //! Every wasm refusal is `reason: message` where `reason` is stable and machine-readable: the
 //! [`ErrorCode`] for input validation on the screener surface
-//! (`validation_invalid_request`, reusing [`WasmScreenerError::reason`]), the evaluator's own
-//! reason (`unsupported_metric`, `invalid_operand`, `invalid_filter`), or a [`ReplayError`]
-//! reason on the replay surface. Message text stays human; the reason is what a caller matches.
+//! (`validation_invalid_request`, reusing [`WasmScreenerError::reason`]), or the evaluator's own
+//! reason (`unsupported_metric`, `invalid_operand`, `invalid_filter`). Message text stays human;
+//! the reason is what a caller matches.
+//!
+//! The replay surface (`ReplayError`) is disabled — see the module-level doc comment in
+//! `lib.rs` — so its reason tests are not here; they lived in `replay.rs` (also disabled).
 
-use crate::replay::ReplayError;
 use crate::screener::WasmScreenerError;
-use honba_messages::ErrorCode;
+use honba_api::wire::ErrorCode;
 
 fn reason_of(error: String) -> String {
     match error.split_once(": ") {
@@ -116,47 +118,4 @@ fn evaluator_reasons_reach_the_wasm_surface_unchanged() {
             || reason_of(err) == "validation_invalid_request",
         "a malformed predicate carries a stable reason"
     );
-}
-
-#[test]
-fn replay_reasons_are_all_distinct_and_stable() {
-    let cases = [
-        (ReplayError::EmptyJournal, "empty_journal"),
-        (ReplayError::InvalidHeaderJson, "invalid_header_json"),
-        (ReplayError::MissingHeader, "missing_header"),
-        (ReplayError::InvalidHeader, "invalid_header"),
-        (
-            ReplayError::UnsupportedJournalVersion,
-            "unsupported_journal_version",
-        ),
-        (ReplayError::InvalidRecord, "invalid_record"),
-        (ReplayError::HeaderSerialize, "header_serialize"),
-    ];
-    for (error, reason) in cases {
-        assert_eq!(error.reason(), reason);
-        assert_eq!(
-            error.to_string(),
-            format!("{reason}: journal rejected"),
-            "{reason} display drifts"
-        );
-    }
-}
-
-#[test]
-fn every_replay_reason_is_machine_readable() {
-    for error in [
-        ReplayError::EmptyJournal,
-        ReplayError::InvalidHeaderJson,
-        ReplayError::MissingHeader,
-        ReplayError::InvalidHeader,
-        ReplayError::UnsupportedJournalVersion,
-        ReplayError::InvalidRecord,
-        ReplayError::HeaderSerialize,
-    ] {
-        assert!(!error.reason().contains(' '), "{error:?}");
-        assert_eq!(
-            reason_of(format!("{}: dropped", error.reason())),
-            error.reason()
-        );
-    }
 }

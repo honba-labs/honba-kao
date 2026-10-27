@@ -38,7 +38,7 @@ use honba_core::rust_decimal::Decimal;
 use honba_core::{Bar, Exchange, InstrumentId, Price, Quantity};
 use honba_indicators::screener::{
     FilterOp, MetricRef, ScreenerError, ScreenerFilterGroup, ScreenerFilterPredicate,
-    evaluate_group, evaluate_predicate, latest_metrics,
+    evaluate_predicate, latest_metrics,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -280,24 +280,47 @@ fn parse_filter_op(op: &str) -> Result<FilterOp, WasmScreenerError> {
     })
 }
 
+/// Ordering operators: the only ones [`operand_value`] requires a genuine JSON number for,
+/// mirroring the evaluator's own `operand()` check. `eq`/`ne`/`neq` don't call it at all — a
+/// non-numeric operand just compares unequal, never errors.
+fn is_ordering_op(op: FilterOp) -> bool {
+    matches!(op, FilterOp::Gt | FilterOp::Gte | FilterOp::Lt | FilterOp::Lte)
+}
+
 /// A predicate's operand as the evaluator reads it: a bare numeric scalar (see the module doc on
-/// the evaluator's non-numeric-operand limitation). A string parses as its numeric value when it
-/// has one; anything else (an array, an object, `null`, a non-numeric string) is `0.0`.
-fn operand_scalar(value: &Value) -> f64 {
+/// the evaluator's non-numeric-operand limitation).
+///
+/// An ordering operator (`eq`/`ne`/`gt`/`gte`/`lt`/`lte`) needs a genuine JSON number or boolean,
+/// matching the evaluator's own refusal message for anything else — a numeral *string* is not a
+/// number here any more than it is there. The remaining operators (`between`/`in`/`not_in`/
+/// `like`/`has`/`crosses_*`) accept a numeral string as a best-effort scalar reading, since their
+/// non-numeric operand shapes (an array, a free-text string, a cross-metric reference) cannot be
+/// represented by the evaluator's `value: f64` at all; an object `{"key": "<metric>"}` is reported
+/// as that metric being unsupported rather than silently read as `0.0`.
+fn operand_value(value: &Value, op: FilterOp) -> Result<f64, WasmScreenerError> {
     match value {
-        Value::Number(n) => n.as_f64().unwrap_or(0.0),
-        Value::String(s) => s.parse().unwrap_or(0.0),
-        Value::Bool(b) => f64::from(u8::from(*b)),
-        _ => 0.0,
+        Value::Number(n) => Ok(n.as_f64().unwrap_or(0.0)),
+        Value::Bool(b) => Ok(f64::from(u8::from(*b))),
+        Value::String(s) if !is_ordering_op(op) => Ok(s.parse().unwrap_or(0.0)),
+        Value::Object(map) => {
+            let key = map.get("key").and_then(Value::as_str).unwrap_or("?");
+            Err(WasmScreenerError::Screener(ScreenerError::UnsupportedMetric {
+                key: key.to_owned(),
+            }))
+        }
+        other => Err(WasmScreenerError::Screener(ScreenerError::InvalidOperand {
+            op,
+            message: format!("cannot order a number against {other}"),
+        })),
     }
 }
 
-/// One wire predicate: `{"key", "op", "value"}`.
+/// One wire predicate: `{"key", "op", "value"}`. `value` is required: an absent one is a
+/// malformed predicate (`validation_invalid_request`), not an operand to evaluate.
 #[derive(Deserialize)]
 struct WirePredicate {
     key: String,
     op: String,
-    #[serde(default)]
     value: Value,
 }
 
@@ -317,14 +340,32 @@ struct WireGroup {
     items: Vec<WireItem>,
 }
 
+/// Rejects an `sma0` (period `0`) key before it reaches the evaluator: `Sma::new(0)` panics
+/// rather than erroring, so this crate's wasm boundary never calls it with one.
+fn reject_zero_period_sma(key: &str) -> Result<(), WasmScreenerError> {
+    let lower = key.to_ascii_lowercase();
+    let is_zero_period = lower
+        .strip_prefix("sma")
+        .is_some_and(|digits| digits.parse::<u32>() == Ok(0));
+    if is_zero_period {
+        return Err(WasmScreenerError::Screener(ScreenerError::UnsupportedMetric {
+            key: key.to_owned(),
+        }));
+    }
+    Ok(())
+}
+
 fn translate_predicate(wire: WirePredicate) -> Result<ScreenerFilterPredicate, WasmScreenerError> {
+    reject_zero_period_sma(&wire.key)?;
+    let op = parse_filter_op(&wire.op)?;
+    let value = operand_value(&wire.value, op)?;
     Ok(ScreenerFilterPredicate {
         metric: MetricRef {
             key: wire.key,
             period: None,
         },
-        op: parse_filter_op(&wire.op)?,
-        value: operand_scalar(&wire.value),
+        op,
+        value,
     })
 }
 
@@ -346,7 +387,7 @@ fn translate_group(wire: WireGroup) -> Result<ScreenerFilterGroup, WasmScreenerE
         "OR" => Ok(ScreenerFilterGroup::Or(items)),
         other => Err(WasmScreenerError::InvalidJson {
             what: "group",
-            message: format!("unknown operator {other:?}; expected \"AND\" or \"OR\""),
+            message: format!("operator {other:?} is not AND or OR"),
         }),
     }
 }
@@ -396,6 +437,41 @@ fn collect_group_keys(group: &ScreenerFilterGroup, keys: &mut Vec<String>) {
                 }
             }
         }
+    }
+}
+
+/// [`evaluate_group`], except an empty `OR` matches everything rather than nothing.
+///
+/// The evaluator's own `Or(groups) => groups.iter()...any(|x| x)` is vacuously `false` on an
+/// empty `groups` (there is no element that matches); the wire contract wants an empty group to
+/// mean "no filter", which is vacuously `true` for `OR` just as it already is for `AND`. Mirrors
+/// the evaluator's own recursion (including its no-short-circuit error propagation, so an
+/// unsupported branch is never hidden behind an already-decided result) so a nested empty `OR`
+/// gets the same fix, not just a top-level one.
+fn evaluate_group_compat(group: &ScreenerFilterGroup, bars: &[Bar]) -> Result<bool, ScreenerError> {
+    match group {
+        ScreenerFilterGroup::And(groups) => {
+            let mut all_true = true;
+            for g in groups {
+                if !evaluate_group_compat(g, bars)? {
+                    all_true = false;
+                }
+            }
+            Ok(all_true)
+        }
+        ScreenerFilterGroup::Or(groups) => {
+            if groups.is_empty() {
+                return Ok(true);
+            }
+            let mut any_true = false;
+            for g in groups {
+                if evaluate_group_compat(g, bars)? {
+                    any_true = true;
+                }
+            }
+            Ok(any_true)
+        }
+        ScreenerFilterGroup::Predicate(pred) => evaluate_predicate(pred, bars),
     }
 }
 
@@ -458,7 +534,7 @@ pub fn group_matches(
     volume: &[f64],
 ) -> Result<bool, WasmScreenerError> {
     let bars = bars_from_arrays(open, high, low, close, volume)?;
-    Ok(evaluate_group(group, &bars)?)
+    Ok(evaluate_group_compat(group, &bars)?)
 }
 
 /// Evaluates a typed predicate and reports both its `result` and the latest `metrics` it reads.
@@ -495,7 +571,7 @@ pub fn scan_group(
     volume: &[f64],
 ) -> Result<ScanOutcome, WasmScreenerError> {
     let bars = bars_from_arrays(open, high, low, close, volume)?;
-    let result = evaluate_group(group, &bars)?;
+    let result = evaluate_group_compat(group, &bars)?;
     let keys = group_metric_keys(group);
     let metrics = latest_metrics(&keys, &bars)?;
     Ok(ScanOutcome { result, metrics })

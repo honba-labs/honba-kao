@@ -14,8 +14,8 @@ use honba_core::{Currency, Exchange, FillReport as Trade, InstrumentId, Money, O
 
 const JAN1: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC (fe's Date.UTC(2024, 0, 2))
 
-fn ts(minute: i64) -> chrono::DateTime<chrono::Utc> {
-    chrono::DateTime::from_timestamp(JAN1 + minute * 60, 0).expect("valid timestamp")
+fn ts(minute: i64) -> honba_core::chrono::DateTime<honba_core::chrono::Utc> {
+    honba_core::chrono::DateTime::from_timestamp(JAN1 + minute * 60, 0).expect("valid timestamp")
 }
 
 fn decimal(value: f64) -> Decimal {
@@ -69,7 +69,7 @@ fn counts_the_epoch_placeholder_as_dropped() {
         Price(decimal(100.0)),
         Quantity(decimal(1.0)),
         "algo",
-        chrono::DateTime::from_timestamp(0, 0).expect("valid timestamp"),
+        honba_core::chrono::DateTime::from_timestamp(0, 0).expect("valid timestamp"),
     );
     let (fills, dropped) = fills_from_trades(&[zero_ts, buy(1.0, 100.0, 20)]);
     assert_eq!(fills.len(), 1);

@@ -6,4 +6,5 @@ mod ohlc;
 mod screener;
 mod wasm_error_codes;
 
-// `replay` is disabled: see the module-level doc comment in `lib.rs`.
+// `replay` is disabled: see the module-level doc comment in `lib.rs`. Its test file stays at
+// `replay.rs` for reference, just not wired in.

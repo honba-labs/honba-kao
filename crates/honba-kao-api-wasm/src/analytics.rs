@@ -946,27 +946,31 @@ fn format_currency(value: f64) -> String {
 mod tests {
     use super::*;
     use crate::pairing::pair_trades;
-    use honba_entities::{Currency, Money as WireMoney, Trade};
-    use honba_messages::{
-        Exchange, InstrumentId, OrderId, OrderSide, UnixNanos as WireUnixNanos,
-    };
+    use honba_core::rust_decimal::Decimal;
+    use honba_core::uuid::Uuid;
+    use honba_core::{Currency, Exchange, FillReport as Trade, InstrumentId, Money, OrderSide, Price, Quantity};
 
     const JAN_2: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC
     const HOURS: i64 = 3_600;
     const DAYS: i64 = 86_400;
 
     fn fill(side: OrderSide, quantity: f64, price: f64, at: i64, costs: f64) -> Trade {
+        let ts = honba_core::chrono::DateTime::from_timestamp(at, 0).expect("valid timestamp");
         Trade::new(
-            OrderId::new("o"),
-            InstrumentId::new("TCS", Exchange::new("NSE")),
+            "f",
+            "o",
+            Uuid::nil(),
+            InstrumentId::new(Exchange::Nse, "TCS"),
             side,
-            quantity,
-            price,
-            Currency::Inr,
-            WireUnixNanos::from_u64(at as u64 * 1_000_000_000),
-            WireUnixNanos::from_u64(at as u64 * 1_000_000_000),
+            Price(Decimal::try_from(price).expect("finite price")),
+            Quantity(Decimal::try_from(quantity).expect("finite quantity")),
+            "algo",
+            ts,
         )
-        .with_costs(WireMoney::from_major_f64(costs, Currency::Inr).expect("valid costs"))
+        .with_fee(Money::new(
+            Decimal::try_from(costs).expect("finite costs"),
+            Currency::Inr,
+        ))
     }
 
     /// Two winners, one loser — a small journal the metrics can be checked
