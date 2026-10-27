@@ -1441,12 +1441,12 @@ const honbaFeed = {
 
         const rawBars = envelope.data.bars || [];
         return rawBars.map((bar) => ({
-            time: Math.floor(Date.parse(bar.ts_event.iso) / 1000),
-            open: bar.open,
-            high: bar.high,
-            low: bar.low,
-            close: bar.close,
-            volume: bar.volume,
+            time: Math.floor(Date.parse(bar.timestamp) / 1000),
+            open: Number(bar.open),
+            high: Number(bar.high),
+            low: Number(bar.low),
+            close: Number(bar.close),
+            volume: Number(bar.volume),
         }));
     },
 
