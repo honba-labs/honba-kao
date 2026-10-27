@@ -203,14 +203,23 @@ Continue the `plan.md` §7 punch list, same cadence (fix → `cargo check` →
 `make lint-design-system` → `rustfmt`/`clippy` on touched files only →
 report → confirm next target):
 
-1. **#1 remainder**: nav-rail redesign to actually expose the 41 new routes
+1. **OpenTerminalUI Mission Control Landing Page (`/home`)**:
+   - `honba-kao/plan-1.md` created, breaking down the full port of OpenTerminalUI's `HomePage.tsx` into 6 milestones.
+   - GitHub tracking issues created on `honba-labs/honba-kao`:
+     - #1: `[Epic] Align Post-Login Landing Page with OpenTerminalUI Mission Control Dashboard`
+     - #2: `[UI-Core] Port OpenTerminalUI Home Primitives: LiveClockStrip, MarketHeatStrip, MetricCard, SystemHealthBar, QuickNavGrid`
+     - #3: `[App] Implement Composite Intelligence Panels (AiInsightCard, IdeasRadar, PortfolioMiniChart, IntelWire)`
+     - #4: `[App] Implement HomePage (Mission Control Dashboard) & Integrate Grid Layout`
+     - #5: `[Routing] Update Post-Login Destination, Root Redirect, and NavRail Anchor to /home`
+     - #6: `[Styles & Tests] Port ot-home-widget CSS and Add Parallel Verification Tests`
+2. **#1 remainder**: nav-rail redesign to actually expose the 41 new routes
    (currently reachable only by direct URL / CommandBar); decide whether to
    also clean up the still-present orphaned `page.rs` duplicates in `oms/`,
    `risk/`, `shadow-account/`, `position-sizer/` noted above.
-2. **#3 Information Density**: `Sparkline`/`RangeBar` ui-core primitives
+3. **#3 Information Density**: `Sparkline`/`RangeBar` ui-core primitives
    exist but are used in only ~2 files app-wide; most pages (e.g. `oms`,
    `ops`) are still plain card grids.
-3. **#7 remainder: get the new CI green.** All pre-existing, none fixed
+4. **#7 remainder: get the new CI green.** All pre-existing, none fixed
    in the #7 pass:
    - **clippy (main blocker)**: `cargo clippy --all-targets -- -D warnings`
      fails with ~28 errors: 22+ real compile errors in
@@ -244,7 +253,7 @@ report → confirm next target):
    - **Sibling pinning**: CI clones `honba-core`/`honba-ya`/`honba-me`/
      `honba-nou` at `main` HEAD; consider pinning to the honba-workspace
      submodule SHAs.
-4. **Regressions found while committing earlier work** (out of #7
+5. **Regressions found while committing earlier work** (out of #7
    scope, not fixed; line numbers are at HEAD `21f0b84`):
    - **Raw multi-line `<button>`s hidden by a lint gap**:
      `workbench/components/order_modal.rs` lines
@@ -294,3 +303,28 @@ report → confirm next target):
   (#1 each, listed above) are the sanctioned track for the full production
   Filings RAG backend — do not re-attempt building that backend inside
   `honba-kao`.
+
+## 4. plan-1.md Milestone Status (Mission Control /home port)
+
+- **Milestone 1 (ui-core home primitives)** — DONE, commit `9086cb7`;
+  `tests/home_primitives_test.rs` 6/6 green (re-verified this session).
+- **Milestone 2 (composite intelligence panels)** — DONE this session,
+  uncommitted. New `crates/honba-kao-app/src/features/home/components/`:
+  `ai_insight_card.rs` (on-demand AI outlook: idle/loading/done/error state
+  machine, sync `InsightFetcher` callback — async AI backend resolves before
+  invoking), `ideas_radar.rs` (Volume Shockers / 52W Breakouts / Mean
+  Reversion signal cards with trigger badges, grouping via
+  `build_radar_entries`, symbol links -> `ROUTES::SECURITY_HUB`), 
+  `portfolio_mini_chart.rs` (dual-line equity-vs-benchmark SVG reusing
+  ui-core `build_sparkline_geometry`/`get_nearest_point_index`,
+  `ot-home-widget-chart-*` classes for the Milestone 5 stylesheet),
+  `intel_wire.rs` (headlines + Bullish/Bearish/Neutral confidence chips,
+  optional `on_open_news` callback), `results_summary.rs`
+  (`ResultsSummaryCards` earnings scorecards QoQ/YoY revenue & PAT +
+  `IntelligenceTimeline` corporate-events/filings feed). Feature registered
+  as `pub mod home;` in `features/mod.rs`. Pure helpers are host-testable:
+  `tests/home_components.rs` 6/6 green. `cargo check` clean on host and
+  wasm32; clippy clean on touched files; fmt applied. Note: the Leptos view
+  macro mis-parses bare `>` inside attribute expressions (e.g.
+  `when=move || n > 0`) — precompute booleans outside the view.
+- **Next**: Milestone 3 (`home_page.rs` container wiring the above) then 4-6.

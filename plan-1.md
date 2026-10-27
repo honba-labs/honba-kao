@@ -93,17 +93,17 @@ honba-kao/
   - Keyboard navigation: Arrow Left/Right/Up/Down, Home, End, Enter/Space activation, roving `tabindex`.
 
 ### Milestone 2: Composite Intelligence Panels (`honba-kao-app/src/features/home/components`)
-- [ ] **2.1 `AiInsightCard`**:
+- [x] **2.1 `AiInsightCard`**:
   - Macro assessment card displaying regime classification and institutional flows summary.
-- [ ] **2.2 `IdeasRadar`**:
+- [x] **2.2 `IdeasRadar`**:
   - Visual cards for algorithmic signals (Volume Shockers, 52W Breakouts, Mean Reversion).
   - Badge tag indicating trigger criteria (e.g. `+3.8x vol`, `+4.2% momentum`).
-- [ ] **2.3 `PortfolioMiniChart`**:
+- [x] **2.3 `PortfolioMiniChart`**:
   - Dual-line SVG mini chart plotting portfolio equity curve against benchmark (NIFTY 50).
   - Compact date labels and crosshair hover inspection.
-- [ ] **2.4 `IntelWire`**:
+- [x] **2.4 `IntelWire`**:
   - Top 5-10 breaking headlines with source, timestamp, and sentiment chips (`Bullish`, `Bearish`, `Neutral` with confidence %).
-- [ ] **2.5 `ResultsSummaryCards` & `IntelligenceTimeline`**:
+- [x] **2.5 `ResultsSummaryCards` & `IntelligenceTimeline`**:
   - Corporate quarterly earnings scorecards (QoQ / YoY revenue & PAT growth) and corporate filings feed.
 
 ### Milestone 3: Mission Control Dashboard Page (`HomePage`)

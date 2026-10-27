@@ -10,6 +10,7 @@ pub mod compare;
 pub mod dom;
 pub mod dossiers;
 pub mod fno;
+pub mod home;
 pub mod landing;
 pub mod launchpad;
 pub mod markets;
