@@ -7,12 +7,15 @@
 //! No static .svg files. Use `HfIcon` or `outline::icon_name()`.
 
 pub mod composed;
+pub mod home;
 pub mod hooks;
 pub mod icons;
 pub mod primitive;
 pub mod theme;
 pub mod trading;
 
+// Re-export home primitives at top level
+pub use home::*;
 // Re-export icons at top level for convenience
 pub use icons::*;
 // Re-export trading primitives at top level
