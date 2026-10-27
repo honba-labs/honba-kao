@@ -25,6 +25,8 @@
 use leptos::prelude::*;
 use leptos::svg::Svg;
 
+use honba_kao_ui_core::HfButton;
+
 use crate::features::strategy_studio::canvas::dom;
 use crate::features::strategy_studio::canvas::edge::{EdgeView, SpliceMenu};
 use crate::features::strategy_studio::canvas::geometry::{
@@ -380,18 +382,34 @@ pub fn CanvasEditor(
             }}
 
             <div class="studio-canvas__controls">
-                <button type="button" title="Zoom in" on:click=move |_| ctx.zoom_centre(1.2)>
+                <HfButton
+                    unstyled=true
+                    title="Zoom in"
+                    on_click=Callback::new(move |_| ctx.zoom_centre(1.2))
+                >
                     "+"
-                </button>
-                <button type="button" title="Zoom out" on:click=move |_| ctx.zoom_centre(1.0 / 1.2)>
+                </HfButton>
+                <HfButton
+                    unstyled=true
+                    title="Zoom out"
+                    on_click=Callback::new(move |_| ctx.zoom_centre(1.0 / 1.2))
+                >
                     "−"
-                </button>
-                <button type="button" title="Fit to view" on:click=move |_| scene.with_untracked(|s| ctx.fit(s))>
+                </HfButton>
+                <HfButton
+                    unstyled=true
+                    title="Fit to view"
+                    on_click=Callback::new(move |_| scene.with_untracked(|s| ctx.fit(s)))
+                >
                     "Fit"
-                </button>
-                <button type="button" title="Re-run the auto-layout" on:click=move |_| store.auto_layout()>
+                </HfButton>
+                <HfButton
+                    unstyled=true
+                    title="Re-run the auto-layout"
+                    on_click=Callback::new(move |_| store.auto_layout())
+                >
                     "Layout"
-                </button>
+                </HfButton>
                 <span class="studio-canvas__zoom tnum">
                     {move || format!("{:.0}%", store.viewport.get().zoom * 100.0)}
                 </span>
