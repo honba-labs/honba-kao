@@ -25,7 +25,7 @@ DoD criteria (`plan.md` §7), current state:
 | 4 | Verified Research (Filings RAG) | **PARTIAL** — Filings tab real, Dossiers mock, full backend scoped out to 3 other repos |
 | 5 | Real-Time Performance | **PARTIAL** — automated tick-ingestion throughput/latency gate + criterion bench exist and pass; TTI/60fps-in-browser still manual |
 | 6 | Safety & Auditability (kill switches) | **FIXED** |
-| 7 | Production Build | Audited only — build actually succeeds today (plan.md's own notes claiming otherwise are stale) |
+| 7 | Production Build | **PARTIAL** — CI now runs every AGENTS.md §7.1 gate plus trunk release build, design-system/a11y lints, perf script and Playwright e2e; it starts red on pre-existing failures (clippy, fmt, 2 test targets, lint false positive, 8/19 e2e) and the shipped WASM is not yet wasm-opt'd (6.2 MiB) |
 
 Detail per criterion worked:
 
@@ -118,6 +118,40 @@ Detail per criterion worked:
   wasm-opt/size sections stay informational. TTI and 60fps *rendering* still
   need a real browser and remain a manual Chrome DevTools step.
 
+- **#7 Production Build**: `trunk build --release` succeeds, both in the
+  working tree and from a clean `git archive HEAD` snapshot with an empty
+  `target/` (~5 min, 6.2 MiB `_bg.wasm`). `.github/workflows/ci.yml` went
+  from one job (fmt/clippy/test) to three: `check-and-test` (fmt, clippy,
+  `cargo test --all --release`; each step `if: !cancelled()` so every gate
+  reports separately), `static-lints` (`make lint-design-system`, `make
+  lint-a11y`) and `web-build` (trunk v0.21.14 + binaryen version_119 from
+  pinned GitHub release tarballs, `trunk build --release`, upload `dist/`,
+  `scripts/check-performance.sh`, Node 22 + `npm ci` + `npx playwright
+  install --with-deps chromium` + `npx playwright test`, upload report on
+  failure). Found along the way: the old CI could never have built — the
+  root `Cargo.toml` has path deps on `../honba-core`, `../honba-ya`,
+  `../honba-me`, `../honba-nou`, and CI only checked out this repo. Both
+  Rust jobs now check this repo out into `honba-kao/` and `git clone
+  --depth 1` the four (public) siblings next to it, at their default
+  branch, not pinned. `check-performance.sh` now runs `wasm-opt -Oz
+  --all-features` into a temp file when wasm-opt is present and reports
+  the optimized size (informational; `dist/` untouched); only exercised
+  locally with a stub binary, since binaryen isn't installed here and
+  downloading it was blocked. E2E: `@playwright/test` 1.64.1 does install
+  from npm here (plan.md's "not installable offline" was stale too) and the
+  suite had never run: every spec called `page.getByLabelText`, which is a
+  Testing Library API, not Playwright (`getByLabel`), so 19/19 failed with a
+  TypeError. Fixed that plus two over-broad F&O locators (`locator('svg')`
+  → the payoff chart's `img` role; metrics text locator `.first()`), added
+  a `webServer` (`trunk serve --release --no-autoreload`, reused locally,
+  `E2E_BASE_URL` override skips it), committed `e2e/package-lock.json` for
+  `npm ci`, and gitignored `e2e/node_modules`/`test-results`/
+  `playwright-report`. Against a HEAD release build: **11/19 pass, 8 fail**
+  on real spec-vs-app divergences, listed in §3. The CI YAML is
+  verified only by `yaml.safe_load` and by running each step's commands
+  locally where possible — no GitHub Actions runner was available, so it
+  has never actually executed.
+
 Nothing from this session has been committed anywhere (honba-kao,
 honba-nou, honba-data, honba-tamashii) — all diffs sit uncommitted in each
 working tree.
@@ -144,11 +178,11 @@ working tree.
   runs `trunk build`, `make lint-design-system`, `make lint-a11y`,
   `scripts/check-performance.sh`, or the Playwright e2e suite under `e2e/`.
   None of this session's design-system fixes (or future ones) are actually
-  CI-gated yet.
+  CI-gated yet. **Superseded by the #7 pass**: all of these are now wired
+  (see #7 detail above).
 - `trunk build` and `cargo check` both **succeed today** on this checkout —
   `plan.md`'s own Phase 8.2/8.4 notes claiming "pre-existing compilation
-  errors preventing trunk build" are stale and should be corrected in a
-  future pass. The WASM output is still large (42 MiB uncompressed dev
+  errors preventing trunk build" were stale; corrected in the #7 pass. The WASM output is still large (42 MiB uncompressed dev
   build vs. the plan's 5 MiB guideline) and `wasm-opt`/binaryen isn't
   installed in this environment, so no optimization pass has ever actually
   run here.
@@ -176,12 +210,71 @@ report → confirm next target):
 2. **#3 Information Density**: `Sparkline`/`RangeBar` ui-core primitives
    exist but are used in only ~2 files app-wide; most pages (e.g. `oms`,
    `ops`) are still plain card grids.
-3. **#7 Production Build**: correct `plan.md`'s stale Phase 8.2/8.4 notes
-   (build actually works now), then decide whether to wire `trunk build` /
-   `lint-design-system` / `lint-a11y` / e2e into CI, and whether to chase the
-   WASM size target (needs `wasm-opt` installed, which isn't available in
-   this environment — may need to be a documented manual step or a CI-only
-   step).
+3. **#7 remainder: get the new CI green.** All pre-existing, none fixed
+   in the #7 pass:
+   - **clippy (main blocker)**: `cargo clippy --all-targets -- -D warnings`
+     fails with ~28 errors: 22+ real compile errors in
+     `honba-kao-ui-core`, 1-2 in `honba-kao-api-wasm`.
+   - **fmt**: `cargo fmt --check` at HEAD `21f0b84` reports 539 hunks in
+     135 files (all 5 crates, 402 of them in `honba-kao-app`). During the
+     #7 pass a workspace-wide reformat appeared uncommitted in the working
+     tree from another session; check whether it has landed before acting.
+   - **tests**: `cargo test --all --no-fail-fast` has 2 failing targets,
+     both `honba-kao-api-wasm`: lib test
+     `tests::screener::scan_predicate_includes_the_right_side_metric`
+     (`src/tests/screener.rs:47`) and `--test screener_conformance`
+     `every_predicate_case_matches_python`. Measured against the local
+     sibling checkouts (which have local-only commits and dirty
+     `Cargo.toml`s); CI clones sibling `main`, so results there may differ.
+   - **lint-design-system** exits 1 on the doc-comment false positive at
+     `simulator/components/command_bar.rs:23`.
+   - **e2e, 8/19 failing** (spec vs. app; decide which side is right):
+     `backtesting.spec.ts:21,31` (headings "Strategy Templates" / "Backtest
+     Runner" absent); `command_bar.spec.ts:19,34` (Ctrl+G doesn't focus
+     `.hf-command-bar__input`; ticker+DES doesn't navigate), `:47` (unknown
+     token navigates to `/equity/security/NOTAREALCOMMAND` instead of
+     staying on `/portfolio`); `ops.spec.ts:38` (second kill-switch click
+     blocked, almost certainly by the `ConfirmDialogContext` gate added in
+     #6, so the spec is stale); `security_hub.spec.ts:21,32,43`
+     (`aria-selected` renders as `""`, see the HfTabs bullet below).
+   - **Optimized assets**: the shipped WASM is never run through wasm-opt.
+     Options: `data-wasm-opt="z"` on the `rel="rust"` link in `index.html`
+     (trunk then fetches and runs wasm-opt itself) or a CI post-process.
+     6.2 MiB vs. the 5 MiB guideline.
+   - **Sibling pinning**: CI clones `honba-core`/`honba-ya`/`honba-me`/
+     `honba-nou` at `main` HEAD; consider pinning to the honba-workspace
+     submodule SHAs.
+4. **Regressions found while committing earlier work** (out of #7
+   scope, not fixed; line numbers are at HEAD `21f0b84`):
+   - **Raw multi-line `<button>`s hidden by a lint gap**:
+     `workbench/components/order_modal.rs` lines
+     97,132,183,207,224,238,247,325,382,405 and `order_ticket.rs` lines
+     42,55,78,141,225,254,269 (these replaced former `HfSegmentedControl`
+     usage); also `simulator/components/command_bar.rs` lines
+     269,303,322,357,390,467,508,550. The Makefile regex `<(button|input)[ >]`
+     only matches a tag opened on one line. Fix the lint (e.g. also match
+     `<button$`) and the markup together.
+   - **`chrono::Utc::now()` in `simulator/kernel/log.rs`** (lines
+     194,207,208,220,264,265): all inside the `#[cfg(test)] mod tests` that
+     starts at line 162, so test-only. Not a wall-clock-in-domain-logic
+     violation, but it is inline test code (next bullet).
+   - **Inline tests in `src/`** (breaks the mandatory parallel-`tests/`
+     rule): 40 `#[cfg(test)]` modules, ~304 `#[test]` fns at HEAD, e.g.
+     `simulator/kernel/{log.rs:162,run.rs:319,controls.rs:451,engine/controller.rs:694}`,
+     `strategy_studio/kernel/codegen.rs:823`, `graph.rs:861`,
+     `honba-kao-client/src/lib.rs:562`, `honba-kao-api-wasm/src/lib.rs:127`
+     (whole `src/tests/` dir), `honba-kao-ui-core/src/hooks/mod.rs:418`,
+     `primitive/progress.rs:40`. Full list: `git grep -n '#\[cfg(test)\]'
+     -- 'crates/*/src/**'`.
+   - **`workbench/stores/book_store.rs`**: the trade list is always empty
+     (line 426, "until a trades endpoint"), and Decimal wire values go
+     through `f64` (`.to_string().parse::<f64>()` at 495, 511, 550, 558,
+     560, 569, 576; `from_f64_retain` at 246; f64 money math at 207, 279),
+     which breaks the zero-floats policy.
+   - **HfTabs `aria-selected`**: `honba-kao-ui-core/src/primitive/tabs.rs:55`
+     (`aria-selected=move || is_active()`) renders a bare boolean attribute
+     (`aria-selected=""`) instead of `"true"`/`"false"`. That is an a11y bug
+     and causes the 3 `security_hub.spec.ts` failures.
 
 ## 4. Operating Invariants
 
