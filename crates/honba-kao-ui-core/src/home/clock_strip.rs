@@ -40,7 +40,7 @@ pub fn default_clock_zones() -> Vec<LiveClockZone> {
 /// (Starts 2nd Sunday in March at 02:00, ends 1st Sunday in November at 02:00).
 fn is_us_dst(utc: NaiveDateTime) -> bool {
     let month = utc.month();
-    if month < 3 || month > 11 {
+    if !(3..=11).contains(&month) {
         return false;
     }
     if month > 3 && month < 11 {
@@ -125,15 +125,15 @@ pub fn LiveClockStrip(
     let is_fixed = now.is_some();
     let (current_time, set_current_time) = signal(now.unwrap_or_else(Utc::now));
 
-    if !is_fixed {
-        if let Ok(handle) = set_interval_with_handle(
+    if !is_fixed
+        && let Ok(handle) = set_interval_with_handle(
             move || {
                 set_current_time.set(Utc::now());
             },
             core::time::Duration::from_millis(update_interval_ms as u64),
-        ) {
-            on_cleanup(move || handle.clear());
-        }
+        )
+    {
+        on_cleanup(move || handle.clear());
     }
 
     let class_name = format!("ot-home-widget-clock-strip {class}")

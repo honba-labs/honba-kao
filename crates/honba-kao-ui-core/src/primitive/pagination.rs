@@ -64,11 +64,10 @@ pub fn HfPaginationLink(
             aria-current=active.then_some("page")
             aria-disabled=disabled.then_some("true")
             on:click=move |ev| {
-                if !disabled {
-                    if let Some(cb) = on_click {
+                if !disabled
+                    && let Some(cb) = on_click {
                         cb.run(ev);
                     }
-                }
             }
         >
             {children()}

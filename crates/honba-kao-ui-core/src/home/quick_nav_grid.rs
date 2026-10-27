@@ -193,8 +193,8 @@ pub fn QuickNavGrid(
                                     if let Some(idx) = target_idx {
                                         ev.prevent_default();
                                         let clamped = idx.min(total_items.saturating_sub(1));
-                                        if let Some(target_item) = items_for_key.get(clamped) {
-                                            if !target_item.disabled {
+                                        if let Some(target_item) = items_for_key.get(clamped)
+                                            && !target_item.disabled {
                                                 set_active_index.set(clamped);
 
                                                 #[cfg(target_arch = "wasm32")]
@@ -211,7 +211,6 @@ pub fn QuickNavGrid(
                                                     }
                                                 }
                                             }
-                                        }
                                     }
                                 };
 

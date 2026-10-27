@@ -124,7 +124,7 @@ pub fn format_number_with_commas(val: f64, max_decimals: usize) -> String {
     let bytes = int_str.as_bytes();
     let len = bytes.len();
     for (i, &b) in bytes.iter().enumerate() {
-        if i > 0 && (len - i) % 3 == 0 {
+        if i > 0 && (len - i).is_multiple_of(3) {
             formatted_int.push(',');
         }
         formatted_int.push(b as char);

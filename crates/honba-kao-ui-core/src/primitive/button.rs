@@ -152,11 +152,10 @@ pub fn HfButton(
             title=title
             role=role
             on:click=move |ev| {
-                if !disabled.get() && !loading {
-                    if let Some(cb) = on_click {
+                if !disabled.get() && !loading
+                    && let Some(cb) = on_click {
                         cb.run(ev);
                     }
-                }
             }
         >
             {content}
@@ -232,11 +231,10 @@ pub fn HfIconButton(
             aria-haspopup=has_popup
             aria-expanded=move || aria_expanded.map(|signal| signal.get().to_string())
             on:click=move |ev| {
-                if !disabled.get() {
-                    if let Some(cb) = on_click {
+                if !disabled.get()
+                    && let Some(cb) = on_click {
                         cb.run(ev);
                     }
-                }
             }
         >
             <svg
