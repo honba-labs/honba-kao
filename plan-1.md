@@ -140,12 +140,12 @@ honba-kao/
   - Import `home.css` in `main.css`.
 
 ### Milestone 6: Verification & Quality Assurance
-- [ ] **6.1 Parallel Tests in `tests/`**:
+- [x] **6.1 Parallel Tests in `tests/`**:
   - Test `LiveClockStrip` rendering and time formatting.
   - Test `MarketHeatStrip` item rendering and click events.
   - Test `QuickNavGrid` roving focus behavior.
   - Test routing invariants: login transitions to `/home`, root redirects to `/home` for authenticated sessions.
-- [ ] **6.2 CI Verification**:
+- [x] **6.2 CI Verification**:
   - Run `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, and `cargo test --workspace`.
-- [ ] **6.3 Inter-Agent Handoff**:
+- [x] **6.3 Inter-Agent Handoff**:
   - Update `.agents/HANDOFF.md` with milestone status and wire contracts.
