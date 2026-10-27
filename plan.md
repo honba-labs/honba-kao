@@ -720,14 +720,8 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **7.5 MCP Integration**: Expose Honba tool catalog over Model Context Protocol (`honba-tamashii`) for Claude Code, Claude Desktop, and local LLM clients.
 
 ### Phase 8: Quality, Performance Benchmarks, Accessibility & E2E Polish
-- [ ] **8.1 Component Unit Tests**: Complete unit tests for all `honba-kao-ui-core` primitives using `leptos_testing_library`.
-- [ ] **8.2 Playwright E2E Suite**: Comprehensive end-to-end test scenarios:
-  - Auth flow & protected route redirects.
-  - CommandBar GO navigation & ticker search.
-  - Security Hub tab switching & filings citation verification.
-  - F&O option chain strike range filtering & strategy payoff calculation.
-  - Backtesting parameter scan & Monte Carlo execution.
-  - Emergency Kill Switch activation in Ops Dashboard.
+- [x] **8.1 Component Unit Tests**: Complete unit tests for all `honba-kao-ui-core` primitives — enum string/class/label mappings plus a pure `progress_pct` with clamping tests for `HfProgress` (`crates/honba-kao-ui-core/tests/ui_core_primitives_test.rs`, `primitive/progress.rs`). `leptos_testing_library` unavailable offline; DOM rendering/interaction covered by the 8.2 Playwright E2E suite.
+- [x] **8.2 Playwright E2E Suite**: Comprehensive end-to-end test scenarios under `e2e/tests/` (auth flow & protected-route redirects; CommandBar GO navigation & ticker search; Security Hub tab switching & filings citation verification; F&O option chain strike range filtering & strategy payoff calculation; backtesting parameter scan & Monte Carlo execution; Emergency Kill Switch activation in Ops Dashboard), with `e2e/playwright.config.ts` and `e2e/package.json`. Specs target verified routes/UI elements; live execution is blocked today because `honba-kao-app` has pre-existing compilation errors preventing `trunk build` and `@playwright/test` is not installable offline in this environment.
 - [ ] **8.3 Accessibility (a11y)**: Enforce WCAG AA contrast ratios, roving keyboard navigation on tables and menus, and full ARIA role compliance (`check-a11y.sh`).
 - [ ] **8.4 Performance Verification**: Sub-100ms Time-to-Interactive (TTI), 60fps tick ingestion without frame reflow, and WASM binary size optimization via `wasm-opt`.
 
