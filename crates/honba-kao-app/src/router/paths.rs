@@ -17,6 +17,23 @@
 /// Route path constants (the `ROUTES` object).
 pub mod routes {
     pub const HOME: &str = "/";
+
+    // --- Markets & Overview (plan.md §5.1 "Markets & Overview") ----------
+    pub const MARKET: &str = "/equity/stocks";
+    pub const MONITORING: &str = "/equity/monitoring";
+    pub const WATCHLIST: &str = "/equity/watchlist";
+    pub const HOTLISTS: &str = "/equity/hotlists";
+    pub const HEATMAP: &str = "/equity/heatmap";
+    pub const NEWS: &str = "/equity/news";
+    pub const ECONOMICS: &str = "/equity/economics";
+    pub const COMMODITIES: &str = "/equity/commodities";
+    pub const FOREX: &str = "/equity/forex";
+    pub const CRYPTO: &str = "/equity/crypto";
+    pub const BONDS: &str = "/equity/bonds";
+    pub const YIELD_CURVE: &str = "/equity/yield-curve";
+    pub const ETF: &str = "/equity/etf-analytics";
+    pub const MUTUAL_FUNDS: &str = "/equity/mutual-funds";
+
     pub const LOGIN: &str = "/login";
     pub const REGISTER: &str = "/register";
     pub const RESET_PASSWORD: &str = "/reset-password";
@@ -27,6 +44,17 @@ pub mod routes {
     pub const SECURITY_HUB: &str = "/equity/security";
     /// Research Dossiers (Phase 2.5) — mock-data page.
     pub const RESEARCH_DOSSIERS: &str = "/equity/research-dossiers";
+
+    // --- Research (plan.md §5.1 "Research") -------------------------------
+    pub const FACTORS: &str = "/equity/factors";
+    pub const INSIDER: &str = "/equity/insider";
+    pub const DIVIDENDS: &str = "/equity/dividends";
+    pub const EARNINGS: &str = "/equity/earnings";
+    pub const INTELLIGENCE: &str = "/equity/intelligence-timeline";
+    pub const RESEARCH_LIBRARY: &str = "/equity/research";
+    pub const SECTOR_ROTATION: &str = "/equity/sector-rotation";
+    pub const RELATIVE_STRENGTH: &str = "/equity/rs";
+
     /// Derivatives & F&O (Phase 3) — Option Chain, mock-data page.
     pub const FNO: &str = "/fno";
     /// Multi-Leg Strategy Builder (Phase 3.3) — mock-data page.
@@ -36,6 +64,9 @@ pub mod routes {
     pub const FNO_GREEKS: &str = "/fno/greeks";
     pub const FNO_FUTURES: &str = "/fno/futures";
     pub const FNO_FLOW: &str = "/fno/flow";
+    pub const FNO_PCR: &str = "/fno/pcr";
+    pub const FNO_HEATMAP: &str = "/fno/heatmap";
+    pub const FNO_EXPIRY: &str = "/fno/expiry";
     /// Black-Scholes Option Greeks Calculator (Phase 3.4b) — live calculator.
     pub const OPTION_GREEKS: &str = "/equity/option-greeks";
     /// Chart Workstation (Phase 4.1) — multi-pane charts.
@@ -46,6 +77,8 @@ pub mod routes {
     pub const DOM: &str = "/equity/dom";
     /// Time & Sales print tape (Phase 4.4) — mock-data page.
     pub const TAPE: &str = "/equity/tape";
+    /// Compare (plan.md §5.1 "Charts & Workstations") — normalized multi-symbol overlay.
+    pub const COMPARE: &str = "/equity/compare";
     /// Launchpad (Phase 4.5) — mosaic workspace, mock-data page.
     pub const LAUNCHPAD: &str = "/equity/launchpad";
     /// Launchpad pop-out window (Phase 4.5) — `?panel=<slug>`, outside the shell.
@@ -54,8 +87,23 @@ pub mod routes {
     pub const BACKTESTING: &str = "/backtesting";
     /// Model Lab (Phase 5.4) — experiment registry and leaderboard.
     pub const MODEL_LAB: &str = "/backtesting/model-lab";
+    /// Model Governance (plan.md §5.1 "Quant & Backtesting") — reuses [`MODEL_LAB`]'s page.
+    pub const MODEL_GOVERNANCE: &str = "/backtesting/model-governance";
+    pub const ALGO_FRAMEWORK: &str = "/backtesting/algorithm-framework";
+    /// Stat Lab (Phase 5.6) — statistical research lab.
+    pub const STAT_LAB: &str = "/equity/stat-lab";
+    /// Pair Trading (Phase 5.6) — cointegration and spread trading lab.
+    pub const PAIR_TRADING: &str = "/equity/pair-trading";
+    pub const ALPHA_ZOO: &str = "/equity/alpha-zoo";
+    pub const RESEARCH_AUTOPILOT: &str = "/equity/research-autopilot";
+    pub const STRATEGY_EXPORT: &str = "/equity/strategy-export";
     /// Portfolio Lab & Optimizer (Phase 5.5) — strategy blending and optimization.
     pub const PORTFOLIO_LAB: &str = "/equity/portfolio/lab";
+    pub const PORTFOLIO_OPTIMIZER: &str = "/backtesting/portfolio-optimizer";
+    /// Paper Trading (plan.md §5.1 "Portfolio & Execution").
+    pub const PAPER: &str = "/equity/paper";
+    pub const JOURNAL: &str = "/equity/journal";
+    pub const ALERTS: &str = "/equity/alerts";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -72,6 +120,20 @@ pub mod routes {
     pub const POSITION_SIZER: &str = "/equity/position-sizer";
     /// Shadow Account Reconciler (Phase 6.5) — broker statement vs internal book reconciliation and violation reporting.
     pub const SHADOW_ACCOUNT: &str = "/equity/shadow-account";
+
+    // --- Risk, OMS & Operations (plan.md §5.1 "Risk, OMS & Operations") --
+    pub const CORRELATION: &str = "/equity/correlation";
+    pub const COCKPIT: &str = "/equity/cockpit";
+    pub const DATA_QUALITY: &str = "/equity/data-quality";
+    pub const REPORTS: &str = "/equity/reports";
+
+    // --- System & Auth (plan.md §5.1 "System & Auth") ---------------------
+    pub const PLUGINS: &str = "/equity/plugins";
+    pub const SAVED_VIEWS: &str = "/equity/saved-views";
+    /// Account home — profile, API keys and sessions (distinct from the
+    /// [`SETTINGS`]/[`FUNDS`] account cluster already wired into the rail).
+    pub const ACCOUNT: &str = "/account";
+    pub const ABOUT: &str = "/about";
 }
 
 /// Alias so call sites read `ROUTES::PORTFOLIO`.
@@ -108,6 +170,10 @@ pub enum Page {
     Settings,
     Funds,
     Risk,                      // Phase 6.1
+    Oms,                       // Phase 6.2
+    Ops,                       // Phase 6.3
+    PositionSizer,             // Phase 6.4
+    ShadowAccount,             // Phase 6.5
     Login,
     Register,
 }
@@ -140,10 +206,10 @@ impl Page {
             Page::ModelLab => "model_lab",
             Page::PortfolioLab => "portfolio_lab",
             Page::Risk => "risk",
-            Page::OMS => "OMS",
-            Page::OPS => "ops",
-            Page::POSITION_SIZER => "position_sizer",
-            Page::SHADOW_ACCOUNT => "shadow_account",
+            Page::Oms => "oms",
+            Page::Ops => "ops",
+            Page::PositionSizer => "position_sizer",
+            Page::ShadowAccount => "shadow_account",
             Page::Tradebook => "tradebook",
             Page::Settings => "settings",
             Page::Funds => "funds",
@@ -178,6 +244,11 @@ impl Page {
             Page::Backtesting => "Backtesting",
             Page::ModelLab => "Model Lab",
             Page::PortfolioLab => "Portfolio Lab",
+            Page::Risk => "Risk",
+            Page::Oms => "OMS",
+            Page::Ops => "Ops",
+            Page::PositionSizer => "Position Sizer",
+            Page::ShadowAccount => "Shadow Account",
             Page::Tradebook => "Tradebook",
             Page::Settings => "Settings",
             Page::Funds => "Funds",
@@ -221,10 +292,10 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::SETTINGS => Some(Page::Settings),
         r if r == ROUTES::FUNDS => Some(Page::Funds),
         r if r == ROUTES::RISK => Some(Page::Risk),
-        r if r == ROUTES::OMS => Some(Page::OMS),
-        r if r == ROUTES::OPS => Some(Page::OPS),
-        r if r == ROUTES::POSITION_SIZER => Some(Page::POSITION_SIZER),
-        r if r == ROUTES::SHADOW_ACCOUNT => Some(Page::SHADOW_ACCOUNT),
+        r if r == ROUTES::OMS => Some(Page::Oms),
+        r if r == ROUTES::OPS => Some(Page::Ops),
+        r if r == ROUTES::POSITION_SIZER => Some(Page::PositionSizer),
+        r if r == ROUTES::SHADOW_ACCOUNT => Some(Page::ShadowAccount),
         r if r == ROUTES::LOGIN => Some(Page::Login),
         r if r == ROUTES::REGISTER => Some(Page::Register),
         _ => None,

@@ -10,18 +10,24 @@ mod fmt;
 
 pub mod black_scholes;
 
+pub mod expiry_page;
 pub mod flow_page;
+pub mod fno_heatmap_page;
 pub mod futures_page;
 pub mod greeks_heatmap_page;
 pub mod oi_page;
 pub mod option_chain_page;
 pub mod option_greeks_page;
+pub mod pcr_page;
 pub mod strategy_builder_page;
 
+pub use expiry_page::ExpiryPage;
 pub use flow_page::FlowPage;
+pub use fno_heatmap_page::FnoHeatmapPage;
 pub use futures_page::FuturesPage;
 pub use greeks_heatmap_page::GreeksHeatmapPage;
 pub use oi_page::OiPage;
 pub use option_chain_page::OptionChainPage;
 pub use option_greeks_page::OptionGreeksPage;
+pub use pcr_page::PcrPage;
 pub use strategy_builder_page::StrategyBuilderPage;
