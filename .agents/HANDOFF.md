@@ -308,26 +308,42 @@ report → confirm next target):
 
 - **Milestone 1 (ui-core home primitives)** — DONE, commit `9086cb7`;
   `tests/home_primitives_test.rs` 6/6 green (re-verified this session).
-- **Milestone 2 (composite intelligence panels)** — DONE this session,
-  uncommitted. New `crates/honba-kao-app/src/features/home/components/`:
-  `ai_insight_card.rs` (on-demand AI outlook: idle/loading/done/error state
-  machine, sync `InsightFetcher` callback — async AI backend resolves before
-  invoking), `ideas_radar.rs` (Volume Shockers / 52W Breakouts / Mean
-  Reversion signal cards with trigger badges, grouping via
-  `build_radar_entries`, symbol links -> `ROUTES::SECURITY_HUB`), 
-  `portfolio_mini_chart.rs` (dual-line equity-vs-benchmark SVG reusing
-  ui-core `build_sparkline_geometry`/`get_nearest_point_index`,
-  `ot-home-widget-chart-*` classes for the Milestone 5 stylesheet),
-  `intel_wire.rs` (headlines + Bullish/Bearish/Neutral confidence chips,
-  optional `on_open_news` callback), `results_summary.rs`
-  (`ResultsSummaryCards` earnings scorecards QoQ/YoY revenue & PAT +
-  `IntelligenceTimeline` corporate-events/filings feed). Feature registered
-  as `pub mod home;` in `features/mod.rs`. Pure helpers are host-testable:
-  `tests/home_components.rs` 6/6 green. `cargo check` clean on host and
-  wasm32; clippy clean on touched files; fmt applied. Note: the Leptos view
-  macro mis-parses bare `>` inside attribute expressions (e.g.
-  `when=move || n > 0`) — precompute booleans outside the view.
-- **Next**: Milestone 3 (`home_page.rs` container wiring the above) then 4-6.
+- **Milestone 2 (composite intelligence panels)** — DONE, commit `312965c`;
+  `tests/home_components.rs` 6/6 green.
+- **Milestone 3 (Mission Control Dashboard page / `home_page.rs`)** — DONE;
+  `crates/honba-kao-app/src/features/home/home_page.rs` (322 lines) fully
+  implements the header ribbon, Market Heat Strip, 2-column grid, and
+  QuickNavGrid launch matrix per plan-1.md §3. Plan checkboxes not yet
+  marked off in `plan-1.md`.
+- **Milestone 4 (Routing, Navigation & Session Policy)** — DONE; all 4
+  sub-tasks already implemented and checked off in `plan-1.md`:
+  `ROUTES::HOME = "/home"` (`paths.rs:19`), `/home` route inside `AppShell`
+  + `RootRoute` auth/guest split (`routes.rs:91,222-233`),
+  `LoginPage` → `navigate(ROUTES::HOME)` (`login_page.rs:31`),
+  `NavRail` HM anchor item (`nav_rail.rs:40-45`).
+- **Milestone 5 (Stylesheet & Theme Token Integration)** — DONE, commit
+  `a8a50b3`. `style/home.css` (`.ot-home-widget-*` selectors) imported in
+  `style/main.css:7`; semantic theme variables added to `style/themes.css`
+  (`--card-background-color`, `--accent-color`, `--color-up`, `--color-down`);
+  `ot-home-tone-up/down/neutral` utilities bound to `--color-up`/`--color-down`.
+- **Milestone 6 (Verification & QA)** — IN PROGRESS:
+  - **6.1 Tests**: New
+    `crates/honba-kao-app/tests/routing_invariants.rs` (8/8 green) covers
+    route constants (`ROUTES::HOME == "/home"`), path→`Page` mapping via
+    `get_current_page_for_path`, and unknown-path → `None`. Existing
+    `tests/home_primitives_test.rs` (6/6) covers LiveClockStrip,
+    MarketHeatStrip, QuickNavGrid; `tests/home_components.rs` (6/6) covers
+    composite panels. No routing-invariant tests existed before this pass.
+  - **6.2 CI Verification**: `cargo test --workspace` has 1 pre-existing
+    failure (`honba-kao-api-wasm` `scan_predicate_includes_the_right_side_metric`,
+    unrelated to this work — no leptos dependency). `cargo fmt --check` has
+    539 pre-existing hunks across 135 files (notably `home_page.rs` imports,
+    Milestone 3 code not touched this session). `cargo clippy --all-targets
+    -- -D warnings` has ~26 pre-existing errors, all in
+    `honba-kao-ui-core`/`honba-kao-api-wasm` library code, none in
+    `routing_invariants.rs`. All failures pre-date this session and are
+    tracked in §3 of this file.
+  - **6.3 Inter-Agent Handoff**: this section.
 
 ## 5. 2026-10-27: Leptos 0.7 -> 0.8 dependency migration
 
