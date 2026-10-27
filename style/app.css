@@ -11,10 +11,9 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 60px minmax(0, 1fr);
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
     "topbar topbar"
-    "ticker ticker"
     "rail main";
   background: var(--canvas);
 }
@@ -24,7 +23,6 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "topbar"
-    "ticker"
     "main";
 }
 
@@ -283,8 +281,11 @@
   flex-shrink: 0;
 }
 
-.header-bar__spacer {
-  flex: 1;
+.header-bar__search {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
 }
 
 .header-bar__actions {
@@ -347,81 +348,6 @@
 
 .header-bar__cta a:hover {
   filter: brightness(1.06);
-}
-
-/* --- Ticker tape (scrolling quote strip under the header) ---------------- */
-/* One line of quotes looping on a CSS marquee. The track holds two copies of
-   the items so the -50% translate is seamless. Hover pauses the scroll. */
-.ticker-tape {
-  grid-area: ticker;
-  position: relative;
-  overflow: hidden;
-  height: 30px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--hair);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-}
-
-.ticker-tape__track {
-  display: flex;
-  width: max-content;
-  height: 100%;
-  animation: ticker-tape-scroll 60s linear infinite;
-}
-
-.ticker-tape:hover .ticker-tape__track {
-  animation-play-state: paused;
-}
-
-.ticker-tape__copy {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.ticker-tape__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 18px;
-  white-space: nowrap;
-  border-right: 1px solid var(--hair);
-}
-
-.ticker-tape__symbol {
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.ticker-tape__change--up {
-  color: var(--pnl-gain);
-}
-
-.ticker-tape__change--down {
-  color: var(--pnl-loss);
-}
-
-@keyframes ticker-tape-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* Reduced motion: no marquee; the strip becomes a manually scrollable row. */
-@media (prefers-reduced-motion: reduce) {
-  .ticker-tape {
-    overflow-x: auto;
-  }
-
-  .ticker-tape__track {
-    animation: none;
-  }
 }
 
 /* --- Trading mode indicator (PAPER | LIVE) ------------------------------- */
@@ -671,6 +597,10 @@
   }
 
   .header-bar__get-started {
+    display: none;
+  }
+
+  .header-bar__search {
     display: none;
   }
 }

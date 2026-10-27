@@ -11,9 +11,9 @@
 
 use leptos::prelude::*;
 
-use crate::router::chrome::{HeaderBar, NavRail, SiteFooter, TickerTape};
+use crate::router::chrome::{HeaderBar, NavRail, SiteFooter};
 use crate::router::paths::Page;
-use crate::shared::components::{CommandBar, CommandPalette, LoginRequiredOverlay, PaletteStudio};
+use crate::shared::components::{CommandPalette, LoginRequiredOverlay, PaletteStudio};
 use crate::shared::contexts::SymbolLinkContext;
 use crate::shared::stream::feed::start_market_feed;
 
@@ -56,7 +56,6 @@ pub fn AppChrome(
             }
         >
             <HeaderBar current_page=current_page />
-            <TickerTape />
             {show_rail
                 .then(|| {
                     view! {
@@ -68,8 +67,6 @@ pub fn AppChrome(
                     }
                 })}
             <main class="app-main">
-                // Persistent GO bar (Ctrl+G); lives in the chrome so it survives navigation.
-                <CommandBar />
                 <CommandPalette />
                 {children()}
             </main>

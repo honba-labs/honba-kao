@@ -1,7 +1,8 @@
-//! Top application bar: brand → spacer → actions.
+//! Top application bar: brand → search (the persistent GO bar) → actions.
 //! Navigation lives in the side icon rail (`nav_rail.rs`) and the account
-//! cluster is also rail-owned (bottom-left), so the bar carries only the brand
-//! block, the theme/language controls and the trading-mode indicator.
+//! cluster is also rail-owned (bottom-left), so the bar carries only the
+//! brand block, the `CommandBar`, the theme/language controls and the
+//! trading-mode indicator.
 //!
 //! Behaviours:
 //!   * sticky, and it lifts with a soft shadow once the page scrolls;
@@ -13,7 +14,7 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 
 use crate::router::paths::{Page, ROUTES};
-use crate::shared::components::BrandLogo;
+use crate::shared::components::{BrandLogo, CommandBar};
 use crate::shared::contexts::{use_auth, use_language};
 use crate::shared::stores::{TradingMode, trading_mode::use_trading_mode};
 use crate::shared::theme::{Mode, Preference, ThemeContext};
@@ -65,7 +66,12 @@ pub fn HeaderBar(
                 </A>
             </div>
 
-            <div class="header-bar__spacer" />
+            <div class="header-bar__search">
+                // Persistent GO bar (Ctrl+G); lives in the header so it
+                // survives navigation and anchors its dropdown under the
+                // top nav instead of the page body.
+                <CommandBar />
+            </div>
 
             <div class="header-bar__actions">
                 <div class="theme-picker">
