@@ -52,7 +52,7 @@ pub fn HfTabsTrigger(
         <button
             class=move || format!("hf-tabs__trigger {}", if is_active() { "hf-tabs__trigger--active" } else { "" }).trim().to_string()
             role="tab"
-            aria-selected=move || is_active()
+            aria-selected=move || if is_active() { "true" } else { "false" }
             data-value=value
             on:click=move |ev| {
                 parent_active.set(value.to_string());
