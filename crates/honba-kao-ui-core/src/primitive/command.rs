@@ -92,11 +92,10 @@ pub fn HfCommandItem(
                 .to_string()
             }
             on:click=move |ev| {
-                if !disabled {
-                    if let Some(cb) = on_select {
+                if !disabled
+                    && let Some(cb) = on_select {
                         cb.run(ev);
                     }
-                }
             }
         >
             {children()}

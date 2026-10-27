@@ -19,11 +19,10 @@ pub fn HfSwitch(
             aria-checked=checked
             disabled=disabled
             on:click=move |ev| {
-                if !disabled {
-                    if let Some(cb) = on_change {
+                if !disabled
+                    && let Some(cb) = on_change {
                         cb.run(ev);
                     }
-                }
             }
         >
             <span class="hf-switch__thumb" />

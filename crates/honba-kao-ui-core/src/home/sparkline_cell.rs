@@ -281,8 +281,8 @@ pub fn SparklineCell(
 
     let marker_color = color.clone();
     let active_markers_view = move || {
-        if let Some(pt) = active_point_memo.get() {
-            Some(view! {
+        active_point_memo.get().map(|pt| {
+            view! {
                 <line
                     class="ot-home-widget-sparkline-crosshair"
                     x1=pt.x
@@ -297,10 +297,8 @@ pub fn SparklineCell(
                     r="2.8"
                     fill=marker_color.clone()
                 />
-            })
-        } else {
-            None
-        }
+            }
+        })
     };
 
     let benchmark_line = (!benchmark_geometry.line_path.is_empty()).then(|| {

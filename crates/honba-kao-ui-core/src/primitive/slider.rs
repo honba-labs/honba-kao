@@ -34,11 +34,10 @@ pub fn HfSlider(
             aria-valuemax=max.to_string()
             aria-valuenow=value.to_string()
             on:input=move |ev| {
-                if let Some(cb) = on_change {
-                    if let Ok(parsed) = event_target_value(&ev).parse::<f64>() {
+                if let Some(cb) = on_change
+                    && let Ok(parsed) = event_target_value(&ev).parse::<f64>() {
                         cb.run(parsed);
                     }
-                }
             }
         />
     }

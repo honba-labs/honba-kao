@@ -34,7 +34,7 @@ pub fn use_click_outside(node_ref: NodeRef<leptos::html::Div>, callback: impl Fn
                 let target_el = ev
                     .target()
                     .and_then(|t| t.dyn_into::<web_sys::Element>().ok());
-                if !el.contains(target_el.as_ref().map(|e| &**e)) {
+                if !el.contains(target_el.as_deref()) {
                     (callback.borrow_mut())();
                 }
             });
@@ -97,10 +97,10 @@ pub fn use_focus_trap(
     active: leptos::prelude::RwSignal<bool>,
 ) {
     leptos::prelude::Effect::new(move |_| {
-        if active.get() {
-            if let Some(el) = node_ref.get() {
-                let _ = el.focus();
-            }
+        if active.get()
+            && let Some(el) = node_ref.get()
+        {
+            let _ = el.focus();
         }
     });
 }
@@ -108,37 +108,34 @@ pub fn use_focus_trap(
 /// Media query hook — returns true when the media query matches.
 pub fn use_media_query(query: &'static str) -> leptos::prelude::RwSignal<bool> {
     let matches = leptos::prelude::RwSignal::new(false);
-    if let Some(window) = web_sys::window() {
-        if let Some(mql) = window.match_media(query).ok().flatten() {
-            let m = matches.clone();
-            let mql = std::rc::Rc::new(mql);
-            let handler = {
-                let m = m.clone();
-                let mql = mql.clone();
-                move |_: web_sys::Event| {
-                    m.set(mql.matches());
-                }
-            };
-            let handler_closure = wasm_bindgen::closure::Closure::wrap(
-                Box::new(handler) as Box<dyn FnMut(web_sys::Event)>
-            );
-            let _ = mql.add_event_listener_with_callback(
-                "change",
-                handler_closure.as_ref().unchecked_ref(),
-            );
-            m.set(mql.matches());
-            // The same closure that was added is the one removed on cleanup.
-            let listener = StoredValue::new_local((mql, handler_closure));
-            on_cleanup(move || {
-                listener.with_value(|(mql, closure)| {
-                    let _ = mql.remove_event_listener_with_callback(
-                        "change",
-                        closure.as_ref().unchecked_ref(),
-                    );
-                });
-                listener.dispose();
+    if let Some(window) = web_sys::window()
+        && let Some(mql) = window.match_media(query).ok().flatten()
+    {
+        let m = matches;
+        let mql = std::rc::Rc::new(mql);
+        let handler = {
+            let mql = mql.clone();
+            move |_: web_sys::Event| {
+                m.set(mql.matches());
+            }
+        };
+        let handler_closure = wasm_bindgen::closure::Closure::wrap(
+            Box::new(handler) as Box<dyn FnMut(web_sys::Event)>
+        );
+        let _ = mql
+            .add_event_listener_with_callback("change", handler_closure.as_ref().unchecked_ref());
+        m.set(mql.matches());
+        // The same closure that was added is the one removed on cleanup.
+        let listener = StoredValue::new_local((mql, handler_closure));
+        on_cleanup(move || {
+            listener.with_value(|(mql, closure)| {
+                let _ = mql.remove_event_listener_with_callback(
+                    "change",
+                    closure.as_ref().unchecked_ref(),
+                );
             });
-        }
+            listener.dispose();
+        });
     }
     matches
 }
@@ -152,25 +149,22 @@ pub fn use_local_storage<
 ) -> leptos::prelude::RwSignal<T> {
     let value = leptos::prelude::RwSignal::new(default.clone());
     // Load from localStorage on init
-    if let Some(window) = web_sys::window() {
-        if let Some(storage) = window.local_storage().ok().flatten() {
-            if let Ok(Some(saved)) = storage.get_item(key) {
-                if let Ok(parsed) = serde_json::from_str::<T>(&saved) {
-                    value.set(parsed);
-                }
-            }
-        }
+    if let Some(window) = web_sys::window()
+        && let Some(storage) = window.local_storage().ok().flatten()
+        && let Ok(Some(saved)) = storage.get_item(key)
+        && let Ok(parsed) = serde_json::from_str::<T>(&saved)
+    {
+        value.set(parsed);
     }
     // Save to localStorage on change
     let key_owned = key.to_string();
     leptos::prelude::Effect::new(move |_| {
         let v = value.get();
-        if let Ok(serialized) = serde_json::to_string(&v) {
-            if let Some(window) = web_sys::window() {
-                if let Some(storage) = window.local_storage().ok().flatten() {
-                    let _ = storage.set_item(&key_owned, &serialized);
-                }
-            }
+        if let Ok(serialized) = serde_json::to_string(&v)
+            && let Some(window) = web_sys::window()
+            && let Some(storage) = window.local_storage().ok().flatten()
+        {
+            let _ = storage.set_item(&key_owned, &serialized);
         }
     });
     value
@@ -186,17 +180,17 @@ pub fn use_debounce<T: Clone + Send + Sync + 'static>(
 
     leptos::prelude::Effect::new(move |_| {
         let val = input.get();
-        let debounced = debounced.clone();
+        let debounced = debounced;
         let mut pending = pending.borrow_mut();
-        if let Some(handle) = pending.take() {
-            if let Some(window) = web_sys::window() {
-                let _ = window.clear_timeout_with_handle(handle);
-            }
+        if let Some(handle) = pending.take()
+            && let Some(window) = web_sys::window()
+        {
+            window.clear_timeout_with_handle(handle);
         }
         if let Some(window) = web_sys::window() {
             let handle = window
                 .set_timeout_with_callback_and_timeout_and_arguments_0(
-                    &wasm_bindgen::closure::Closure::wrap(Box::new(move || {
+                    wasm_bindgen::closure::Closure::wrap(Box::new(move || {
                         debounced.set(val.clone());
                     })
                         as Box<dyn FnMut()>)
@@ -274,8 +268,7 @@ pub fn use_market_phase() -> leptos::prelude::RwSignal<String> {
 
 /// Trading state (HALTED/REDUCING/ACTIVE) sync hook.
 pub fn use_trading_state() -> leptos::prelude::RwSignal<String> {
-    let state = leptos::prelude::RwSignal::new("Active".to_string());
-    state
+    leptos::prelude::RwSignal::new("Active".to_string())
 }
 /// The rendered slice `[start, end)` of a fixed-row-height virtual list.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
