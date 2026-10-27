@@ -2100,3 +2100,309 @@
 .sc-fh__cell--s4 { background: color-mix(in srgb, var(--pnl-gain) 40%, var(--surface-2)); }
 .sc-fh__cell--s5 { background: color-mix(in srgb, var(--pnl-gain) 85%, var(--surface-2)); }
 .sc-fh__legend { margin-top: 12px; font-size: 12px; color: var(--ink-3); }
+
+/* ========================================================================= */
+/* Screener v2: hero deck, preset shelf, workspace grid, tab bar, score      */
+/* badge, factor chips, range trend (Milestone 1, plan-screener.md)         */
+/* ========================================================================= */
+
+/* --- Hero deck -------------------------------------------------------- */
+.sc-hero-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sc-hero-deck__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sc-hero-deck__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sc-hero-deck__meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sc-hero-deck__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sc-search-input {
+  min-width: 220px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.sc-search-input:focus {
+  outline: none;
+  border-color: var(--primary-8);
+}
+
+.sc-universe-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+/* --- Preset shelf ------------------------------------------------------- */
+.sc-preset-shelf {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.sc-preset-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.sc-preset-card[data-active="true"] {
+  border-color: var(--primary-8);
+  background: color-mix(in srgb, var(--primary-8) 14%, var(--surface-2));
+}
+
+.sc-preset-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sc-preset-card__category {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --- Workspace grid ------------------------------------------------------ */
+.sc-workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 0;
+  flex: 1;
+  gap: 0;
+}
+
+.sc-workspace-grid[data-detail-open="true"] {
+  grid-template-columns: 1fr 360px;
+}
+
+.sc-workspace-primary {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sc-workspace-secondary {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--border-color);
+  background: var(--surface);
+}
+
+/* --- Tab bar -------------------------------------------------------------- */
+.sc-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 8px;
+}
+
+.sc-tab-bar__item {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+
+.sc-tab-bar__item[data-active="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--primary-8);
+}
+
+/* --- Generic chip / overflow --------------------------------------------- */
+.sc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-3);
+  color: var(--ink-3);
+}
+
+.sc-chip-overflow {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-3);
+  color: var(--muted);
+}
+
+/* --- Filter summary bar --------------------------------------------------- */
+.sc-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.sc-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.sc-filter-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface-3);
+  border-radius: 100px;
+  padding: 1px 8px;
+}
+
+.sc-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Score badge ----------------------------------------------------------- */
+.sc-score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-score-badge.badge-high {
+  background: rgba(0, 230, 118, 0.15);
+  color: var(--pnl-gain);
+}
+
+.sc-score-badge.badge-mid {
+  background: rgba(255, 215, 64, 0.15);
+  color: var(--warning-color);
+}
+
+.sc-score-badge.badge-low {
+  background: rgba(255, 82, 82, 0.15);
+  color: var(--pnl-loss);
+}
+
+/* --- Factor chips (Signals column) ----------------------------------------- */
+.sc-factor-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sc-factor-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.sc-factor-chip.factor-value {
+  background: color-mix(in srgb, var(--primary-8) 16%, transparent);
+  color: var(--primary-8);
+}
+
+.sc-factor-chip.factor-momentum {
+  background: color-mix(in srgb, var(--pnl-gain) 16%, transparent);
+  color: var(--pnl-gain);
+}
+
+.sc-factor-chip.factor-quality {
+  background: color-mix(in srgb, var(--secondary-8) 16%, transparent);
+  color: var(--secondary-8);
+}
+
+.sc-factor-chip.factor-lowvol {
+  background: var(--surface-3);
+  color: var(--ink-3);
+}
+
+/* --- Range bar cell with trend-state label ---------------------------------- */
+.sc-rangebar-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sc-rangebar-cell__trend {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--muted);
+}
+
+.sc-rangebar-cell[data-trend="near-high"] .sc-rangebar-cell__trend,
+.sc-rangebar-cell[data-trend="uptrend"] .sc-rangebar-cell__trend {
+  color: var(--pnl-gain);
+}
+
+.sc-rangebar-cell[data-trend="near-low"] .sc-rangebar-cell__trend,
+.sc-rangebar-cell[data-trend="downtrend"] .sc-rangebar-cell__trend {
+  color: var(--pnl-loss);
+}
+
+.sc-rangebar-cell[data-trend="range-bound"] .sc-rangebar-cell__trend {
+  color: var(--muted);
+}

@@ -11,6 +11,7 @@ pub mod home;
 pub mod hooks;
 pub mod icons;
 pub mod primitive;
+pub mod screener;
 pub mod theme;
 pub mod trading;
 
@@ -20,6 +21,8 @@ pub use home::*;
 pub use icons::*;
 // Re-export trading primitives at top level
 pub use trading::*;
+// Re-export screener primitives at top level
+pub use screener::*;
 // Re-export composed components at top level
 pub use composed::*;
 // Re-export hooks at top level
