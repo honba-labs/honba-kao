@@ -717,7 +717,7 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **7.2 Multi-Agent Debate**: Orchestrate bull vs bear debate with portfolio manager decision syntheses.
 - [x] **7.3 Action Proposals**: Render executable cards (paper order, watchlist, alert) requiring explicit user confirmation before dispatching.
 - [x] **7.4 Grounding & Citations**: Connect filings RAG quotes with verbatim verification directly into agent message cards.
-- [ ] **7.5 MCP Integration**: Expose Honba tool catalog over Model Context Protocol (`honba-tamashii`) for Claude Code, Claude Desktop, and local LLM clients.
+- [x] **7.5 MCP Integration**: Expose Honba tool catalog over Model Context Protocol (`honba-tamashii`) for Claude Code, Claude Desktop, and local LLM clients.
 
 ### Phase 8: Quality, Performance Benchmarks, Accessibility & E2E Polish
 - [ ] **8.1 Component Unit Tests**: Complete unit tests for all `honba-kao-ui-core` primitives using `leptos_testing_library`.
