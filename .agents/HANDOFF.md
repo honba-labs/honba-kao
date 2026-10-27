@@ -328,3 +328,96 @@ report → confirm next target):
   macro mis-parses bare `>` inside attribute expressions (e.g.
   `when=move || n > 0`) — precompute booleans outside the view.
 - **Next**: Milestone 3 (`home_page.rs` container wiring the above) then 4-6.
+
+## 5. 2026-10-27: Leptos 0.7 -> 0.8 dependency migration
+
+**Why**: leptos 0.7.x's macro crates (`leptos_macro`, `leptos_router_macro`,
+`reactive_stores_macro`, transitively via `rstml`/`syn_derive`) pulled in
+`proc-macro-error2 v2.0.1`, which has no newer release and triggers a Rust
+future-incompatibility warning (E0365, rustc issue #127909) on every build.
+`honba-kao-app`'s `flow-rs-leptos = "0.1.0-beta.2"` dependency already
+required `leptos = "0.8.9"` and was pulling leptos 0.8.22 in transitively
+alongside the direct 0.7.8 pin, so the workspace carried two full copies of
+leptos side by side. leptos 0.8's own macro crates don't depend on
+`proc-macro-error2` at all, so bumping removes the warning and the
+duplicate dependency tree in one move.
+
+**What changed** (commit `5d3de87`, `chore(kao): bump leptos 0.7 -> 0.8`):
+- `Cargo.toml` (workspace `[workspace.dependencies]`): `leptos = { version
+  = "0.7", features = ["csr"] }` -> `"0.8"`; `leptos_router = "0.7"` ->
+  `"0.8"`.
+- `crates/openalgo-charts-rs/Cargo.toml`: its own independent `leptos =
+  { version = "0.7", ... }` (not `leptos.workspace = true`) bumped the same
+  way.
+- **Zero source files changed.** `cargo check --workspace` (dev and prod
+  profiles) and `cargo check --target wasm32-unknown-unknown --workspace`
+  are all clean after the bump — no `.rs` edits were needed anywhere in
+  `honba-kao-app`, `honba-kao-ui-core`, `honba-kao-client`, or
+  `openalgo-charts-rs`. This is because the app was already written
+  against the newer, post-0.6 Leptos API surface (`signal()`/`RwSignal`,
+  `Effect::new`, `Memo::new`, `leptos_router::{components::*, hooks::*,
+  path!}`) that's unchanged between 0.7 and 0.8 for a CSR-only app; the
+  real 0.8.0 breaking changes (Axum 0.8 route-path syntax, custom
+  `FromServerFnError` server-function error types, `LocalResource` dropping
+  its `SendWrapper`, `PossibleRouteMatch` dyn-safety, removed `Default` on
+  `LeptosOptions`/`ConfFile`) are all SSR/server-function/Axum-integration
+  surface this workspace doesn't use (`leptos` is pulled in with
+  `features = ["csr"]` only).
+- `Cargo.lock` is gitignored in this repo (`.gitignore` line 1) and was
+  regenerated locally but never committed — nothing to stage there.
+
+**Verification**:
+- `cargo tree -i proc-macro-error2` in `honba-kao`: no matches (previously
+  resolved through `leptos_macro`, `leptos_router_macro`,
+  `reactive_stores_macro`, and `syn_derive`/`rstml`, all via leptos 0.7.8).
+- `cargo tree -p leptos` / `-p leptos_router`: exactly one version each
+  now (`leptos v0.8.22`, `leptos_router v0.8.17`); every `leptos_*` crate
+  in the lockfile is unified at 0.8.x (`leptos_config` 0.8.10, `leptos_dom`
+  0.8.8, `leptos_hot_reload` 0.8.7, `leptos_macro` 0.8.19,
+  `leptos_router_macro` 0.8.7, `leptos_server` 0.8.8).
+- `cargo check --workspace` / `--profile prod` / `--target
+  wasm32-unknown-unknown`: all clean, only the 2 pre-existing `dead_code`
+  warnings in `workbench/components/{drawing_rail.rs:114,pane_chart.rs:78}`
+  (unrelated to this migration, not touched).
+- `cargo test --all --no-fail-fast`: every leptos-dependent crate
+  (`honba-kao-app`, `honba-kao-ui-core`, `honba-kao-client`,
+  `openalgo-charts-rs`) is 100% green, including
+  `tests/home_primitives_test.rs`, `tests/home_components.rs`,
+  `tests/realtime_performance.rs`, `tests/strategy_studio_canvas.rs`, and
+  `honba-kao-ui-core`'s `ui_core_primitives_test.rs`. The only 2 failing
+  targets are `honba-kao-api-wasm --lib`
+  (`tests::screener::scan_predicate_includes_the_right_side_metric`,
+  `src/tests/screener.rs:47`) and `--test screener_conformance`
+  (`every_predicate_case_matches_python`) — this crate has **no leptos
+  dependency at all** and these are the exact same 2 pre-existing failures
+  already logged in §3 item 4 of this file before this migration started;
+  confirmed unaffected by it.
+- `cargo clippy --all-targets -- -D warnings`: same pre-existing debt as
+  already tracked in §3 item 4 ("clippy (main blocker)") — 26 errors (13
+  distinct sites counting lib + lib-test duplicates), all confined to
+  `honba-kao-ui-core` (9x collapsible-if, 1x `.clone()` on a `Copy`
+  `RwSignal<T>`, 1x unit let-binding, 1x needless reference, 1x
+  let-and-return), none leptos-API-related and none new — this migration
+  introduced zero new clippy findings. Since no `.rs` file needed to
+  change for the bump itself, there was nothing in scope for this task to
+  fix or reformat.
+
+**Follow-ups documented, not fixed** (none new; all already tracked in §3
+of this file): the honba-kao-ui-core clippy debt and the 2
+honba-kao-api-wasm test failures above pre-date this migration and are
+unrelated to it (no leptos involvement in either).
+
+**Observed but out of scope**: this session ran concurrently, in the same
+working tree, with another agent actively advancing plan-1.md Milestones
+4-6 (routing/nav-rail wiring, `style/home.css` / `style/themes.css` theme
+tokens, a new untracked `crates/honba-kao-app/tests/routing_invariants.rs`
+— see commits `a8a50b3`, `553c4e5`, `312965c`, `d10feac` and others on
+`main` made during this same window). None of that work, nor its files,
+were touched by this migration.
+
+**Next step** (unchanged by this migration — it only touched build
+dependencies): Milestone 3 (`home_page.rs` container wiring), as recorded
+in §4 above. By the time this entry was written, Milestones 4-6 also
+appeared to be progressing concurrently per the commit log; whoever picks
+up next should re-check §4's status against `git log` rather than trusting
+it as current, since it was not updated by the concurrent session.
