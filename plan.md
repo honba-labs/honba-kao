@@ -709,7 +709,7 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **6.1 Risk Dashboard**: Implement `/equity/risk` with VaR/CVaR, EWMA vol, PCA factor exposures, and crisis stress scenarios (2008 GFC, COVID-19, Rate Shock).
 - [x] **6.2 OMS & Pre-Trade Compliance**: Implement `/equity/oms` with pre-trade checks (OTR, circuit filter limits, restricted symbols) and immutable audit log.
 - [x] **6.3 Operations Console**: Implement `/equity/ops` with Trader/Quant/PM/Risk/System desks, emergency kill switches (Panic Sell All, Cancel All Pending, Halt Engine), and feed health monitoring.
-- [ ] **6.4 Position Sizer**: Build `/equity/position-sizer` with Fixed Fractional, Kelly Criterion, ATR volatility-adjusted sizing, and R:R calculations directly wired to `honba-core::sizing`.
+- [x] **6.4 Position Sizer**: Build `/equity/position-sizer` with Fixed Fractional, Kelly Criterion, ATR volatility-adjusted sizing, and R:R calculations directly wired to `honba-core::sizing`.
 - [ ] **6.5 Shadow Account Reconciler**: Implement `/equity/shadow-account` for automated broker statement vs internal book reconciliation and violation reporting.
 
 ### Phase 7: AI Research Agent Console, Multi-Agent Debate & MCP Bridge

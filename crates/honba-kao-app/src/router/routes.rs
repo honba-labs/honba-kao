@@ -42,6 +42,7 @@ use crate::features::risk::RiskPage;
 use crate::features::oms::OmsPage;
 use crate::features::ops::OpsPage;
 use crate::features::position_sizer::PositionSizerPage;
+use crate::features::shadow_account::ShadowAccountPage;
 use crate::features::simulator::SimulatorPage;
 use crate::features::strategy_studio::StrategyStudioPage;
 use crate::features::tape::TapePage;
@@ -104,6 +105,7 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/equity/oms") view=OmsPage />
                 <Route path=path!("/equity/ops") view=OpsPage />
                 <Route path=path!("/equity/position-sizer") view=PositionSizerPage />
+                <Route path=path!("/equity/shadow-account") view=ShadowAccountPage />
 
                 // --- User cluster -------------------------------------------
                 <Route path=path!("/settings") view=SettingsPage />
