@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Set E2E_BASE_URL to test an already-running server (no webServer is started).
+const externalBaseURL = process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.spec\.ts/,
@@ -10,7 +13,7 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
 
   use: {
-    baseURL: 'http://127.0.0.1:8080',
+    baseURL: externalBaseURL ?? 'http://127.0.0.1:8080',
     timezoneId: 'Asia/Kolkata',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -24,8 +27,14 @@ export default defineConfig({
     },
   ],
 
-  // The honba-kao app is served separately (see e2e/package.json notes):
-  //   trunk build && python3 -m http.server 8080 --directory dist
-  // webServer is intentionally omitted because honba-kao-app has pre-existing
-  // compilation errors that prevent `trunk build` today (see plan.md Phase 8.2 note).
+  // Serve the release build via trunk (SPA fallback for deep links such as
+  // /equity/ops). CI runs `trunk build --release` first, so this is a cache
+  // hit; locally an already-running `trunk serve` is reused.
+  webServer: externalBaseURL ? undefined : {
+    command: 'trunk serve --release --no-autoreload',
+    cwd: '..',
+    url: 'http://127.0.0.1:8080',
+    reuseExistingServer: !process.env.CI,
+    timeout: 300_000,
+  },
 });

@@ -5,8 +5,8 @@ const DEMO_PASSWORD = 'test123';
 
 async function signIn(page) {
   await page.goto('/login');
-  await page.getByLabelText('Email').fill(DEMO_EMAIL);
-  await page.getByLabelText('Password').fill(DEMO_PASSWORD);
+  await page.getByLabel('Email').fill(DEMO_EMAIL);
+  await page.getByLabel('Password').fill(DEMO_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL('/portfolio');
 }
@@ -44,9 +44,9 @@ test.describe('F&O option chain strike filtering & strategy payoff', () => {
     await expect(page.getByRole('button', { name: 'Iron Condor' })).toHaveAttribute('aria-pressed', 'true');
 
     // The expiry payoff curve is rendered as an SVG; strategic metrics follow.
-    await expect(page.locator('svg')).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Net payoff at expiry' })).toBeVisible();
     await expect(
-      page.locator('text=/max profit|max loss|breakeven|net debit|net credit/i')
+      page.locator('text=/max profit|max loss|breakeven|net debit|net credit/i').first()
     ).toBeVisible();
   });
 });

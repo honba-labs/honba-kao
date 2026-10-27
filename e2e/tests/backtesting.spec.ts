@@ -5,8 +5,8 @@ const DEMO_PASSWORD = 'test123';
 
 async function signIn(page) {
   await page.goto('/login');
-  await page.getByLabelText('Email').fill(DEMO_EMAIL);
-  await page.getByLabelText('Password').fill(DEMO_PASSWORD);
+  await page.getByLabel('Email').fill(DEMO_EMAIL);
+  await page.getByLabel('Password').fill(DEMO_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL('/portfolio');
 }
