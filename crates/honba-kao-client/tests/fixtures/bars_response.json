@@ -1,108 +1,52 @@
 {
   "bars": [
     {
-      "bar_type": {
-        "instrument_id": {
-          "symbol": "TCS",
-          "exchange": "NSE"
-        },
-        "spec": {
-          "step": 1,
-          "aggregation": "minute",
-          "price_type": "last"
-        }
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "open": 22000.0,
-      "high": 22044.0,
-      "low": 21978.0,
-      "close": 22010.0,
-      "volume": 12500.0,
-      "ts_event": {
-        "iso": "2023-11-14T22:25:05.000000000Z",
-        "unix_nanos": "1700000705000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-14T22:25:05.000000000Z",
-        "unix_nanos": "1700000705000000000"
-      }
+      "open": "22000.00",
+      "high": "22044.00000",
+      "low": "21978.00000",
+      "close": "22010.00",
+      "volume": "12500",
+      "timestamp": "2023-11-14T22:25:05Z"
     },
     {
-      "bar_type": {
-        "instrument_id": {
-          "symbol": "TCS",
-          "exchange": "NSE"
-        },
-        "spec": {
-          "step": 1,
-          "aggregation": "minute",
-          "price_type": "last"
-        }
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "open": 22025.0,
-      "high": 22069.05,
-      "low": 22002.975,
-      "close": 22035.0,
-      "volume": 12500.0,
-      "ts_event": {
-        "iso": "2023-11-14T22:30:05.000000000Z",
-        "unix_nanos": "1700001005000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-14T22:30:05.000000000Z",
-        "unix_nanos": "1700001005000000000"
-      }
+      "open": "22025.00",
+      "high": "22069.05000",
+      "low": "22002.97500",
+      "close": "22035.00",
+      "volume": "12500",
+      "timestamp": "2023-11-14T22:30:05Z"
     },
     {
-      "bar_type": {
-        "instrument_id": {
-          "symbol": "TCS",
-          "exchange": "NSE"
-        },
-        "spec": {
-          "step": 1,
-          "aggregation": "minute",
-          "price_type": "last"
-        }
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "open": 22050.0,
-      "high": 22094.1,
-      "low": 22027.95,
-      "close": 22060.0,
-      "volume": 12500.0,
-      "ts_event": {
-        "iso": "2023-11-14T22:35:05.000000000Z",
-        "unix_nanos": "1700001305000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-14T22:35:05.000000000Z",
-        "unix_nanos": "1700001305000000000"
-      }
+      "open": "22050.00",
+      "high": "22094.10000",
+      "low": "22027.95000",
+      "close": "22060.00",
+      "volume": "12500",
+      "timestamp": "2023-11-14T22:35:05Z"
     },
     {
-      "bar_type": {
-        "instrument_id": {
-          "symbol": "TCS",
-          "exchange": "NSE"
-        },
-        "spec": {
-          "step": 1,
-          "aggregation": "minute",
-          "price_type": "last"
-        }
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "open": 22075.0,
-      "high": 22119.15,
-      "low": 22052.925,
-      "close": 22085.0,
-      "volume": 12500.0,
-      "ts_event": {
-        "iso": "2023-11-14T22:40:05.000000000Z",
-        "unix_nanos": "1700001605000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-14T22:40:05.000000000Z",
-        "unix_nanos": "1700001605000000000"
-      }
+      "open": "22075.00",
+      "high": "22119.15000",
+      "low": "22052.92500",
+      "close": "22085.00",
+      "volume": "12500",
+      "timestamp": "2023-11-14T22:40:05Z"
     }
   ]
 }

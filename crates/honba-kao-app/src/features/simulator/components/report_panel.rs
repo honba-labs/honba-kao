@@ -37,7 +37,7 @@ pub fn ReportPanel(
             state
                 .response
                 .as_ref()
-                .and_then(|response| response.validation.clone())
+                .and_then(|response| response.validation.as_ref().map(honba_kao_client::wire::map_validation_block))
         })
     });
     let not_modelled = Memo::new(move |_| {

@@ -1,10 +1,8 @@
 {
   "strategies": [
     {
-      "id": "sha256:da444fa65e98325f2f440ca450eeddf0aa93b88a412589e5b0d6f3666c790fd0",
+      "id": "sha256:49201413c3e7610d5fd69eb83f9236efa3eb13d355d041d3d9067d1d79624afa",
       "ir": {
-        "schema_version": 4,
-        "strategy_api_version": "1.0.0",
         "manifest": {
           "api_version": "1.0.0",
           "name": "sma",
@@ -12,20 +10,18 @@
           "universe": {
             "explicit": [
               {
-                "symbol": "TCS",
-                "exchange": "NSE"
+                "exchange": "NSE",
+                "symbol": "TCS"
               }
             ]
           },
           "subscriptions": {
             "instruments": [
               {
-                "symbol": "TCS",
-                "exchange": "NSE"
+                "exchange": "NSE",
+                "symbol": "TCS"
               }
-            ],
-            "quotes": false,
-            "trades": false
+            ]
           },
           "driving_timeframe": {
             "interval": 5,
@@ -33,35 +29,22 @@
           },
           "warmup_bars": 20
         },
-        "universe": {
-          "named": null,
+        "subscriptions": {
           "instruments": [
             {
-              "symbol": "TCS",
-              "exchange": "NSE"
-            }
-          ]
-        },
-        "subscriptions": {
-          "bars": [
-            {
-              "symbol": "TCS",
-              "exchange": "NSE"
+              "exchange": "NSE",
+              "symbol": "TCS"
             }
           ],
-          "quotes": [],
-          "trades": []
+          "bars": [
+            {
+              "interval": 5,
+              "aggregation": "minute"
+            }
+          ],
+          "quotes": true,
+          "trades": true
         },
-        "driving_timeframe": {
-          "interval": 5,
-          "aggregation": "minute"
-        },
-        "timeframes": [
-          {
-            "interval": 5,
-            "aggregation": "minute"
-          }
-        ],
         "warmup_bars": 20
       }
     }

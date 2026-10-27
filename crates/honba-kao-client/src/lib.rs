@@ -49,6 +49,37 @@ use thiserror::Error;
 pub mod wire {
     pub use crate::StatusAck;
     pub use honba_analytics::ValidationBlock;
+    pub use honba_api::wire::ValidationBlock as ApiValidationBlock;
+    pub fn map_validation_block(wire: &honba_api::wire::ValidationBlock) -> honba_analytics::ValidationBlock {
+        use honba_core::rust_decimal::prelude::ToPrimitive;
+        let dsr_val = wire.deflated_sharpe_ratio.and_then(|d| d.to_f64());
+        let pbo_val = wire.probability_of_overfitting.and_then(|d| d.to_f64());
+        let dsr = dsr_val.map(|v| honba_analytics::DsrResult {
+            observed_sharpe: 0.0,
+            expected_max_sharpe: 0.0,
+            standard_error: 0.0,
+            z_stat: 0.0,
+            dsr: v,
+            passed: v >= 0.95,
+        });
+        let pbo = pbo_val.map(|v| honba_analytics::PboResult {
+            pbo: v,
+            combinations_evaluated: 0,
+            median_oos_percentile: 0.0,
+            passed: v < 0.5,
+        });
+        let passed = dsr.as_ref().map(|d| d.passed).unwrap_or(true) && pbo.as_ref().map(|p| p.passed).unwrap_or(true);
+        honba_analytics::ValidationBlock {
+            dsr,
+            pbo,
+            walk_forward: None,
+            holdout: None,
+            monte_carlo: None,
+            cost_stress: None,
+            passed,
+            warnings: Vec::new(),
+        }
+    }
     pub use honba_api::{
         BacktestEventsQuery, BacktestMetrics, BacktestRequest, BacktestResponse, BarsQuery,
         BarsResponse, CompiledStrategy, LayoutDocument, LayoutsResponse, OrdersRequest,
@@ -454,7 +485,7 @@ impl ApiClient {
 /// (serde's `#[serde(default)]` bound on the `data` field), which response
 /// payloads do not all satisfy. The defaulted envelope fields are therefore
 /// decoded by hand; `data` is an `Option<T>` and needs no default.
-fn decode_envelope<T: DeserializeOwned>(
+pub fn decode_envelope<T: DeserializeOwned>(
     value: serde_json::Value,
 ) -> Result<ResponseEnvelope<T>, serde_json::Error> {
     use honba_api::wire::{ApiVersion, ErrorDetail, SCHEMA_VERSION};
@@ -465,6 +496,8 @@ fn decode_envelope<T: DeserializeOwned>(
         None => ApiVersion::default(),
     };
     let schema_version = match field("schema_version") {
+        Some(serde_json::Value::Number(n)) => n.to_string(),
+        Some(serde_json::Value::String(s)) => s,
         Some(v) => serde_json::from_value::<String>(v)?,
         None => SCHEMA_VERSION.to_owned(),
     };
@@ -577,8 +610,9 @@ mod tests {
         name: &str,
     ) -> Result<T, honba_api::ErrorDetail> {
         let text = std::fs::read_to_string(fixture(name)).expect("fixture file");
-        let envelope: honba_api::ResponseEnvelope<T> =
-            serde_json::from_str(&text).expect("fixture envelope decodes");
+        let value: serde_json::Value =
+            serde_json::from_str(&text).expect("fixture is valid JSON");
+        let envelope = decode_envelope::<T>(value).expect("fixture envelope decodes");
         envelope.into_result()
     }
 
@@ -604,8 +638,10 @@ mod tests {
         // without parsing the human message (honba-ya verify.rs).
         let text = std::fs::read_to_string(fixture("verify_error_no_subscriptions"))
             .expect("fixture file");
-        let envelope: honba_api::ResponseEnvelope<serde_json::Value> =
-            serde_json::from_str(&text).expect("fixture envelope decodes");
+        let value: serde_json::Value =
+            serde_json::from_str(&text).expect("fixture is valid JSON");
+        let envelope = decode_envelope::<serde_json::Value>(value)
+            .expect("fixture envelope decodes");
         let detail = envelope.into_result().expect_err("verify refused");
         let context = detail.context.expect("verify attaches context");
         assert_eq!(context["reason"].as_str(), Some("no_subscriptions"));

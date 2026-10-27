@@ -137,6 +137,7 @@ const TRUST_LABELS: [(&str, &str); 6] = [
 /// each result wrapper carries its own `passed` verdict. The block-level
 /// `passed` is deliberately *not* a badge: the panel shows per-gate chips and
 /// that gate owns the aggregate decision (P5).
+
 pub fn trust_badges(validation: Option<&ValidationBlock>) -> Vec<TrustBadge> {
     let Some(block) = validation else {
         return Vec::new();
@@ -238,13 +239,11 @@ pub fn closed_round_trips(fills: &[WireTrade]) -> u32 {
     let mut trips = 0u32;
     for fill in fills {
         let before = held;
-        let sign = match fill.side() {
+        let sign = match fill.side {
             honba_kao_client::wire::WireOrderSide::Buy => 1.0,
             honba_kao_client::wire::WireOrderSide::Sell => -1.0,
-            // Guarded by the Trade door; a sideless fill would not parse.
-            _ => 0.0,
         };
-        held += sign * fill.quantity();
+        held += sign * fill.quantity.to_string().parse::<f64>().unwrap_or(0.0);
         if held.abs() <= 1e-9 {
             held = 0.0;
             if before.abs() > 1e-9 {
@@ -370,19 +369,20 @@ mod tests {
     #[test]
     fn closed_round_trips_counts_only_the_flattening_crossings() {
         use honba_kao_client::wire::{
-            Currency, Exchange, InstrumentId, OrderId, WireOrderSide, WireUnixNanos,
+            Exchange, InstrumentId, WireOrderSide,
         };
         let fill = |side: WireOrderSide, quantity: f64, minute: i64| {
-            let ts = 1_704_153_600 + minute * 60;
+            let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
             WireTrade::new(
-                OrderId::new("o"),
-                InstrumentId::new("TCS", Exchange::new("NSE")),
+                "f",
+                "o",
+                honba_core::uuid::Uuid::nil(),
+                InstrumentId::new(Exchange::Nse, "TCS"),
                 side,
-                quantity,
-                100.0,
-                Currency::Inr,
-                WireUnixNanos::from_u64(ts as u64 * 1_000_000_000),
-                WireUnixNanos::from_u64(ts as u64 * 1_000_000_000),
+                honba_core::Price::new(rust_decimal::Decimal::from(100)),
+                honba_core::Quantity::from_u64(quantity as u64),
+                "algo",
+                ts,
             )
         };
         let fills: &[honba_kao_client::wire::Trade] = &[

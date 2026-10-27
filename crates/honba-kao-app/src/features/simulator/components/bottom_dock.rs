@@ -62,10 +62,15 @@ pub fn BottomDock(
     let rows = Memo::new(move |_| analytics.with(|bundle| bundle.rows.clone()));
     let heatmap = Memo::new(move |_| analytics.with(|bundle| bundle.heatmap.clone()));
     let wire_total_return = Memo::new(move |_| {
-        analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.total_return))
+        analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.total_return.to_string().parse::<f64>().unwrap_or(0.0)))
     });
     let sharpe = Memo::new(move |_| {
-        analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.sharpe))
+        analytics.with(|bundle| {
+            bundle
+                .metrics
+                .as_ref()
+                .map(|metrics| metrics.sharpe.to_string().parse::<f64>().unwrap_or(0.0))
+        })
     });
     let equity_series = Memo::new(move |_| analytics.with(|bundle| bundle.equity_series.clone()));
     let run_window = Memo::new(move |_| analytics.with(|bundle| bundle.window.clone()));
@@ -168,7 +173,10 @@ pub fn BottomDock(
                                                 <span class=class>
                                                     {format!(
                                                         "{} Total Return",
-                                                        format_metric_value(Some(total), MetricKind::Percent),
+                                                        format_metric_value(
+                                                            Some(total),
+                                                            MetricKind::Percent,
+                                                        ),
                                                     )}
                                                 </span>
                                             }

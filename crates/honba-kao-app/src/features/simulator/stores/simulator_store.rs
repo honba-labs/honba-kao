@@ -220,10 +220,10 @@ impl SimulatorStore {
                         });
                 let run_metrics = metrics.as_ref().map(|metrics| RunMetrics {
                     trades: metrics.trades,
-                    net_pnl: metrics.net_pnl,
-                    sharpe: metrics.sharpe,
-                    max_drawdown: metrics.max_drawdown,
-                    total_return: metrics.total_return,
+                    net_pnl: metrics.net_pnl.to_string().parse::<f64>().unwrap_or(0.0),
+                    sharpe: metrics.sharpe.to_string().parse::<f64>().unwrap_or(0.0),
+                    max_drawdown: metrics.max_drawdown.to_string().parse::<f64>().unwrap_or(0.0),
+                    total_return: metrics.total_return.to_string().parse::<f64>().unwrap_or(0.0),
                 });
                 let input = AnalyticsInput {
                     metrics: run_metrics.as_ref(),
@@ -291,8 +291,8 @@ mod tests {
     use crate::features::simulator::stores::controls_store::ControlsPatch;
     use honba_kao_client::ClientError;
     use honba_kao_client::wire::{
-        BacktestRequest, BacktestResponse, CompiledStrategy, Currency, Exchange, InstrumentId,
-        OrderId, RunStatus, Trade, TradesResponse, WireOrderSide, WireUnixNanos,
+        BacktestRequest, BacktestResponse, CompiledStrategy, Exchange, InstrumentId,
+        RunStatus, Trade, TradesResponse, WireOrderSide,
     };
     use std::cell::{Cell, RefCell};
     use std::collections::VecDeque;
@@ -464,32 +464,23 @@ mod tests {
         serde_json::from_value(serde_json::json!({
             "id": id,
             "ir": {
-                "schema_version": 4,
-                "strategy_api_version": "1.0.0",
                 "manifest": {
                     "api_version": "1.0.0",
                     "name": "SMA Cross",
                     "source_hash": "sha256:abc",
                     "universe": { "explicit": [ { "symbol": "TCS", "exchange": "NSE" } ] },
                     "subscriptions": {
-                        "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ],
-                        "quotes": false,
-                        "trades": false
+                        "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ]
                     },
                     "driving_timeframe": { "interval": 5, "aggregation": "minute" },
                     "warmup_bars": 2
                 },
-                "universe": {
-                    "named": null,
-                    "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ]
-                },
                 "subscriptions": {
-                    "bars": [ { "symbol": "TCS", "exchange": "NSE" } ],
-                    "quotes": [],
-                    "trades": []
+                    "instruments": [ { "symbol": "TCS", "exchange": "NSE" } ],
+                    "bars": [ { "interval": 5, "aggregation": "minute" } ],
+                    "quotes": true,
+                    "trades": true
                 },
-                "driving_timeframe": { "interval": 5, "aggregation": "minute" },
-                "timeframes": [ { "interval": 5, "aggregation": "minute" } ],
                 "warmup_bars": 2
             }
         }))
@@ -508,15 +499,16 @@ mod tests {
     }
 
     fn completed_response(run_id: &str) -> BacktestResponse {
+        use rust_decimal::Decimal;
         BacktestResponse {
             run_id: run_id.to_string(),
             status: RunStatus::Completed,
             metrics: Some(honba_kao_client::wire::BacktestMetrics {
                 trades: 2,
-                net_pnl: 500.0,
-                sharpe: 1.2,
-                max_drawdown: 0.05,
-                total_return: 0.05,
+                net_pnl: Decimal::from(500),
+                sharpe: Decimal::new(12, 1),
+                max_drawdown: Decimal::new(5, 2),
+                total_return: Decimal::new(5, 2),
             }),
             assumptions: None,
             validation: None,
@@ -525,15 +517,17 @@ mod tests {
     }
 
     fn fill(minute: i64) -> Trade {
+        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
         Trade::new(
-            OrderId::new("o"),
-            InstrumentId::new("TCS", Exchange::new("NSE")),
+            "f",
+            "o",
+            honba_core::uuid::Uuid::nil(),
+            InstrumentId::new(Exchange::Nse, "TCS"),
             WireOrderSide::Buy,
-            10.0,
-            100.0,
-            Currency::Inr,
-            WireUnixNanos::from_u64((1_704_153_600 + minute * 60) as u64 * 1_000_000_000),
-            WireUnixNanos::from_u64((1_704_153_600 + minute * 60) as u64 * 1_000_000_000),
+            honba_core::Price::new(rust_decimal::Decimal::from(100)),
+            honba_core::Quantity::from_u64(10),
+            "algo",
+            ts,
         )
     }
 

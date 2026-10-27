@@ -8,11 +8,11 @@ use std::time::Duration;
 
 use leptos::prelude::*;
 use leptos::task::spawn_local_scoped;
-
 use honba_kao_client::wire::{
-    InstrumentId, OrdersRequest, PortfolioPosition, PositionSide, WireExchange, WireOrder,
-    WireOrderSide, WireOrderStatus, WireOrderType, WireProduct, WireTimeInForce, WireTradingState,
+    InstrumentId, OrdersRequest, PortfolioPosition, WireExchange, WireOrder,
+    WireOrderStatus, WireTradingState,
 };
+use rust_decimal::Decimal;
 
 use super::order_draft_store::{
     OrderSide, OrderTicketDraft, OrderType, Product, TimeInForce, default_symbol, instrument_price,
@@ -236,13 +236,15 @@ impl BookStore {
         // a backend rejection only drags an error line, like the labs app.
         let request = OrdersRequest {
             instrument_id: Some(InstrumentId::new(
+                WireExchange::Nse,
                 ticket.symbol.clone(),
-                WireExchange::new("NSE"),
             )),
             side: Some(ticket.side.as_id().to_string()),
             order_type: Some(ticket.order_type.as_id().to_string()),
-            qty: Some(ticket.quantity as f64),
-            price: Some(price),
+            qty: Some(Decimal::from(ticket.quantity)),
+            price: Some(
+                rust_decimal::Decimal::from_f64_retain(price).unwrap_or_default(),
+            ),
             tif: Some(ticket.tif.as_id().to_string()),
             client_order_id: Some(order_id.clone()),
         };
@@ -420,26 +422,11 @@ impl BookStore {
                         .collect::<Vec<_>>();
                     store.orders.set(book);
 
-                    // The trade book is the ledger's filled rows — fills
-                    // carry their venue price in `avg_fill_price`.
-                    let trades = orders
-                        .iter()
-                        .filter(|row| {
-                            row.status() == WireOrderStatus::Filled && row.filled_qty() > 0.0
-                        })
-                        .map(|row| WbTrade {
-                            order_id: row.order_id().to_string(),
-                            symbol: row.instrument_id().symbol().to_uppercase(),
-                            side: if row.side() == WireOrderSide::Sell {
-                                OrderSide::Sell
-                            } else {
-                                OrderSide::Buy
-                            },
-                            price: row.avg_fill_price().unwrap_or(0.0),
-                            quantity: row.filled_qty().round() as i64,
-                            costs: 0.0,
-                        })
-                        .collect::<Vec<_>>();
+                    // The trade book comes from fills; orders alone carry no
+                    // fill data, so the trade list is empty until a trades
+                    // endpoint is wired (P7). Orders are still mapped to the
+                    // book for display.
+                    let trades: Vec<WbTrade> = Vec::new();
                     store.trades.set(trades);
                 }
                 Err(error) => tracing::warn!("workbench: orders fetch failed: {error}"),
@@ -503,70 +490,91 @@ fn to_wire_trading_state(state: TradingState) -> WireTradingState {
 }
 
 fn wire_order(row: WireOrder) -> WbOrder {
+    let price = match row.order_type {
+        honba_kao_client::wire::WireOrderType::Limit(p) => {
+            p.to_string().parse::<f64>().unwrap_or(0.0)
+        }
+        _ => 0.0,
+    };
     WbOrder {
-        order_id: row.order_id().to_string(),
-        symbol: row.instrument_id().symbol().to_uppercase(),
-        order_type: wire_order_type(row.order_type()),
-        side: if row.side() == WireOrderSide::Sell {
+        order_id: row.client_order_id.to_string(),
+        symbol: row.instrument.symbol.to_uppercase(),
+        order_type: wire_order_type(row.order_type),
+        side: if row.side == honba_kao_client::wire::WireOrderSide::Sell {
             OrderSide::Sell
         } else {
             OrderSide::Buy
         },
-        quantity: row.quantity().round() as i64,
-        price: row.avg_fill_price().or(row.price()).unwrap_or(0.0),
-        status: wire_status_text(row.status()),
-        product: row
-            .product()
-            .map(|product| match product {
-                WireProduct::Delivery => Product::Delivery,
-                _ => Product::Intraday,
-            })
-            .unwrap_or(Product::Intraday),
-        tif: if row.time_in_force() == WireTimeInForce::Ioc {
-            TimeInForce::Ioc
-        } else {
-            TimeInForce::Day
+        quantity: row
+            .quantity
+            .to_string()
+            .parse::<f64>()
+            .unwrap_or(0.0) as i64,
+        price,
+        status: row.tag.clone().unwrap_or_default(),
+        product: Product::Intraday,
+        tif: match row.tif {
+            honba_kao_client::wire::WireTimeInForce::Ioc => TimeInForce::Ioc,
+            _ => TimeInForce::Day,
         },
     }
 }
 
-fn wire_order_type(order_type: WireOrderType) -> OrderType {
+fn wire_order_type(order_type: honba_kao_client::wire::WireOrderType) -> OrderType {
     match order_type {
-        WireOrderType::Market => OrderType::Market,
-        WireOrderType::StopMarket | WireOrderType::TrailingStop => OrderType::StopMarket,
-        WireOrderType::StopLimit => OrderType::StopLimit,
-        _ => OrderType::Limit,
+        honba_kao_client::wire::WireOrderType::Market => OrderType::Market,
+        honba_kao_client::wire::WireOrderType::Limit(_) => OrderType::Limit,
+        honba_kao_client::wire::WireOrderType::StopLoss(_) => OrderType::StopMarket,
+        honba_kao_client::wire::WireOrderType::StopLimit { .. } => OrderType::StopLimit,
     }
 }
 
+#[allow(dead_code)]
 fn wire_status_text(status: WireOrderStatus) -> String {
     match status {
-        WireOrderStatus::Initialized => "initialized",
-        WireOrderStatus::Submitted => "submitted",
-        WireOrderStatus::Accepted => "accepted",
+        WireOrderStatus::PendingNew => "pending_new",
+        WireOrderStatus::New => "new",
         WireOrderStatus::PartiallyFilled => "partially_filled",
         WireOrderStatus::Filled => "filled",
         WireOrderStatus::Cancelled => "cancelled",
         WireOrderStatus::Rejected => "rejected",
         WireOrderStatus::Expired => "expired",
-        _ => "unknown",
     }
     .to_string()
 }
 
 fn wire_position(position: PortfolioPosition) -> WbPosition {
+    let qty = position
+        .quantity
+        .to_string()
+        .parse::<f64>()
+        .unwrap_or(0.0);
+    let side = if qty < 0.0 {
+        OrderSide::Sell
+    } else {
+        OrderSide::Buy
+    };
+    let ltp = if qty.abs() > 1e-9 {
+        position.market_value.to_string().parse::<f64>().unwrap_or(0.0) / qty.abs()
+    } else {
+        position.avg_price.to_string().parse::<f64>().unwrap_or(0.0)
+    };
     WbPosition {
-        symbol: position.instrument_id.symbol().to_uppercase(),
-        side: if position.side == PositionSide::Short {
-            OrderSide::Sell
-        } else {
-            OrderSide::Buy
-        },
-        quantity: position.quantity.round() as i64,
-        avg_price: position.avg_price,
-        ltp: position.mark,
-        realized_pnl: position.realized_pnl.to_major_f64(),
-        unrealized_pnl: position.unrealized_pnl.to_major_f64(),
+        symbol: position.instrument.symbol.to_uppercase(),
+        side,
+        quantity: qty.abs() as i64,
+        avg_price: position
+            .avg_price
+            .to_string()
+            .parse::<f64>()
+            .unwrap_or(0.0),
+        ltp,
+        realized_pnl: 0.0,
+        unrealized_pnl: position
+            .unrealized_pnl
+            .to_string()
+            .parse::<f64>()
+            .unwrap_or(0.0),
     }
 }
 

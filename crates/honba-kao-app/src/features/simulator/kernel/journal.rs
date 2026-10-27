@@ -116,7 +116,7 @@ mod tests {
     use super::*;
     use crate::features::simulator::kernel::run::ClientFut;
     use honba_kao_client::wire::{
-        Currency, Exchange, InstrumentId, OrderId, Trade, WireOrderSide, WireUnixNanos,
+        Exchange, InstrumentId, Trade, WireOrderSide,
     };
 
     struct OkJournal(Vec<Trade>);
@@ -142,15 +142,17 @@ mod tests {
     }
 
     fn fill(minute: i64) -> Trade {
+        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
         Trade::new(
-            OrderId::new("o"),
-            InstrumentId::new("TCS", Exchange::new("NSE")),
+            "f",
+            "o",
+            honba_core::uuid::Uuid::nil(),
+            InstrumentId::new(Exchange::Nse, "TCS"),
             WireOrderSide::Buy,
-            10.0,
-            100.0,
-            Currency::Inr,
-            WireUnixNanos::from_u64((1_704_153_600 + minute * 60) as u64 * 1_000_000_000),
-            WireUnixNanos::from_u64((1_704_153_600 + minute * 60) as u64 * 1_000_000_000),
+            honba_core::Price::new(rust_decimal::Decimal::from(100)),
+            honba_core::Quantity::from_u64(10),
+            "algo",
+            ts,
         )
     }
 

@@ -13,8 +13,9 @@
 //! effect in P6 via the typed client); this module holds the pure fold from
 //! client outcome to [`BarsState`], which is what the vitest suite exercised.
 
-use honba_kao_client::wire::{Bar as WireBar, BarsResponse};
 use honba_kao_client::ClientError;
+use honba_kao_client::wire::BarsResponse;
+use honba_core::market::Bar;
 
 use crate::features::simulator::kernel::chart_data::{preview_bars, to_chart_bars, ChartBar, PreviewBarsRequest};
 
@@ -147,7 +148,7 @@ fn fallback_state(
 /// the state is labelled, never passed off as served history.
 pub fn load_run_bars_fold(
     request: &LoadBarsRequest<'_>,
-    outcome: Result<Vec<WireBar>, ClientError>,
+    outcome: Result<Vec<Bar>, ClientError>,
 ) -> BarsState {
     match outcome {
         Ok(wire_bars) => {
@@ -190,7 +191,7 @@ pub fn no_client_fallback_note(instrument_id: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use honba_kao_client::wire::{BarAggregation, BarSpecification, BarType, Exchange, InstrumentId, PriceType, WireUnixNanos};
+    use honba_kao_client::wire::{Exchange, InstrumentId};
 
     const REQUEST_FROM: &str = "2024-01-01";
     const REQUEST_TO: &str = "2024-02-01";
@@ -205,19 +206,21 @@ mod tests {
         }
     }
 
-    fn wire_bar(seconds: u64, close: f64) -> WireBar {
-        let instrument = InstrumentId::new("TCS", Exchange::new("NSE"));
-        let spec = BarSpecification::new(1, BarAggregation::Day, PriceType::Last);
-        WireBar::new(
-            BarType::new(instrument, spec),
-            close,
-            close + 1.0,
-            close - 1.0,
-            close,
-            5.0,
-            WireUnixNanos::from_u64(seconds * 1_000_000_000),
-            WireUnixNanos::from_u64(seconds * 1_000_000_000),
-        )
+    fn wire_bar(seconds: u64, close: f64) -> Bar {
+        use honba_core::{Price, Quantity};
+        use chrono::{DateTime, Utc};
+        use rust_decimal::Decimal;
+        let p = Price::new(Decimal::try_from(close).unwrap_or_default());
+        let instrument = InstrumentId::new(Exchange::Nse, "TCS");
+        Bar {
+            instrument,
+            open: p,
+            high: Price::new(Decimal::try_from(close + 1.0).unwrap_or_default()),
+            low: Price::new(Decimal::try_from(close - 1.0).unwrap_or_default()),
+            close: p,
+            volume: Quantity::from_u64(5),
+            timestamp: DateTime::<Utc>::from_timestamp_nanos((seconds * 1_000_000_000) as i64),
+        }
     }
 
     #[test]

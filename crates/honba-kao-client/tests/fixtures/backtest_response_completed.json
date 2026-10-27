@@ -3,10 +3,10 @@
   "status": "completed",
   "metrics": {
     "trades": 14,
-    "net_pnl": 45230.55,
-    "sharpe": 1.87,
-    "max_drawdown": 0.0621,
-    "total_return": 0.4523
+    "net_pnl": "45230.55",
+    "sharpe": "1.87",
+    "max_drawdown": "0.0621",
+    "total_return": "0.4523"
   },
   "assumptions": {
     "not_modelled": [

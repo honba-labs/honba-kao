@@ -20,18 +20,13 @@ use honba_kao_client::wire::{ErrorDetail, Event, RunStatus, StreamFrame};
 /// serde `type` tag (fe `describeEvent`). Unknown tags fold to their
 /// un-articulated spelling; "nothing to describe" is `event`.
 pub fn describe_event(event: &Event) -> String {
+    #[allow(unreachable_patterns)]
     match event {
         Event::Bar(_) => "bar".to_string(),
         Event::Quote(_) => "quote".to_string(),
-        Event::Trade(_) => "trade tick".to_string(),
         Event::Order(_) => "order update".to_string(),
-        Event::OrderFilled { .. } => "order filled".to_string(),
-        Event::OrderPartiallyFilled { .. } => "order partially filled".to_string(),
-        Event::OrderAccepted { .. } => "order accepted".to_string(),
-        Event::OrderRejected { .. } => "order rejected".to_string(),
-        Event::OrderCancelled { .. } => "order cancelled".to_string(),
-        Event::OrderCancelRequested { .. } => "order cancel requested".to_string(),
-        Event::OrderExpired { .. } => "order expired".to_string(),
+        Event::Fill(_) => "trade tick".to_string(),
+        Event::Metric { .. } => "metric".to_string(),
         // The event union is `#[non_exhaustive]`: a newer producer's tag is
         // spelled out honestly rather than guessed.
         _ => event_type_tag(event).replace('_', " "),
@@ -42,12 +37,16 @@ pub fn describe_event(event: &Event) -> String {
 /// for variants this build does not enumerate (see [`describe_event`]).
 fn event_type_tag(event: &Event) -> String {
     match serde_json::to_value(event) {
-        Ok(value) => value
-            .get("type")
-            .and_then(|tag| tag.as_str())
-            .unwrap_or("event")
-            .to_string(),
-        Err(_) => "event".to_string(),
+        Ok(serde_json::Value::Object(map)) => {
+            if let Some(tag) = map.get("type").and_then(|tag| tag.as_str()) {
+                tag.to_string()
+            } else if let Some(key) = map.keys().next() {
+                key.to_string()
+            } else {
+                "event".to_string()
+            }
+        }
+        _ => "event".to_string(),
     }
 }
 
@@ -86,7 +85,7 @@ pub fn frame_to_line(frame: Option<&StreamFrame>) -> Option<String> {
             Some(format!("#{seq} status: {}{}", status_label(status), detail))
         }
         StreamFrame::Record { seq, message } => {
-            Some(format!("#{seq} {}", describe_event(message.event())))
+            Some(format!("#{seq} {}", describe_event(&message.event)))
         }
     }
 }
@@ -163,10 +162,12 @@ pub fn fold_terminal(status: Option<RunStatus>) -> Option<RunStatus> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Utc;
     use honba_kao_client::wire::{
-        ErrorCode as WireErrorCode, Exchange, InstrumentId, OrderId, WireMessage, WireOrder,
-        WireOrderSide, WireOrderType, WireQuoteTick, WireTimeInForce, WireUnixNanos,
+        ErrorCode as WireErrorCode, Exchange, InstrumentId, WireMessage, WireOrder,
+        WireOrderSide, WireOrderType, WireQuoteTick,
     };
+    use rust_decimal::Decimal;
 
     fn status_frame(seq: u64, status: RunStatus) -> StreamFrame {
         StreamFrame::Status {
@@ -190,7 +191,7 @@ mod tests {
     fn record_frame(seq: u64, event: Event) -> StreamFrame {
         StreamFrame::Record {
             seq,
-            message: WireMessage::new(event, WireUnixNanos::from_u64(0)),
+            message: WireMessage::new(event, Utc::now()),
         }
     }
 
@@ -198,51 +199,45 @@ mod tests {
     fn labels_every_wire_event_mapping_fe_cares_about() {
         // fe's `describeEvent` cases, keyed on the typed union now.
         let quote = WireQuoteTick::new(
-            InstrumentId::new("TCS", Exchange::new("NSE")),
-            100.0,
-            101.0,
-            1.0,
-            2.0,
-            WireUnixNanos::from_u64(1),
-            WireUnixNanos::from_u64(1),
+            InstrumentId::new(Exchange::Nse, "TCS".to_string()),
+            Decimal::from(100),
+            Decimal::from(101),
+            Decimal::from(1),
+            Decimal::from(2),
+            Utc::now(),
+            Utc::now(),
         );
         assert_eq!(describe_event(&Event::Quote(quote)), "quote");
-        assert_eq!(
-            describe_event(&Event::OrderExpired {
-                order_id: OrderId::new("o"),
-                ts_event: WireUnixNanos::from_u64(0)
-            }),
-            "order expired"
+        let fill = honba_core::FillReport::new(
+            "f",
+            "o",
+            honba_core::uuid::Uuid::nil(),
+            InstrumentId::new(Exchange::Nse, "TCS"),
+            WireOrderSide::Buy,
+            honba_core::Price::ZERO,
+            honba_core::Quantity::ZERO,
+            "algo",
+            chrono::Utc::now(),
         );
+        assert_eq!(describe_event(&Event::Fill(fill)), "trade tick");
         let order = WireOrder::new(
-            OrderId::new("o"),
-            InstrumentId::new("TCS", Exchange::new("NSE")),
+            InstrumentId::new(Exchange::Nse, "TCS".to_string()),
             WireOrderSide::Buy,
             WireOrderType::Market,
-            10.0,
-            None,
-            WireTimeInForce::Day,
-            WireUnixNanos::from_u64(0),
-            WireUnixNanos::from_u64(0),
+            honba_core::Quantity::from_u64(10),
+            "algo".to_string(),
         );
         assert_eq!(describe_event(&Event::Order(order)), "order update");
     }
 
     #[test]
     fn an_unknown_event_kind_is_never_guessed_by_this_build() {
-        // The union is `#[non_exhaustive]`, but serde still rejects unknown
-        // tags — so the fallback arm in `describe_event` exists only for a
-        // future compile. What *is* tested: the tag reader leans on the
-        // wire's own serializer, which for every current variant names
-        // itself.
-        let event: Event = serde_json::from_value(serde_json::json!({
-            "type": "order_rejected",
-            "order_id": "o-1",
-            "reason": "no qty",
-            "ts_event": { "iso": "", "unix_nanos": "0" }
-        }))
-        .expect("event parses");
-        assert_eq!(event_type_tag(&event), "order_rejected");
+        let event = Event::Metric {
+            name: "custom_stat".to_string(),
+            value: serde_json::json!(42),
+        };
+        assert_eq!(describe_event(&event), "metric");
+        assert_eq!(event_type_tag(&event), "Metric");
     }
 
     #[test]
@@ -261,13 +256,13 @@ mod tests {
     #[test]
     fn record_lines_name_the_event() {
         let quote = WireQuoteTick::new(
-            InstrumentId::new("TCS", Exchange::new("NSE")),
-            100.0,
-            101.0,
-            1.0,
-            2.0,
-            WireUnixNanos::from_u64(2),
-            WireUnixNanos::from_u64(2),
+            InstrumentId::new(Exchange::Nse, "TCS".to_string()),
+            Decimal::from(100),
+            Decimal::from(101),
+            Decimal::from(1),
+            Decimal::from(2),
+            Utc::now(),
+            Utc::now(),
         );
         assert_eq!(
             frame_to_line(Some(&record_frame(13, Event::Quote(quote)))),

@@ -1,69 +1,60 @@
 {
   "trades": [
     {
+      "fill_id": "F-1",
       "order_id": "BK-1-1700002205000000000",
-      "instrument_id": {
-        "symbol": "TCS",
-        "exchange": "NSE"
+      "client_order_id": "00000000-0000-0000-1797-9eff9a67e200",
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "side": "buy",
-      "quantity": 10.0,
-      "price": 22010.0,
-      "costs": {
-        "amount": 0,
-        "currency": "INR"
-      },
-      "ts_event": {
-        "iso": "2023-11-14T22:50:05.000000000Z",
-        "unix_nanos": "1700002205000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-14T22:50:05.000000000Z",
-        "unix_nanos": "1700002205000000000"
+      "side": "BUY",
+      "price": "22010.00",
+      "quantity": "10",
+      "algo_id": "fixture-gen",
+      "timestamp": "2023-11-14T22:50:05Z",
+      "correlation_id": "00000000-0000-0000-1797-9eff9a67e200",
+      "fee": {
+        "amount": "0",
+        "currency": "Inr"
       }
     },
     {
+      "fill_id": "F-2",
       "order_id": "BK-1-1700006705000000000",
-      "instrument_id": {
-        "symbol": "TCS",
-        "exchange": "NSE"
+      "client_order_id": "00000000-0000-0000-1797-a317574eaa00",
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "side": "sell",
-      "quantity": 10.0,
-      "price": 22060.0,
-      "costs": {
-        "amount": 0,
-        "currency": "INR"
-      },
-      "ts_event": {
-        "iso": "2023-11-15T00:05:05.000000000Z",
-        "unix_nanos": "1700006705000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-15T00:05:05.000000000Z",
-        "unix_nanos": "1700006705000000000"
+      "side": "SELL",
+      "price": "22060.00",
+      "quantity": "10",
+      "algo_id": "fixture-gen",
+      "timestamp": "2023-11-15T00:05:05Z",
+      "correlation_id": "00000000-0000-0000-1797-a317574eaa00",
+      "fee": {
+        "amount": "0",
+        "currency": "Inr"
       }
     },
     {
+      "fill_id": "F-3",
       "order_id": "BK-1-1700009705000000000",
-      "instrument_id": {
-        "symbol": "TCS",
-        "exchange": "NSE"
+      "client_order_id": "00000000-0000-0000-1797-a5d1d53dda00",
+      "instrument": {
+        "exchange": "NSE",
+        "symbol": "TCS"
       },
-      "side": "buy",
-      "quantity": 5.0,
-      "price": 21980.0,
-      "costs": {
-        "amount": 0,
-        "currency": "INR"
-      },
-      "ts_event": {
-        "iso": "2023-11-15T00:55:05.000000000Z",
-        "unix_nanos": "1700009705000000000"
-      },
-      "ts_init": {
-        "iso": "2023-11-15T00:55:05.000000000Z",
-        "unix_nanos": "1700009705000000000"
+      "side": "BUY",
+      "price": "21980.00",
+      "quantity": "5",
+      "algo_id": "fixture-gen",
+      "timestamp": "2023-11-15T00:55:05Z",
+      "correlation_id": "00000000-0000-0000-1797-a5d1d53dda00",
+      "fee": {
+        "amount": "0",
+        "currency": "Inr"
       }
     }
   ]

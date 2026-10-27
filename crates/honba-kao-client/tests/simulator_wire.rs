@@ -10,10 +10,11 @@
 use std::fs;
 use std::path::Path;
 
+use honba_api::ApiResponse;
+use honba_core::rust_decimal::Decimal;
 use honba_kao_client::wire::{
     BacktestResponse, BarsResponse, RunStatus, StrategiesResponse, StreamFrame, TradesResponse,
 };
-use honba_api::{ApiResponse, ResponseEnvelope};
 
 const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures");
 
@@ -22,7 +23,7 @@ fn fixture(name: &str) -> String {
         .unwrap_or_else(|e| panic!("fixture {name}: {e}"))
 }
 
-/// Wraps one fixture payload the way `crate::ApiResponse::success` does and
+/// Wraps one fixture payload the way `ApiResponse::success` does and
 /// decodes it back through the envelope — the exact path `ApiClient::send`
 /// takes for every simulator route.
 fn enveloped<T>(payload: &str) -> T
@@ -30,9 +31,10 @@ where
     T: serde::de::DeserializeOwned + serde::Serialize,
 {
     let data = serde_json::from_str::<T>(payload).expect("raw fixture decodes");
-    let envelope = ResponseEnvelope::<T>::success(data);
+    let envelope = ApiResponse::success(data);
     let raw = serde_json::to_string(&envelope).expect("envelope serializes");
-    let decoded = serde_json::from_str::<ResponseEnvelope<T>>(&raw)
+    let value = serde_json::from_str::<serde_json::Value>(&raw).expect("envelope parses as json");
+    let decoded = honba_kao_client::decode_envelope::<T>(value)
         .expect("enveloped fixture decodes");
     decoded.into_result().expect("envelope carries a payload")
 }
@@ -44,9 +46,9 @@ fn bars_response_decodes_raw_and_enveloped() {
     assert_eq!(bars.len(), 4);
     // Ascending ts_event, nanos-as-string preserved (no float round-trip):
     let first = &bars[0];
-    assert_eq!(first.ts_event().as_u64(), 1_700_000_705_000_000_000);
-    assert!(bars.windows(2).all(|w| w[0].ts_event() <= w[1].ts_event()));
-    assert_eq!(first.bar_type().instrument_id().symbol(), "TCS");
+    assert_eq!(first.timestamp.timestamp_nanos_opt().unwrap(), 1_700_000_705_000_000_000);
+    assert!(bars.windows(2).all(|w| w[0].timestamp <= w[1].timestamp));
+    assert_eq!(first.instrument.symbol, "TCS");
 }
 
 #[test]
@@ -56,10 +58,10 @@ fn backtest_completed_decodes_raw_and_enveloped() {
     assert_eq!(response.status, RunStatus::Completed);
     let metrics = response.metrics.expect("completed run carries metrics");
     assert_eq!(metrics.trades, 14);
-    assert_eq!(metrics.net_pnl, 45_230.55);
-    assert_eq!(metrics.sharpe, 1.87);
-    assert_eq!(metrics.max_drawdown, 0.0621);
-    assert_eq!(metrics.total_return, 0.4523);
+    assert_eq!(metrics.net_pnl, Decimal::new(4_523_055, 2));
+    assert_eq!(metrics.sharpe, Decimal::new(187, 2));
+    assert_eq!(metrics.max_drawdown, Decimal::new(621, 4));
+    assert_eq!(metrics.total_return, Decimal::new(4523, 4));
     let assumptions = response.assumptions.expect("assumptions block");
     assert!(assumptions.get("not_modelled").is_some());
 }
@@ -90,11 +92,11 @@ fn trades_response_decodes_the_journal_fills() {
     let trades = response.trades;
     assert_eq!(trades.len(), 3);
     // Integer minor-unit costs on the wire; a legacy float would be rounded.
-    assert_eq!(trades[0].costs().minor(), 0);
-    assert_eq!(trades[0].instrument_id().to_string(), "TCS.NSE");
+    assert_eq!(trades[0].fee.amount, Decimal::ZERO);
+    assert_eq!(trades[0].instrument.to_string(), "NSE:TCS");
     // Side, quantity, price survive the round trip.
-    assert_eq!(trades[0].quantity(), 10.0);
-    assert_eq!(trades[2].quantity(), 5.0);
+    assert_eq!(trades[0].quantity.0, Decimal::from(10));
+    assert_eq!(trades[2].quantity.0, Decimal::from(5));
 }
 
 #[test]
@@ -117,13 +119,14 @@ fn stream_frames_decode_the_sse_payloads() {
 /// `ClientError::Api`): an enveloped failure never yields a payload.
 #[test]
 fn failure_envelope_weeds_out_a_missing_payload() {
-    let error = honba_messages::ErrorDetail::new(
-        honba_messages::ErrorCode::ValidationInvalidRequest,
+    let error = honba_api::ErrorDetail::new(
+        honba_api::ErrorCode::ValidationInvalidRequest,
         "seed must be non-zero",
     );
-    let envelope = ResponseEnvelope::<BacktestResponse>::error(error);
+    let envelope = ApiResponse::error::<BacktestResponse>(error);
     let raw = serde_json::to_string(&envelope).expect("failure envelope serializes");
-    let decoded = serde_json::from_str::<ResponseEnvelope<BacktestResponse>>(&raw)
+    let value = serde_json::from_str::<serde_json::Value>(&raw).expect("envelope parses as json");
+    let decoded = honba_kao_client::decode_envelope::<BacktestResponse>(value)
         .expect("failure envelope decodes");
     assert!(
         decoded.into_result().is_err(),

@@ -30,7 +30,7 @@
 use honba_api_wasm::calendar::{
     civil_from_days, days_from_civil, unix_nanos_to_seconds, IST_OFFSET_SECONDS,
 };
-use honba_kao_client::wire::Bar as WireBar;
+use honba_core::market::Bar;
 
 use crate::features::simulator::kernel::controls::{parse_bar_spec, BarUnit};
 
@@ -83,14 +83,17 @@ pub fn bar_spec_seconds(bar_spec: &str) -> Option<i64> {
 ///
 /// Bars a source never emitted are simply absent, which is what keeps holidays
 /// and weekends visible as gaps.
-pub fn to_chart_bars(bars: &[WireBar]) -> Vec<ChartBar> {
+pub fn to_chart_bars(bars: &[Bar]) -> Vec<ChartBar> {
     let mut by_time: std::collections::BTreeMap<i64, ChartBar> = std::collections::BTreeMap::new();
     for bar in bars {
-        let Some(time) = unix_nanos_to_seconds(bar.ts_event()) else {
+        let Some(time) = unix_nanos_to_seconds(bar.timestamp) else {
             continue;
         };
-        let (open, high, low, close, volume) =
-            (bar.open(), bar.high(), bar.low(), bar.close(), bar.volume());
+        let open = bar.open.to_string().parse::<f64>().unwrap_or(0.0);
+        let high = bar.high.to_string().parse::<f64>().unwrap_or(0.0);
+        let low = bar.low.to_string().parse::<f64>().unwrap_or(0.0);
+        let close = bar.close.to_string().parse::<f64>().unwrap_or(0.0);
+        let volume = bar.volume.to_string().parse::<f64>().unwrap_or(0.0);
         let values_ok = [open, high, low, close].iter().all(|value| value.is_finite());
         if !values_ok {
             continue;
@@ -439,8 +442,7 @@ mod tests {
     use super::*;
     use honba_api_wasm::pairing::{markers_from_pairing, pair_trades, FillSide, TradeMarkerKind};
     use honba_kao_client::wire::{
-        Currency, Exchange, BarAggregation, BarSpecification, BarType, InstrumentId, OrderId,
-        PriceType, Trade, WireOrderSide as OrderSide, WireUnixNanos,
+        Exchange, InstrumentId, Trade, WireOrderSide as OrderSide,
     };
     /// 2024-01-01 is a Monday.
     const JAN1_2024: i64 = 1_704_067_200;
@@ -455,19 +457,21 @@ mod tests {
         day(i) + SESSION_OPEN_UTC
     }
 
-    fn wire_bar(seconds: u64, close: f64) -> WireBar {
-        let instrument = InstrumentId::new("TCS", Exchange::new("NSE"));
-        let spec = BarSpecification::new(1, BarAggregation::Day, PriceType::Last);
-        WireBar::new(
-            BarType::new(instrument, spec),
-            close - 1.0,
-            close + 1.0,
-            close - 2.0,
-            close,
-            1_000.0,
-            WireUnixNanos::from_u64(seconds * 1_000_000_000),
-            WireUnixNanos::from_u64(seconds * 1_000_000_000),
-        )
+    fn wire_bar(seconds: u64, close: f64) -> Bar {
+        use honba_core::{Price, Quantity};
+        use chrono::{DateTime, Utc};
+        use rust_decimal::Decimal;
+        let p = Price::new(Decimal::try_from(close).unwrap_or_default());
+        let instrument = InstrumentId::new(Exchange::Nse, "TCS");
+        Bar {
+            instrument,
+            open: Price::new(Decimal::try_from(close - 1.0).unwrap_or_default()),
+            high: Price::new(Decimal::try_from(close + 1.0).unwrap_or_default()),
+            low: Price::new(Decimal::try_from(close - 2.0).unwrap_or_default()),
+            close: p,
+            volume: Quantity::from_u64(1_000),
+            timestamp: DateTime::<Utc>::from_timestamp_nanos((seconds * 1_000_000_000) as i64),
+        }
     }
 
     fn chart_bar(time: i64, close: f64, volume: f64) -> ChartBar {
@@ -708,15 +712,17 @@ mod tests {
 
         let trade_at = |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
             let seconds = bar_times[bar_index] + skew_sec;
+            let ts = chrono::DateTime::from_timestamp(seconds, 0).expect("valid timestamp");
             Trade::new(
-                OrderId::new(format!("o-{:?}-{}", side, bar_index)),
-                InstrumentId::new("TCS", Exchange::new("NSE")),
+                format!("o-{:?}-{}", side, bar_index),
+                format!("o-{:?}-{}", side, bar_index),
+                honba_core::uuid::Uuid::nil(),
+                InstrumentId::new(Exchange::Nse, "TCS"),
                 side,
-                quantity,
-                price,
-                Currency::Inr,
-                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
-                WireUnixNanos::from_u64(seconds as u64 * 1_000_000_000),
+                honba_core::Price::new(rust_decimal::Decimal::try_from(price).unwrap_or_default()),
+                honba_core::Quantity::from_u64(quantity as u64),
+                "algo",
+                ts,
             )
         };
 

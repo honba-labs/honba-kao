@@ -2,20 +2,28 @@
   "kind": "record",
   "seq": 1,
   "message": {
-    "schema_version": 4,
+    "schema_version": "4",
     "event": {
-      "type": "order_filled",
-      "order_id": "BK-1-2",
-      "last_qty": 10.0,
-      "last_px": 22060.0,
-      "ts_event": {
-        "iso": "2023-11-15T00:05:05.000000000Z",
-        "unix_nanos": "1700006705000000000"
+      "Fill": {
+        "fill_id": "F-2",
+        "order_id": "BK-1-1700006705000000000",
+        "client_order_id": "00000000-0000-0000-1797-a317574eaa00",
+        "instrument": {
+          "exchange": "NSE",
+          "symbol": "TCS"
+        },
+        "side": "SELL",
+        "price": "22060.00",
+        "quantity": "10",
+        "algo_id": "fixture-gen",
+        "timestamp": "2023-11-15T00:05:05Z",
+        "correlation_id": "00000000-0000-0000-1797-a317574eaa00",
+        "fee": {
+          "amount": "0",
+          "currency": "Inr"
+        }
       }
     },
-    "ts_init": {
-      "iso": "2023-11-15T00:05:05.000000000Z",
-      "unix_nanos": "1700006705000000000"
-    }
+    "ts_init": "2023-11-15T00:05:05Z"
   }
 }

@@ -20,6 +20,8 @@
 //! and fix the test here.
 
 use honba_kao_client::wire::{BacktestRequest, MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS};
+use num_traits::cast::FromPrimitive;
+use rust_decimal::Decimal;
 
 use crate::features::simulator::kernel::defaults::{
     DEFAULT_BENCHMARK, DEFAULT_CAPITAL, DEFAULT_FILL_MODEL, DEFAULT_SEED, DEFAULT_TIMEFRAME,
@@ -303,6 +305,7 @@ pub fn parse_bar_spec(bar_spec: &str) -> Option<(u32, BarUnit)> {
 }
 
 /// A non-empty string (fe `requiredString`).
+#[allow(dead_code)]
 fn required_string(value: &Option<String>) -> bool {
     value.as_deref().is_some_and(|value| !value.trim().is_empty())
 }
@@ -329,10 +332,18 @@ pub fn control_issues(controls: &SimulatorControls, today: Today) -> Vec<String>
     {
         issues.push(format!("Unknown fill model {:?}.", controls.fill_model));
     }
-    if let Some(issue) = rate_issue("Commission", controls.commission, MAX_COMMISSION_PER_FILL) {
+    if let Some(issue) = rate_issue(
+        "Commission",
+        controls.commission,
+        MAX_COMMISSION_PER_FILL.to_string().parse::<f64>().unwrap_or(0.0),
+    ) {
         issues.push(issue);
     }
-    if let Some(issue) = rate_issue("Slippage", controls.slippage, MAX_SLIPPAGE_BPS) {
+    if let Some(issue) = rate_issue(
+        "Slippage",
+        controls.slippage,
+        MAX_SLIPPAGE_BPS.to_string().parse::<f64>().unwrap_or(0.0),
+    ) {
         issues.push(issue);
     }
     if controls.period == PeriodPreset::Custom {
@@ -416,7 +427,7 @@ pub fn plan_request(
         } else {
             controls.timeframe.trim().to_string()
         }),
-        initial_capital: Some(controls.capital),
+        initial_capital: Some(Decimal::from_f64(controls.capital).unwrap_or_default()),
         seed: Some(options.seed.unwrap_or(DEFAULT_SEED)),
         fill_model: Some(if controls.fill_model.is_empty() {
             DEFAULT_FILL_MODEL.to_string()
@@ -424,9 +435,9 @@ pub fn plan_request(
             controls.fill_model.clone()
         }),
         commission_per_fill: (controls.commission > 0.0 && controls.commission.is_finite())
-            .then_some(controls.commission),
+            .then_some(Decimal::from_f64(controls.commission).unwrap_or_default()),
         slippage_bps: (controls.slippage > 0.0 && controls.slippage.is_finite())
-            .then_some(controls.slippage),
+            .then_some(Decimal::from_f64(controls.slippage).unwrap_or_default()),
     };
 
     SimulationRequestPlan {
@@ -545,7 +556,7 @@ mod tests {
     fn rejects_a_commission_or_slippage_the_server_resolver_would_refuse() {
         let over_slippage = controls_with(|c| {
             c.commission = -1.0;
-            c.slippage = MAX_SLIPPAGE_BPS + 1.0;
+            c.slippage = MAX_SLIPPAGE_BPS.to_string().parse::<f64>().unwrap_or(0.0) + 1.0;
         });
         let issues = control_issues(&over_slippage, NOW);
         assert!(issues.iter().any(|i| i.contains("ommission")));
@@ -560,8 +571,8 @@ mod tests {
     fn accepts_a_commission_or_slippage_at_the_cap_exactly() {
         // Boundary: exactly the max is legal (resolver: `> max` rejects).
         let capped = controls_with(|c| {
-            c.commission = MAX_COMMISSION_PER_FILL;
-            c.slippage = MAX_SLIPPAGE_BPS as f64;
+            c.commission = MAX_COMMISSION_PER_FILL.to_string().parse::<f64>().unwrap_or(0.0);
+            c.slippage = MAX_SLIPPAGE_BPS.to_string().parse::<f64>().unwrap_or(0.0);
         });
         assert!(control_issues(&capped, NOW).is_empty());
     }
@@ -591,7 +602,7 @@ mod tests {
         assert_eq!(plan.request.end.as_deref(), Some("2026-10-17"));
         assert_eq!(plan.request.bar_spec.as_deref(), Some("5m"));
         // Default capital + seed (server-side defaults), no commission/slippage.
-        assert_eq!(plan.request.initial_capital, Some(250_000.0));
+        assert_eq!(plan.request.initial_capital, Some(Decimal::from(250_000)));
         assert_eq!(plan.request.seed, Some(DEFAULT_SEED));
         assert_eq!(plan.request.commission_per_fill, None);
         assert_eq!(plan.request.slippage_bps, None);
@@ -613,8 +624,8 @@ mod tests {
             today: NOW,
         };
         let plan = plan_request(&controls, &options);
-        assert_eq!(plan.request.commission_per_fill, Some(20.0));
-        assert_eq!(plan.request.slippage_bps, Some(5.0));
+        assert_eq!(plan.request.commission_per_fill, Some(Decimal::from(20)));
+        assert_eq!(plan.request.slippage_bps, Some(Decimal::from(5)));
         assert!(plan.not_modelled.is_empty());
         assert!(plan.issues.is_empty());
     }
