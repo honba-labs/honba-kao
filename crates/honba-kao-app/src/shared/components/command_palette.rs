@@ -5,7 +5,9 @@
 //! highlight, `Enter` runs the highlighted row, `Escape` closes. Rows are
 //! built by [`crate::shared::command::palette::build_items`].
 
-use honba_kao_ui_core::composed::command_bar::{CommandSuggestion, HfCommandBarInput, HfCommandSuggestions};
+use honba_kao_ui_core::composed::command_bar::{
+    CommandSuggestion, HfCommandBarInput, HfCommandSuggestions,
+};
 use honba_kao_ui_core::composed::modal::HfModal;
 use leptos::html;
 use leptos::prelude::*;
@@ -58,7 +60,9 @@ pub fn CommandPalette() -> impl IntoView {
     });
 
     let run = Callback::new(move |idx: usize| {
-        let Some(item) = items.get_untracked().get(idx).cloned() else { return };
+        let Some(item) = items.get_untracked().get(idx).cloned() else {
+            return;
+        };
         let outcome = match &item.target {
             PaletteTarget::Route(route) => CommandOutcome::Navigate(route.clone()),
             PaletteTarget::Command(text) => route_for(&parse_command(text)),

@@ -52,13 +52,16 @@ impl RunEventStream {
         resume_from_seq: Option<u64>,
         mut on_frame: impl FnMut(Result<StreamFrame, ClientError>) + 'static,
     ) -> Result<Self, ClientError> {
-        let mut url = format!("{}/backtests/{}/events", base_url, crate::encode_query(run_id));
+        let mut url = format!(
+            "{}/backtests/{}/events",
+            base_url,
+            crate::encode_query(run_id)
+        );
         if let Some(seq) = resume_from_seq {
             url.push_str(&format!("?resume_from_seq={seq}"));
         }
-        let source = EventSource::new(&url).map_err(|e| {
-            ClientError::Network(format!("EventSource({url}): {e:?}"))
-        })?;
+        let source = EventSource::new(&url)
+            .map_err(|e| ClientError::Network(format!("EventSource({url}): {e:?}")))?;
 
         let on_message = {
             let callback = wasm_bindgen::closure::Closure::<dyn FnMut(MessageEvent)>::new(

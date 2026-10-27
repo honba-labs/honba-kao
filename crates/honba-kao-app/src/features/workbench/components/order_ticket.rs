@@ -7,7 +7,9 @@ use leptos::prelude::*;
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
 use crate::features::workbench::stores::book_store::TradingState;
-use crate::features::workbench::stores::order_draft_store::{OrderSide, OrderType, Product, TicketField};
+use crate::features::workbench::stores::order_draft_store::{
+    OrderSide, OrderType, Product, TicketField,
+};
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
 use crate::shared::utils::currency;
 

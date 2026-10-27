@@ -7,7 +7,12 @@ fn quote_frame_carries_decimal_strings_and_provenance() {
     let text = r#"{"type":"quote","symbol":"RELIANCE","ltp":"2982.50","change_pct":"1.4",
         "provenance":{"quality":"delayed","source":"kite","as_of":"2026-10-26T10:00:00+05:30","latency_ms":42}}"#;
     match parse_frame(text).expect("quote parses") {
-        StreamFrame::Quote { symbol, ltp, provenance, .. } => {
+        StreamFrame::Quote {
+            symbol,
+            ltp,
+            provenance,
+            ..
+        } => {
             assert_eq!(symbol, "RELIANCE");
             assert_eq!(ltp, "2982.50");
             assert_eq!(provenance.quality, Quality::Delayed);
@@ -35,7 +40,12 @@ fn depth_frame_parses_both_sides() {
     let text = r#"{"type":"depth","symbol":"TCS","bids":[{"price":"4011.9","quantity":"100"}],
         "asks":[{"price":"4012.1","quantity":"80"}],"provenance":{"quality":"live","source":"kite"}}"#;
     match parse_frame(text).expect("depth parses") {
-        StreamFrame::Depth { bids, asks, provenance, .. } => {
+        StreamFrame::Depth {
+            bids,
+            asks,
+            provenance,
+            ..
+        } => {
             assert_eq!(bids.len(), 1);
             assert_eq!(asks[0].price, "4012.1");
             assert_eq!(provenance.quality, Quality::Live);

@@ -8,7 +8,7 @@
 //! journal is fills with no signal price, so it is left blank rather than
 //! guessed (risk R5) — the column exists to document the absence.
 
-use honba_api_wasm::analytics::{format_timestamp, to_csv, CsvColumn, JournalRow};
+use honba_api_wasm::analytics::{CsvColumn, JournalRow, format_timestamp, to_csv};
 use honba_api_wasm::pairing::{Direction, RoundTripStatus};
 use leptos::prelude::*;
 use wasm_bindgen::JsCast;
@@ -38,18 +38,66 @@ struct Column {
 }
 
 const COLUMNS: [Column; 12] = [
-    Column { key: None, header: "Symbol", numeric: false },
-    Column { key: None, header: "Side", numeric: false },
-    Column { key: None, header: "Status", numeric: false },
-    Column { key: Some(SortKey::EntryTs), header: "Entry (UTC)", numeric: false },
-    Column { key: Some(SortKey::ExitTs), header: "Exit (UTC)", numeric: false },
-    Column { key: Some(SortKey::Quantity), header: "Qty", numeric: true },
-    Column { key: Some(SortKey::AvgEntry), header: "Avg Entry", numeric: true },
-    Column { key: Some(SortKey::AvgExit), header: "Avg Exit", numeric: true },
-    Column { key: Some(SortKey::RealizedPnl), header: "Net PnL", numeric: true },
-    Column { key: Some(SortKey::ReturnPct), header: "Return %", numeric: true },
-    Column { key: Some(SortKey::Fees), header: "Fees", numeric: true },
-    Column { key: None, header: "Slippage", numeric: true },
+    Column {
+        key: None,
+        header: "Symbol",
+        numeric: false,
+    },
+    Column {
+        key: None,
+        header: "Side",
+        numeric: false,
+    },
+    Column {
+        key: None,
+        header: "Status",
+        numeric: false,
+    },
+    Column {
+        key: Some(SortKey::EntryTs),
+        header: "Entry (UTC)",
+        numeric: false,
+    },
+    Column {
+        key: Some(SortKey::ExitTs),
+        header: "Exit (UTC)",
+        numeric: false,
+    },
+    Column {
+        key: Some(SortKey::Quantity),
+        header: "Qty",
+        numeric: true,
+    },
+    Column {
+        key: Some(SortKey::AvgEntry),
+        header: "Avg Entry",
+        numeric: true,
+    },
+    Column {
+        key: Some(SortKey::AvgExit),
+        header: "Avg Exit",
+        numeric: true,
+    },
+    Column {
+        key: Some(SortKey::RealizedPnl),
+        header: "Net PnL",
+        numeric: true,
+    },
+    Column {
+        key: Some(SortKey::ReturnPct),
+        header: "Return %",
+        numeric: true,
+    },
+    Column {
+        key: Some(SortKey::Fees),
+        header: "Fees",
+        numeric: true,
+    },
+    Column {
+        key: None,
+        header: "Slippage",
+        numeric: true,
+    },
 ];
 
 /// fe's `num` helper — fixed decimals, `—` for absent/non-finite.
@@ -65,33 +113,73 @@ fn num(value: Option<f64>, digits: usize) -> String {
 /// RFC-4180 quoting (`csv_field`), so the closures return plain strings.
 fn csv_columns() -> Vec<CsvColumn<JournalRow>> {
     vec![
-        CsvColumn { header: "id", value: |row| row.id.clone() },
-        CsvColumn { header: "symbol", value: |row| row.instrument.clone() },
-        CsvColumn { header: "side", value: |row| row.direction.as_str().to_string() },
-        CsvColumn { header: "status", value: |row| row.status.as_str().to_string() },
-        CsvColumn { header: "entry_ts", value: |row| format_timestamp(Some(row.entry_ts)) },
-        CsvColumn { header: "exit_ts", value: |row| format_timestamp(row.exit_ts) },
-        CsvColumn { header: "qty", value: |row| row.quantity.to_string() },
-        CsvColumn { header: "open_qty", value: |row| row.open_quantity.to_string() },
-        CsvColumn { header: "avg_entry", value: |row| row.avg_entry.to_string() },
+        CsvColumn {
+            header: "id",
+            value: |row| row.id.clone(),
+        },
+        CsvColumn {
+            header: "symbol",
+            value: |row| row.instrument.clone(),
+        },
+        CsvColumn {
+            header: "side",
+            value: |row| row.direction.as_str().to_string(),
+        },
+        CsvColumn {
+            header: "status",
+            value: |row| row.status.as_str().to_string(),
+        },
+        CsvColumn {
+            header: "entry_ts",
+            value: |row| format_timestamp(Some(row.entry_ts)),
+        },
+        CsvColumn {
+            header: "exit_ts",
+            value: |row| format_timestamp(row.exit_ts),
+        },
+        CsvColumn {
+            header: "qty",
+            value: |row| row.quantity.to_string(),
+        },
+        CsvColumn {
+            header: "open_qty",
+            value: |row| row.open_quantity.to_string(),
+        },
+        CsvColumn {
+            header: "avg_entry",
+            value: |row| row.avg_entry.to_string(),
+        },
         CsvColumn {
             header: "avg_exit",
-            value: |row| row.avg_exit.map_or_else(String::new, |value| value.to_string()),
+            value: |row| {
+                row.avg_exit
+                    .map_or_else(String::new, |value| value.to_string())
+            },
         },
         CsvColumn {
             header: "net_pnl",
-            value: |row| row.realized_pnl.map_or_else(String::new, |value| value.to_string()),
+            value: |row| {
+                row.realized_pnl
+                    .map_or_else(String::new, |value| value.to_string())
+            },
         },
         CsvColumn {
             header: "return_pct",
             value: |row| {
-                row.return_pct.map_or_else(String::new, |value| format!("{:.4}", value * 100.0))
+                row.return_pct
+                    .map_or_else(String::new, |value| format!("{:.4}", value * 100.0))
             },
         },
-        CsvColumn { header: "fees", value: |row| row.fees.to_string() },
+        CsvColumn {
+            header: "fees",
+            value: |row| row.fees.to_string(),
+        },
         // The journal carries no signal price, so slippage is deliberately
         // blank (R5) — the column documents the absence instead of a guess.
-        CsvColumn { header: "slippage", value: |_row| String::new() },
+        CsvColumn {
+            header: "slippage",
+            value: |_row| String::new(),
+        },
     ]
 }
 
@@ -141,8 +229,7 @@ fn download_csv(file_name: &str, csv: &str) -> Option<()> {
     parts.push(&text);
     let bag = web_sys::BlobPropertyBag::new();
     bag.set_type("text/csv;charset=utf-8");
-    let blob =
-        web_sys::Blob::new_with_u8_slice_sequence_and_options(&parts.into(), &bag).ok()?;
+    let blob = web_sys::Blob::new_with_u8_slice_sequence_and_options(&parts.into(), &bag).ok()?;
     let url = web_sys::Url::create_object_url_with_blob(&blob).ok()?;
 
     let anchor = document
@@ -192,9 +279,14 @@ pub fn JournalTable(
         } else {
             rows.into_iter()
                 .filter(|row| {
-                    [row.instrument.as_str(), row.direction.as_str(), row.status.as_str(), row.exit_reason.as_str()]
-                        .iter()
-                        .any(|field| field.to_lowercase().contains(&needle))
+                    [
+                        row.instrument.as_str(),
+                        row.direction.as_str(),
+                        row.status.as_str(),
+                        row.exit_reason.as_str(),
+                    ]
+                    .iter()
+                    .any(|field| field.to_lowercase().contains(&needle))
                 })
                 .collect()
         };
@@ -209,11 +301,7 @@ pub fn JournalTable(
                 a.entry_ts.cmp(&b.entry_ts)
             } else {
                 let cmp = av.partial_cmp(&bv).unwrap_or(std::cmp::Ordering::Equal);
-                if ascending {
-                    cmp
-                } else {
-                    cmp.reverse()
-                }
+                if ascending { cmp } else { cmp.reverse() }
             }
         });
         rows
@@ -453,10 +541,25 @@ mod tests {
     fn csv_columns_cover_the_table_and_leave_slippage_blank() {
         let columns = csv_columns();
         assert_eq!(
-            columns.iter().map(|column| column.header).collect::<Vec<_>>(),
+            columns
+                .iter()
+                .map(|column| column.header)
+                .collect::<Vec<_>>(),
             [
-                "id", "symbol", "side", "status", "entry_ts", "exit_ts", "qty", "open_qty",
-                "avg_entry", "avg_exit", "net_pnl", "return_pct", "fees", "slippage",
+                "id",
+                "symbol",
+                "side",
+                "status",
+                "entry_ts",
+                "exit_ts",
+                "qty",
+                "open_qty",
+                "avg_entry",
+                "avg_exit",
+                "net_pnl",
+                "return_pct",
+                "fees",
+                "slippage",
             ]
         );
         let row = sample_row();

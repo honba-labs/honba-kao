@@ -13,11 +13,11 @@
 //! journal's `Export CSV` stays in the journal's own toolbar because it
 //! exports the filtered, sorted rows the table holds.
 
+use honba_api_wasm::analytics::{MetricKind, format_metric_value};
 use honba_kao_ui_core::icons::outline::{
     activity, bar_chart_2, briefcase, delete, file_spreadsheet, scroll_text, shield_check,
 };
 use honba_kao_ui_core::{HfButton, SvgIcon};
-use honba_api_wasm::analytics::{MetricKind, format_metric_value};
 use leptos::prelude::*;
 
 use crate::features::simulator::components::equity_card::{BarsSeamRef, EquityCard};
@@ -62,7 +62,15 @@ pub fn BottomDock(
     let rows = Memo::new(move |_| analytics.with(|bundle| bundle.rows.clone()));
     let heatmap = Memo::new(move |_| analytics.with(|bundle| bundle.heatmap.clone()));
     let wire_total_return = Memo::new(move |_| {
-        analytics.with(|bundle| bundle.metrics.as_ref().map(|metrics| metrics.total_return.to_string().parse::<f64>().unwrap_or(0.0)))
+        analytics.with(|bundle| {
+            bundle.metrics.as_ref().map(|metrics| {
+                metrics
+                    .total_return
+                    .to_string()
+                    .parse::<f64>()
+                    .unwrap_or(0.0)
+            })
+        })
     });
     let sharpe = Memo::new(move |_| {
         analytics.with(|bundle| {
@@ -90,9 +98,7 @@ pub fn BottomDock(
             SimTab::Trades => Some(rows.with(Vec::len)),
             SimTab::Portfolio => Some(engine_state.with(|state| state.round_trips.len())),
             SimTab::Signals => Some(history.with(Vec::len)),
-            SimTab::Logs => {
-                Some(history.with(Vec::len) + run.with(|state| state.logs.len()))
-            }
+            SimTab::Logs => Some(history.with(Vec::len) + run.with(|state| state.logs.len())),
             SimTab::Overview | SimTab::Report => None,
         }
     };

@@ -23,40 +23,244 @@ pub struct CommandFunctionSpec {
 
 /// OpenTerminalUI's full function table, in its order.
 pub const COMMAND_FUNCTIONS: &[CommandFunctionSpec] = &[
-    CommandFunctionSpec { code: "DESK", label: "Analyst Desk", description: "Open the cockpit analyst workspace", aliases: &["COCKPIT", "MONITOR"], security_scoped: false },
-    CommandFunctionSpec { code: "DES", label: "Description / Security Hub", description: "Open security hub overview", aliases: &["SECURITY", "HUB"], security_scoped: true },
-    CommandFunctionSpec { code: "GP", label: "Graph Price", description: "Open chart tab", aliases: &["CHART"], security_scoped: true },
-    CommandFunctionSpec { code: "CH", label: "Chart Workstation", description: "Open chart workstation with active symbol", aliases: &["WORKSTATION"], security_scoped: true },
-    CommandFunctionSpec { code: "FA", label: "Financial Analysis", description: "Open financials tab", aliases: &["FIN", "FUNDAMENTALS"], security_scoped: true },
-    CommandFunctionSpec { code: "NEWS", label: "News", description: "Open news (global or ticker-specific)", aliases: &["N"], security_scoped: false },
-    CommandFunctionSpec { code: "OPT", label: "Options", description: "Open options / F&O view", aliases: &["OPTIONS"], security_scoped: true },
-    CommandFunctionSpec { code: "ALERT", label: "Alerts", description: "Open symbol alert workflows", aliases: &["ALERTS", "AL"], security_scoped: true },
-    CommandFunctionSpec { code: "EST", label: "Estimates", description: "Open analyst estimates tab", aliases: &["ESTIMATES"], security_scoped: true },
-    CommandFunctionSpec { code: "PEER", label: "Peers", description: "Open peers comparison tab", aliases: &["PEERS"], security_scoped: true },
-    CommandFunctionSpec { code: "OWN", label: "Ownership", description: "Open ownership tab", aliases: &["OWNERSHIP"], security_scoped: true },
-    CommandFunctionSpec { code: "EQS", label: "Equity Screener", description: "Open equity screener", aliases: &["SCREENER"], security_scoped: false },
-    CommandFunctionSpec { code: "PORT", label: "Portfolio", description: "Open portfolio", aliases: &["PF", "PORTFOLIO"], security_scoped: false },
-    CommandFunctionSpec { code: "WL", label: "Watchlist", description: "Open watchlist", aliases: &["WATCHLIST"], security_scoped: false },
-    CommandFunctionSpec { code: "TOP", label: "Top Stories", description: "Open top market stories", aliases: &["HEADLINES"], security_scoped: false },
-    CommandFunctionSpec { code: "BT", label: "Backtesting", description: "Open backtesting workspace", aliases: &["BACKTEST"], security_scoped: false },
-    CommandFunctionSpec { code: "SET", label: "Settings", description: "Open settings", aliases: &["SETTINGS"], security_scoped: false },
-    CommandFunctionSpec { code: "OPS", label: "Ops Dashboard", description: "Open operations dashboard", aliases: &["OPERATIONS"], security_scoped: false },
-    CommandFunctionSpec { code: "LAUNCH", label: "Launchpad", description: "Open multi-panel launchpad", aliases: &["LP", "LAUNCHPAD"], security_scoped: false },
-    CommandFunctionSpec { code: "COMP", label: "Split Compare", description: "Open split-screen comparison", aliases: &["COMPARE"], security_scoped: false },
-    CommandFunctionSpec { code: "YCURVE", label: "Yield Curve", description: "Open US Treasury yield curve dashboard", aliases: &["GC", "YIELD", "CURVE"], security_scoped: false },
-    CommandFunctionSpec { code: "ECAL", label: "Economic Calendar", description: "Open global economic calendar", aliases: &["CALENDAR"], security_scoped: false },
-    CommandFunctionSpec { code: "ECOF", label: "Macro Dashboard", description: "Open macro indicators dashboard", aliases: &["MACRO", "INDICATORS"], security_scoped: false },
-    CommandFunctionSpec { code: "FRED", label: "FRED Series", description: "Chart a FRED economic series", aliases: &["SERIES"], security_scoped: false },
-    CommandFunctionSpec { code: "RRG", label: "Sector Rotation Map", description: "Relative Rotation Graph (RRG)", aliases: &["SROT", "SECTOR"], security_scoped: false },
-    CommandFunctionSpec { code: "CRYP", label: "Crypto Workspace", description: "Open dedicated crypto workspace", aliases: &["CRYPTO"], security_scoped: false },
-    CommandFunctionSpec { code: "CMDTY", label: "Commodities", description: "Open commodity market view", aliases: &["COMMODITY", "GOLD", "OIL"], security_scoped: false },
-    CommandFunctionSpec { code: "FX", label: "Forex", description: "Open FX market view", aliases: &["FOREX", "CURRENCY"], security_scoped: false },
-    CommandFunctionSpec { code: "ETFA", label: "ETF Analytics", description: "Open ETF market view", aliases: &["ETF"], security_scoped: false },
-    CommandFunctionSpec { code: "BOND", label: "Bonds", description: "Open bond and yield views", aliases: &["CREDIT", "FIXED"], security_scoped: false },
-    CommandFunctionSpec { code: "HOT", label: "Hotlists", description: "Open movers and hotlists", aliases: &["MOVERS", "GAINERS", "LOSERS", "HOTLISTS"], security_scoped: false },
-    CommandFunctionSpec { code: "TCA", label: "Transaction Costs", description: "Open TCA workflow", aliases: &["COST", "SLIPPAGE"], security_scoped: false },
-    CommandFunctionSpec { code: "COMM", label: "Community", description: "Open community and idea flow", aliases: &["IDEAS", "SOCIAL"], security_scoped: false },
-    CommandFunctionSpec { code: "DEPTH", label: "Market Depth", description: "Open market depth workflow", aliases: &["DOM", "L2", "BOOK"], security_scoped: false },
+    CommandFunctionSpec {
+        code: "DESK",
+        label: "Analyst Desk",
+        description: "Open the cockpit analyst workspace",
+        aliases: &["COCKPIT", "MONITOR"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "DES",
+        label: "Description / Security Hub",
+        description: "Open security hub overview",
+        aliases: &["SECURITY", "HUB"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "GP",
+        label: "Graph Price",
+        description: "Open chart tab",
+        aliases: &["CHART"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "CH",
+        label: "Chart Workstation",
+        description: "Open chart workstation with active symbol",
+        aliases: &["WORKSTATION"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "FA",
+        label: "Financial Analysis",
+        description: "Open financials tab",
+        aliases: &["FIN", "FUNDAMENTALS"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "NEWS",
+        label: "News",
+        description: "Open news (global or ticker-specific)",
+        aliases: &["N"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "OPT",
+        label: "Options",
+        description: "Open options / F&O view",
+        aliases: &["OPTIONS"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "ALERT",
+        label: "Alerts",
+        description: "Open symbol alert workflows",
+        aliases: &["ALERTS", "AL"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "EST",
+        label: "Estimates",
+        description: "Open analyst estimates tab",
+        aliases: &["ESTIMATES"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "PEER",
+        label: "Peers",
+        description: "Open peers comparison tab",
+        aliases: &["PEERS"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "OWN",
+        label: "Ownership",
+        description: "Open ownership tab",
+        aliases: &["OWNERSHIP"],
+        security_scoped: true,
+    },
+    CommandFunctionSpec {
+        code: "EQS",
+        label: "Equity Screener",
+        description: "Open equity screener",
+        aliases: &["SCREENER"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "PORT",
+        label: "Portfolio",
+        description: "Open portfolio",
+        aliases: &["PF", "PORTFOLIO"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "WL",
+        label: "Watchlist",
+        description: "Open watchlist",
+        aliases: &["WATCHLIST"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "TOP",
+        label: "Top Stories",
+        description: "Open top market stories",
+        aliases: &["HEADLINES"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "BT",
+        label: "Backtesting",
+        description: "Open backtesting workspace",
+        aliases: &["BACKTEST"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "SET",
+        label: "Settings",
+        description: "Open settings",
+        aliases: &["SETTINGS"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "OPS",
+        label: "Ops Dashboard",
+        description: "Open operations dashboard",
+        aliases: &["OPERATIONS"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "LAUNCH",
+        label: "Launchpad",
+        description: "Open multi-panel launchpad",
+        aliases: &["LP", "LAUNCHPAD"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "COMP",
+        label: "Split Compare",
+        description: "Open split-screen comparison",
+        aliases: &["COMPARE"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "YCURVE",
+        label: "Yield Curve",
+        description: "Open US Treasury yield curve dashboard",
+        aliases: &["GC", "YIELD", "CURVE"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "ECAL",
+        label: "Economic Calendar",
+        description: "Open global economic calendar",
+        aliases: &["CALENDAR"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "ECOF",
+        label: "Macro Dashboard",
+        description: "Open macro indicators dashboard",
+        aliases: &["MACRO", "INDICATORS"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "FRED",
+        label: "FRED Series",
+        description: "Chart a FRED economic series",
+        aliases: &["SERIES"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "RRG",
+        label: "Sector Rotation Map",
+        description: "Relative Rotation Graph (RRG)",
+        aliases: &["SROT", "SECTOR"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "CRYP",
+        label: "Crypto Workspace",
+        description: "Open dedicated crypto workspace",
+        aliases: &["CRYPTO"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "CMDTY",
+        label: "Commodities",
+        description: "Open commodity market view",
+        aliases: &["COMMODITY", "GOLD", "OIL"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "FX",
+        label: "Forex",
+        description: "Open FX market view",
+        aliases: &["FOREX", "CURRENCY"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "ETFA",
+        label: "ETF Analytics",
+        description: "Open ETF market view",
+        aliases: &["ETF"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "BOND",
+        label: "Bonds",
+        description: "Open bond and yield views",
+        aliases: &["CREDIT", "FIXED"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "HOT",
+        label: "Hotlists",
+        description: "Open movers and hotlists",
+        aliases: &["MOVERS", "GAINERS", "LOSERS", "HOTLISTS"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "TCA",
+        label: "Transaction Costs",
+        description: "Open TCA workflow",
+        aliases: &["COST", "SLIPPAGE"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "COMM",
+        label: "Community",
+        description: "Open community and idea flow",
+        aliases: &["IDEAS", "SOCIAL"],
+        security_scoped: false,
+    },
+    CommandFunctionSpec {
+        code: "DEPTH",
+        label: "Market Depth",
+        description: "Open market depth workflow",
+        aliases: &["DOM", "L2", "BOOK"],
+        security_scoped: false,
+    },
 ];
 
 /// Financial statement focus words accepted after `FA` (`INCOME`, `BS`, ...).
@@ -78,9 +282,18 @@ pub enum ParsedCommand {
     /// `RELIANCE`: a bare ticker, opens its overview.
     Ticker { raw: String, ticker: String },
     /// `RELIANCE FA income`: a ticker followed by a function.
-    TickerFunction { raw: String, ticker: String, func: &'static str, modifiers: Vec<String> },
+    TickerFunction {
+        raw: String,
+        ticker: String,
+        func: &'static str,
+        modifiers: Vec<String>,
+    },
     /// `PORT`, `DESK RELIANCE`: a function with no ticker in front.
-    Function { raw: String, func: &'static str, modifiers: Vec<String> },
+    Function {
+        raw: String,
+        func: &'static str,
+        modifiers: Vec<String>,
+    },
     /// Anything else. Routed to the AI agent (not wired yet).
     NaturalLanguage { raw: String, query: String },
 }
@@ -128,25 +341,49 @@ pub fn parse_command(input: &str) -> ParsedCommand {
     let tokens: Vec<String> = raw.split_whitespace().map(normalize_token).collect();
 
     if tokens.is_empty() {
-        return ParsedCommand::NaturalLanguage { raw: raw.clone(), query: String::new() };
+        return ParsedCommand::NaturalLanguage {
+            raw: raw.clone(),
+            query: String::new(),
+        };
     }
 
     if tokens.len() == 1 {
         let only = &tokens[0];
-        if let Some(spec) = COMMAND_FUNCTIONS.iter().find(|spec| spec.code == only.as_str()) {
-            return ParsedCommand::Function { raw, func: spec.code, modifiers: vec![] };
+        if let Some(spec) = COMMAND_FUNCTIONS
+            .iter()
+            .find(|spec| spec.code == only.as_str())
+        {
+            return ParsedCommand::Function {
+                raw,
+                func: spec.code,
+                modifiers: vec![],
+            };
         }
         if looks_like_ticker(only) {
-            return ParsedCommand::Ticker { raw, ticker: only.clone() };
+            return ParsedCommand::Ticker {
+                raw,
+                ticker: only.clone(),
+            };
         }
         if let Some(func) = function_code(only) {
-            return ParsedCommand::Function { raw, func, modifiers: vec![] };
+            return ParsedCommand::Function {
+                raw,
+                func,
+                modifiers: vec![],
+            };
         }
-        return ParsedCommand::NaturalLanguage { query: raw.clone(), raw };
+        return ParsedCommand::NaturalLanguage {
+            query: raw.clone(),
+            raw,
+        };
     }
 
     if let Some(func) = function_code(&tokens[0]) {
-        return ParsedCommand::Function { raw, func, modifiers: tokens[1..].to_vec() };
+        return ParsedCommand::Function {
+            raw,
+            func,
+            modifiers: tokens[1..].to_vec(),
+        };
     }
 
     if looks_like_ticker(&tokens[0]) {
@@ -164,7 +401,11 @@ pub fn parse_command(input: &str) -> ParsedCommand {
             let previous = &tokens[..tokens.len() - 1];
             if previous.iter().all(|t| looks_like_ticker(t)) {
                 if previous.len() > 1 {
-                    return ParsedCommand::Function { raw, func, modifiers: previous.to_vec() };
+                    return ParsedCommand::Function {
+                        raw,
+                        func,
+                        modifiers: previous.to_vec(),
+                    };
                 }
                 return ParsedCommand::TickerFunction {
                     raw,
@@ -175,10 +416,16 @@ pub fn parse_command(input: &str) -> ParsedCommand {
             }
         }
 
-        return ParsedCommand::Ticker { raw, ticker: tokens[0].clone() };
+        return ParsedCommand::Ticker {
+            raw,
+            ticker: tokens[0].clone(),
+        };
     }
 
-    ParsedCommand::NaturalLanguage { query: raw.clone(), raw }
+    ParsedCommand::NaturalLanguage {
+        query: raw.clone(),
+        raw,
+    }
 }
 
 /// Security-hub tab id for a security-scoped function. Port of `securityFuncToTab`.
@@ -211,11 +458,18 @@ pub fn route_for(parsed: &ParsedCommand) -> CommandOutcome {
         ParsedCommand::Ticker { ticker, .. } => {
             CommandOutcome::Navigate(security_route(ticker, "overview", &[]))
         }
-        ParsedCommand::TickerFunction { ticker, func, modifiers, .. } => {
+        ParsedCommand::TickerFunction {
+            ticker,
+            func,
+            modifiers,
+            ..
+        } => {
             let tab = security_tab_for(func);
             CommandOutcome::Navigate(security_route(ticker, tab, modifiers))
         }
-        ParsedCommand::Function { func, modifiers, .. } => match *func {
+        ParsedCommand::Function {
+            func, modifiers, ..
+        } => match *func {
             // Ticker-scoped functions typed without a ticker: open the hub's default.
             "DES" | "GP" | "FA" | "NEWS" | "EST" | "PEER" | "OWN" | "OPT" | "ALERT" => {
                 match modifiers.first().filter(|m| looks_like_ticker(m)) {
@@ -276,7 +530,10 @@ pub fn fuzzy_score(haystack: &str, needle: &str) -> i32 {
     let mut score = 0;
     let mut cursor = 0usize;
     for ch in n.chars() {
-        match h_chars[cursor.min(h_chars.len())..].iter().position(|c| *c == ch) {
+        match h_chars[cursor.min(h_chars.len())..]
+            .iter()
+            .position(|c| *c == ch)
+        {
             Some(offset) => {
                 let idx = cursor + offset;
                 score += if idx == cursor { 12 } else { 4 };
@@ -300,7 +557,11 @@ pub struct TickerHint {
 const TICKER_FUNCTION_HINTS: &[(&str, &str, &str)] = &[
     ("DES", "Overview", "Open the security overview"),
     ("FA", "Financials", "Open financial statements and ratios"),
-    ("CH", "Chart Workstation", "Load the symbol into chart workstation"),
+    (
+        "CH",
+        "Chart Workstation",
+        "Load the symbol into chart workstation",
+    ),
     ("NEWS", "News", "Open ticker-specific news"),
     ("OPT", "Option Chain", "Open options and derivatives"),
     ("EST", "Estimates", "Open analyst estimates"),
@@ -321,7 +582,11 @@ const FINANCIAL_SUB_HINTS: &[(&str, &str)] = &[
 /// `TICKER FA` lists the statement focus words, and a partial second token
 /// filters the function hints.
 pub fn ticker_hints(input: &str) -> Vec<TickerHint> {
-    let tokens: Vec<String> = input.trim().split_whitespace().map(normalize_token).collect();
+    let tokens: Vec<String> = input
+        .trim()
+        .split_whitespace()
+        .map(normalize_token)
+        .collect();
     if tokens.is_empty() || !looks_like_ticker(&tokens[0]) {
         return vec![];
     }
@@ -358,7 +623,9 @@ pub fn ticker_hints(input: &str) -> Vec<TickerHint> {
     if parsed_function == Some("FA") || second == "FA" {
         return FINANCIAL_SUB_HINTS
             .iter()
-            .filter(|(sub, subtitle)| third.is_empty() || fuzzy_score(&format!("{sub} {subtitle}"), &third) >= 0)
+            .filter(|(sub, subtitle)| {
+                third.is_empty() || fuzzy_score(&format!("{sub} {subtitle}"), &third) >= 0
+            })
             .map(|(sub, subtitle)| {
                 hint(
                     format!("hint:{ticker}:FA:{sub}"),

@@ -4,7 +4,7 @@
 //! theoretical price and Greeks. A market price fills in an implied-vol solve.
 //! Inputs are user-entered; no feed is wired, so the defaults are illustrative.
 
-use super::black_scholes::{bs_price_and_greeks, implied_vol, Greeks};
+use super::black_scholes::{Greeks, bs_price_and_greeks, implied_vol};
 use honba_kao_ui_core::{
     HfInput, HfKpi, HfPageHeader, HfPanel, HfPanelHeader, HfToggleGroup, HfToggleGroupItem,
 };

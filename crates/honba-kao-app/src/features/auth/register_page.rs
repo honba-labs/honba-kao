@@ -7,9 +7,9 @@ use leptos_router::hooks::use_navigate;
 use honba_kao_ui_core::HfButton;
 
 use crate::features::auth::components::{AuthField, AuthShell};
+use crate::router::paths::ROUTES;
 use crate::shared::constants::auth as creds;
 use crate::shared::contexts::use_auth;
-use crate::router::paths::ROUTES;
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {

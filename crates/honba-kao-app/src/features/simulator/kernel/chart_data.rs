@@ -28,11 +28,11 @@
 //! fe, even though a Rust-decoded wire bar cannot hold a NaN.
 
 use honba_api_wasm::calendar::{
-    civil_from_days, days_from_civil, unix_nanos_to_seconds, IST_OFFSET_SECONDS,
+    IST_OFFSET_SECONDS, civil_from_days, days_from_civil, unix_nanos_to_seconds,
 };
 use honba_core::market::Bar;
 
-use crate::features::simulator::kernel::controls::{parse_bar_spec, BarUnit};
+use crate::features::simulator::kernel::controls::{BarUnit, parse_bar_spec};
 
 /// NSE regular session, in seconds past IST midnight (09:15 → 15:30).
 pub const SESSION_OPEN_SECONDS: i64 = 9 * 3600 + 15 * 60;
@@ -94,7 +94,9 @@ pub fn to_chart_bars(bars: &[Bar]) -> Vec<ChartBar> {
         let low = bar.low.to_string().parse::<f64>().unwrap_or(0.0);
         let close = bar.close.to_string().parse::<f64>().unwrap_or(0.0);
         let volume = bar.volume.to_string().parse::<f64>().unwrap_or(0.0);
-        let values_ok = [open, high, low, close].iter().all(|value| value.is_finite());
+        let values_ok = [open, high, low, close]
+            .iter()
+            .all(|value| value.is_finite());
         if !values_ok {
             continue;
         }
@@ -132,12 +134,13 @@ pub fn bucket_start(time: i64, spec: (u32, BarUnit)) -> i64 {
     let (step, unit) = spec;
     match unit {
         BarUnit::Second | BarUnit::Minute | BarUnit::Hour => {
-            let width = step as i64 * match unit {
-                BarUnit::Second => 1,
-                BarUnit::Minute => 60,
-                BarUnit::Hour => 3600,
-                _ => unreachable!("guarded by the match"),
-            };
+            let width = step as i64
+                * match unit {
+                    BarUnit::Second => 1,
+                    BarUnit::Minute => 60,
+                    BarUnit::Hour => 3600,
+                    _ => unreachable!("guarded by the match"),
+                };
             time.div_euclid(width) * width
         }
         BarUnit::Day => ist_day_start(time),
@@ -146,8 +149,7 @@ pub fn bucket_start(time: i64, spec: (u32, BarUnit)) -> i64 {
             ist_day_start(time) - days_since_monday * 86_400
         }
         BarUnit::Month => {
-            let (year, month, _) =
-                civil_from_days((time + IST_OFFSET_SECONDS).div_euclid(86_400));
+            let (year, month, _) = civil_from_days((time + IST_OFFSET_SECONDS).div_euclid(86_400));
             days_from_civil(year, month, 1) * 86_400 - IST_OFFSET_SECONDS
         }
     }
@@ -297,10 +299,7 @@ pub fn preview_bars(request: &PreviewBarsRequest<'_>) -> Vec<ChartBar> {
         _ => 100.0,
     };
     let seed = seed_for(request.instrument_id, spec);
-    let intraday = matches!(
-        spec.1,
-        BarUnit::Second | BarUnit::Minute | BarUnit::Hour
-    );
+    let intraday = matches!(spec.1, BarUnit::Second | BarUnit::Minute | BarUnit::Hour);
     let step = if intraday {
         (spec.0 as i64)
             * match spec.1 {
@@ -440,10 +439,8 @@ pub fn marker_tolerance_sec(bar_spec: &str) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use honba_api_wasm::pairing::{markers_from_pairing, pair_trades, FillSide, TradeMarkerKind};
-    use honba_kao_client::wire::{
-        Exchange, InstrumentId, Trade, WireOrderSide as OrderSide,
-    };
+    use honba_api_wasm::pairing::{FillSide, TradeMarkerKind, markers_from_pairing, pair_trades};
+    use honba_kao_client::wire::{Exchange, InstrumentId, Trade, WireOrderSide as OrderSide};
     /// 2024-01-01 is a Monday.
     const JAN1_2024: i64 = 1_704_067_200;
 
@@ -458,8 +455,8 @@ mod tests {
     }
 
     fn wire_bar(seconds: u64, close: f64) -> Bar {
-        use honba_core::{Price, Quantity};
         use chrono::{DateTime, Utc};
+        use honba_core::{Price, Quantity};
         use rust_decimal::Decimal;
         let p = Price::new(Decimal::try_from(close).unwrap_or_default());
         let instrument = InstrumentId::new(Exchange::Nse, "TCS");
@@ -503,11 +500,7 @@ mod tests {
 
     #[test]
     fn converts_sorts_and_de_dublicates_keeping_the_later_bar() {
-        let bars = to_chart_bars(&[
-            wire_bar(200, 2.0),
-            wire_bar(100, 1.0),
-            wire_bar(200, 3.0),
-        ]);
+        let bars = to_chart_bars(&[wire_bar(200, 2.0), wire_bar(100, 1.0), wire_bar(200, 3.0)]);
         let pairs: Vec<(i64, f64)> = bars.iter().map(|b| (b.time, b.close)).collect();
         assert_eq!(pairs, [(100, 1.0), (200, 3.0)]);
     }
@@ -515,7 +508,11 @@ mod tests {
     #[test]
     fn folds_finer_bars_into_the_run_bar_spec() {
         let folded = resample_bars(
-            &[minute(0, 0, 100.0, 10.0), minute(0, 5, 104.0, 10.0), minute(0, 10, 102.0, 10.0)],
+            &[
+                minute(0, 0, 100.0, 10.0),
+                minute(0, 5, 104.0, 10.0),
+                minute(0, 10, 102.0, 10.0),
+            ],
             "15m",
         );
         assert_eq!(folded.len(), 1);
@@ -536,7 +533,10 @@ mod tests {
     fn never_invents_a_bar_for_a_bucket_with_no_data() {
         // Mon 2024-01-01 and Mon 2024-01-08: the week in between is never
         // emitted by the source and is not fabricated here.
-        let daily = resample_bars(&[minute(0, 0, 100.0, 10.0), minute(7, 0, 110.0, 10.0)], "1d");
+        let daily = resample_bars(
+            &[minute(0, 0, 100.0, 10.0), minute(7, 0, 110.0, 10.0)],
+            "1d",
+        );
         let times: Vec<i64> = daily.iter().map(|b| b.time).collect();
         assert_eq!(times, [open(0), open(7)]);
         assert!(resample_bars(&[], "1d").is_empty());
@@ -636,11 +636,13 @@ mod tests {
             anchor: None,
         };
         assert!(preview_bars(&request).is_empty());
-        assert!(preview_bars(&PreviewBarsRequest {
-            to: request.from,
-            ..request
-        })
-        .is_empty());
+        assert!(
+            preview_bars(&PreviewBarsRequest {
+                to: request.from,
+                ..request
+            })
+            .is_empty()
+        );
     }
 
     #[test]
@@ -649,10 +651,7 @@ mod tests {
             .iter()
             .map(|offset| chart_bar(open(0) + offset, 1.0, 0.0))
             .collect();
-        assert_eq!(
-            snap_ts(&[open(0) + 600], &bars, 300),
-            vec![open(0) + 600]
-        );
+        assert_eq!(snap_ts(&[open(0) + 600], &bars, 300), vec![open(0) + 600]);
     }
 
     #[test]
@@ -696,7 +695,10 @@ mod tests {
     fn snapped_markers_land_on_the_bar_their_fill_belongs_to() {
         // 2024-01-02, 09:15 IST (the NSE session open) is 03:45 UTC.
         let session_open = day(1) + 3 * 3600 + 45 * 60;
-        let bar_times: Vec<i64> = [0, 5, 10, 15, 20, 25].iter().map(|m| session_open + m * 60).collect();
+        let bar_times: Vec<i64> = [0, 5, 10, 15, 20, 25]
+            .iter()
+            .map(|m| session_open + m * 60)
+            .collect();
         let bars: Vec<ChartBar> = bar_times
             .iter()
             .enumerate()
@@ -710,21 +712,24 @@ mod tests {
             })
             .collect();
 
-        let trade_at = |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
-            let seconds = bar_times[bar_index] + skew_sec;
-            let ts = chrono::DateTime::from_timestamp(seconds, 0).expect("valid timestamp");
-            Trade::new(
-                format!("o-{:?}-{}", side, bar_index),
-                format!("o-{:?}-{}", side, bar_index),
-                honba_core::uuid::Uuid::nil(),
-                InstrumentId::new(Exchange::Nse, "TCS"),
-                side,
-                honba_core::Price::new(rust_decimal::Decimal::try_from(price).unwrap_or_default()),
-                honba_core::Quantity::from_u64(quantity as u64),
-                "algo",
-                ts,
-            )
-        };
+        let trade_at =
+            |side: OrderSide, quantity: f64, price: f64, bar_index: usize, skew_sec: i64| {
+                let seconds = bar_times[bar_index] + skew_sec;
+                let ts = chrono::DateTime::from_timestamp(seconds, 0).expect("valid timestamp");
+                Trade::new(
+                    format!("o-{:?}-{}", side, bar_index),
+                    format!("o-{:?}-{}", side, bar_index),
+                    honba_core::uuid::Uuid::nil(),
+                    InstrumentId::new(Exchange::Nse, "TCS"),
+                    side,
+                    honba_core::Price::new(
+                        rust_decimal::Decimal::try_from(price).unwrap_or_default(),
+                    ),
+                    honba_core::Quantity::from_u64(quantity as u64),
+                    "algo",
+                    ts,
+                )
+            };
 
         // A long entered on the first bar and scaled out across two later bars.
         let trades = [
@@ -759,7 +764,8 @@ mod tests {
         );
 
         // A fill with no skew still lands.
-        let exact = markers_from_pairing(&pair_trades(&[trade_at(OrderSide::Buy, 10.0, 100.0, 2, 0)]));
+        let exact =
+            markers_from_pairing(&pair_trades(&[trade_at(OrderSide::Buy, 10.0, 100.0, 2, 0)]));
         let exact_times = snap_ts(&[exact[0].ts], &bars, tolerance);
         assert_eq!(exact_times, vec![bar_times[2]]);
     }

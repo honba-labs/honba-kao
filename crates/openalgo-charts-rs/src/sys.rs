@@ -30,10 +30,16 @@ extern "C" {
     // ------------------------------------------------------------------------
 
     #[wasm_bindgen(catch, js_name = createChart)]
-    pub fn create_chart(container: &web_sys::HtmlElement, options: &JsValue) -> Result<Chart, JsValue>;
+    pub fn create_chart(
+        container: &web_sys::HtmlElement,
+        options: &JsValue,
+    ) -> Result<Chart, JsValue>;
 
     #[wasm_bindgen(catch, js_namespace = window, js_name = createChart)]
-    pub fn create_chart_window(container: &web_sys::HtmlElement, options: &JsValue) -> Result<Chart, JsValue>;
+    pub fn create_chart_window(
+        container: &web_sys::HtmlElement,
+        options: &JsValue,
+    ) -> Result<Chart, JsValue>;
 
     // ------------------------------------------------------------------------
     // Chart methods
@@ -64,7 +70,11 @@ extern "C" {
     pub fn subscribe_crosshair_move(this: &Chart, cb: &js_sys::Function) -> js_sys::Function;
 
     #[wasm_bindgen(method, js_name = subscribeDrag)]
-    pub fn subscribe_drag(this: &Chart, on_drag: &js_sys::Function, on_drag_end: &JsValue) -> js_sys::Function;
+    pub fn subscribe_drag(
+        this: &Chart,
+        on_drag: &js_sys::Function,
+        on_drag_end: &JsValue,
+    ) -> js_sys::Function;
 
     #[wasm_bindgen(method, js_name = on)]
     pub fn on(this: &Chart, event: &str, cb: &js_sys::Function) -> js_sys::Function;
@@ -155,7 +165,12 @@ extern "C" {
     pub fn bridge_mount_static(element: &JsValue) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = setSeries, catch)]
-    pub fn bridge_set_series(id: f64, kind: &str, style: &str, bars: &str) -> Result<JsValue, JsValue>;
+    pub fn bridge_set_series(
+        id: f64,
+        kind: &str,
+        style: &str,
+        bars: &str,
+    ) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "honbaCharts"], js_name = updateLast, catch)]
     pub fn bridge_update_last(id: f64, bar: &str) -> Result<JsValue, JsValue>;
@@ -212,7 +227,8 @@ extern "C" {
 }
 
 fn is_chart(value: &JsValue) -> bool {
-    value.is_object() && js_sys::Reflect::has(value, &JsValue::from_str("addSeries")).unwrap_or(false)
+    value.is_object()
+        && js_sys::Reflect::has(value, &JsValue::from_str("addSeries")).unwrap_or(false)
 }
 
 fn is_series_api(value: &JsValue) -> bool {
@@ -220,11 +236,13 @@ fn is_series_api(value: &JsValue) -> bool {
 }
 
 fn is_time_scale(value: &JsValue) -> bool {
-    value.is_object() && js_sys::Reflect::has(value, &JsValue::from_str("fitContent")).unwrap_or(false)
+    value.is_object()
+        && js_sys::Reflect::has(value, &JsValue::from_str("fitContent")).unwrap_or(false)
 }
 
 fn is_price_scale(value: &JsValue) -> bool {
-    value.is_object() && js_sys::Reflect::has(value, &JsValue::from_str("setOptions")).unwrap_or(false)
+    value.is_object()
+        && js_sys::Reflect::has(value, &JsValue::from_str("setOptions")).unwrap_or(false)
 }
 
 impl Clone for Chart {
@@ -263,4 +281,3 @@ unsafe impl Send for TimeScale {}
 unsafe impl Sync for TimeScale {}
 unsafe impl Send for PriceScale {}
 unsafe impl Sync for PriceScale {}
-

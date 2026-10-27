@@ -22,12 +22,14 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use super::indicators::{
-    bollinger_series, ema_series, macd_from_emas, rsi_series, sma_series, BollingerSeries,
-    MacdSeries,
+    BollingerSeries, MacdSeries, bollinger_series, ema_series, macd_from_emas, rsi_series,
+    sma_series,
 };
-use super::{stamp_str, Indication};
+use super::{Indication, stamp_str};
 use crate::features::simulator::kernel::chart_data::ChartBar;
-use crate::features::simulator::kernel::selection::{StrategyGraphEdge, StrategyGraphNode, StrategyGraphShape};
+use crate::features::simulator::kernel::selection::{
+    StrategyGraphEdge, StrategyGraphNode, StrategyGraphShape,
+};
 
 /// The engine's own order side — fe `'buy' | 'sell' | 'hold'`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -198,17 +200,17 @@ pub fn compute_graph_indicators(
                 let signal = period_param(&node.params, &["signal"], 9);
                 let fast_ema = ema_series(&closes, fast);
                 let slow_ema = ema_series(&closes, slow);
-                result
-                    .macd
-                    .insert(node.id.clone(), macd_from_emas(&fast_ema, &slow_ema, slow, signal));
+                result.macd.insert(
+                    node.id.clone(),
+                    macd_from_emas(&fast_ema, &slow_ema, slow, signal),
+                );
             }
             "bollinger" => {
                 let length = period_param(&node.params, &["length", "period"], 20);
                 let std = num_param(&node.params, &["std"], 2.0);
-                result.bollinger.insert(
-                    node.id.clone(),
-                    bollinger_series(&closes, length, std),
-                );
+                result
+                    .bollinger
+                    .insert(node.id.clone(), bollinger_series(&closes, length, std));
             }
             // fe skips unbundled kinds silently; the conditions referencing
             // them read the close via the fallback in get_series_value.
@@ -280,17 +282,17 @@ pub fn evaluate_bar_signals(
 
     let mut signals: Vec<SignalEvaluation> = Vec::new();
 
-    for node in graph.nodes.iter().filter(|n| {
-        n.node_type == "condition" || n.node_type == "logic"
-    }) {
+    for node in graph
+        .nodes
+        .iter()
+        .filter(|n| n.node_type == "condition" || n.node_type == "logic")
+    {
         // fe: the first edge into `left`/`a`, and into `right`/`b`.
         let into = |port: &[&str]| -> Option<&StrategyGraphEdge> {
             graph
                 .edges
                 .iter()
-                .find(|edge| {
-                    edge.to_node == node.id && port.contains(&edge.to_port.as_str())
-                })
+                .find(|edge| edge.to_node == node.id && port.contains(&edge.to_port.as_str()))
         };
         let left_edge = into(&["left", "a"]);
         let right_edge = into(&["right", "b"]);
@@ -308,27 +310,43 @@ pub fn evaluate_bar_signals(
             .filter(|v| v.is_finite());
 
         let left_val = match left_edge {
-            Some(edge) => {
-                get_series_value(indicators, bars, &edge.from_node, &edge.from_port, bar_index)
-            }
+            Some(edge) => get_series_value(
+                indicators,
+                bars,
+                &edge.from_node,
+                &edge.from_port,
+                bar_index,
+            ),
             None => current.close,
         };
         let prev_left_val = match (has_prev, left_edge) {
-            (true, Some(edge)) => {
-                get_series_value(indicators, bars, &edge.from_node, &edge.from_port, bar_index - 1)
-            }
+            (true, Some(edge)) => get_series_value(
+                indicators,
+                bars,
+                &edge.from_node,
+                &edge.from_port,
+                bar_index - 1,
+            ),
             _ => f64::NAN,
         };
         let right_val = match right_edge {
-            Some(edge) => {
-                get_series_value(indicators, bars, &edge.from_node, &edge.from_port, bar_index)
-            }
+            Some(edge) => get_series_value(
+                indicators,
+                bars,
+                &edge.from_node,
+                &edge.from_port,
+                bar_index,
+            ),
             None => threshold.unwrap_or(f64::NAN),
         };
         let prev_right_val = match (has_prev, right_edge) {
-            (true, Some(edge)) => {
-                get_series_value(indicators, bars, &edge.from_node, &edge.from_port, bar_index - 1)
-            }
+            (true, Some(edge)) => get_series_value(
+                indicators,
+                bars,
+                &edge.from_node,
+                &edge.from_port,
+                bar_index - 1,
+            ),
             _ => threshold.unwrap_or(f64::NAN),
         };
 
@@ -380,12 +398,8 @@ pub fn evaluate_bar_signals(
             active,
             indication,
             weight: 1.0,
-            indicator_value: left_val
-                .is_finite()
-                .then(|| round2(left_val)),
-            threshold_value: right_val
-                .is_finite()
-                .then(|| round2(right_val)),
+            indicator_value: left_val.is_finite().then(|| round2(left_val)),
+            threshold_value: right_val.is_finite().then(|| round2(right_val)),
             details,
         });
     }
@@ -432,9 +446,9 @@ pub fn evaluate_bar_signals(
 
     // fe rule: a single condition is enough; with more, a majority-ish
     // count (`Math.min(bullish.length, max(1, ceil(signals/2)))`).
-    let required_bullish = bullish.len().min(
-        (signals.len() as f64 / 2.0).ceil() as usize
-    );
+    let required_bullish = bullish
+        .len()
+        .min((signals.len() as f64 / 2.0).ceil() as usize);
     let required_bullish = required_bullish.max(1);
 
     if bullish_score >= required_bullish as f64 && bullish_score > bearish_score {
@@ -499,7 +513,9 @@ pub fn evaluate_bar_signals(
 mod tests {
     use super::*;
 
-    use crate::features::simulator::kernel::selection::{builtin_template, StrategyGraphEdge, StrategyGraphNode};
+    use crate::features::simulator::kernel::selection::{
+        StrategyGraphEdge, StrategyGraphNode, builtin_template,
+    };
 
     /// fe `engine.test.ts` `mockBars` (same generator, f64 exact).
     fn mock_bars(count: usize) -> Vec<ChartBar> {
@@ -658,14 +674,11 @@ mod tests {
         // ≤ 35 flips to bullish oversold); details carry the comparison.
         let bars = mock_bars(30);
         let mut graph = bare_graph();
-        graph.nodes = vec![
-            indicator("r", "rsi", 5.0),
-            {
-                let mut c = param("c40", "condition", "op", "lt".into());
-                c.params.insert("threshold".into(), 40.into());
-                c
-            },
-        ];
+        graph.nodes = vec![indicator("r", "rsi", 5.0), {
+            let mut c = param("c40", "condition", "op", "lt".into());
+            c.params.insert("threshold".into(), 40.into());
+            c
+        }];
         graph.edges = vec![edge("e", "r", "value", "c40", "left")];
         let indicators = compute_graph_indicators(&graph, &bars);
         let confluence = evaluate_bar_signals(&graph, &bars, 20, &indicators);
@@ -694,14 +707,11 @@ mod tests {
             })
             .collect();
         let mut graph = bare_graph();
-        graph.nodes = vec![
-            indicator("r", "rsi", 3.0),
-            {
-                let mut c = param("c", "condition", "op", "gt".into());
-                c.params.insert("threshold".into(), 70.into());
-                c
-            },
-        ];
+        graph.nodes = vec![indicator("r", "rsi", 3.0), {
+            let mut c = param("c", "condition", "op", "gt".into());
+            c.params.insert("threshold".into(), 70.into());
+            c
+        }];
         graph.edges = vec![edge("e", "r", "value", "c", "left")];
         let indicators = compute_graph_indicators(&graph, &bars);
         let confluence = evaluate_bar_signals(&graph, &bars, 10, &indicators);
@@ -822,7 +832,11 @@ mod tests {
                 assert_eq!(trade.side, TradeAction::Buy);
                 assert_eq!(trade.quantity, 25.0);
                 assert_eq!(trade.price, bars[i].close);
-                assert!(confluence.reason.starts_with("Bullish Confluence (1/1 signals):"));
+                assert!(
+                    confluence
+                        .reason
+                        .starts_with("Bullish Confluence (1/1 signals):")
+                );
                 assert!(confluence.confluence_ratio > 0.0);
                 return;
             } else {
@@ -861,9 +875,11 @@ mod tests {
         let trade = confluence.executed_trade.expect("sell must place an order");
         assert_eq!(trade.side, TradeAction::Sell);
         assert_eq!(trade.quantity, 10.0);
-        assert!(confluence
-            .reason
-            .starts_with("Bearish Confluence (1/1 signals):"));
+        assert!(
+            confluence
+                .reason
+                .starts_with("Bearish Confluence (1/1 signals):")
+        );
     }
 
     #[test]

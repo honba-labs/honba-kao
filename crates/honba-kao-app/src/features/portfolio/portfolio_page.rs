@@ -11,9 +11,9 @@ use leptos::prelude::*;
 
 use crate::shared::api;
 use crate::shared::components::charts::EquityChart;
-use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::shared::types::{BrokerStatus, Holding};
 use crate::shared::utils::{compact_currency, currency, percent, quantity};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 
 #[component]
 pub fn PortfolioPage() -> impl IntoView {

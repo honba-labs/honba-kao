@@ -6,12 +6,12 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
+use honba_kao_client::wire::{
+    InstrumentId, OrdersRequest, PortfolioPosition, WireExchange, WireOrder, WireOrderStatus,
+    WireTradingState,
+};
 use leptos::prelude::*;
 use leptos::task::spawn_local_scoped;
-use honba_kao_client::wire::{
-    InstrumentId, OrdersRequest, PortfolioPosition, WireExchange, WireOrder,
-    WireOrderStatus, WireTradingState,
-};
 use rust_decimal::Decimal;
 
 use super::order_draft_store::{
@@ -235,16 +235,11 @@ impl BookStore {
         // stop shapes the server does not parse today) is already on screen;
         // a backend rejection only drags an error line, like the labs app.
         let request = OrdersRequest {
-            instrument_id: Some(InstrumentId::new(
-                WireExchange::Nse,
-                ticket.symbol.clone(),
-            )),
+            instrument_id: Some(InstrumentId::new(WireExchange::Nse, ticket.symbol.clone())),
             side: Some(ticket.side.as_id().to_string()),
             order_type: Some(ticket.order_type.as_id().to_string()),
             qty: Some(Decimal::from(ticket.quantity)),
-            price: Some(
-                rust_decimal::Decimal::from_f64_retain(price).unwrap_or_default(),
-            ),
+            price: Some(rust_decimal::Decimal::from_f64_retain(price).unwrap_or_default()),
             tif: Some(ticket.tif.as_id().to_string()),
             client_order_id: Some(order_id.clone()),
         };
@@ -505,11 +500,7 @@ fn wire_order(row: WireOrder) -> WbOrder {
         } else {
             OrderSide::Buy
         },
-        quantity: row
-            .quantity
-            .to_string()
-            .parse::<f64>()
-            .unwrap_or(0.0) as i64,
+        quantity: row.quantity.to_string().parse::<f64>().unwrap_or(0.0) as i64,
         price,
         status: row.tag.clone().unwrap_or_default(),
         product: Product::Intraday,
@@ -544,18 +535,19 @@ fn wire_status_text(status: WireOrderStatus) -> String {
 }
 
 fn wire_position(position: PortfolioPosition) -> WbPosition {
-    let qty = position
-        .quantity
-        .to_string()
-        .parse::<f64>()
-        .unwrap_or(0.0);
+    let qty = position.quantity.to_string().parse::<f64>().unwrap_or(0.0);
     let side = if qty < 0.0 {
         OrderSide::Sell
     } else {
         OrderSide::Buy
     };
     let ltp = if qty.abs() > 1e-9 {
-        position.market_value.to_string().parse::<f64>().unwrap_or(0.0) / qty.abs()
+        position
+            .market_value
+            .to_string()
+            .parse::<f64>()
+            .unwrap_or(0.0)
+            / qty.abs()
     } else {
         position.avg_price.to_string().parse::<f64>().unwrap_or(0.0)
     };
@@ -563,11 +555,7 @@ fn wire_position(position: PortfolioPosition) -> WbPosition {
         symbol: position.instrument.symbol.to_uppercase(),
         side,
         quantity: qty.abs() as i64,
-        avg_price: position
-            .avg_price
-            .to_string()
-            .parse::<f64>()
-            .unwrap_or(0.0),
+        avg_price: position.avg_price.to_string().parse::<f64>().unwrap_or(0.0),
         ltp,
         realized_pnl: 0.0,
         unrealized_pnl: position

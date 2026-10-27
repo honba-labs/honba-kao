@@ -222,8 +222,16 @@ impl SimulatorStore {
                     trades: metrics.trades,
                     net_pnl: metrics.net_pnl.to_string().parse::<f64>().unwrap_or(0.0),
                     sharpe: metrics.sharpe.to_string().parse::<f64>().unwrap_or(0.0),
-                    max_drawdown: metrics.max_drawdown.to_string().parse::<f64>().unwrap_or(0.0),
-                    total_return: metrics.total_return.to_string().parse::<f64>().unwrap_or(0.0),
+                    max_drawdown: metrics
+                        .max_drawdown
+                        .to_string()
+                        .parse::<f64>()
+                        .unwrap_or(0.0),
+                    total_return: metrics
+                        .total_return
+                        .to_string()
+                        .parse::<f64>()
+                        .unwrap_or(0.0),
                 });
                 let input = AnalyticsInput {
                     metrics: run_metrics.as_ref(),
@@ -291,8 +299,8 @@ mod tests {
     use crate::features::simulator::stores::controls_store::ControlsPatch;
     use honba_kao_client::ClientError;
     use honba_kao_client::wire::{
-        BacktestRequest, BacktestResponse, CompiledStrategy, Exchange, InstrumentId,
-        RunStatus, Trade, TradesResponse, WireOrderSide,
+        BacktestRequest, BacktestResponse, CompiledStrategy, Exchange, InstrumentId, RunStatus,
+        Trade, TradesResponse, WireOrderSide,
     };
     use std::cell::{Cell, RefCell};
     use std::collections::VecDeque;
@@ -517,7 +525,8 @@ mod tests {
     }
 
     fn fill(minute: i64) -> Trade {
-        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
+        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0)
+            .expect("valid timestamp");
         Trade::new(
             "f",
             "o",

@@ -39,7 +39,10 @@ impl LinkBook {
     /// the stored value changed. Unlinked (`None`) is a no-op.
     pub fn set_group_symbol(&mut self, group: LinkGroup, symbol: Option<&str>) -> bool {
         let Some(i) = slot(group) else { return false };
-        let next = symbol.map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
+        let next = symbol
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string);
         if self.symbols[i] == next {
             return false;
         }
@@ -49,7 +52,10 @@ impl LinkBook {
 
     /// The group a panel belongs to (`None` if never assigned).
     pub fn panel_group(&self, panel_id: &str) -> LinkGroup {
-        self.panels.get(panel_id).copied().unwrap_or(LinkGroup::None)
+        self.panels
+            .get(panel_id)
+            .copied()
+            .unwrap_or(LinkGroup::None)
     }
 
     /// Assigns a panel to a group. Assigning `None` removes the entry.
@@ -79,7 +85,9 @@ pub struct SymbolLinkContext {
 
 impl SymbolLinkContext {
     pub fn new() -> Self {
-        Self { book: RwSignal::new(LinkBook::new()) }
+        Self {
+            book: RwSignal::new(LinkBook::new()),
+        }
     }
 
     /// Makes this context available to descendants via [`use_symbol_link`].
@@ -88,7 +96,8 @@ impl SymbolLinkContext {
     }
 
     pub fn group_symbol(&self, group: LinkGroup) -> Option<String> {
-        self.book.with(|b| b.group_symbol(group).map(str::to_string))
+        self.book
+            .with(|b| b.group_symbol(group).map(str::to_string))
     }
 
     pub fn set_group_symbol(&self, group: LinkGroup, symbol: &str) {
@@ -161,5 +170,10 @@ pub fn use_link_group(panel_id: &str) -> LinkGroupHandle {
         }
     });
 
-    LinkGroupHandle { group, symbol, set_group, set_symbol }
+    LinkGroupHandle {
+        group,
+        symbol,
+        set_group,
+        set_symbol,
+    }
 }

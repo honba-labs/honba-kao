@@ -21,7 +21,7 @@ use crate::features::simulator::kernel::selection::{
     StrategyGraphEdge, StrategyGraphNode, StrategyGraphShape,
 };
 use crate::features::strategy_studio::kernel::graph::{
-    catalogue_entry, edge_id, first_cycle_node, node_inputs, node_outputs, PortKind,
+    PortKind, catalogue_entry, edge_id, first_cycle_node, node_inputs, node_outputs,
 };
 
 /// Why an edit was refused. Messages are rendered verbatim in the editor.
@@ -83,7 +83,11 @@ pub fn input_kind(graph: &StrategyGraphShape, node_id: &str, port: &str) -> Opti
 
 /// fe's unique-id rule: `base`, then `base_1`, `base_2`, … until free.
 pub fn unique_node_id(graph: &StrategyGraphShape, base: &str) -> String {
-    let base = if base.trim().is_empty() { "node" } else { base.trim() };
+    let base = if base.trim().is_empty() {
+        "node"
+    } else {
+        base.trim()
+    };
     if find_node(graph, base).is_none() {
         return base.to_string();
     }
@@ -107,7 +111,11 @@ pub fn id_base(node: &StrategyGraphNode) -> String {
 /// Appends `node` under a unique id (its own id when free, else the
 /// [`id_base`] with a counter) and returns the id it landed under.
 pub fn add_node(graph: &mut StrategyGraphShape, mut node: StrategyGraphNode) -> String {
-    let base = if node.id.trim().is_empty() { id_base(&node) } else { node.id.clone() };
+    let base = if node.id.trim().is_empty() {
+        id_base(&node)
+    } else {
+        node.id.clone()
+    };
     let id = unique_node_id(graph, &base);
     node.id = id.clone();
     graph.nodes.push(node);
@@ -163,7 +171,10 @@ pub fn connect(
         port: to_port.to_string(),
     })?;
     if out_kind != in_kind {
-        return Err(EditError::KindMismatch { from: out_kind, to: in_kind });
+        return Err(EditError::KindMismatch {
+            from: out_kind,
+            to: in_kind,
+        });
     }
     if let Some(existing) = graph.edges.iter().find(|e| {
         e.from_node == from && e.from_port == from_port && e.to_node == to && e.to_port == to_port
@@ -172,7 +183,8 @@ pub fn connect(
     }
 
     let mut next = graph.clone();
-    next.edges.retain(|e| !(e.to_node == to && e.to_port == to_port));
+    next.edges
+        .retain(|e| !(e.to_node == to && e.to_port == to_port));
     let id = edge_id(from, from_port, to, to_port);
     next.edges.push(StrategyGraphEdge {
         id: id.clone(),
@@ -224,18 +236,26 @@ pub fn splice_edge(
         .cloned()
         .ok_or_else(|| EditError::UnknownEdge(edge_id_to_split.to_string()))?;
     let edge_kind = output_kind(graph, &edge.from_node, &edge.from_port).ok_or_else(|| {
-        EditError::UnknownPort { node: edge.from_node.clone(), port: edge.from_port.clone() }
+        EditError::UnknownPort {
+            node: edge.from_node.clone(),
+            port: edge.from_port.clone(),
+        }
     })?;
-    let target_kind = input_kind(graph, &edge.to_node, &edge.to_port).ok_or_else(|| {
-        EditError::UnknownPort { node: edge.to_node.clone(), port: edge.to_port.clone() }
-    })?;
+    let target_kind =
+        input_kind(graph, &edge.to_node, &edge.to_port).ok_or_else(|| EditError::UnknownPort {
+            node: edge.to_node.clone(),
+            port: edge.to_port.clone(),
+        })?;
     if !splice_fits(&node, in_port, out_port, edge_kind, target_kind) {
         let node_in = node_inputs(&node.node_type)
             .iter()
             .find(|p| p.id == in_port)
             .map(|p| p.kind)
             .unwrap_or(edge_kind);
-        return Err(EditError::KindMismatch { from: edge_kind, to: node_in });
+        return Err(EditError::KindMismatch {
+            from: edge_kind,
+            to: node_in,
+        });
     }
 
     let mut next = graph.clone();
@@ -307,7 +327,8 @@ pub fn set_indicator(graph: &mut StrategyGraphShape, node_id: &str, kind: &str) 
     node.params.clear();
     if let Some(entry) = catalogue_entry(kind) {
         for param in entry.params {
-            node.params.insert(param.name.to_string(), param.json_default());
+            node.params
+                .insert(param.name.to_string(), param.json_default());
         }
     }
     node.label = Some(kind.to_uppercase());

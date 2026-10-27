@@ -26,18 +26,18 @@ use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use leptos::prelude::*;
-use crate::features::simulator::kernel::log::{initial_run_log, RunLogState};
+use crate::features::simulator::kernel::log::{RunLogState, initial_run_log};
 use crate::features::simulator::kernel::run::{SimRunState, SimRunStatus};
+use leptos::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
+use crate::features::simulator::kernel::log::fold_run_log;
 /// The client's SSE consumer: the fold lives here, the transport in the
 /// client crate (`RunEventStream`). Only reachable under wasm — the native
 /// build has no `EventSource` runtime, so the drawer's poll log stands
 /// alone there exactly like fe's no-route fallback.
 #[cfg(target_arch = "wasm32")]
 use crate::shared::api::http::base_url;
-#[cfg(target_arch = "wasm32")]
-use crate::features::simulator::kernel::log::fold_run_log;
 #[cfg(target_arch = "wasm32")]
 use honba_kao_client::events::RunEventStream;
 #[cfg(target_arch = "wasm32")]
@@ -88,26 +88,28 @@ fn unpark_stream(_ticket: Option<usize>) {
 fn open_stream(run_id: &str, live: RwSignal<RunLogState>) -> Option<usize> {
     #[cfg(target_arch = "wasm32")]
     {
-        let handle: StreamHandle = Rc::new(RunEventStream::open(&base_url(), run_id, None, move |frame| {
-            let Ok(frame) = frame else {
-                // Decode failures are swallowed like fe's fold: the poll log
-                // still shows, the tail retries silently.
-                return;
-            };
-            live.update(|state| {
-                // Replayed frames are already folded — skip them by seq so
-                // the browser's auto-reconnect (which re-issues the original
-                // `resume_from_seq` URL) never duplicates lines.
-                let seq = match &frame {
-                    StreamFrame::Status { seq, .. } | StreamFrame::Record { seq, .. } => *seq,
-                };
-                if seq <= state.last_seq {
+        let handle: StreamHandle = Rc::new(
+            RunEventStream::open(&base_url(), run_id, None, move |frame| {
+                let Ok(frame) = frame else {
+                    // Decode failures are swallowed like fe's fold: the poll log
+                    // still shows, the tail retries silently.
                     return;
-                }
-                *state = fold_run_log(state, Some(&frame));
-            });
-        })
-        .ok()?);
+                };
+                live.update(|state| {
+                    // Replayed frames are already folded — skip them by seq so
+                    // the browser's auto-reconnect (which re-issues the original
+                    // `resume_from_seq` URL) never duplicates lines.
+                    let seq = match &frame {
+                        StreamFrame::Status { seq, .. } | StreamFrame::Record { seq, .. } => *seq,
+                    };
+                    if seq <= state.last_seq {
+                        return;
+                    }
+                    *state = fold_run_log(state, Some(&frame));
+                });
+            })
+            .ok()?,
+        );
         Some(park_stream(handle))
     }
     #[cfg(not(target_arch = "wasm32"))]
@@ -166,17 +168,22 @@ pub fn RunLogDrawer(
     on_cleanup(move || unpark_stream(stream_ticket.get_untracked()));
 
     let poll_count = Memo::new(move |_| run.with(|state| state.logs.len()));
-    let line_count =
-        Memo::new(move |_| poll_count.get() + live.with(|state| state.lines.len()));
+    let line_count = Memo::new(move |_| poll_count.get() + live.with(|state| state.lines.len()));
 
     let poll_lines = Memo::new(move |_| run.with(|state| state.logs.clone()));
     let live_lines = Memo::new(move |_| live.with(|state| state.lines.clone()));
 
     let badge = move || {
         if streaming.get() {
-            ("streaming…".to_string(), "sim-log__badge sim-log__badge--live")
+            (
+                "streaming…".to_string(),
+                "sim-log__badge sim-log__badge--live",
+            )
         } else if run_line.get().is_empty() {
-            ("poll only".to_string(), "sim-log__badge sim-log__badge--muted")
+            (
+                "poll only".to_string(),
+                "sim-log__badge sim-log__badge--muted",
+            )
         } else {
             ("SSE".to_string(), "sim-log__badge sim-log__badge--muted")
         }

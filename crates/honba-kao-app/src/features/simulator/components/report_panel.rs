@@ -34,10 +34,12 @@ pub fn ReportPanel(
     let metrics = Memo::new(move |_| analytics.with(|bundle| bundle.ribbon.clone()));
     let validation = Memo::new(move |_| {
         run.with(|state| {
-            state
-                .response
-                .as_ref()
-                .and_then(|response| response.validation.as_ref().map(honba_kao_client::wire::map_validation_block))
+            state.response.as_ref().and_then(|response| {
+                response
+                    .validation
+                    .as_ref()
+                    .map(honba_kao_client::wire::map_validation_block)
+            })
         })
     });
     let not_modelled = Memo::new(move |_| {
@@ -60,7 +62,11 @@ pub fn ReportPanel(
         })
     });
     let plan_not_modelled = Memo::new(move |_| {
-        last_plan.with(|plan| plan.as_ref().map(|plan| plan.not_modelled.clone()).unwrap_or_default())
+        last_plan.with(|plan| {
+            plan.as_ref()
+                .map(|plan| plan.not_modelled.clone())
+                .unwrap_or_default()
+        })
     });
 
     view! {

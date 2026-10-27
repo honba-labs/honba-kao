@@ -103,7 +103,9 @@ pub(crate) mod testing {
 }
 
 pub use controls::{
-    control_issues, default_controls, minus_months, parse_bar_spec, plan_request,
-    preset_range, resolve_range, universe_for, PeriodPreset, SimulatorControls, Today,
+    PeriodPreset, SimulatorControls, Today, control_issues, default_controls, minus_months,
+    parse_bar_spec, plan_request, preset_range, resolve_range, universe_for,
 };
-pub use defaults::{format_fill_model, format_timeframe, DEFAULT_BENCHMARK, DEFAULT_CAPITAL, DEFAULT_SEED};
+pub use defaults::{
+    DEFAULT_BENCHMARK, DEFAULT_CAPITAL, DEFAULT_SEED, format_fill_model, format_timeframe,
+};

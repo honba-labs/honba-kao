@@ -8,9 +8,9 @@
 use leptos::prelude::*;
 use leptos_router::components::A;
 
+use crate::router::paths::ROUTES;
 use crate::shared::components::BrandLogo;
 use crate::shared::constants::branding;
-use crate::router::paths::ROUTES;
 
 #[component]
 pub fn FlowLanding() -> impl IntoView {

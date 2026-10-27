@@ -16,7 +16,7 @@
 
 /// Route path constants (the `ROUTES` object).
 pub mod routes {
-    pub const HOME: &str = "/";
+    pub const HOME: &str = "/home";
 
     // --- Markets & Overview (plan.md §5.1 "Markets & Overview") ----------
     pub const MARKET: &str = "/equity/stocks";
@@ -169,11 +169,11 @@ pub enum Page {
     PortfolioLab,
     Settings,
     Funds,
-    Risk,                      // Phase 6.1
-    Oms,                       // Phase 6.2
-    Ops,                       // Phase 6.3
-    PositionSizer,             // Phase 6.4
-    ShadowAccount,             // Phase 6.5
+    Risk,          // Phase 6.1
+    Oms,           // Phase 6.2
+    Ops,           // Phase 6.3
+    PositionSizer, // Phase 6.4
+    ShadowAccount, // Phase 6.5
     Login,
     Register,
 }

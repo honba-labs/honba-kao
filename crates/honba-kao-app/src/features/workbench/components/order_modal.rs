@@ -7,14 +7,16 @@ use core::time::Duration;
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::icons::outline::x_close;
-use honba_kao_ui_core::{HfButton, HfIconButton};
 use super::market_depth::MarketDepth;
 use super::number_input::WbNumberInput;
 use crate::features::workbench::stores::book_store::TradingState;
-use crate::features::workbench::stores::order_draft_store::{OrderSide, OrderType, Product, TicketField, TimeInForce};
+use crate::features::workbench::stores::order_draft_store::{
+    OrderSide, OrderType, Product, TicketField, TimeInForce,
+};
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
 use crate::shared::utils::currency;
+use honba_kao_ui_core::icons::outline::x_close;
+use honba_kao_ui_core::{HfButton, HfIconButton};
 
 /// Quantity quick chips, as in the labs modal.
 const QUICK_INCREMENTS: [i64; 6] = [1, 10, 25, 50, 100, 250];

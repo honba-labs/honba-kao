@@ -15,7 +15,7 @@ use leptos::prelude::*;
 
 use crate::features::simulator::kernel::selection::{StrategyGraphNode, StrategyGraphShape};
 use crate::features::strategy_studio::canvas::editor::CanvasCtx;
-use crate::features::strategy_studio::canvas::palette::{palette_node, PalettePayload};
+use crate::features::strategy_studio::canvas::palette::{PalettePayload, palette_node};
 use crate::features::strategy_studio::canvas::scene::{RenderEdge, Selection};
 use crate::features::strategy_studio::kernel::edit::{input_kind, output_kind, splice_fits};
 
@@ -47,21 +47,85 @@ const fn option(
     in_port: &'static str,
     out_port: &'static str,
 ) -> SpliceOption {
-    SpliceOption { label, node_type, indicator, op, side, in_port, out_port }
+    SpliceOption {
+        label,
+        node_type,
+        indicator,
+        op,
+        side,
+        in_port,
+        out_port,
+    }
 }
 
 /// fe's `SERIES_SPLICE_OPTIONS` + `BOOL_SPLICE_OPTIONS`, in fe's order.
 pub const SPLICE_OPTIONS: &[SpliceOption] = &[
-    option("SMA Indicator", "indicator", Some("sma"), None, None, "input", "value"),
-    option("EMA Indicator", "indicator", Some("ema"), None, None, "input", "value"),
-    option("RSI Indicator", "indicator", Some("rsi"), None, None, "input", "value"),
-    option("Pct Change", "transform", None, Some("pct_change"), None, "input", "value"),
+    option(
+        "SMA Indicator",
+        "indicator",
+        Some("sma"),
+        None,
+        None,
+        "input",
+        "value",
+    ),
+    option(
+        "EMA Indicator",
+        "indicator",
+        Some("ema"),
+        None,
+        None,
+        "input",
+        "value",
+    ),
+    option(
+        "RSI Indicator",
+        "indicator",
+        Some("rsi"),
+        None,
+        None,
+        "input",
+        "value",
+    ),
+    option(
+        "Pct Change",
+        "transform",
+        None,
+        Some("pct_change"),
+        None,
+        "input",
+        "value",
+    ),
     option("AND Gate", "logic", None, Some("and"), None, "a", "signal"),
     option("OR Gate", "logic", None, Some("or"), None, "a", "signal"),
     option("Risk Gate", "risk", None, None, None, "signal", "signal"),
-    option("Position Sizing", "sizing", None, None, None, "signal", "size"),
-    option("Buy Order", "order", None, None, Some("buy"), "signal", "orders"),
-    option("Sell Order", "order", None, None, Some("sell"), "signal", "orders"),
+    option(
+        "Position Sizing",
+        "sizing",
+        None,
+        None,
+        None,
+        "signal",
+        "size",
+    ),
+    option(
+        "Buy Order",
+        "order",
+        None,
+        None,
+        Some("buy"),
+        "signal",
+        "orders",
+    ),
+    option(
+        "Sell Order",
+        "order",
+        None,
+        None,
+        Some("sell"),
+        "signal",
+        "orders",
+    ),
 ];
 
 /// The node a splice option inserts, with catalogue / fe defaults.
@@ -95,7 +159,13 @@ pub fn splice_options_for(graph: &StrategyGraphShape, edge_id: &str) -> Vec<Spli
     SPLICE_OPTIONS
         .iter()
         .filter(|option| {
-            splice_fits(&splice_node(option), option.in_port, option.out_port, edge_kind, target_kind)
+            splice_fits(
+                &splice_node(option),
+                option.in_port,
+                option.out_port,
+                edge_kind,
+                target_kind,
+            )
         })
         .copied()
         .collect()
@@ -113,7 +183,11 @@ pub fn EdgeView(
     let kind = edge.kind.map(|k| k.as_str()).unwrap_or("unknown");
     let class = format!(
         "studio-edge studio-kind--{kind}{}",
-        if edge.selected { " studio-edge--selected" } else { "" }
+        if edge.selected {
+            " studio-edge--selected"
+        } else {
+            ""
+        }
     );
     let select_id = edge.id.clone();
     let menu_id = edge.id.clone();
@@ -173,7 +247,9 @@ pub fn SpliceMenu(
     top: f64,
 ) -> impl IntoView {
     let store = ctx.store;
-    let options = store.graph.with_untracked(|g| splice_options_for(g, &edge_id));
+    let options = store
+        .graph
+        .with_untracked(|g| splice_options_for(g, &edge_id));
     let empty = options.is_empty();
     view! {
         <div

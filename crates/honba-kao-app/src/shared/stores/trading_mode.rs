@@ -85,12 +85,9 @@ impl TradingModeStore {
     /// reacts anywhere the mode is read.
     pub fn set(&self, mode: TradingMode) {
         self.mode.set(mode);
-        if let Some(storage) = web_sys::window().and_then(|window| {
-            window
-                .local_storage()
-                .ok()
-                .flatten()
-        }) {
+        if let Some(storage) =
+            web_sys::window().and_then(|window| window.local_storage().ok().flatten())
+        {
             let _ = storage.set_item(STORAGE_KEY, mode.as_id());
         }
     }

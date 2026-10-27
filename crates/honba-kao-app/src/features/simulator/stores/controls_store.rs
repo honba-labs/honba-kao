@@ -299,9 +299,9 @@ mod tests {
                 controls
                     .storage
                     .as_ref()
-                    .and_then(
-                        |storage| storage.get_item(crate::features::simulator::kernel::persistence::SIMULATOR_STORAGE_KEY)
-                    )
+                    .and_then(|storage| storage.get_item(
+                        crate::features::simulator::kernel::persistence::SIMULATOR_STORAGE_KEY
+                    ))
                     .is_some()
             );
         });

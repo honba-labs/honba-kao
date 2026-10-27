@@ -17,7 +17,11 @@ pub fn sparkline_points(values: &[f64], width: f64, height: f64) -> String {
     let max = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let span = max - min;
     let n = values.len();
-    let step = if n > 1 { (width - 2.0) / (n as f64 - 1.0) } else { 0.0 };
+    let step = if n > 1 {
+        (width - 2.0) / (n as f64 - 1.0)
+    } else {
+        0.0
+    };
     values
         .iter()
         .enumerate()
@@ -43,7 +47,11 @@ pub fn HfMiniSparkline(
 ) -> impl IntoView {
     let points = sparkline_points(&values, width, height);
     let rising = values.len() >= 2 && values.last() >= values.first();
-    let tone = if rising { "hf-sparkline--up" } else { "hf-sparkline--down" };
+    let tone = if rising {
+        "hf-sparkline--up"
+    } else {
+        "hf-sparkline--down"
+    };
     view! {
         <svg
             class=format!("hf-sparkline {tone} {class}").trim().to_string()

@@ -3,8 +3,8 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 
 use crate::chart::ChartHandle;
@@ -152,32 +152,30 @@ pub fn OpenAlgoChart(
                 &chart_mode_clone,
                 quantity as f64,
             ) {
-                Ok(promise) => {
-                    match JsFuture::from(promise).await {
-                        Ok(resolved) => {
-                            let id = resolved.as_f64().unwrap_or_default();
-                            if alive.try_get_untracked().unwrap_or(false) {
-                                let handle = ChartHandle::from_bridge_id(id);
-                                if let Some(ch) = chart_handle {
-                                    ch.set(Some(handle.clone()));
-                                }
-                                chart_instance.set_value(Some(handle));
-                            } else {
-                                let _ = sys::bridge_destroy(id);
+                Ok(promise) => match JsFuture::from(promise).await {
+                    Ok(resolved) => {
+                        let id = resolved.as_f64().unwrap_or_default();
+                        if alive.try_get_untracked().unwrap_or(false) {
+                            let handle = ChartHandle::from_bridge_id(id);
+                            if let Some(ch) = chart_handle {
+                                ch.set(Some(handle.clone()));
                             }
-                        }
-                        Err(_) if attempts.try_get_untracked().is_some_and(|c| c < 120) => {
-                            set_timeout(
-                                move || attempts.update(|c| *c += 1),
-                                Duration::from_millis(25),
-                            );
-                        }
-                        Err(e) => {
-                            #[cfg(feature = "tracing")]
-                            tracing::error!("openalgo widget failed: {e:?}");
+                            chart_instance.set_value(Some(handle));
+                        } else {
+                            let _ = sys::bridge_destroy(id);
                         }
                     }
-                }
+                    Err(_) if attempts.try_get_untracked().is_some_and(|c| c < 120) => {
+                        set_timeout(
+                            move || attempts.update(|c| *c += 1),
+                            Duration::from_millis(25),
+                        );
+                    }
+                    Err(e) => {
+                        #[cfg(feature = "tracing")]
+                        tracing::error!("openalgo widget failed: {e:?}");
+                    }
+                },
                 Err(_) if attempts.try_get_untracked().is_some_and(|c| c < 120) => {
                     set_timeout(
                         move || attempts.update(|c| *c += 1),

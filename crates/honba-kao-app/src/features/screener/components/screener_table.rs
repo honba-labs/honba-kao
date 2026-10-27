@@ -16,11 +16,13 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{dismiss_on_outside_click, use_virtual_rows, HfButton, HfIconButton};
+use honba_kao_ui_core::{HfButton, HfIconButton, dismiss_on_outside_click, use_virtual_rows};
 
 use crate::features::screener::data::instruments::Instrument;
 use crate::features::screener::stores::columns::{ColumnDef, ScreenerType};
-use crate::features::screener::stores::filter_engine::{AdvancedFilters, SortDirection, static_cagr3y, static_cagr5y};
+use crate::features::screener::stores::filter_engine::{
+    AdvancedFilters, SortDirection, static_cagr3y, static_cagr5y,
+};
 use crate::features::screener::stores::screener_store::{DetailTab, ScreenerStore};
 use crate::shared::utils::currency;
 

@@ -9,8 +9,8 @@ use leptos_router::hooks::use_navigate;
 use honba_kao_ui_core::HfButton;
 
 use crate::features::auth::components::{AuthField, AuthShell};
-use crate::shared::contexts::use_auth;
 use crate::router::paths::ROUTES;
+use crate::shared::contexts::use_auth;
 
 #[component]
 pub fn SetupPage() -> impl IntoView {

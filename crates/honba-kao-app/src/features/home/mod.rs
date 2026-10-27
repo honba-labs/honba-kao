@@ -4,5 +4,7 @@
 //! the `HomePage` container itself lands with Milestone 3.
 
 pub mod components;
+pub mod home_page;
 
 pub use components::*;
+pub use home_page::*;

@@ -10,7 +10,9 @@ use leptos::prelude::*;
 use honba_kao_ui_core::HfIconButton;
 use honba_kao_ui_core::icons::outline::x_close;
 
-use crate::features::screener::stores::screener_store::{ScreenDefinition, ScreenerStore, builtin_screens_registry};
+use crate::features::screener::stores::screener_store::{
+    ScreenDefinition, ScreenerStore, builtin_screens_registry,
+};
 
 /// The category tabs (`cat.id` + labels of the labs modal).
 const CATEGORIES: [(&str, &str); 6] = [

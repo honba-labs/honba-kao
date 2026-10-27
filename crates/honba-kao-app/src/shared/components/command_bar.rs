@@ -19,8 +19,8 @@ use honba_kao_ui_core::composed::command_bar::{
 use honba_kao_ui_core::trading::{HfProvenanceChip, ProvenanceQuality};
 use leptos::html;
 use leptos::prelude::*;
-use leptos_router::hooks::use_navigate;
 use leptos_router::NavigateOptions;
+use leptos_router::hooks::use_navigate;
 
 use crate::shared::command::commanding::{
     COMMAND_FUNCTIONS, CommandOutcome, MAX_HISTORY, commit_history, fuzzy_score, parse_command,
@@ -47,7 +47,9 @@ pub fn read_history() -> Vec<String> {
 
 /// Persists the history. Failures are ignored: the bar works without storage.
 pub fn write_history(history: &[String]) {
-    let Ok(raw) = serde_json::to_string(history) else { return };
+    let Ok(raw) = serde_json::to_string(history) else {
+        return;
+    };
     if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten()) {
         let _ = storage.set_item(HISTORY_KEY, &raw);
     }
@@ -98,15 +100,19 @@ pub fn build_candidates(query: &str, history: &[String], reverse: bool) -> Vec<C
         command: hint.command,
     }));
 
-    out.extend(symbols::search(q, 6).into_iter().map(|s: MockSymbol| Candidate {
-        view: CommandSuggestion {
-            key: format!("asset:{}", s.ticker),
-            title: s.ticker.to_string(),
-            subtitle: format!("{} · {}", s.name, s.exchange),
-            badge: "ASSET",
-        },
-        command: s.ticker.to_string(),
-    }));
+    out.extend(
+        symbols::search(q, 6)
+            .into_iter()
+            .map(|s: MockSymbol| Candidate {
+                view: CommandSuggestion {
+                    key: format!("asset:{}", s.ticker),
+                    title: s.ticker.to_string(),
+                    subtitle: format!("{} · {}", s.name, s.exchange),
+                    badge: "ASSET",
+                },
+                command: s.ticker.to_string(),
+            }),
+    );
 
     out.extend(
         COMMAND_FUNCTIONS
@@ -158,10 +164,15 @@ pub fn CommandBar() -> impl IntoView {
     let history = RwSignal::new(read_history());
     let feedback = RwSignal::new(None::<String>);
 
-    let candidates = Memo::new(move |_| {
-        build_candidates(&value.get(), &history.get(), reverse.get())
+    let candidates =
+        Memo::new(move |_| build_candidates(&value.get(), &history.get(), reverse.get()));
+    let views = Signal::derive(move || {
+        candidates
+            .get()
+            .into_iter()
+            .map(|c| c.view)
+            .collect::<Vec<_>>()
     });
-    let views = Signal::derive(move || candidates.get().into_iter().map(|c| c.view).collect::<Vec<_>>());
     let preview = Memo::new(move |_| preview_symbol(&value.get()));
     let heading = Signal::derive(move || {
         if reverse.get() {

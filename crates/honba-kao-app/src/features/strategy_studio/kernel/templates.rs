@@ -52,7 +52,13 @@ fn node(
     }
 }
 
-fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str) -> StrategyGraphEdge {
+fn edge(
+    id: &str,
+    from_node: &str,
+    from_port: &str,
+    to_node: &str,
+    to_port: &str,
+) -> StrategyGraphEdge {
     StrategyGraphEdge {
         id: id.to_string(),
         from_node: from_node.to_string(),
@@ -83,7 +89,13 @@ fn shape(
 }
 
 fn order(id: &str, label: &str, side: &str) -> StrategyGraphNode {
-    node(id, "order", label, None, &[("side", side.into()), ("quantity", 1.into())])
+    node(
+        id,
+        "order",
+        label,
+        None,
+        &[("side", side.into()), ("quantity", 1.into())],
+    )
 }
 
 fn sma_cross() -> StrategyGraphShape {
@@ -94,9 +106,27 @@ fn sma_cross() -> StrategyGraphShape {
         2,
         vec![
             node("n1", "universe", "Universe", None, &[]),
-            node("f", "indicator", "Fast SMA", Some("sma"), &[("period", 5.into())]),
-            node("s", "indicator", "Slow SMA", Some("sma"), &[("period", 20.into())]),
-            node("c", "condition", "Cross", None, &[("op", "crosses_above".into())]),
+            node(
+                "f",
+                "indicator",
+                "Fast SMA",
+                Some("sma"),
+                &[("period", 5.into())],
+            ),
+            node(
+                "s",
+                "indicator",
+                "Slow SMA",
+                Some("sma"),
+                &[("period", 20.into())],
+            ),
+            node(
+                "c",
+                "condition",
+                "Cross",
+                None,
+                &[("op", "crosses_above".into())],
+            ),
             order("o", "Entry Long", "buy"),
         ],
         vec![
@@ -117,12 +147,30 @@ fn ema_trend() -> StrategyGraphShape {
         5,
         vec![
             node("n1", "universe", "Universe", None, &[]),
-            node("fast", "indicator", "Fast EMA", Some("ema"), &[("period", 9.into())]),
-            node("slow", "indicator", "Slow EMA", Some("ema"), &[("period", 21.into())]),
+            node(
+                "fast",
+                "indicator",
+                "Fast EMA",
+                Some("ema"),
+                &[("period", 9.into())],
+            ),
+            node(
+                "slow",
+                "indicator",
+                "Slow EMA",
+                Some("ema"),
+                &[("period", 21.into())],
+            ),
             node("c", "condition", "Trend Up", None, &[("op", "gt".into())]),
             order("buy", "Buy", "buy"),
             order("sell", "Sell", "sell"),
-            node("c2", "condition", "Trend Down", None, &[("op", "lt".into())]),
+            node(
+                "c2",
+                "condition",
+                "Trend Down",
+                None,
+                &[("op", "lt".into())],
+            ),
         ],
         vec![
             edge("e1", "n1", "bars", "fast", "input"),
@@ -145,7 +193,13 @@ fn rsi_mr() -> StrategyGraphShape {
         14,
         vec![
             node("n1", "universe", "Universe", None, &[]),
-            node("rsi", "indicator", "RSI 14", Some("rsi"), &[("period", 14.into())]),
+            node(
+                "rsi",
+                "indicator",
+                "RSI 14",
+                Some("rsi"),
+                &[("period", 14.into())],
+            ),
             node(
                 "oversold",
                 "condition",
@@ -186,10 +240,26 @@ fn macd_rsi() -> StrategyGraphShape {
                 "indicator",
                 "MACD",
                 Some("macd"),
-                &[("fast", 12.into()), ("slow", 26.into()), ("signal", 9.into())],
+                &[
+                    ("fast", 12.into()),
+                    ("slow", 26.into()),
+                    ("signal", 9.into()),
+                ],
             ),
-            node("rsi", "indicator", "RSI 14", Some("rsi"), &[("period", 14.into())]),
-            node("macd_cross", "condition", "MACD Cross Up", None, &[("op", "crosses_above".into())]),
+            node(
+                "rsi",
+                "indicator",
+                "RSI 14",
+                Some("rsi"),
+                &[("period", 14.into())],
+            ),
+            node(
+                "macd_cross",
+                "condition",
+                "MACD Cross Up",
+                None,
+                &[("op", "crosses_above".into())],
+            ),
             node(
                 "rsi_filter",
                 "condition",
@@ -228,8 +298,20 @@ fn bb_breakout() -> StrategyGraphShape {
                 Some("bollinger"),
                 &[("length", 20.into()), ("std", 2.0.into())],
             ),
-            node("upper_break", "condition", "Break Upper", None, &[("op", "crosses_above".into())]),
-            node("lower_break", "condition", "Break Lower", None, &[("op", "crosses_below".into())]),
+            node(
+                "upper_break",
+                "condition",
+                "Break Upper",
+                None,
+                &[("op", "crosses_above".into())],
+            ),
+            node(
+                "lower_break",
+                "condition",
+                "Break Lower",
+                None,
+                &[("op", "crosses_below".into())],
+            ),
             order("buy", "Buy Breakout", "buy"),
             order("sell", "Sell Breakdown", "sell"),
         ],
@@ -253,10 +335,34 @@ fn atr_trailing() -> StrategyGraphShape {
         14,
         vec![
             node("n1", "universe", "Universe", None, &[]),
-            node("ema", "indicator", "EMA 200", Some("ema"), &[("period", 200.into())]),
-            node("atr", "indicator", "ATR 14", Some("atr"), &[("period", 14.into())]),
-            node("trend_up", "condition", "Price > EMA", None, &[("op", "gt".into())]),
-            node("trailing", "risk", "ATR Trailing Stop", None, &[("max_drawdown", 0.03.into())]),
+            node(
+                "ema",
+                "indicator",
+                "EMA 200",
+                Some("ema"),
+                &[("period", 200.into())],
+            ),
+            node(
+                "atr",
+                "indicator",
+                "ATR 14",
+                Some("atr"),
+                &[("period", 14.into())],
+            ),
+            node(
+                "trend_up",
+                "condition",
+                "Price > EMA",
+                None,
+                &[("op", "gt".into())],
+            ),
+            node(
+                "trailing",
+                "risk",
+                "ATR Trailing Stop",
+                None,
+                &[("max_drawdown", 0.03.into())],
+            ),
             order("buy", "Buy", "buy"),
             node(
                 "sz",

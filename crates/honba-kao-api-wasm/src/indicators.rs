@@ -442,7 +442,10 @@ fn macd_periods(
 ///
 /// [`IndicatorError`] for bad params, non-finite input, or finite input whose result overflows
 /// `f64` (infinite output, or `NaN` after warm-up).
-pub fn close_series(indicator: &CloseIndicator, closes: &[f64]) -> Result<Vec<f64>, IndicatorError> {
+pub fn close_series(
+    indicator: &CloseIndicator,
+    closes: &[f64],
+) -> Result<Vec<f64>, IndicatorError> {
     indicator.validate()?;
     if let Some(i) = closes.iter().position(|c| !c.is_finite()) {
         return Err(IndicatorError::NonFiniteInput(i));
@@ -580,7 +583,12 @@ pub fn ohlc_indicator_series(
     low: &[f64],
     close: &[f64],
 ) -> Result<Vec<f64>, IndicatorError> {
-    ohlc_series(&OhlcIndicator::from_json(name, params_json)?, high, low, close)
+    ohlc_series(
+        &OhlcIndicator::from_json(name, params_json)?,
+        high,
+        low,
+        close,
+    )
 }
 
 /// Describes the available indicators: names, inputs, params, outputs, warm-up and the render

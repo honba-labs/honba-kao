@@ -34,8 +34,7 @@ where
     let envelope = ApiResponse::success(data);
     let raw = serde_json::to_string(&envelope).expect("envelope serializes");
     let value = serde_json::from_str::<serde_json::Value>(&raw).expect("envelope parses as json");
-    let decoded = honba_kao_client::decode_envelope::<T>(value)
-        .expect("enveloped fixture decodes");
+    let decoded = honba_kao_client::decode_envelope::<T>(value).expect("enveloped fixture decodes");
     decoded.into_result().expect("envelope carries a payload")
 }
 
@@ -46,7 +45,10 @@ fn bars_response_decodes_raw_and_enveloped() {
     assert_eq!(bars.len(), 4);
     // Ascending ts_event, nanos-as-string preserved (no float round-trip):
     let first = &bars[0];
-    assert_eq!(first.timestamp.timestamp_nanos_opt().unwrap(), 1_700_000_705_000_000_000);
+    assert_eq!(
+        first.timestamp.timestamp_nanos_opt().unwrap(),
+        1_700_000_705_000_000_000
+    );
     assert!(bars.windows(2).all(|w| w[0].timestamp <= w[1].timestamp));
     assert_eq!(first.instrument.symbol, "TCS");
 }

@@ -30,13 +30,13 @@ use honba_kao_ui_core::HfButton;
 use crate::features::strategy_studio::canvas::dom;
 use crate::features::strategy_studio::canvas::edge::{EdgeView, SpliceMenu};
 use crate::features::strategy_studio::canvas::geometry::{
-    smoothstep_path, snap_position, Position, Viewport, GRID, NODE_WIDTH,
+    GRID, NODE_WIDTH, Position, Viewport, smoothstep_path, snap_position,
 };
 use crate::features::strategy_studio::canvas::node_card::NodeCard;
 use crate::features::strategy_studio::canvas::palette::{
-    palette_node, parse_palette_payload, HONBA_NODE_MIME,
+    HONBA_NODE_MIME, palette_node, parse_palette_payload,
 };
-use crate::features::strategy_studio::canvas::scene::{build_scene, Scene, Selection};
+use crate::features::strategy_studio::canvas::scene::{Scene, Selection, build_scene};
 use crate::features::strategy_studio::kernel::graph::PortKind;
 use crate::features::strategy_studio::stores::StudioStore;
 
@@ -102,7 +102,10 @@ impl CanvasCtx {
     /// Client point → canvas-local px.
     fn local(&self, ev: &web_sys::MouseEvent) -> Option<(f64, f64)> {
         let (left, top, _, _) = self.rect()?;
-        Some((f64::from(ev.client_x()) - left, f64::from(ev.client_y()) - top))
+        Some((
+            f64::from(ev.client_x()) - left,
+            f64::from(ev.client_y()) - top,
+        ))
     }
 
     /// Client point → world units.
@@ -127,11 +130,23 @@ impl CanvasCtx {
     }
 
     /// An output dot was pressed: start a wire.
-    pub fn begin_connect(&self, node: &str, port: &'static str, kind: PortKind, anchor: (f64, f64)) {
+    pub fn begin_connect(
+        &self,
+        node: &str,
+        port: &'static str,
+        kind: PortKind,
+        anchor: (f64, f64),
+    ) {
         self.store.select(Selection::None);
-        self.drag
-            .set_value(Some(DragState::Connect { node: node.to_string(), port }));
-        self.wire.set(Some(Wire { from: anchor, to: anchor, kind }));
+        self.drag.set_value(Some(DragState::Connect {
+            node: node.to_string(),
+            port,
+        }));
+        self.wire.set(Some(Wire {
+            from: anchor,
+            to: anchor,
+            kind,
+        }));
     }
 
     /// The pointer was released on an input dot: connect when a wire is
@@ -162,7 +177,10 @@ impl CanvasCtx {
 
     /// Zooms about the canvas centre.
     fn zoom_centre(&self, factor: f64) {
-        let (w, h) = self.rect().map(|(_, _, w, h)| (w, h)).unwrap_or((800.0, 500.0));
+        let (w, h) = self
+            .rect()
+            .map(|(_, _, w, h)| (w, h))
+            .unwrap_or((800.0, 500.0));
         self.store
             .viewport
             .update(|vp| *vp = vp.zoom_at(w / 2.0, h / 2.0, factor));
@@ -292,8 +310,8 @@ pub fn CanvasEditor(
     };
     let on_drop = move |ev: web_sys::DragEvent| {
         ev.prevent_default();
-        let Some(payload) = dom::drag_get_data(&ev, HONBA_NODE_MIME)
-            .and_then(|data| parse_palette_payload(&data))
+        let Some(payload) =
+            dom::drag_get_data(&ev, HONBA_NODE_MIME).and_then(|data| parse_palette_payload(&data))
         else {
             store
                 .notice

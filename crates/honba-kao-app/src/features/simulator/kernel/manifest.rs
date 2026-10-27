@@ -16,8 +16,8 @@
 //!   identity. It is explicitly not a cryptographic digest of source code:
 //!   nothing on this side compiles source until the studio lands (P8).
 
-use honba_kao_client::{wire::CompiledStrategy, ClientError};
-use serde_json::{json, Value};
+use honba_kao_client::{ClientError, wire::CompiledStrategy};
+use serde_json::{Value, json};
 
 use crate::features::simulator::kernel::run::ClientFut;
 use crate::features::simulator::kernel::selection::StrategyGraphShape;
@@ -162,8 +162,15 @@ mod tests {
         let manifest = strategy_manifest_value(&template());
         assert_eq!(manifest["api_version"], STRATEGY_API_VERSION);
         assert_eq!(manifest["name"], "SMA Cross");
-        assert!(manifest["source_hash"].as_str().is_some_and(|h| h.starts_with("fnv1a64:")));
-        assert_eq!(manifest["driving_timeframe"], json!({"interval": 5, "aggregation": "minute"}));
+        assert!(
+            manifest["source_hash"]
+                .as_str()
+                .is_some_and(|h| h.starts_with("fnv1a64:"))
+        );
+        assert_eq!(
+            manifest["driving_timeframe"],
+            json!({"interval": 5, "aggregation": "minute"})
+        );
         assert_eq!(manifest["warmup_bars"], 2);
         assert_eq!(
             manifest["universe"],
@@ -179,7 +186,10 @@ mod tests {
             universe_named: "nifty50".to_string(),
             ..template()
         };
-        assert_eq!(strategy_manifest_value(&named)["universe"], json!({ "named": "nifty50" }));
+        assert_eq!(
+            strategy_manifest_value(&named)["universe"],
+            json!({ "named": "nifty50" })
+        );
     }
 
     #[test]
@@ -223,8 +233,9 @@ mod tests {
         });
         let compiled: CompiledStrategy = serde_json::from_value(value).expect("fixture decodes");
         let client = OkCompile(compiled);
-        let result =
-            crate::features::simulator::kernel::testing::block_on(async { compile_strategy(&client, &template()).await });
+        let result = crate::features::simulator::kernel::testing::block_on(async {
+            compile_strategy(&client, &template()).await
+        });
         assert_eq!(
             result.strategy_id,
             "sha256:da444fa65e98325f2f440ca450eeddf0aa93b88a412589e5b0d6f3666c790fd0"
@@ -235,7 +246,9 @@ mod tests {
     #[test]
     fn a_failed_compile_carries_the_error_and_the_name_fallback() {
         let client = FailingCompile("manifest: bad shape".to_string());
-        let result = crate::features::simulator::kernel::testing::block_on(async { compile_strategy(&client, &template()).await });
+        let result = crate::features::simulator::kernel::testing::block_on(async {
+            compile_strategy(&client, &template()).await
+        });
         assert_eq!(result.error.as_deref(), Some("decode: manifest: bad shape"));
         assert_eq!(result.strategy_id, "SMA Cross");
     }

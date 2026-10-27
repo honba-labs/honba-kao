@@ -11,9 +11,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use leptos::prelude::*;
 
-use crate::shared::components::charts::openalgo_chart::IndicatorDef;
 use crate::features::workbench::stores::layout_store::AppliedIndicator;
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
+use crate::shared::components::charts::openalgo_chart::IndicatorDef;
 
 /// Minted instance ids so the engine can own per-instance state and the
 /// chips keep working across pane remounts.

@@ -5,8 +5,8 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::composed::modal::HfModal;
 use crate::shared::theme::palette::{ColorToken, get_palette_256};
+use honba_kao_ui_core::composed::modal::HfModal;
 
 #[component]
 pub fn PaletteStudio(

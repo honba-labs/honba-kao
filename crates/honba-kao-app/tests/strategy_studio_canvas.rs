@@ -7,19 +7,19 @@ use std::collections::BTreeMap;
 
 use honba_kao_app::features::simulator::kernel::selection::StrategyGraphShape;
 use honba_kao_app::features::strategy_studio::canvas::edge::{
-    splice_node, splice_options_for, SPLICE_OPTIONS,
+    SPLICE_OPTIONS, splice_node, splice_options_for,
 };
 use honba_kao_app::features::strategy_studio::canvas::geometry::{
-    auto_layout, smoothstep_path, snap, snap_position, Position, Viewport, GRID,
+    GRID, Position, Viewport, auto_layout, smoothstep_path, snap, snap_position,
 };
 use honba_kao_app::features::strategy_studio::canvas::inspector::parse_param_input;
 use honba_kao_app::features::strategy_studio::canvas::palette::{
     palette_items, palette_node, palette_payload, parse_palette_payload,
 };
-use honba_kao_app::features::strategy_studio::canvas::scene::{build_scene, Selection};
+use honba_kao_app::features::strategy_studio::canvas::scene::{Selection, build_scene};
 use honba_kao_app::features::strategy_studio::kernel::edit::{self, EditError};
 use honba_kao_app::features::strategy_studio::kernel::graph::{
-    catalogue_entry, default_node, graph_hash, graph_issues, PortKind,
+    PortKind, catalogue_entry, default_node, graph_hash, graph_issues,
 };
 use honba_kao_app::features::strategy_studio::kernel::templates::{
     blank_graph, library_template, strategy_templates, template_by_name,
@@ -43,13 +43,22 @@ fn the_six_fe_templates_port_in_fe_order() {
     let names: Vec<&str> = strategy_templates().iter().map(|t| t.name).collect();
     assert_eq!(
         names,
-        ["sma_cross", "ema_trend", "rsi_mr", "macd_rsi", "bb_breakout", "atr_trailing"]
+        [
+            "sma_cross",
+            "ema_trend",
+            "rsi_mr",
+            "macd_rsi",
+            "bb_breakout",
+            "atr_trailing"
+        ]
     );
     for t in strategy_templates() {
         assert_eq!(t.graph.name, t.name);
         assert_eq!(port_mismatches(&t.graph), 0, "{} ports type-check", t.name);
         assert!(
-            !graph_issues(&t.graph).iter().any(|i| i.code == "cycle_detected"),
+            !graph_issues(&t.graph)
+                .iter()
+                .any(|i| i.code == "cycle_detected"),
             "{} is acyclic",
             t.name
         );
@@ -86,12 +95,27 @@ fn every_template_renders_every_node_and_edge_in_one_pass() {
         let positions = auto_layout(&t.graph);
         assert_eq!(positions.len(), t.graph.nodes.len(), "{}", t.name);
         for p in positions.values() {
-            assert_eq!(*p, snap_position(*p), "{} positions are on the grid", t.name);
+            assert_eq!(
+                *p,
+                snap_position(*p),
+                "{} positions are on the grid",
+                t.name
+            );
         }
-        let scene = build_scene(&t.graph, &positions, &Selection::None, &graph_issues(&t.graph));
+        let scene = build_scene(
+            &t.graph,
+            &positions,
+            &Selection::None,
+            &graph_issues(&t.graph),
+        );
         assert_eq!(scene.nodes.len(), t.graph.nodes.len(), "{}", t.name);
         assert_eq!(scene.edges.len(), t.graph.edges.len(), "{}", t.name);
-        assert!(scene.edges.iter().all(|e| e.kind.is_some() && e.d.starts_with('M')));
+        assert!(
+            scene
+                .edges
+                .iter()
+                .all(|e| e.kind.is_some() && e.d.starts_with('M'))
+        );
     }
 }
 
@@ -110,7 +134,12 @@ fn auto_layout_places_downstream_nodes_in_later_columns() {
 #[test]
 fn missing_positions_fall_back_to_the_layout_and_selection_is_flagged() {
     let graph = template("macd_rsi");
-    let scene = build_scene(&graph, &BTreeMap::new(), &Selection::Node("and".into()), &[]);
+    let scene = build_scene(
+        &graph,
+        &BTreeMap::new(),
+        &Selection::Node("and".into()),
+        &[],
+    );
     let and = scene.nodes.iter().find(|n| n.id == "and").unwrap();
     assert!(and.selected);
     assert!(and.x > 0.0);
@@ -124,7 +153,13 @@ fn missing_positions_fall_back_to_the_layout_and_selection_is_flagged() {
 #[test]
 fn node_issues_land_on_their_card() {
     let mut graph = template("sma_cross");
-    graph.nodes.iter_mut().find(|n| n.id == "f").unwrap().params.insert("period".into(), 0.into());
+    graph
+        .nodes
+        .iter_mut()
+        .find(|n| n.id == "f")
+        .unwrap()
+        .params
+        .insert("period".into(), 0.into());
     let issues = graph_issues(&graph);
     let scene = build_scene(&graph, &auto_layout(&graph), &Selection::None, &issues);
     let fast = scene.nodes.iter().find(|n| n.id == "f").unwrap();
@@ -139,9 +174,15 @@ fn connect_refuses_mismatches_self_loops_and_cycles() {
     let before = graph.clone();
     assert_eq!(
         edit::connect(&mut graph, "c", "signal", "f", "input"),
-        Err(EditError::KindMismatch { from: PortKind::Bool, to: PortKind::Series })
+        Err(EditError::KindMismatch {
+            from: PortKind::Bool,
+            to: PortKind::Series
+        })
     );
-    assert_eq!(edit::connect(&mut graph, "f", "value", "f", "input"), Err(EditError::SelfLoop));
+    assert_eq!(
+        edit::connect(&mut graph, "f", "value", "f", "input"),
+        Err(EditError::SelfLoop)
+    );
     assert!(matches!(
         edit::connect(&mut graph, "f", "nope", "c", "left"),
         Err(EditError::UnknownPort { .. })
@@ -153,7 +194,10 @@ fn connect_refuses_mismatches_self_loops_and_cycles() {
     let a = edit::add_node(&mut chain, default_node("", "indicator", Some("ema")));
     edit::connect(&mut chain, "f", "value", &a, "input").unwrap();
     let snapshot = chain.clone();
-    assert_eq!(edit::connect(&mut chain, &a, "value", "f", "input"), Err(EditError::Cycle));
+    assert_eq!(
+        edit::connect(&mut chain, &a, "value", "f", "input"),
+        Err(EditError::Cycle)
+    );
     assert_eq!(chain, snapshot);
 }
 
@@ -171,7 +215,10 @@ fn a_new_source_replaces_the_old_edge_into_an_input() {
     assert_eq!(id, "e_s_value_c_left");
     // Re-connecting the identical edge is a no-op.
     let edges = graph.edges.len();
-    assert_eq!(edit::connect(&mut graph, "s", "value", "c", "left").unwrap(), id);
+    assert_eq!(
+        edit::connect(&mut graph, "s", "value", "c", "left").unwrap(),
+        id
+    );
     assert_eq!(graph.edges.len(), edges);
 }
 
@@ -183,7 +230,12 @@ fn add_node_uniquifies_ids_and_remove_node_drops_incident_edges() {
     assert_eq!(first, "sma");
     assert_eq!(second, "sma_1");
     assert!(edit::remove_node(&mut graph, "c"));
-    assert!(graph.edges.iter().all(|e| e.from_node != "c" && e.to_node != "c"));
+    assert!(
+        graph
+            .edges
+            .iter()
+            .all(|e| e.from_node != "c" && e.to_node != "c")
+    );
     assert!(!edit::remove_node(&mut graph, "c"));
 }
 
@@ -194,7 +246,12 @@ fn switching_an_indicator_resets_params_and_drops_vanished_outputs() {
     let macd = graph.nodes.iter().find(|n| n.id == "macd").unwrap();
     assert_eq!(macd.indicator.as_deref(), Some("sma"));
     assert_eq!(macd.params.keys().collect::<Vec<_>>(), ["period"]);
-    assert!(graph.edges.iter().all(|e| e.from_node != "macd" || e.from_port == "value"));
+    assert!(
+        graph
+            .edges
+            .iter()
+            .all(|e| e.from_node != "macd" || e.from_port == "value")
+    );
     assert_eq!(port_mismatches(&graph), 0);
 }
 
@@ -204,11 +261,25 @@ fn switching_an_indicator_resets_params_and_drops_vanished_outputs() {
 fn splice_options_type_check_on_both_sides() {
     let graph = template("sma_cross");
     // bool edge into order.signal: gates fit; sizing/orders would orphan it.
-    let labels: Vec<&str> = splice_options_for(&graph, "e5").iter().map(|o| o.label).collect();
+    let labels: Vec<&str> = splice_options_for(&graph, "e5")
+        .iter()
+        .map(|o| o.label)
+        .collect();
     assert_eq!(labels, ["AND Gate", "OR Gate", "Risk Gate"]);
     // series edge into an indicator input: the series options.
-    let labels: Vec<&str> = splice_options_for(&graph, "e1").iter().map(|o| o.label).collect();
-    assert_eq!(labels, ["SMA Indicator", "EMA Indicator", "RSI Indicator", "Pct Change"]);
+    let labels: Vec<&str> = splice_options_for(&graph, "e1")
+        .iter()
+        .map(|o| o.label)
+        .collect();
+    assert_eq!(
+        labels,
+        [
+            "SMA Indicator",
+            "EMA Indicator",
+            "RSI Indicator",
+            "Pct Change"
+        ]
+    );
     assert!(splice_options_for(&graph, "nope").is_empty());
 }
 
@@ -221,7 +292,12 @@ fn every_template_edge_splices_without_orphan_handles() {
             // nothing that passes a `size` through (the menu says so).
             let kind = edit::output_kind(&t.graph, &edge.from_node, &edge.from_port);
             if matches!(kind, Some(PortKind::Series | PortKind::Bool)) {
-                assert!(!options.is_empty(), "{} edge {} offers a splice", t.name, edge.id);
+                assert!(
+                    !options.is_empty(),
+                    "{} edge {} offers a splice",
+                    t.name,
+                    edge.id
+                );
             } else {
                 assert!(options.is_empty(), "{} edge {}", t.name, edge.id);
             }
@@ -234,13 +310,22 @@ fn every_template_edge_splices_without_orphan_handles() {
                     option.in_port,
                     option.out_port,
                 )
-                .unwrap_or_else(|e| panic!("{} {} {}: {}", t.name, edge.id, option.label, e.message()));
+                .unwrap_or_else(|e| {
+                    panic!("{} {} {}: {}", t.name, edge.id, option.label, e.message())
+                });
                 assert_eq!(graph.nodes.len(), t.graph.nodes.len() + 1);
                 assert_eq!(graph.edges.len(), t.graph.edges.len() + 1);
                 assert!(!graph.edges.iter().any(|e| e.id == edge.id));
                 assert!(graph.edges.iter().any(|e| e.to_node == new_id));
                 assert!(graph.edges.iter().any(|e| e.from_node == new_id));
-                assert_eq!(port_mismatches(&graph), 0, "{} {} {}", t.name, edge.id, option.label);
+                assert_eq!(
+                    port_mismatches(&graph),
+                    0,
+                    "{} {} {}",
+                    t.name,
+                    edge.id,
+                    option.label
+                );
                 let scene = build_scene(&graph, &auto_layout(&graph), &Selection::None, &[]);
                 assert_eq!(scene.edges.len(), graph.edges.len());
             }
@@ -252,9 +337,18 @@ fn every_template_edge_splices_without_orphan_handles() {
 fn a_splice_that_does_not_fit_is_refused() {
     let mut graph = template("sma_cross");
     let before = graph.clone();
-    let buy = SPLICE_OPTIONS.iter().find(|o| o.label == "Buy Order").unwrap();
+    let buy = SPLICE_OPTIONS
+        .iter()
+        .find(|o| o.label == "Buy Order")
+        .unwrap();
     assert!(matches!(
-        edit::splice_edge(&mut graph, "e5", splice_node(buy), buy.in_port, buy.out_port),
+        edit::splice_edge(
+            &mut graph,
+            "e5",
+            splice_node(buy),
+            buy.in_port,
+            buy.out_port
+        ),
         Err(EditError::KindMismatch { .. })
     ));
     assert_eq!(graph, before);
@@ -300,12 +394,19 @@ fn snapping_is_to_the_16px_grid() {
     assert_eq!(snap(7.9), 0.0);
     assert_eq!(snap(8.1), 16.0);
     assert_eq!(snap(-9.0), -16.0);
-    assert_eq!(snap_position(Position::new(33.0, 47.0)), Position::new(32.0, 48.0));
+    assert_eq!(
+        snap_position(Position::new(33.0, 47.0)),
+        Position::new(32.0, 48.0)
+    );
 }
 
 #[test]
 fn wheel_zoom_keeps_the_point_under_the_cursor() {
-    let vp = Viewport { x: 40.0, y: -20.0, zoom: 1.0 };
+    let vp = Viewport {
+        x: 40.0,
+        y: -20.0,
+        zoom: 1.0,
+    };
     let (wx, wy) = vp.to_world(300.0, 200.0);
     let zoomed = vp.zoom_at(300.0, 200.0, 1.5);
     let (sx, sy) = zoomed.to_screen(wx, wy);
@@ -335,7 +436,11 @@ fn fit_frames_all_cards() {
     for node in &scene.nodes {
         let (x0, y0) = vp.to_screen(node.x, node.y);
         let (x1, y1) = vp.to_screen(node.x + node.width, node.y + node.height);
-        assert!(x0 >= 0.0 && y0 >= 0.0 && x1 <= 800.0 && y1 <= 500.0, "{} fits", node.id);
+        assert!(
+            x0 >= 0.0 && y0 >= 0.0 && x1 <= 800.0 && y1 <= 500.0,
+            "{} fits",
+            node.id
+        );
     }
     assert!(vp.zoom <= 1.0);
 }
@@ -361,11 +466,23 @@ fn inspector_values_are_typed_by_spec_then_by_previous_value() {
     let sma = catalogue_entry("sma").unwrap();
     let period = &sma.params[0];
     assert_eq!(parse_param_input("21", Some(period), None), Some(21.into()));
-    assert_eq!(parse_param_input("21.6", Some(period), None), Some(22.into()));
+    assert_eq!(
+        parse_param_input("21.6", Some(period), None),
+        Some(22.into())
+    );
     assert_eq!(parse_param_input("abc", Some(period), None), None);
     let k = &catalogue_entry("bollinger").unwrap().params[1];
     assert_eq!(parse_param_input("2.5", Some(k), None), Some(2.5.into()));
-    assert_eq!(parse_param_input("0.04", None, Some(&0.03.into())), Some(0.04.into()));
-    assert_eq!(parse_param_input("70", None, Some(&30.into())), Some(70.into()));
-    assert_eq!(parse_param_input("sell", None, Some(&"buy".into())), Some("sell".into()));
+    assert_eq!(
+        parse_param_input("0.04", None, Some(&0.03.into())),
+        Some(0.04.into())
+    );
+    assert_eq!(
+        parse_param_input("70", None, Some(&30.into())),
+        Some(70.into())
+    );
+    assert_eq!(
+        parse_param_input("sell", None, Some(&"buy".into())),
+        Some("sell".into())
+    );
 }

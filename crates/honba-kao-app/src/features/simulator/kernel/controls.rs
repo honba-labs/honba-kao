@@ -279,8 +279,7 @@ pub enum BarUnit {
 /// Parses a bar spec like `"5m"` into `(5, Minute)`; `None` for anything the
 /// resolver would reject (empty digits, zero count, unknown unit).
 pub fn parse_bar_spec(bar_spec: &str) -> Option<(u32, BarUnit)> {
-    let digits_len = bar_spec
-        .len()
+    let digits_len = bar_spec.len()
         - bar_spec
             .trim_start_matches(|c: char| c.is_ascii_digit())
             .len();
@@ -307,7 +306,9 @@ pub fn parse_bar_spec(bar_spec: &str) -> Option<(u32, BarUnit)> {
 /// A non-empty string (fe `requiredString`).
 #[allow(dead_code)]
 fn required_string(value: &Option<String>) -> bool {
-    value.as_deref().is_some_and(|value| !value.trim().is_empty())
+    value
+        .as_deref()
+        .is_some_and(|value| !value.trim().is_empty())
 }
 
 /// Human-readable control problems; empty means the run request can be built
@@ -335,7 +336,10 @@ pub fn control_issues(controls: &SimulatorControls, today: Today) -> Vec<String>
     if let Some(issue) = rate_issue(
         "Commission",
         controls.commission,
-        MAX_COMMISSION_PER_FILL.to_string().parse::<f64>().unwrap_or(0.0),
+        MAX_COMMISSION_PER_FILL
+            .to_string()
+            .parse::<f64>()
+            .unwrap_or(0.0),
     ) {
         issues.push(issue);
     }
@@ -356,9 +360,8 @@ pub fn control_issues(controls: &SimulatorControls, today: Today) -> Vec<String>
                     issues.push("Custom start must be strictly before the end date.".to_string());
                 }
             }
-            _ => issues.push(
-                "Custom period needs both a start and an end date (YYYY-MM-DD).".to_string(),
-            ),
+            _ => issues
+                .push("Custom period needs both a start and an end date (YYYY-MM-DD).".to_string()),
         }
     }
     issues
@@ -547,9 +550,11 @@ mod tests {
             c.end = Some("2024-01-01".to_string());
         });
         let issues = control_issues(&controls, NOW);
-        assert!(issues
-            .iter()
-            .any(|issue| issue == "Custom start must be strictly before the end date."));
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue == "Custom start must be strictly before the end date.")
+        );
     }
 
     #[test]
@@ -562,16 +567,21 @@ mod tests {
         assert!(issues.iter().any(|i| i.contains("ommission")));
         assert!(issues.iter().any(|i| i.contains("lippage")));
         let nan_commission = controls_with(|c| c.commission = f64::NAN);
-        assert!(control_issues(&nan_commission, NOW)
-            .iter()
-            .any(|i| i.contains("ommission")));
+        assert!(
+            control_issues(&nan_commission, NOW)
+                .iter()
+                .any(|i| i.contains("ommission"))
+        );
     }
 
     #[test]
     fn accepts_a_commission_or_slippage_at_the_cap_exactly() {
         // Boundary: exactly the max is legal (resolver: `> max` rejects).
         let capped = controls_with(|c| {
-            c.commission = MAX_COMMISSION_PER_FILL.to_string().parse::<f64>().unwrap_or(0.0);
+            c.commission = MAX_COMMISSION_PER_FILL
+                .to_string()
+                .parse::<f64>()
+                .unwrap_or(0.0);
             c.slippage = MAX_SLIPPAGE_BPS.to_string().parse::<f64>().unwrap_or(0.0);
         });
         assert!(control_issues(&capped, NOW).is_empty());
@@ -606,7 +616,10 @@ mod tests {
         assert_eq!(plan.request.seed, Some(DEFAULT_SEED));
         assert_eq!(plan.request.commission_per_fill, None);
         assert_eq!(plan.request.slippage_bps, None);
-        assert_eq!(plan.range, ("2026-04-17".to_string(), "2026-10-17".to_string()));
+        assert_eq!(
+            plan.range,
+            ("2026-04-17".to_string(), "2026-10-17".to_string())
+        );
         assert!(plan.not_modelled.is_empty());
         assert!(plan.issues.is_empty());
     }
@@ -668,7 +681,16 @@ mod tests {
         let json = serde_json::to_value(&plan.request).expect("serializes");
         assert!(json.is_object());
         let object = json.as_object().unwrap();
-        for expected in ["strategy", "universe", "start", "end", "bar_spec", "fill_model", "initial_capital", "seed"] {
+        for expected in [
+            "strategy",
+            "universe",
+            "start",
+            "end",
+            "bar_spec",
+            "fill_model",
+            "initial_capital",
+            "seed",
+        ] {
             assert!(object.contains_key(expected), "missing key {expected}");
         }
         assert!(!object.contains_key("commission_per_fill"));
@@ -691,4 +713,3 @@ mod tests {
         assert_eq!(parse_bar_spec("5"), None);
     }
 }
-

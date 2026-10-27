@@ -4,14 +4,10 @@ use leptos::prelude::*;
 
 #[component]
 pub fn HfRadioGroup(
-    #[prop(optional)]
-    _value: Option<String>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    _on_change: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] _value: Option<String>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] _on_change: Option<Callback<web_sys::Event>>,
     children: Children,
 ) -> impl IntoView {
     let _disabled = disabled.unwrap_or(false);
@@ -30,14 +26,10 @@ pub fn HfRadioGroup(
 #[component]
 pub fn HfRadioGroupItem(
     value: &'static str,
-    #[prop(optional)]
-    checked: Option<bool>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_change: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] checked: Option<bool>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_change: Option<Callback<web_sys::Event>>,
     children: Children,
 ) -> impl IntoView {
     let checked = checked.unwrap_or(false);

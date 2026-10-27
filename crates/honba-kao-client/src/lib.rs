@@ -24,13 +24,13 @@
 pub mod stream;
 
 use gloo_net::http::{Request, RequestBuilder};
+use honba_api::wire::{Order, PortfolioPosition, QuoteTick};
 use honba_api::{
     BacktestRequest, BacktestResponse, BarsResponse, CompiledStrategy, DepthResponse,
     LayoutDocument, LayoutsResponse, OrdersRequest, OrdersResponse, PortfolioPositionsResponse,
     ProfileRevision, QuotesResponse, StrategiesResponse, SweepRequest, SweepResponse,
     TradesResponse, TradingStateChange, TradingStateRequest, TradingStateResponse,
 };
-use honba_api::wire::{Order, PortfolioPosition, QuoteTick};
 use honba_api::{ResponseEnvelope, TradingState};
 use serde::de::DeserializeOwned;
 use thiserror::Error;
@@ -50,7 +50,9 @@ pub mod wire {
     pub use crate::StatusAck;
     pub use honba_analytics::ValidationBlock;
     pub use honba_api::wire::ValidationBlock as ApiValidationBlock;
-    pub fn map_validation_block(wire: &honba_api::wire::ValidationBlock) -> honba_analytics::ValidationBlock {
+    pub fn map_validation_block(
+        wire: &honba_api::wire::ValidationBlock,
+    ) -> honba_analytics::ValidationBlock {
         use honba_core::rust_decimal::prelude::ToPrimitive;
         let dsr_val = wire.deflated_sharpe_ratio.and_then(|d| d.to_f64());
         let pbo_val = wire.probability_of_overfitting.and_then(|d| d.to_f64());
@@ -68,7 +70,8 @@ pub mod wire {
             median_oos_percentile: 0.0,
             passed: v < 0.5,
         });
-        let passed = dsr.as_ref().map(|d| d.passed).unwrap_or(true) && pbo.as_ref().map(|p| p.passed).unwrap_or(true);
+        let passed = dsr.as_ref().map(|d| d.passed).unwrap_or(true)
+            && pbo.as_ref().map(|p| p.passed).unwrap_or(true);
         honba_analytics::ValidationBlock {
             dsr,
             pbo,
@@ -80,20 +83,20 @@ pub mod wire {
             warnings: Vec::new(),
         }
     }
+    pub use honba_api::wire::{
+        BarAggregation, BarSpecification, Order as WireOrder, PortfolioAccount, PortfolioHolding,
+        PortfolioPosition, Position, PriceType, QuoteTick as WireQuoteTick, Trade,
+    };
     pub use honba_api::{
         BacktestEventsQuery, BacktestMetrics, BacktestRequest, BacktestResponse, BarsQuery,
-        BarsResponse, CompiledStrategy, LayoutDocument, LayoutsResponse, OrdersRequest,
-        OrdersResponse, ProfileRevision, DEFAULT_BAR_SPEC, DEFAULT_INITIAL_CAPITAL, FILL_MODELS,
-        MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS, RunStatus, StreamFrame, StrategiesResponse,
-        SweepRequest, SweepResponse, TradesResponse,
+        BarsResponse, CompiledStrategy, DEFAULT_BAR_SPEC, DEFAULT_INITIAL_CAPITAL, FILL_MODELS,
+        LayoutDocument, LayoutsResponse, MAX_COMMISSION_PER_FILL, MAX_SLIPPAGE_BPS, OrdersRequest,
+        OrdersResponse, ProfileRevision, RunStatus, StrategiesResponse, StreamFrame, SweepRequest,
+        SweepResponse, TradesResponse,
     };
     pub use honba_api::{
         ErrorCode as WireErrorCode, ErrorCode, ErrorDetail, Event as WireEvent, Event,
         Message as WireMessage, Message, TradingState as WireTradingState,
-    };
-    pub use honba_api::wire::{
-        BarAggregation, BarSpecification, Order as WireOrder, Position, PortfolioAccount,
-        PortfolioHolding, PortfolioPosition, PriceType, QuoteTick as WireQuoteTick, Trade,
     };
     pub use honba_core::{
         Currency, Exchange as WireExchange, Exchange, InstrumentId, Money as WireMoney,
@@ -593,9 +596,7 @@ mod tests {
     /// The `schema/conformance/studio` JSON files, read relative to the crate.
     fn fixture(name: &str) -> String {
         for base in ["../..", "../../.."] {
-            let path = format!(
-                "{base}/schema/conformance/studio/{name}.json"
-            );
+            let path = format!("{base}/schema/conformance/studio/{name}.json");
             if std::fs::read_to_string(&path).is_ok() {
                 return path;
             }
@@ -610,8 +611,7 @@ mod tests {
         name: &str,
     ) -> Result<T, honba_api::ErrorDetail> {
         let text = std::fs::read_to_string(fixture(name)).expect("fixture file");
-        let value: serde_json::Value =
-            serde_json::from_str(&text).expect("fixture is valid JSON");
+        let value: serde_json::Value = serde_json::from_str(&text).expect("fixture is valid JSON");
         let envelope = decode_envelope::<T>(value).expect("fixture envelope decodes");
         envelope.into_result()
     }
@@ -638,10 +638,9 @@ mod tests {
         // without parsing the human message (honba-ya verify.rs).
         let text = std::fs::read_to_string(fixture("verify_error_no_subscriptions"))
             .expect("fixture file");
-        let value: serde_json::Value =
-            serde_json::from_str(&text).expect("fixture is valid JSON");
-        let envelope = decode_envelope::<serde_json::Value>(value)
-            .expect("fixture envelope decodes");
+        let value: serde_json::Value = serde_json::from_str(&text).expect("fixture is valid JSON");
+        let envelope =
+            decode_envelope::<serde_json::Value>(value).expect("fixture envelope decodes");
         let detail = envelope.into_result().expect_err("verify refused");
         let context = detail.context.expect("verify attaches context");
         assert_eq!(context["reason"].as_str(), Some("no_subscriptions"));

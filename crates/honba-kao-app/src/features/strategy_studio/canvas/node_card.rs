@@ -44,8 +44,16 @@ pub fn NodeCard(
     let class = format!(
         "studio-node studio-cat--{}{}{}",
         category_slug(node.category),
-        if node.selected { " studio-node--selected" } else { "" },
-        if node.issues.is_empty() { "" } else { " studio-node--invalid" },
+        if node.selected {
+            " studio-node--selected"
+        } else {
+            ""
+        },
+        if node.issues.is_empty() {
+            ""
+        } else {
+            " studio-node--invalid"
+        },
     );
     let drag_id = node.id.clone();
     let issue_count = node.issues.len();

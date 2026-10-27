@@ -21,12 +21,12 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 
-use honba_kao_ui_core::icons::outline::{self, SvgIcon};
 use honba_kao_ui_core::HfButton;
 use honba_kao_ui_core::hooks::use_click_outside;
+use honba_kao_ui_core::icons::outline::{self, SvgIcon};
 
-use crate::shared::contexts::{use_auth, use_language};
 use crate::router::paths::{Page, ROUTES};
+use crate::shared::contexts::{use_auth, use_language};
 
 /// One rail destination.
 struct RailItem {
@@ -37,6 +37,12 @@ struct RailItem {
 }
 
 const RAIL_ITEMS: &[RailItem] = &[
+    RailItem {
+        href: ROUTES::HOME,
+        key: "nav.home",
+        page: Page::Home,
+        glyph: outline::home(),
+    },
     RailItem {
         href: ROUTES::PORTFOLIO,
         key: "nav.portfolio",
@@ -284,8 +290,7 @@ fn RailMenuItem(
     /// Path data from `honba_kao_ui_core::icons::outline`.
     #[prop(into)]
     glyph: &'static str,
-    #[prop(into)]
-    label: &'static str,
+    #[prop(into)] label: &'static str,
     on_click: Callback<()>,
 ) -> impl IntoView {
     view! {

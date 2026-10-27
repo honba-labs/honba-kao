@@ -144,8 +144,16 @@ pub fn trust_badges(validation: Option<&ValidationBlock>) -> Vec<TrustBadge> {
     };
     let mut badges: Vec<TrustBadge> = Vec::new();
     let gates: [(&str, Option<bool>, &str); 6] = [
-        ("dsr", block.dsr.as_ref().map(|result| result.passed), TRUST_LABELS[0].1),
-        ("pbo", block.pbo.as_ref().map(|result| result.passed), TRUST_LABELS[1].1),
+        (
+            "dsr",
+            block.dsr.as_ref().map(|result| result.passed),
+            TRUST_LABELS[0].1,
+        ),
+        (
+            "pbo",
+            block.pbo.as_ref().map(|result| result.passed),
+            TRUST_LABELS[1].1,
+        ),
         (
             "holdout",
             block.holdout.as_ref().map(|result| result.passed),
@@ -171,11 +179,7 @@ pub fn trust_badges(validation: Option<&ValidationBlock>) -> Vec<TrustBadge> {
         // fe: a key present (a block object) is shown, `Boolean(passed)` read
         // off it; a block that is absent is not shown. Same here.
         if let Some(passed) = passed {
-            badges.push(TrustBadge {
-                key,
-                label,
-                passed,
-            });
+            badges.push(TrustBadge { key, label, passed });
         }
     }
     badges
@@ -368,11 +372,10 @@ mod tests {
 
     #[test]
     fn closed_round_trips_counts_only_the_flattening_crossings() {
-        use honba_kao_client::wire::{
-            Exchange, InstrumentId, WireOrderSide,
-        };
+        use honba_kao_client::wire::{Exchange, InstrumentId, WireOrderSide};
         let fill = |side: WireOrderSide, quantity: f64, minute: i64| {
-            let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
+            let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0)
+                .expect("valid timestamp");
             WireTrade::new(
                 "f",
                 "o",

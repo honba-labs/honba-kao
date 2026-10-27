@@ -25,14 +25,14 @@
 use std::sync::Arc;
 
 use honba_api_wasm::analytics::{
-    benchmark_equity, benchmark_instrument_id, format_metric_value, AnalyticsInput, ClosePoint,
-    EquitySampling, EquitySeries, MetricKind, RunWindow,
+    AnalyticsInput, ClosePoint, EquitySampling, EquitySeries, MetricKind, RunWindow,
+    benchmark_equity, benchmark_instrument_id, format_metric_value,
 };
 use leptos::prelude::*;
 
 use openalgo_charts::types::{Bar, SeriesKind, SeriesOptions};
 
-use crate::features::simulator::kernel::bars::{seconds_of_date, BarsSeam};
+use crate::features::simulator::kernel::bars::{BarsSeam, seconds_of_date};
 use crate::features::simulator::kernel::chart_data::to_chart_bars;
 use crate::features::simulator::kernel::ops::max_drawdown_pct;
 use crate::features::simulator::kernel::run::RunAbort;
@@ -129,13 +129,11 @@ pub fn EquityCard(
     // The benchmark overlay's bars, when the fetch produced an index-aligned
     // series.
     let overlay_bars = Memo::new(move |_| {
-        benchmark
-            .get()
-            .map(|values| {
-                let held_window = window.get();
-                let start = held_window.as_ref().map(|w| w.start.as_str());
-                equity_bars(&values, start)
-            })
+        benchmark.get().map(|values| {
+            let held_window = window.get();
+            let start = held_window.as_ref().map(|w| w.start.as_str());
+            equity_bars(&values, start)
+        })
     });
 
     // The benchmark overlay fetch (fe's `useEffect`). Keyed on exactly what
@@ -160,11 +158,15 @@ pub fn EquityCard(
             return;
         };
         let Some(instrument_id) = benchmark_instrument_id(Some(&label), None) else {
-            note.set(Some("Benchmark overlay needs a benchmark symbol.".to_string()));
+            note.set(Some(
+                "Benchmark overlay needs a benchmark symbol.".to_string(),
+            ));
             return;
         };
         if equity.sampling != EquitySampling::Daily {
-            note.set(Some("Benchmark overlay needs a daily equity curve.".to_string()));
+            note.set(Some(
+                "Benchmark overlay needs a daily equity curve.".to_string(),
+            ));
             return;
         }
         let Some(seam) = bars.get_value() else {
@@ -239,7 +241,9 @@ pub fn EquityCard(
     let chart_handle = RwSignal::new(None::<openalgo_charts::chart::ChartHandle>);
     let overlay_handle = StoredValue::<Option<openalgo_charts::chart::SeriesHandle>>::new(None);
     Effect::new(move |_| {
-        let Some(handle) = chart_handle.get() else { return };
+        let Some(handle) = chart_handle.get() else {
+            return;
+        };
         match overlay_bars.get() {
             Some(bars) => {
                 overlay_handle.update_value(|slot| {

@@ -22,7 +22,12 @@ pub enum LinkGroup {
 
 impl LinkGroup {
     /// All linked groups, in cycle order (excludes `None`).
-    pub const LINKED: [LinkGroup; 4] = [LinkGroup::Red, LinkGroup::Blue, LinkGroup::Green, LinkGroup::Yellow];
+    pub const LINKED: [LinkGroup; 4] = [
+        LinkGroup::Red,
+        LinkGroup::Blue,
+        LinkGroup::Green,
+        LinkGroup::Yellow,
+    ];
 
     /// Next group in the cycle: `None -> Red -> Blue -> Green -> Yellow -> None`.
     pub fn cycle(self) -> LinkGroup {

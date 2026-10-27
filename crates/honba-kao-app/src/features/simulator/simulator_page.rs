@@ -19,8 +19,6 @@ use std::sync::Arc;
 
 use leptos::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
-use crate::shared::api::http::client;
 use crate::features::simulator::components::bottom_dock::BottomDock;
 use crate::features::simulator::components::command_bar::SimCommandBar;
 use crate::features::simulator::components::params_drawer::ParamsDrawer;
@@ -37,6 +35,8 @@ use crate::features::simulator::stores::controls_store::utc_today;
 #[cfg(target_arch = "wasm32")]
 use crate::features::simulator::stores::run_store::{BrowserClock, run_options};
 use crate::features::simulator::stores::simulator_store::SimulatorStore;
+#[cfg(target_arch = "wasm32")]
+use crate::shared::api::http::client;
 
 /// The debug fixture's completed run payload (the client crate's
 /// `backtest_response_completed.json` shapes, embedded verbatim — no
@@ -274,7 +274,9 @@ pub fn SimulatorPage() -> impl IntoView {
     #[cfg(debug_assertions)]
     let on_demo = {
         let demo_store = RwSignal::new(store.clone());
-        Some(Callback::new(move |()| demo_store.with_untracked(load_demo_run)))
+        Some(Callback::new(move |()| {
+            demo_store.with_untracked(load_demo_run)
+        }))
     };
     #[cfg(not(debug_assertions))]
     let on_demo: Option<Callback<()>> = None;

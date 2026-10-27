@@ -4,14 +4,10 @@ use leptos::prelude::*;
 
 #[component]
 pub fn HfSwitch(
-    #[prop(optional)]
-    checked: Option<bool>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_change: Option<Callback<web_sys::MouseEvent>>,
+    #[prop(optional)] checked: Option<bool>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_change: Option<Callback<web_sys::MouseEvent>>,
 ) -> impl IntoView {
     let checked = checked.unwrap_or(false);
     let disabled = disabled.unwrap_or(false);

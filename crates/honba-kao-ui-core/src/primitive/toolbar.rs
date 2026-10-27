@@ -25,12 +25,9 @@ impl HfToolbarVariant {
 /// HfToolbar — horizontal layout toolbar.
 #[component]
 pub fn HfToolbar(
-    #[prop(optional)]
-    variant: Option<HfToolbarVariant>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    direction: Option<&'static str>, // "row" | "column"
+    #[prop(optional)] variant: Option<HfToolbarVariant>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] direction: Option<&'static str>, // "row" | "column"
     children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfToolbarVariant::Default);
@@ -57,10 +54,7 @@ pub fn HfToolbar(
 
 /// HfToolbarSpacer — flexible space between toolbar items.
 #[component]
-pub fn HfToolbarSpacer(
-    #[prop(optional, into)]
-    class: String,
-) -> impl IntoView {
+pub fn HfToolbarSpacer(#[prop(optional, into)] class: String) -> impl IntoView {
     view! {
         <div class=format!("hf-toolbar-spacer {class}").trim().to_string() />
     }

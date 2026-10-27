@@ -20,8 +20,12 @@ use super::run_store::BrowserClock;
 use crate::features::simulator::kernel::bars::BarsState;
 use crate::features::simulator::kernel::chart_data::ChartBar;
 use crate::features::simulator::kernel::controls::SimulatorControls;
-use crate::features::simulator::kernel::engine::controller::{ReplayController, SimulationEngineState};
-use crate::features::simulator::kernel::engine::{DEFAULT_ACCOUNT_ID, FillModel, ReplayConfig, ReplayStatus};
+use crate::features::simulator::kernel::engine::controller::{
+    ReplayController, SimulationEngineState,
+};
+use crate::features::simulator::kernel::engine::{
+    DEFAULT_ACCOUNT_ID, FillModel, ReplayConfig, ReplayStatus,
+};
 #[cfg(target_arch = "wasm32")]
 use crate::features::simulator::kernel::run::Clock;
 use crate::features::simulator::kernel::selection::StrategyGraphShape;
@@ -244,7 +248,9 @@ impl ReplayStore {
                     let interval = store
                         .controller
                         .try_update_value(|controller| {
-                            crate::features::simulator::kernel::engine::interval_ms(controller.speed())
+                            crate::features::simulator::kernel::engine::interval_ms(
+                                controller.speed(),
+                            )
                         })
                         .unwrap_or(180);
                     Clock::sleep(&BrowserClock, interval as u64).await;

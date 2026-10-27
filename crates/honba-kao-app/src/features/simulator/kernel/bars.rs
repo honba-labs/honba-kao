@@ -13,11 +13,13 @@
 //! effect in P6 via the typed client); this module holds the pure fold from
 //! client outcome to [`BarsState`], which is what the vitest suite exercised.
 
+use honba_core::market::Bar;
 use honba_kao_client::ClientError;
 use honba_kao_client::wire::BarsResponse;
-use honba_core::market::Bar;
 
-use crate::features::simulator::kernel::chart_data::{preview_bars, to_chart_bars, ChartBar, PreviewBarsRequest};
+use crate::features::simulator::kernel::chart_data::{
+    ChartBar, PreviewBarsRequest, preview_bars, to_chart_bars,
+};
 
 /// Where the displayed bars come from (`BarsSource`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -124,11 +126,7 @@ pub fn preview_for(request: &LoadBarsRequest<'_>) -> Vec<ChartBar> {
 
 /// The preview fallback state, parametrised by what went wrong (`fallback`
 /// closure in fe's `loadRunBars`).
-fn fallback_state(
-    request: &LoadBarsRequest<'_>,
-    error: Option<String>,
-    note: String,
-) -> BarsState {
+fn fallback_state(request: &LoadBarsRequest<'_>, error: Option<String>, note: String) -> BarsState {
     BarsState {
         // fe folds a fallback to `ready` even when the store was unreachable
         // (the preview is renderable); `error` carries the transport story.
@@ -207,8 +205,8 @@ mod tests {
     }
 
     fn wire_bar(seconds: u64, close: f64) -> Bar {
-        use honba_core::{Price, Quantity};
         use chrono::{DateTime, Utc};
+        use honba_core::{Price, Quantity};
         use rust_decimal::Decimal;
         let p = Price::new(Decimal::try_from(close).unwrap_or_default());
         let instrument = InstrumentId::new(Exchange::Nse, "TCS");

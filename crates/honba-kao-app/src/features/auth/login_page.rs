@@ -12,9 +12,9 @@ use leptos_router::hooks::use_navigate;
 use honba_kao_ui_core::HfButton;
 
 use crate::features::auth::components::{AuthField, AuthShell};
+use crate::router::paths::ROUTES;
 use crate::shared::constants::auth as creds;
 use crate::shared::contexts::use_auth;
-use crate::router::paths::ROUTES;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
@@ -28,7 +28,7 @@ pub fn LoginPage() -> impl IntoView {
     let submit = move || match auth.sign_in(&email.get(), &password.get()) {
         Ok(()) => {
             error.set(None);
-            navigate(ROUTES::PORTFOLIO, Default::default());
+            navigate(ROUTES::HOME, Default::default());
         }
         Err(message) => error.set(Some(message)),
     };

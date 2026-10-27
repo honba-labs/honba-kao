@@ -10,7 +10,13 @@ fn quote(symbol: &str, ltp: &str, quality: Quality) -> StreamFrame {
         symbol: symbol.into(),
         ltp: ltp.into(),
         change_pct: "0.5".into(),
-        provenance: Provenance { quality, source: "kite".into(), note: None, as_of: None, latency_ms: None },
+        provenance: Provenance {
+            quality,
+            source: "kite".into(),
+            note: None,
+            as_of: None,
+            latency_ms: None,
+        },
     }
 }
 
@@ -57,8 +63,14 @@ fn going_offline_downgrades_live_quotes_to_cached() {
     book.seed_synthetic(MOCK_SYMBOLS);
     book.apply_frame(&quote("INFY", "1700.00", Quality::Live));
     book.mark_offline();
-    assert_eq!(book.quote("INFY").unwrap().quality, ProvenanceQuality::Cached);
-    assert_eq!(book.quote("TCS").unwrap().quality, ProvenanceQuality::Synthetic);
+    assert_eq!(
+        book.quote("INFY").unwrap().quality,
+        ProvenanceQuality::Cached
+    );
+    assert_eq!(
+        book.quote("TCS").unwrap().quality,
+        ProvenanceQuality::Synthetic
+    );
     assert_eq!(book.overall_quality(), ProvenanceQuality::Cached);
 }
 

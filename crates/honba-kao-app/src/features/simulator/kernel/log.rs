@@ -152,9 +152,9 @@ pub fn fold_run_log(state: &RunLogState, frame: Option<&StreamFrame>) -> RunLogS
 /// are terminal and stick (`foldTerminal`); anything else keeps running.
 pub fn fold_terminal(status: Option<RunStatus>) -> Option<RunStatus> {
     match status {
-        Some(
-            status @ (RunStatus::Completed | RunStatus::Failed | RunStatus::Cancelled),
-        ) => Some(status),
+        Some(status @ (RunStatus::Completed | RunStatus::Failed | RunStatus::Cancelled)) => {
+            Some(status)
+        }
         _ => None,
     }
 }
@@ -164,8 +164,8 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use honba_kao_client::wire::{
-        ErrorCode as WireErrorCode, Exchange, InstrumentId, WireMessage, WireOrder,
-        WireOrderSide, WireOrderType, WireQuoteTick,
+        ErrorCode as WireErrorCode, Exchange, InstrumentId, WireMessage, WireOrder, WireOrderSide,
+        WireOrderType, WireQuoteTick,
     };
     use rust_decimal::Decimal;
 
@@ -281,10 +281,7 @@ mod tests {
         assert_eq!(state.terminal, None);
         assert_eq!(state.lines.last().unwrap(), "#600 status: running");
 
-        let terminal = fold_run_log(
-            &state,
-            Some(&status_frame(601, RunStatus::Completed)),
-        );
+        let terminal = fold_run_log(&state, Some(&status_frame(601, RunStatus::Completed)));
         assert_eq!(terminal.terminal, Some(RunStatus::Completed));
         assert_eq!(terminal.lines.last().unwrap(), "#601 status: completed");
 
@@ -295,9 +292,18 @@ mod tests {
 
     #[test]
     fn folds_terminal_only_for_terminal_statuses() {
-        assert_eq!(fold_terminal(Some(RunStatus::Completed)), Some(RunStatus::Completed));
-        assert_eq!(fold_terminal(Some(RunStatus::Failed)), Some(RunStatus::Failed));
-        assert_eq!(fold_terminal(Some(RunStatus::Cancelled)), Some(RunStatus::Cancelled));
+        assert_eq!(
+            fold_terminal(Some(RunStatus::Completed)),
+            Some(RunStatus::Completed)
+        );
+        assert_eq!(
+            fold_terminal(Some(RunStatus::Failed)),
+            Some(RunStatus::Failed)
+        );
+        assert_eq!(
+            fold_terminal(Some(RunStatus::Cancelled)),
+            Some(RunStatus::Cancelled)
+        );
         assert_eq!(fold_terminal(Some(RunStatus::Running)), None);
         assert_eq!(fold_terminal(Some(RunStatus::Pending)), None);
         assert_eq!(fold_terminal(None), None);

@@ -6,8 +6,7 @@ use leptos::prelude::*;
 #[component]
 pub fn HfPlaceholder(
     route: &'static str,
-    #[prop(default = "")]
-    note: &'static str,
+    #[prop(default = "")] note: &'static str,
 ) -> impl IntoView {
     view! {
         <div class="placeholder">

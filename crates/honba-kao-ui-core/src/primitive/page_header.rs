@@ -5,10 +5,8 @@ use leptos::prelude::*;
 #[component]
 pub fn HfPageHeader(
     title: &'static str,
-    #[prop(default = "")]
-    subtitle: &'static str,
-    #[prop(optional)]
-    children: Option<Children>,
+    #[prop(default = "")] subtitle: &'static str,
+    #[prop(optional)] children: Option<Children>,
 ) -> impl IntoView {
     view! {
         <div class="page-header">

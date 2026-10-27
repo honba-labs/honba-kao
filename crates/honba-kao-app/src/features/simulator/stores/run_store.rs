@@ -230,7 +230,8 @@ impl StrategyCompiler for honba_kao_client::ApiClient {
     fn post_strategies_manifest<'a>(
         &'a self,
         manifest: &'a Value,
-    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<CompiledStrategy, ClientError>> {
+    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<CompiledStrategy, ClientError>>
+    {
         Box::pin(self.post_strategies(manifest))
     }
 }
@@ -239,14 +240,16 @@ impl RunClient for honba_kao_client::ApiClient {
     fn post_backtests<'a>(
         &'a self,
         request: &'a BacktestRequest,
-    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BacktestResponse, ClientError>> {
+    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BacktestResponse, ClientError>>
+    {
         Box::pin(self.post_backtests(request))
     }
 
     fn get_backtest<'a>(
         &'a self,
         id: &'a str,
-    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BacktestResponse, ClientError>> {
+    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BacktestResponse, ClientError>>
+    {
         Box::pin(self.get_backtest(id))
     }
 }
@@ -255,7 +258,8 @@ impl JournalClient for honba_kao_client::ApiClient {
     fn get_backtest_journal<'a>(
         &'a self,
         id: &'a str,
-    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<TradesResponse, ClientError>> {
+    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<TradesResponse, ClientError>>
+    {
         Box::pin(self.get_backtest_journal(id))
     }
 }
@@ -267,7 +271,8 @@ impl crate::features::simulator::kernel::bars::BarsSeam for honba_kao_client::Ap
         tf: Option<&'a str>,
         from: Option<&'a str>,
         to: Option<&'a str>,
-    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BarsResponse, ClientError>> {
+    ) -> crate::features::simulator::kernel::run::ClientFut<'a, Result<BarsResponse, ClientError>>
+    {
         Box::pin(self.get_bars(id, tf, from, to))
     }
 }

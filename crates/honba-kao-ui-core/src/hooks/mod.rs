@@ -24,10 +24,7 @@ use wasm_bindgen::JsCast;
 ///     view! { <div node_ref=menu_ref>"Menu"</div> }
 /// }
 /// ```
-pub fn use_click_outside(
-    node_ref: NodeRef<leptos::html::Div>,
-    callback: impl FnMut() + 'static,
-) {
+pub fn use_click_outside(node_ref: NodeRef<leptos::html::Div>, callback: impl FnMut() + 'static) {
     let callback = std::rc::Rc::new(std::cell::RefCell::new(callback));
     leptos::prelude::Effect::new(move |_| {
         if let Some(el) = node_ref.get() {
@@ -84,9 +81,7 @@ where
 /// Escape key handler — calls callback when Escape is pressed.
 ///
 /// The `keydown` listener is removed when the calling owner is cleaned up.
-pub fn use_escape_key(
-    callback: impl FnMut() + 'static,
-) {
+pub fn use_escape_key(callback: impl FnMut() + 'static) {
     let callback = std::cell::RefCell::new(callback);
     let handle = window_event_listener(leptos::ev::keydown, move |ev| {
         if ev.key() == "Escape" {
@@ -124,8 +119,13 @@ pub fn use_media_query(query: &'static str) -> leptos::prelude::RwSignal<bool> {
                     m.set(mql.matches());
                 }
             };
-            let handler_closure = wasm_bindgen::closure::Closure::wrap(Box::new(handler) as Box<dyn FnMut(web_sys::Event)>);
-            let _ = mql.add_event_listener_with_callback("change", handler_closure.as_ref().unchecked_ref());
+            let handler_closure = wasm_bindgen::closure::Closure::wrap(
+                Box::new(handler) as Box<dyn FnMut(web_sys::Event)>
+            );
+            let _ = mql.add_event_listener_with_callback(
+                "change",
+                handler_closure.as_ref().unchecked_ref(),
+            );
             m.set(mql.matches());
             // The same closure that was added is the one removed on cleanup.
             let listener = StoredValue::new_local((mql, handler_closure));
@@ -144,7 +144,9 @@ pub fn use_media_query(query: &'static str) -> leptos::prelude::RwSignal<bool> {
 }
 
 /// Local storage hook — persists a signal value to localStorage.
-pub fn use_local_storage<T: serde::Serialize + serde::de::DeserializeOwned + Clone + Send + Sync + 'static>(
+pub fn use_local_storage<
+    T: serde::Serialize + serde::de::DeserializeOwned + Clone + Send + Sync + 'static,
+>(
     key: &'static str,
     default: T,
 ) -> leptos::prelude::RwSignal<T> {
@@ -192,12 +194,17 @@ pub fn use_debounce<T: Clone + Send + Sync + 'static>(
             }
         }
         if let Some(window) = web_sys::window() {
-            let handle = window.set_timeout_with_callback_and_timeout_and_arguments_0(
-                &wasm_bindgen::closure::Closure::wrap(Box::new(move || {
-                    debounced.set(val.clone());
-                }) as Box<dyn FnMut()>).into_js_value().unchecked_ref(),
-                ms as i32,
-            ).ok();
+            let handle = window
+                .set_timeout_with_callback_and_timeout_and_arguments_0(
+                    &wasm_bindgen::closure::Closure::wrap(Box::new(move || {
+                        debounced.set(val.clone());
+                    })
+                        as Box<dyn FnMut()>)
+                    .into_js_value()
+                    .unchecked_ref(),
+                    ms as i32,
+                )
+                .ok();
             *pending = handle;
         }
     });
@@ -228,22 +235,21 @@ pub fn use_controllable_state<T: Clone + Send + Sync + 'static>(
 }
 
 /// WebSocket tick subscription hook.
-pub fn use_tick_stream(
-    url: &'static str,
-    on_tick: impl Fn(serde_json::Value) + 'static,
-) {
+pub fn use_tick_stream(url: &'static str, on_tick: impl Fn(serde_json::Value) + 'static) {
     let on_tick = std::rc::Rc::new(std::cell::RefCell::new(on_tick));
     leptos::prelude::Effect::new(move |_| {
         if let Ok(ws) = web_sys::WebSocket::new(url) {
             let on_tick_clone = on_tick.clone();
-            let onmessage_cb = wasm_bindgen::closure::Closure::wrap(Box::new(move |ev: web_sys::MessageEvent| {
-                if let Ok(text) = ev.data().dyn_into::<js_sys::JsString>() {
-                    let text_str = text.as_string().unwrap_or_default();
-                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text_str) {
-                        on_tick_clone.borrow()(val);
+            let onmessage_cb =
+                wasm_bindgen::closure::Closure::wrap(Box::new(move |ev: web_sys::MessageEvent| {
+                    if let Ok(text) = ev.data().dyn_into::<js_sys::JsString>() {
+                        let text_str = text.as_string().unwrap_or_default();
+                        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text_str) {
+                            on_tick_clone.borrow()(val);
+                        }
                     }
-                }
-            }) as Box<dyn FnMut(web_sys::MessageEvent)>);
+                })
+                    as Box<dyn FnMut(web_sys::MessageEvent)>);
             ws.set_onmessage(Some(onmessage_cb.as_ref().unchecked_ref()));
             // Detach the handler and close the socket when the owner is
             // cleaned up, before the closure itself is dropped.
@@ -399,8 +405,7 @@ pub fn use_virtual_rows(
         let Some(element) = container.get() else {
             return;
         };
-        let callback =
-            wasm_bindgen::closure::Closure::<dyn FnMut()>::new(move || rows.sync());
+        let callback = wasm_bindgen::closure::Closure::<dyn FnMut()>::new(move || rows.sync());
         let Ok(observer) = web_sys::ResizeObserver::new(callback.as_ref().unchecked_ref()) else {
             return;
         };

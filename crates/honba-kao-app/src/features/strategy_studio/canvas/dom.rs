@@ -31,7 +31,11 @@ fn data_transfer(ev: &web_sys::DragEvent) -> Option<JsValue> {
 /// `ev.dataTransfer.setData(mime, data)` + `effectAllowed = "copy"`.
 pub fn drag_set_data(ev: &web_sys::DragEvent, mime: &str, data: &str) {
     if let Some(transfer) = data_transfer(ev) {
-        let _ = call(&transfer, "setData", &[&JsValue::from_str(mime), &JsValue::from_str(data)]);
+        let _ = call(
+            &transfer,
+            "setData",
+            &[&JsValue::from_str(mime), &JsValue::from_str(data)],
+        );
         // Some browsers refuse to start a drag with only a custom MIME type.
         let _ = call(
             &transfer,
@@ -69,7 +73,12 @@ pub fn drag_set_drop_effect(ev: &web_sys::DragEvent) {
 pub fn client_rect(element: &web_sys::Element) -> Option<(f64, f64, f64, f64)> {
     let rect = call(element.as_ref(), "getBoundingClientRect", &[])?;
     let number = |key: &str| get(&rect, key).and_then(|v| v.as_f64());
-    Some((number("left")?, number("top")?, number("width")?, number("height")?))
+    Some((
+        number("left")?,
+        number("top")?,
+        number("width")?,
+        number("height")?,
+    ))
 }
 
 /// Whether a key event comes from an editable control, where Delete /

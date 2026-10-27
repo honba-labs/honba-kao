@@ -4,14 +4,10 @@ use leptos::prelude::*;
 
 #[component]
 pub fn HfCheckbox(
-    #[prop(optional)]
-    checked: Option<bool>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_change: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] checked: Option<bool>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_change: Option<Callback<web_sys::Event>>,
     children: Children,
 ) -> impl IntoView {
     let checked = checked.unwrap_or(false);

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use crate::features::simulator::kernel::selection::StrategyGraphNode;
 use crate::features::strategy_studio::canvas::dom;
 use crate::features::strategy_studio::kernel::graph::{
-    default_node, is_known_indicator, NodeCategory, CATALOGUE, STRUCTURAL_NODE_TYPES,
+    CATALOGUE, NodeCategory, STRUCTURAL_NODE_TYPES, default_node, is_known_indicator,
 };
 use crate::features::strategy_studio::stores::StudioStore;
 
@@ -130,7 +130,8 @@ pub fn palette_node(payload: &PalettePayload) -> StrategyGraphNode {
     match payload.node_type.as_str() {
         // fe's splice-menu defaults for the two nodes `default_node` leaves bare.
         "sizing" => {
-            node.params.insert("mode".to_string(), "fixed_quantity".into());
+            node.params
+                .insert("mode".to_string(), "fixed_quantity".into());
             node.params.insert("value".to_string(), 1.into());
         }
         "risk" => {

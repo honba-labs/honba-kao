@@ -273,7 +273,11 @@ pub fn universe_string(
         .universe_explicit
         .iter()
         .map(|(symbol, exchange)| {
-            format!("{}.{}", symbol.trim().to_uppercase(), exchange.trim().to_uppercase())
+            format!(
+                "{}.{}",
+                symbol.trim().to_uppercase(),
+                exchange.trim().to_uppercase()
+            )
         })
         .collect::<Vec<String>>()
         .join(",")
@@ -321,13 +325,19 @@ mod tests {
             driving_aggregation: "week".to_string(),
             ..graph()
         };
-        assert_eq!(controls_for_graph(&weekly, &default_controls()).timeframe, "1w");
+        assert_eq!(
+            controls_for_graph(&weekly, &default_controls()).timeframe,
+            "1w"
+        );
         let unusual = StrategyGraphShape {
             driving_aggregation: "quarter".to_string(),
             ..graph()
         };
         // fe's `AGGREGATION_UNIT … ?? 'd'`.
-        assert_eq!(controls_for_graph(&unusual, &default_controls()).timeframe, "5d");
+        assert_eq!(
+            controls_for_graph(&unusual, &default_controls()).timeframe,
+            "5d"
+        );
     }
 
     #[test]

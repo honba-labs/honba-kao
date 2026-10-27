@@ -92,8 +92,9 @@ pub fn add_indicator(
             String::new()
         };
 
-    let json = sys::bridge_add_indicator(id, indicator_id, &settings_json, instance_id.unwrap_or(""))
-        .map_err(|e| format!("{e:?}"))?;
+    let json =
+        sys::bridge_add_indicator(id, indicator_id, &settings_json, instance_id.unwrap_or(""))
+            .map_err(|e| format!("{e:?}"))?;
 
     let raw = json
         .as_string()

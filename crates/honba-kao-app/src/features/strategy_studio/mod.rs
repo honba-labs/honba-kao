@@ -6,12 +6,12 @@
 //   ([`crate::features::simulator::kernel::selection::StrategyGraphShape`]).
 // * [`components`] — the strategy library and grid risk panel.
 // * [`stores`] — reactive stores for the strategy studio canvas.
-// 
+//
 pub mod canvas;
 pub mod components;
 pub mod kernel;
 pub mod stores;
 pub mod strategy_studio_page;
 
-pub use strategy_studio_page::StrategyStudioPage;
 pub use stores::StudioStore;
+pub use strategy_studio_page::StrategyStudioPage;

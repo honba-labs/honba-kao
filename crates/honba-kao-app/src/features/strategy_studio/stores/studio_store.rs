@@ -21,12 +21,12 @@ use leptos::prelude::*;
 
 use crate::features::simulator::kernel::selection::{StrategyGraphNode, StrategyGraphShape};
 use crate::features::strategy_studio::canvas::geometry::{
-    auto_layout, snap_position, Position, Viewport, GRID,
+    GRID, Position, Viewport, auto_layout, snap_position,
 };
 use crate::features::strategy_studio::canvas::scene::Selection;
 use crate::features::strategy_studio::kernel::codegen::generate_code;
 use crate::features::strategy_studio::kernel::edit;
-use crate::features::strategy_studio::kernel::graph::{graph_hash, graph_issues, ValidationIssue};
+use crate::features::strategy_studio::kernel::graph::{ValidationIssue, graph_hash, graph_issues};
 use crate::features::strategy_studio::kernel::templates::{blank_graph, template_by_name};
 
 /// The page-scoped studio store. `Copy`: every field is an arena handle.
@@ -186,17 +186,17 @@ impl StudioStore {
         let ids: Vec<String> = self
             .graph
             .with_untracked(|g| g.nodes.iter().map(|n| n.id.clone()).collect());
-        self.positions.update(|positions| positions.retain(|id, _| ids.contains(id)));
+        self.positions
+            .update(|positions| positions.retain(|id, _| ids.contains(id)));
     }
 
     /// fe `addNode`: appends at `position` (snapped), selects it, returns
     /// the id it landed under.
     pub fn add_node_at(&self, node: StrategyGraphNode, position: Position) -> String {
         let id = self.edit(|graph| edit::add_node(graph, node));
-        self.positions
-            .update(|positions| {
-                positions.insert(id.clone(), snap_position(position));
-            });
+        self.positions.update(|positions| {
+            positions.insert(id.clone(), snap_position(position));
+        });
         self.select(Selection::Node(id.clone()));
         self.accept();
         id
@@ -208,7 +208,10 @@ impl StudioStore {
     pub fn add_node_visible(&self, node: StrategyGraphNode) -> String {
         let count = self.graph.with_untracked(|g| g.nodes.len()) % 8;
         let step = GRID * 2.0 * count as f64;
-        let (wx, wy) = self.viewport.get_untracked().to_world(64.0 + step, 64.0 + step);
+        let (wx, wy) = self
+            .viewport
+            .get_untracked()
+            .to_world(64.0 + step, 64.0 + step);
         self.add_node_at(node, Position::new(wx, wy))
     }
 
@@ -289,8 +292,14 @@ impl StudioStore {
             Ok(new_id) => {
                 let position = self.positions.with_untracked(|positions| {
                     let (from, to) = endpoints.unwrap_or_default();
-                    let a = positions.get(&from).copied().unwrap_or(Position::new(96.0, 96.0));
-                    let b = positions.get(&to).copied().unwrap_or(Position::new(400.0, 96.0));
+                    let a = positions
+                        .get(&from)
+                        .copied()
+                        .unwrap_or(Position::new(96.0, 96.0));
+                    let b = positions
+                        .get(&to)
+                        .copied()
+                        .unwrap_or(Position::new(400.0, 96.0));
                     Position::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0 + GRID * 6.0)
                 });
                 self.graph.set(candidate);
@@ -346,7 +355,14 @@ impl StudioStore {
             graph.universe_explicit = if symbol.is_empty() {
                 Vec::new()
             } else {
-                vec![(symbol, if exchange.is_empty() { "NSE".to_string() } else { exchange })]
+                vec![(
+                    symbol,
+                    if exchange.is_empty() {
+                        "NSE".to_string()
+                    } else {
+                        exchange
+                    },
+                )]
             };
         });
     }

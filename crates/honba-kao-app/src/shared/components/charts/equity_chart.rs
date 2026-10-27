@@ -3,8 +3,8 @@
 use leptos::prelude::*;
 
 use crate::shared::components::charts::{ChartSeries, OpenAlgoChart};
-use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 use crate::shared::data::demo_data::demo_ohlc_bars;
+use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 
 #[component]
 pub fn EquityChart() -> impl IntoView {

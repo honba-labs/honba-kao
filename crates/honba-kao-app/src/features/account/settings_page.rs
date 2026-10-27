@@ -3,9 +3,9 @@
 use leptos::prelude::*;
 
 use crate::shared::api;
-use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::shared::constants::branding;
 use crate::shared::stores::trading_mode::{TradingMode, use_trading_mode};
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 
 #[component]
 pub fn SettingsPage() -> impl IntoView {

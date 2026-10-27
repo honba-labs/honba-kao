@@ -10,14 +10,22 @@ use honba_kao_app::shared::command::symbols;
 fn bare_ticker_parses_as_ticker() {
     assert_eq!(
         parse_command("reliance"),
-        ParsedCommand::Ticker { raw: "reliance".into(), ticker: "RELIANCE".into() }
+        ParsedCommand::Ticker {
+            raw: "reliance".into(),
+            ticker: "RELIANCE".into()
+        }
     );
 }
 
 #[test]
 fn ticker_then_function_parses_as_ticker_function() {
     match parse_command("infy fa income") {
-        ParsedCommand::TickerFunction { ticker, func, modifiers, .. } => {
+        ParsedCommand::TickerFunction {
+            ticker,
+            func,
+            modifiers,
+            ..
+        } => {
             assert_eq!(ticker, "INFY");
             assert_eq!(func, "FA");
             assert_eq!(modifiers, vec!["INCOME".to_string()]);

@@ -46,7 +46,10 @@ use crate::router::paths::ROUTES;
 
 /// fe's three timeframe groups (`MINUTES`, `HOURS`, `DAYS, WEEKS & MONTHS`).
 const TIMEFRAME_GROUPS: [(&str, &[&str]); 3] = [
-    ("MINUTES", &["1m", "2m", "3m", "5m", "10m", "15m", "30m", "45m"]),
+    (
+        "MINUTES",
+        &["1m", "2m", "3m", "5m", "10m", "15m", "30m", "45m"],
+    ),
     ("HOURS", &["1h", "2h", "3h", "4h"]),
     ("DAYS, WEEKS & MONTHS", &["1d", "1w", "1mo"]),
 ];

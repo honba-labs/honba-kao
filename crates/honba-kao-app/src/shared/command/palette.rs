@@ -6,7 +6,9 @@
 //! ticker. Rows are scored with [`fuzzy_score`] and sorted best first.
 
 use crate::router::paths::ROUTES;
-use crate::shared::command::commanding::{COMMAND_FUNCTIONS, fuzzy_score, looks_like_ticker, ticker_hints};
+use crate::shared::command::commanding::{
+    COMMAND_FUNCTIONS, fuzzy_score, looks_like_ticker, ticker_hints,
+};
 use crate::shared::command::symbols;
 
 /// What a palette row does when chosen.
@@ -37,8 +39,16 @@ pub const NAV_ENTRIES: &[(&str, &str, &str)] = &[
     ("Strategy Studio", ROUTES::STRATEGY, "Workspace > Strategy"),
     ("Simulator", ROUTES::SIMULATOR, "Workspace > Simulator"),
     ("Tradebook", ROUTES::TRADEBOOK, "Workspace > Tradebook"),
-    ("Security Hub", "/equity/security", "Research > Security Hub"),
-    ("Research Dossiers", "/equity/research-dossiers", "Research > Dossiers"),
+    (
+        "Security Hub",
+        "/equity/security",
+        "Research > Security Hub",
+    ),
+    (
+        "Research Dossiers",
+        "/equity/research-dossiers",
+        "Research > Dossiers",
+    ),
     ("Settings", ROUTES::SETTINGS, "System > Settings"),
     ("Funds", ROUTES::FUNDS, "System > Funds"),
 ];
@@ -53,7 +63,9 @@ pub fn build_items(query: &str) -> Vec<PaletteItem> {
         let score = if q.is_empty() {
             1700 - idx as i32
         } else {
-            fuzzy_score(label, q).max(fuzzy_score(route, q)).max(fuzzy_score(crumb, q))
+            fuzzy_score(label, q)
+                .max(fuzzy_score(route, q))
+                .max(fuzzy_score(crumb, q))
         };
         if score >= 0 {
             rows.push(PaletteItem {
@@ -114,7 +126,8 @@ pub fn build_items(query: &str) -> Vec<PaletteItem> {
         }
     }
 
-    if !q.is_empty() && looks_like_ticker(&q.to_ascii_uppercase())
+    if !q.is_empty()
+        && looks_like_ticker(&q.to_ascii_uppercase())
         && !rows.iter().any(|r| r.badge == "ASSET")
     {
         let upper = q.to_ascii_uppercase();

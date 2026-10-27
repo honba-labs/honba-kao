@@ -6,9 +6,9 @@
 //! display value, not a model output.
 
 use honba_kao_ui_core::{
-    HfButton, HfButtonSize, HfButtonVariant, HfInput, HfKpi, HfPageHeader, HfPanel,
-    HfPanelHeader, HfTable, HfTableBody, HfTableCell, HfTableHeader, HfTableHeaderCell,
-    HfTableRow, HfToggleGroup, HfToggleGroupItem,
+    HfButton, HfButtonSize, HfButtonVariant, HfInput, HfKpi, HfPageHeader, HfPanel, HfPanelHeader,
+    HfTable, HfTableBody, HfTableCell, HfTableHeader, HfTableHeaderCell, HfTableRow, HfToggleGroup,
+    HfToggleGroupItem,
 };
 use leptos::prelude::*;
 
@@ -201,7 +201,9 @@ fn fmt_pnl(paise: i64) -> String {
 }
 
 fn fmt_opt_pnl(value: Option<i64>) -> String {
-    value.map(fmt_pnl).unwrap_or_else(|| "Unlimited".to_string())
+    value
+        .map(fmt_pnl)
+        .unwrap_or_else(|| "Unlimited".to_string())
 }
 
 /// Payoff polyline in the fixed viewBox, split at the zero line by clipping

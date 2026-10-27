@@ -12,12 +12,9 @@ use crate::{HfButton, HfButtonVariant, HfIconButton};
 
 #[component]
 pub fn HfModal(
-    #[prop(optional, into)]
-    title: String,
-    #[prop(optional)]
-    on_close: Option<Callback<()>>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] title: String,
+    #[prop(optional)] on_close: Option<Callback<()>>,
+    #[prop(optional, into)] class: String,
     children: Children,
 ) -> impl IntoView {
     let close = move || {
@@ -52,18 +49,12 @@ pub fn HfModal(
 /// HfConfirmDialog — confirmation dialog with confirm/cancel actions.
 #[component]
 pub fn HfConfirmDialog(
-    #[prop(optional)]
-    on_confirm: Option<Callback<()>>,
-    #[prop(optional)]
-    on_cancel: Option<Callback<()>>,
-    #[prop(optional, into)]
-    title: Option<String>,
-    #[prop(optional, into)]
-    message: Option<String>,
-    #[prop(optional, into)]
-    confirm_label: Option<String>,
-    #[prop(optional, into)]
-    cancel_label: Option<String>,
+    #[prop(optional)] on_confirm: Option<Callback<()>>,
+    #[prop(optional)] on_cancel: Option<Callback<()>>,
+    #[prop(optional, into)] title: Option<String>,
+    #[prop(optional, into)] message: Option<String>,
+    #[prop(optional, into)] confirm_label: Option<String>,
+    #[prop(optional, into)] cancel_label: Option<String>,
 ) -> impl IntoView {
     let cancel = move || {
         if let Some(cb) = on_cancel {

@@ -8,7 +8,7 @@
 //! a reported and a computed number visible at a glance (risk R5, honesty
 //! invariant 1: metrics are never invented).
 
-use honba_api_wasm::analytics::{format_metric_value, MetricKind, MetricProvenance, RibbonMetric};
+use honba_api_wasm::analytics::{MetricKind, MetricProvenance, RibbonMetric, format_metric_value};
 use leptos::prelude::*;
 
 /// fe's `PROVENANCE_STYLE` — the chip label per provenance (the strings the

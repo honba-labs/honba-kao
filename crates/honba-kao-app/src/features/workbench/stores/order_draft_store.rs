@@ -5,8 +5,8 @@
 
 use leptos::prelude::*;
 
-use crate::shared::data::demo_data;
 use crate::features::workbench::data::symbol_search;
+use crate::shared::data::demo_data;
 
 // ---------------------------------------------------------------------------
 // Order ticket domain

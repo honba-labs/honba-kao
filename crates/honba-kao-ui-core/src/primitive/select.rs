@@ -5,16 +5,11 @@ use leptos::prelude::*;
 /// HfSelect — dropdown select trigger.
 #[component]
 pub fn HfSelect(
-    #[prop(optional)]
-    value: Option<String>,
-    #[prop(optional)]
-    _placeholder: Option<&'static str>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_change: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] value: Option<String>,
+    #[prop(optional)] _placeholder: Option<&'static str>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_change: Option<Callback<web_sys::Event>>,
     children: Children,
 ) -> impl IntoView {
     let disabled = disabled.unwrap_or(false);
@@ -38,10 +33,8 @@ pub fn HfSelect(
 /// HfSelectTrigger — the clickable trigger part of a select.
 #[component]
 pub fn HfSelectTrigger(
-    #[prop(optional)]
-    _value: Option<String>,
-    #[prop(optional)]
-    placeholder: Option<&'static str>,
+    #[prop(optional)] _value: Option<String>,
+    #[prop(optional)] placeholder: Option<&'static str>,
     children: Children,
 ) -> impl IntoView {
     view! {
@@ -69,11 +62,7 @@ pub fn HfSelectTrigger(
 
 /// HfSelectContent — the dropdown content of a select.
 #[component]
-pub fn HfSelectContent(
-    #[prop(optional, into)]
-    class: String,
-    children: Children,
-) -> impl IntoView {
+pub fn HfSelectContent(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
     view! {
         <div class=format!("hf-select__content {class}").trim().to_string()>
             {children()}
@@ -85,10 +74,8 @@ pub fn HfSelectContent(
 #[component]
 pub fn HfSelectItem(
     value: &'static str,
-    #[prop(optional)]
-    selected: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional)] selected: Option<bool>,
+    #[prop(optional, into)] class: String,
     children: Children,
 ) -> impl IntoView {
     let selected = selected.unwrap_or(false);
@@ -105,10 +92,7 @@ pub fn HfSelectItem(
 
 /// HfSelectSeparator — separator between select items.
 #[component]
-pub fn HfSelectSeparator(
-    #[prop(optional, into)]
-    class: String,
-) -> impl IntoView {
+pub fn HfSelectSeparator(#[prop(optional, into)] class: String) -> impl IntoView {
     view! {
         <div class=format!("hf-select__separator {class}").trim().to_string() />
     }

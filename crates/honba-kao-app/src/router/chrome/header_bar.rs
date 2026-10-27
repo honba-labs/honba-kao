@@ -8,15 +8,13 @@
 //!   * transparent over the landing hero, solid once scrolled;
 //!   * the PAPER | LIVE indicator toggles the shared trading-mode store.
 
-use honba_kao_ui_core::{
-    HfButton, HfIconButton, HfTradingModeToggle, HfTradingModeType,
-};
+use honba_kao_ui_core::{HfButton, HfIconButton, HfTradingModeToggle, HfTradingModeType};
 use leptos::prelude::*;
 use leptos_router::components::A;
 
+use crate::router::paths::{Page, ROUTES};
 use crate::shared::components::BrandLogo;
 use crate::shared::contexts::{use_auth, use_language};
-use crate::router::paths::{Page, ROUTES};
 use crate::shared::stores::{TradingMode, trading_mode::use_trading_mode};
 use crate::shared::theme::{Mode, Preference, ThemeContext};
 
@@ -42,11 +40,10 @@ pub fn HeaderBar(
         TradingMode::Paper => HfTradingModeType::Sandbox,
         TradingMode::Live => HfTradingModeType::Live,
     });
-    let set_widget_mode =
-        Callback::new(move |next: HfTradingModeType| match next {
-            HfTradingModeType::Sandbox => trading.set(TradingMode::Paper),
-            HfTradingModeType::Live => trading.set(TradingMode::Live),
-        });
+    let set_widget_mode = Callback::new(move |next: HfTradingModeType| match next {
+        HfTradingModeType::Sandbox => trading.set(TradingMode::Paper),
+        HfTradingModeType::Live => trading.set(TradingMode::Live),
+    });
 
     view! {
         <header

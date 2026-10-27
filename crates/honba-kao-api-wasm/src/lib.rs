@@ -51,8 +51,7 @@ pub fn indicator_series(
     params_json: &str,
     closes: &[f64],
 ) -> Result<Vec<f64>, JsError> {
-    indicators::indicator_series(name, params_json, closes)
-        .map_err(|error| indicator_error(&error))
+    indicators::indicator_series(name, params_json, closes).map_err(|error| indicator_error(&error))
 }
 
 /// Full OHLC-input indicator series (currently `atr`) over equal-length `high`, `low` and

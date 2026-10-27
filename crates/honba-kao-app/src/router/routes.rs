@@ -17,16 +17,17 @@ use leptos_router::path;
 
 use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
-use crate::features::backtesting::backtesting_page::BacktestingDeckPage;
 use crate::features::backtesting::BacktestingPage;
+use crate::features::backtesting::backtesting_page::BacktestingDeckPage;
 use crate::features::chart_workstation::ChartWorkstationPage;
 use crate::features::compare::ComparePage;
 use crate::features::dom::DomPage;
 use crate::features::dossiers::DossiersPage;
 use crate::features::fno::{
-    ExpiryPage, FlowPage, FnoHeatmapPage, FuturesPage, GreeksHeatmapPage, OiPage,
-    OptionChainPage, OptionGreeksPage, PcrPage, StrategyBuilderPage,
+    ExpiryPage, FlowPage, FnoHeatmapPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage,
+    OptionGreeksPage, PcrPage, StrategyBuilderPage,
 };
+use crate::features::home::HomePage;
 use crate::features::landing::LandingPage;
 use crate::features::launchpad::{LaunchpadPage, PopoutPage};
 use crate::features::markets::{
@@ -36,9 +37,14 @@ use crate::features::markets::{
 };
 use crate::features::model_lab::ModelLabPage;
 use crate::features::mta::MtaPage;
+use crate::features::oms::OmsPage;
+use crate::features::ops::OpsPage;
+use crate::features::pair_trading::PairTradingPage;
+use crate::features::pair_trading::pair_trading_page::PairTradingPageContent;
 use crate::features::portfolio::PortfolioPage;
 use crate::features::portfolio_extras::{AlertsPage, JournalPage, PaperPage};
 use crate::features::portfolio_lab::PortfolioLabPage;
+use crate::features::position_sizer::PositionSizerPage;
 use crate::features::quant_extras::{
     AlgoFrameworkPage, AlphaZooPage, ResearchAutopilotPage, StrategyExportPage,
 };
@@ -46,26 +52,23 @@ use crate::features::research::{
     DividendsPage, EarningsPage, FactorsPage, InsiderPage, IntelligenceTimelinePage,
     RelativeStrengthPage, ResearchLibraryPage, SectorRotationPage,
 };
-use crate::features::stat_lab::StatLabPage;
-use crate::features::stat_lab::stat_lab_page::StatLabPageContent;
-use crate::features::pair_trading::PairTradingPage;
-use crate::features::pair_trading::pair_trading_page::PairTradingPageContent;
+use crate::features::risk::RiskPage;
+use crate::features::risk_ops_extras::{
+    CockpitPage, CorrelationPage, DataQualityPage, ReportsPage,
+};
 use crate::features::screener::ScreenerPage;
 use crate::features::security_hub::SecurityHubPage;
-use crate::features::risk::RiskPage;
-use crate::features::risk_ops_extras::{CockpitPage, CorrelationPage, DataQualityPage, ReportsPage};
-use crate::features::oms::OmsPage;
-use crate::features::ops::OpsPage;
-use crate::features::position_sizer::PositionSizerPage;
 use crate::features::shadow_account::ShadowAccountPage;
 use crate::features::simulator::SimulatorPage;
+use crate::features::stat_lab::StatLabPage;
+use crate::features::stat_lab::stat_lab_page::StatLabPageContent;
 use crate::features::strategy_studio::StrategyStudioPage;
 use crate::features::system_extras::{AboutPage, AccountHomePage, PluginsPage, SavedViewsPage};
 use crate::features::tape::TapePage;
 use crate::features::tradebook::TradebookPage;
 use crate::features::workbench::WorkbenchPage;
 use crate::router::app_chrome::AppChrome;
-use crate::router::paths::{get_current_page_for_path, Page, ROUTES};
+use crate::router::paths::{Page, ROUTES, get_current_page_for_path};
 use crate::shared::contexts::use_auth;
 
 #[component]
@@ -84,6 +87,9 @@ pub fn AppRoutes() -> impl IntoView {
 
             // --- Gated workspace (persistent chrome) --------------------------
             <ParentRoute path=path!("") view=AppShell>
+                // --- Mission Control (plan-1.md Milestone 3) -----------------
+                <Route path=path!("/home") view=HomePage />
+
                 // --- Markets & Overview --------------------------------------
                 <Route path=path!("/equity/stocks") view=MarketPage />
                 <Route path=path!("/equity/monitoring") view=MonitoringPage />
@@ -219,7 +225,7 @@ fn RootRoute() -> impl IntoView {
 
     view! {
         {if auth.is_authenticated() {
-            view! { <Redirect path=ROUTES::PORTFOLIO /> }.into_any()
+            view! { <Redirect path=ROUTES::HOME /> }.into_any()
         } else {
             view! { <LandingPage /> }.into_any()
         }}

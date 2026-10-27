@@ -314,8 +314,7 @@ mod tests {
             if i + 1 >= 10 {
                 let window = &closes[i - 9..=i];
                 let mean = window.iter().sum::<f64>() / 10.0;
-                let variance =
-                    window.iter().map(|c| (c - mean) * (c - mean)).sum::<f64>() / 10.0;
+                let variance = window.iter().map(|c| (c - mean) * (c - mean)).sum::<f64>() / 10.0;
                 let std = variance.sqrt();
                 // The honba stream accumulates running sums (and derives
                 // variance as sum_sq/n − mean²), fe recomputes each window
@@ -324,8 +323,14 @@ mod tests {
                 // pinned at 1e-9 (≈ a picopaisa on a ₹100 band — far below
                 // anything the confluence condition can read differently).
                 assert!((stream.middle[i] - mean).abs() < 1e-9, "middle at {i}");
-                assert!((stream.upper[i] - (mean + 2.0 * std)).abs() < 1e-9, "upper at {i}");
-                assert!((stream.lower[i] - (mean - 2.0 * std)).abs() < 1e-9, "lower at {i}");
+                assert!(
+                    (stream.upper[i] - (mean + 2.0 * std)).abs() < 1e-9,
+                    "upper at {i}"
+                );
+                assert!(
+                    (stream.lower[i] - (mean - 2.0 * std)).abs() < 1e-9,
+                    "lower at {i}"
+                );
             } else {
                 assert!(stream.upper[i].is_nan());
             }

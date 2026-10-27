@@ -39,7 +39,11 @@ fn realised_equity_points(initial_capital: f64, trips_latest_first: &[RoundTrip]
 
 /// `color-bullish` / `color-bearish` for a signed value (fe's ternary).
 fn tone(value: f64) -> &'static str {
-    if value >= 0.0 { "color-bullish" } else { "color-bearish" }
+    if value >= 0.0 {
+        "color-bullish"
+    } else {
+        "color-bearish"
+    }
 }
 
 #[component]
@@ -65,7 +69,10 @@ pub fn KpiCards(
     let stats = Memo::new(move |_| engine_state.with(|state| round_trip_stats(&state.round_trips)));
     let max_drawdown = Memo::new(move |_| {
         engine_state.with(|state| {
-            max_drawdown_pct(&realised_equity_points(state.initial_capital, &state.round_trips))
+            max_drawdown_pct(&realised_equity_points(
+                state.initial_capital,
+                &state.round_trips,
+            ))
         })
     });
 
@@ -176,7 +183,10 @@ mod tests {
             trip("t2", None, RoundTripStatus::Open),
             trip("t1", Some(200.0), RoundTripStatus::Closed),
         ];
-        assert_eq!(realised_equity_points(1_000.0, &trips), vec![1_000.0, 1_200.0, 1_150.0]);
+        assert_eq!(
+            realised_equity_points(1_000.0, &trips),
+            vec![1_000.0, 1_200.0, 1_150.0]
+        );
         assert_eq!(realised_equity_points(1_000.0, &[]), vec![1_000.0]);
     }
 

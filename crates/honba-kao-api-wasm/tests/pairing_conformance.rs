@@ -10,7 +10,9 @@ use honba_api_wasm::pairing::{
 };
 use honba_core::rust_decimal::Decimal;
 use honba_core::uuid::Uuid;
-use honba_core::{Currency, Exchange, FillReport as Trade, InstrumentId, Money, OrderSide, Price, Quantity};
+use honba_core::{
+    Currency, Exchange, FillReport as Trade, InstrumentId, Money, OrderSide, Price, Quantity,
+};
 
 const JAN1: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC (fe's Date.UTC(2024, 0, 2))
 
@@ -22,7 +24,14 @@ fn decimal(value: f64) -> Decimal {
     Decimal::try_from(value).expect("finite test value")
 }
 
-fn fill(side: OrderSide, quantity: f64, price: f64, minute: i64, costs: f64, symbol: &str) -> Trade {
+fn fill(
+    side: OrderSide,
+    quantity: f64,
+    price: f64,
+    minute: i64,
+    costs: f64,
+    symbol: &str,
+) -> Trade {
     Trade::new(
         format!("f-{symbol}-{minute}"),
         format!("o-{side:?}-{minute}"),
@@ -193,18 +202,34 @@ fn keeps_instruments_independent() {
         fill(OrderSide::Sell, 10.0, 120.0, 40, 0.0, "TCS"),
     ]);
     assert_eq!(result.trips.len(), 2);
-    let mut instruments: Vec<&str> = result.trips.iter().map(|trip| trip.instrument.as_str()).collect();
+    let mut instruments: Vec<&str> = result
+        .trips
+        .iter()
+        .map(|trip| trip.instrument.as_str())
+        .collect();
     instruments.sort_unstable();
     assert_eq!(instruments, ["INFY.NSE", "TCS.NSE"]);
-    let tcs = result.trips.iter().find(|t| t.instrument == "TCS.NSE").unwrap();
-    let infy = result.trips.iter().find(|t| t.instrument == "INFY.NSE").unwrap();
+    let tcs = result
+        .trips
+        .iter()
+        .find(|t| t.instrument == "TCS.NSE")
+        .unwrap();
+    let infy = result
+        .trips
+        .iter()
+        .find(|t| t.instrument == "INFY.NSE")
+        .unwrap();
     assert_eq!(tcs.status, RoundTripStatus::Closed);
     assert_eq!(infy.status, RoundTripStatus::Open);
 }
 
 #[test]
 fn numbers_trips_in_entry_order_and_reports_nothing_for_an_empty_journal() {
-    let result = pair_trades(&[buy(1.0, 100.0, 30), buy(1.0, 100.0, 10), sell(1.0, 110.0, 15)]);
+    let result = pair_trades(&[
+        buy(1.0, 100.0, 30),
+        buy(1.0, 100.0, 10),
+        sell(1.0, 110.0, 15),
+    ]);
     let ids: Vec<&str> = result.trips.iter().map(|t| t.id.as_str()).collect();
     assert_eq!(ids, ["trip-1", "trip-2"]);
     assert!(pair_trades(&[]).trips.is_empty());
@@ -222,7 +247,10 @@ fn places_an_entry_marker_per_entry_leg_and_an_exit_marker_per_exit_leg() {
     ]);
     let markers = markers_from_pairing(&result);
     assert_eq!(
-        markers.iter().map(|m| (m.kind, m.side, m.ts, m.quantity)).collect::<Vec<_>>(),
+        markers
+            .iter()
+            .map(|m| (m.kind, m.side, m.ts, m.quantity))
+            .collect::<Vec<_>>(),
         vec![
             (TradeMarkerKind::Entry, FillSide::Buy, JAN1 + 600, 100.0),
             (TradeMarkerKind::Exit, FillSide::Sell, JAN1 + 1200, 60.0),
@@ -263,7 +291,12 @@ fn gives_every_marker_a_stable_key_its_round_trip_can_be_found_by() {
     let unique = keys.len();
     keys.dedup();
     assert_eq!(keys.len(), unique);
-    assert_eq!(trip_for_marker(&result, Some(&markers[1].trip_id)).unwrap().id, "trip-1");
+    assert_eq!(
+        trip_for_marker(&result, Some(&markers[1].trip_id))
+            .unwrap()
+            .id,
+        "trip-1"
+    );
     assert!(trip_for_marker(&result, Some("trip-99")).is_none());
     assert!(trip_for_marker(&result, None).is_none());
 }
@@ -281,7 +314,11 @@ fn golden_journal_pairs_into_three_trips_like_the_fe_fixture() {
         fill(OrderSide::Sell, 10.0, 105.0, 10 + 70 * 1440, 1.0, "TCS"),
     ];
     let result = pair_trades(&trades);
-    let pnl: Vec<f64> = result.trips.iter().map(|t| t.realized_pnl.unwrap()).collect();
+    let pnl: Vec<f64> = result
+        .trips
+        .iter()
+        .map(|t| t.realized_pnl.unwrap())
+        .collect();
     assert_eq!(pnl.len(), 3);
     assert!((pnl[0] - 98.0).abs() < 1e-6);
     assert!((pnl[1] + 52.0).abs() < 1e-6);

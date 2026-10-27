@@ -3,8 +3,8 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{HfStatus, HfStatusCircle};
 use crate::shared::theme::ThemeContext;
+use honba_kao_ui_core::{HfStatus, HfStatusCircle};
 
 #[component]
 pub fn StatusBar() -> impl IntoView {

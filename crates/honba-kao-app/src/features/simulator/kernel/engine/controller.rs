@@ -166,7 +166,8 @@ impl ReplayController {
             bars: Vec::new(),
             graph: None,
             config,
-            secondary_timeframe: crate::features::simulator::kernel::engine::DEFAULT_SECONDARY_TIMEFRAME.to_string(),
+            secondary_timeframe:
+                crate::features::simulator::kernel::engine::DEFAULT_SECONDARY_TIMEFRAME.to_string(),
             multi_timeframe: false,
             indicators: None,
             status: ReplayStatus::Idle,
@@ -415,7 +416,8 @@ impl ReplayController {
     /// fe's timer body: up to `ticks_per_frame(speed)` ticks this frame,
     /// marking the replay `completed` when the series runs out.
     pub fn run_frame(&mut self) {
-        let per_frame = crate::features::simulator::kernel::engine::ticks_per_frame(self.config.speed);
+        let per_frame =
+            crate::features::simulator::kernel::engine::ticks_per_frame(self.config.speed);
         for _ in 0..per_frame {
             match self.advance() {
                 Some(outcome) if outcome.more => {}

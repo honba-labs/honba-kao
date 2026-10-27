@@ -10,7 +10,7 @@ use leptos::prelude::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HfSegmentedControlVariant {
     Default,
-   Inline,
+    Inline,
 }
 
 impl HfSegmentedControlVariant {
@@ -25,10 +25,8 @@ impl HfSegmentedControlVariant {
 /// HfSegmentedControl — container for segmented control pills.
 #[component]
 pub fn HfSegmentedControl(
-    #[prop(optional)]
-    variant: Option<HfSegmentedControlVariant>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional)] variant: Option<HfSegmentedControlVariant>,
+    #[prop(optional, into)] class: String,
     children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfSegmentedControlVariant::Default);
@@ -49,12 +47,9 @@ pub fn HfSegmentedControl(
 /// HfSegmentedControlItem — a single pill in a segmented control.
 #[component]
 pub fn HfSegmentedControlItem(
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    selected: Option<bool>,
-    #[prop(optional)]
-    disabled: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] selected: Option<bool>,
+    #[prop(optional)] disabled: Option<bool>,
     children: Children,
 ) -> impl IntoView {
     let selected = selected.unwrap_or(false);
@@ -62,7 +57,11 @@ pub fn HfSegmentedControlItem(
 
     let item_class = format!(
         "hf-segmented-control__item {} {}",
-        if selected { "hf-segmented-control__item--selected" } else { "" },
+        if selected {
+            "hf-segmented-control__item--selected"
+        } else {
+            ""
+        },
         class
     )
     .trim()

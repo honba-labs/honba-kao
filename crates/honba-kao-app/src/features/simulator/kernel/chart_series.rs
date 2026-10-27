@@ -24,7 +24,7 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::features::simulator::kernel::catalogue::catalogue_lookup;
-use crate::features::simulator::kernel::selection::{StrategyGraphShape, StrategyGraphNode};
+use crate::features::simulator::kernel::selection::{StrategyGraphNode, StrategyGraphShape};
 use openalgo_charts::indicators::IndicatorDef;
 
 /// One chart-drawable indicator spec (fe `ChartIndicatorSpec`).
@@ -59,11 +59,8 @@ pub struct ChartIndicatorSpec {
 /// `macd`/`bollinger`/`donchian`/`supertrend` — the kinds the built-in
 /// graphs use — but has no `rma` (Wilder smoothing registers as `smma`) and
 /// no `psar`/`parabolic_sar`, matching fe's map.)
-const REGISTRY_ID: &[(&str, Option<&str>)] = &[
-    ("rma", None),
-    ("psar", None),
-    ("parabolic_sar", None),
-];
+const REGISTRY_ID: &[(&str, Option<&str>)] =
+    &[("rma", None), ("psar", None), ("parabolic_sar", None)];
 
 /// Graph parameter name → registry input key.
 ///
@@ -196,14 +193,20 @@ pub fn graph_specs(
     graph: Option<&StrategyGraphShape>,
     overlay_colors: &[&str],
 ) -> Vec<ChartIndicatorSpec> {
-    let Some(graph) = graph else { return Vec::new() };
+    let Some(graph) = graph else {
+        return Vec::new();
+    };
     let mut slot_per_kind: BTreeMap<String, usize> = BTreeMap::new();
 
     indicator_nodes(graph)
         .into_iter()
         .map(|node| {
             let kind = node.indicator.clone().unwrap_or_default();
-            let registry_id = if kind.is_empty() { None } else { registry_id_for(&kind) };
+            let registry_id = if kind.is_empty() {
+                None
+            } else {
+                registry_id_for(&kind)
+            };
             let indicator = registry_id.map(String::from);
             let supported = indicator.is_some();
             let reason = if supported {
@@ -321,9 +324,16 @@ mod tests {
 
     #[test]
     fn renames_graph_parameters_to_the_registry_input_keys() {
-        let params = json!({"period": 3}).as_object().unwrap().clone()
-            .into_iter().collect();
-        assert_eq!(settings_for("sma", &params), BTreeMap::from([("length".to_string(), json!(3))]));
+        let params = json!({"period": 3})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
+        assert_eq!(
+            settings_for("sma", &params),
+            BTreeMap::from([("length".to_string(), json!(3))])
+        );
         let macd = json!({"fast": 5, "slow": 13, "signal": 4});
         let macd_params = macd.as_object().unwrap().clone().into_iter().collect();
         assert_eq!(
@@ -334,13 +344,29 @@ mod tests {
                 ("signalPeriod".to_string(), json!(4)),
             ]),
         );
-        let boll = json!({"length": 10, "std": 2.5}).as_object().unwrap().clone().into_iter().collect();
+        let boll = json!({"length": 10, "std": 2.5})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(
             settings_for("bollinger", &boll),
-            BTreeMap::from([("length".to_string(), json!(10)), ("stdDev".to_string(), json!(2.5))]),
+            BTreeMap::from([
+                ("length".to_string(), json!(10)),
+                ("stdDev".to_string(), json!(2.5))
+            ]),
         );
-        let atr = json!({"period": 14}).as_object().unwrap().clone().into_iter().collect();
-        assert_eq!(settings_for("atr", &atr), BTreeMap::from([("period".to_string(), json!(14))]));
+        let atr = json!({"period": 14})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
+        assert_eq!(
+            settings_for("atr", &atr),
+            BTreeMap::from([("period".to_string(), json!(14))])
+        );
     }
 
     #[test]
@@ -348,7 +374,12 @@ mod tests {
         // A non-finite number is unrepresentable in the JSON the settings
         // arrive as; fe dropped `Number.POSITIVE_INFINITY`, so a `null`
         // value and a nested object stand in for the same drop rules.
-        let params = json!({"unknown": "x", "nul": null, "deep": {}}).as_object().unwrap().clone().into_iter().collect();
+        let params = json!({"unknown": "x", "nul": null, "deep": {}})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(
             settings_for("sma", &params),
             BTreeMap::from([("unknown".to_string(), json!("x"))]),
@@ -358,18 +389,38 @@ mod tests {
 
     #[test]
     fn describe_kind_reads_the_graph_parameters_in_catalogue_order() {
-        let macd = json!({"slow": 26, "fast": 12, "signal": 9}).as_object().unwrap().clone().into_iter().collect();
+        let macd = json!({"slow": 26, "fast": 12, "signal": 9})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(describe_kind("macd", &macd), "MACD 12/26/9");
-        let sma = json!({"period": 3}).as_object().unwrap().clone().into_iter().collect();
+        let sma = json!({"period": 3})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(describe_kind("sma", &sma), "SMA 3");
-        let boll = json!({"length": 20, "std": 2.0}).as_object().unwrap().clone().into_iter().collect();
+        let boll = json!({"length": 20, "std": 2.0})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(describe_kind("bollinger", &boll), "BOLLINGER 20/2");
         assert_eq!(describe_kind("sma", &BTreeMap::new()), "SMA");
     }
 
     #[test]
     fn describes_kinds_without_a_catalogue_entry_from_the_param_names_it_has() {
-        let params = json!({"zzz": 1}).as_object().unwrap().clone().into_iter().collect();
+        let params = json!({"zzz": 1})
+            .as_object()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .collect();
         assert_eq!(describe_kind("zzz_kind", &params), "ZZZ_KIND 1");
     }
 
@@ -377,14 +428,39 @@ mod tests {
     fn turns_every_indicator_node_into_a_spec_keeping_labels_and_ids() {
         let specs = graph_specs(
             Some(&graph(vec![
-                StrategyGraphNode { id: "u".into(), node_type: "universe".into(), ..Default::default() },
-                StrategyGraphNode { id: "f".into(), node_type: "indicator".into(), label: Some("Fast SMA".into()), indicator: Some("sma".into()), params: BTreeMap::from([("period".into(), json!(3))]) },
-                StrategyGraphNode { id: "s".into(), node_type: "indicator".into(), indicator: Some("sma".into()), params: BTreeMap::from([("period".into(), json!(8))]), ..Default::default() },
-                StrategyGraphNode { id: "r".into(), node_type: "indicator".into(), indicator: Some("rsi".into()), params: BTreeMap::from([("period".into(), json!(14))]), ..Default::default() },
+                StrategyGraphNode {
+                    id: "u".into(),
+                    node_type: "universe".into(),
+                    ..Default::default()
+                },
+                StrategyGraphNode {
+                    id: "f".into(),
+                    node_type: "indicator".into(),
+                    label: Some("Fast SMA".into()),
+                    indicator: Some("sma".into()),
+                    params: BTreeMap::from([("period".into(), json!(3))]),
+                },
+                StrategyGraphNode {
+                    id: "s".into(),
+                    node_type: "indicator".into(),
+                    indicator: Some("sma".into()),
+                    params: BTreeMap::from([("period".into(), json!(8))]),
+                    ..Default::default()
+                },
+                StrategyGraphNode {
+                    id: "r".into(),
+                    node_type: "indicator".into(),
+                    indicator: Some("rsi".into()),
+                    params: BTreeMap::from([("period".into(), json!(14))]),
+                    ..Default::default()
+                },
             ])),
             OVERLAY_COLORS,
         );
-        assert_eq!(specs.iter().map(|s| s.key.as_str()).collect::<Vec<_>>(), ["f", "s", "r"]);
+        assert_eq!(
+            specs.iter().map(|s| s.key.as_str()).collect::<Vec<_>>(),
+            ["f", "s", "r"]
+        );
         let first = &specs[0];
         assert_eq!(first.indicator.as_deref(), Some("sma"));
         assert_eq!(first.label, "Fast SMA");
@@ -398,7 +474,10 @@ mod tests {
     #[test]
     fn cycles_overlay_colours_so_two_periods_of_one_kind_are_tellable_apart() {
         let specs = graph_specs(
-            Some(&graph(vec![indicator_node("f", "sma", None), indicator_node("s", "sma", None)])),
+            Some(&graph(vec![
+                indicator_node("f", "sma", None),
+                indicator_node("s", "sma", None),
+            ])),
             OVERLAY_COLORS,
         );
         assert_eq!(specs.len(), 2);
@@ -419,8 +498,14 @@ mod tests {
             OVERLAY_COLORS,
         );
         assert!(!specs[0].settings.contains_key("color"));
-        assert_eq!(specs[0].settings.get("basisColor"), Some(&json!(OVERLAY_COLORS[0])));
-        assert_eq!(specs[0].settings.get("bandColor"), Some(&json!(OVERLAY_COLORS[0])));
+        assert_eq!(
+            specs[0].settings.get("basisColor"),
+            Some(&json!(OVERLAY_COLORS[0]))
+        );
+        assert_eq!(
+            specs[0].settings.get("bandColor"),
+            Some(&json!(OVERLAY_COLORS[0]))
+        );
     }
 
     #[test]
@@ -483,7 +568,8 @@ mod tests {
     }
 
     #[test]
-    fn resolve_completes_settings_with_descriptor_defaults_but_the_graph_period_drives_the_registry_length() {
+    fn resolve_completes_settings_with_descriptor_defaults_but_the_graph_period_drives_the_registry_length()
+     {
         let specs = graph_specs(
             Some(&graph(vec![indicator_node("f", "sma", Some(3))])),
             OVERLAY_COLORS,
@@ -512,7 +598,13 @@ mod tests {
         assert!(specs[0].supported);
         let resolved = resolve_specs(specs, &catalog());
         assert!(!resolved[0].supported);
-        assert!(resolved[0].reason.as_deref().unwrap_or("").contains("not_a_real_indicator"));
+        assert!(
+            resolved[0]
+                .reason
+                .as_deref()
+                .unwrap_or("")
+                .contains("not_a_real_indicator")
+        );
         // drawable_specs never hands such a spec to the bridge.
         assert!(drawable_specs(&resolved).is_empty());
     }
@@ -521,7 +613,10 @@ mod tests {
     fn drawable_specs_keep_only_supported_specs_in_graph_order() {
         let resolved = resolve_specs(
             graph_specs(
-                Some(&graph(vec![indicator_node("f", "sma", Some(3)), indicator_node("r", "rma", None)])),
+                Some(&graph(vec![
+                    indicator_node("f", "sma", Some(3)),
+                    indicator_node("r", "rma", None),
+                ])),
                 OVERLAY_COLORS,
             )
             .into_iter()
@@ -530,7 +625,10 @@ mod tests {
                 // registry lacks must carry the unsupported verdict before
                 // drawing (as unknown kinds do after `resolve_specs`).
                 if spec.indicator.is_none() {
-                    ChartIndicatorSpec { supported: false, ..spec }
+                    ChartIndicatorSpec {
+                        supported: false,
+                        ..spec
+                    }
                 } else {
                     spec
                 }
@@ -539,6 +637,9 @@ mod tests {
             &catalog(),
         );
         let drawable = drawable_specs(&resolved);
-        assert_eq!(drawable.iter().map(|s| s.key.as_str()).collect::<Vec<_>>(), ["f"]);
+        assert_eq!(
+            drawable.iter().map(|s| s.key.as_str()).collect::<Vec<_>>(),
+            ["f"]
+        );
     }
 }

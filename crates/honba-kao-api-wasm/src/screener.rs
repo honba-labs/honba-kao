@@ -284,7 +284,10 @@ fn parse_filter_op(op: &str) -> Result<FilterOp, WasmScreenerError> {
 /// mirroring the evaluator's own `operand()` check. `eq`/`ne`/`neq` don't call it at all — a
 /// non-numeric operand just compares unequal, never errors.
 fn is_ordering_op(op: FilterOp) -> bool {
-    matches!(op, FilterOp::Gt | FilterOp::Gte | FilterOp::Lt | FilterOp::Lte)
+    matches!(
+        op,
+        FilterOp::Gt | FilterOp::Gte | FilterOp::Lt | FilterOp::Lte
+    )
 }
 
 /// A predicate's operand as the evaluator reads it: a bare numeric scalar (see the module doc on
@@ -304,9 +307,11 @@ fn operand_value(value: &Value, op: FilterOp) -> Result<f64, WasmScreenerError> 
         Value::String(s) if !is_ordering_op(op) => Ok(s.parse().unwrap_or(0.0)),
         Value::Object(map) => {
             let key = map.get("key").and_then(Value::as_str).unwrap_or("?");
-            Err(WasmScreenerError::Screener(ScreenerError::UnsupportedMetric {
-                key: key.to_owned(),
-            }))
+            Err(WasmScreenerError::Screener(
+                ScreenerError::UnsupportedMetric {
+                    key: key.to_owned(),
+                },
+            ))
         }
         other => Err(WasmScreenerError::Screener(ScreenerError::InvalidOperand {
             op,
@@ -348,9 +353,11 @@ fn reject_zero_period_sma(key: &str) -> Result<(), WasmScreenerError> {
         .strip_prefix("sma")
         .is_some_and(|digits| digits.parse::<u32>() == Ok(0));
     if is_zero_period {
-        return Err(WasmScreenerError::Screener(ScreenerError::UnsupportedMetric {
-            key: key.to_owned(),
-        }));
+        return Err(WasmScreenerError::Screener(
+            ScreenerError::UnsupportedMetric {
+                key: key.to_owned(),
+            },
+        ));
     }
     Ok(())
 }

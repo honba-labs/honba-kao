@@ -34,8 +34,8 @@ pub use controller::ChartController;
 pub use drawing::DrawingTool;
 pub use events::{CrosshairMoveEvent, OrderClickEvent, Subscription};
 pub use indicators::{
-    IndicatorDef, IndicatorInput, LiveIndicator, SelectOption, add_indicator, chart_indicators,
-    indicator_catalog, register_custom_indicator_picker, remove_indicator,
+    add_indicator, chart_indicators, indicator_catalog, register_custom_indicator_picker,
+    remove_indicator, IndicatorDef, IndicatorInput, LiveIndicator, SelectOption,
 };
 pub use theme::{css_var, is_dark_mode, resolve_color, theme_from_skin};
 pub use types::{

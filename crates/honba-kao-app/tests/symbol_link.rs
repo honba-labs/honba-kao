@@ -14,7 +14,10 @@ fn panels_in_one_group_share_its_symbol_and_other_groups_stay_intact() {
     assert_eq!(book.group_symbol(LinkGroup::Red), Some("RELIANCE"));
     assert_eq!(book.group_symbol(LinkGroup::Blue), None);
 
-    assert_eq!(book.panels_in(LinkGroup::Red), vec!["chart".to_string(), "dom".to_string()]);
+    assert_eq!(
+        book.panels_in(LinkGroup::Red),
+        vec!["chart".to_string(), "dom".to_string()]
+    );
     assert_eq!(book.panel_group("news"), LinkGroup::Blue);
 }
 
@@ -60,7 +63,13 @@ fn group_cycle_visits_all_four_then_returns_to_none() {
     }
     assert_eq!(
         seen,
-        vec![LinkGroup::Red, LinkGroup::Blue, LinkGroup::Green, LinkGroup::Yellow, LinkGroup::None]
+        vec![
+            LinkGroup::Red,
+            LinkGroup::Blue,
+            LinkGroup::Green,
+            LinkGroup::Yellow,
+            LinkGroup::None
+        ]
     );
 }
 

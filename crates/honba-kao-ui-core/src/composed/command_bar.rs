@@ -96,7 +96,8 @@ pub fn HfCommandSuggestions(
     let rows = move || {
         let list = items.get();
         if list.is_empty() {
-            return view! { <div class="hf-command-suggestions__empty">"No matches"</div> }.into_any();
+            return view! { <div class="hf-command-suggestions__empty">"No matches"</div> }
+                .into_any();
         }
         list.into_iter()
             .enumerate()
@@ -152,7 +153,11 @@ pub fn HfAssetPreviewCard(
     #[prop(optional)] quality: Option<ProvenanceQuality>,
 ) -> impl IntoView {
     let up = !change_pct.trim_start().starts_with('-');
-    let change_class = if up { "hf-asset-preview__change hf-asset-preview__change--up" } else { "hf-asset-preview__change hf-asset-preview__change--down" };
+    let change_class = if up {
+        "hf-asset-preview__change hf-asset-preview__change--up"
+    } else {
+        "hf-asset-preview__change hf-asset-preview__change--down"
+    };
     let arrow = if up { "▲" } else { "▼" };
     view! {
         <div class="hf-asset-preview">

@@ -15,13 +15,13 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 
-use honba_kao_ui_core::{HfButton, dismiss_on_outside_click};
 use super::layouts::{area_name, preset_for};
-use crate::shared::components::charts::openalgo_chart as bridge;
 use crate::features::workbench::stores::layout_store::{
     AppliedIndicator, ChartMode, ChartPaneConfig, PaneField, Timeframe,
 };
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
+use crate::shared::components::charts::openalgo_chart as bridge;
+use honba_kao_ui_core::{HfButton, dismiss_on_outside_click};
 
 // ---------------------------------------------------------------------------
 // Workspace panes
@@ -529,7 +529,9 @@ fn PaneChart(
                 // the static OpenAlgoChart behavior.
                 Err(_)
                     if mount_epoch.try_get_untracked() == Some(epoch)
-                        && attempts.try_get_untracked().is_some_and(|count| count < 120) =>
+                        && attempts
+                            .try_get_untracked()
+                            .is_some_and(|count| count < 120) =>
                 {
                     set_timeout(
                         move || attempts.update(|count| *count += 1),

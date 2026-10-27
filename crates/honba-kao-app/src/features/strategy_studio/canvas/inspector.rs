@@ -18,24 +18,39 @@ use serde_json::Value;
 
 use crate::features::simulator::kernel::selection::StrategyGraphShape;
 use crate::features::strategy_studio::canvas::scene::Selection;
-use crate::features::strategy_studio::kernel::graph::{catalogue_entry, ParamSpec, CATALOGUE};
+use crate::features::strategy_studio::kernel::graph::{CATALOGUE, ParamSpec, catalogue_entry};
 use crate::features::strategy_studio::stores::StudioStore;
 
 /// What the form is built from (its memo key).
 #[derive(Clone, Debug, PartialEq)]
 enum FormKey {
     Strategy,
-    Edge { id: String, from: String, to: String },
-    Node { id: String, node_type: String, indicator: Option<String>, params: Vec<String> },
+    Edge {
+        id: String,
+        from: String,
+        to: String,
+    },
+    Node {
+        id: String,
+        node_type: String,
+        indicator: Option<String>,
+        params: Vec<String>,
+    },
     Missing,
 }
 
 /// A select-style parameter's choices, by node type.
 fn enum_choices(node_type: &str, name: &str) -> Option<&'static [&'static str]> {
     match (node_type, name) {
-        ("condition", "op") => {
-            Some(&["crosses_above", "crosses_below", "gt", "gte", "lt", "lte", "eq"])
-        }
+        ("condition", "op") => Some(&[
+            "crosses_above",
+            "crosses_below",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "eq",
+        ]),
         ("logic", "op") => Some(&["and", "or", "not"]),
         ("order", "side") => Some(&["buy", "sell"]),
         ("sizing", "mode") => Some(&["fixed_quantity", "percent_equity"]),
@@ -46,7 +61,11 @@ fn enum_choices(node_type: &str, name: &str) -> Option<&'static [&'static str]> 
 
 /// The JSON spelling of an edited value, typed by the catalogue spec when
 /// there is one, else by the value it replaces. `None` when unparsable.
-pub fn parse_param_input(text: &str, spec: Option<&ParamSpec>, previous: Option<&Value>) -> Option<Value> {
+pub fn parse_param_input(
+    text: &str,
+    spec: Option<&ParamSpec>,
+    previous: Option<&Value>,
+) -> Option<Value> {
     let text = text.trim();
     let kind = spec.map(|s| s.kind).unwrap_or(match previous {
         Some(Value::Number(n)) if n.is_i64() || n.is_u64() => "int",
@@ -55,11 +74,12 @@ pub fn parse_param_input(text: &str, spec: Option<&ParamSpec>, previous: Option<
         _ => "str",
     });
     match kind {
-        "int" => text
-            .parse::<i64>()
-            .ok()
-            .map(Value::from)
-            .or_else(|| text.parse::<f64>().ok().filter(|f| f.is_finite()).map(|f| Value::from(f.round() as i64))),
+        "int" => text.parse::<i64>().ok().map(Value::from).or_else(|| {
+            text.parse::<f64>()
+                .ok()
+                .filter(|f| f.is_finite())
+                .map(|f| Value::from(f.round() as i64))
+        }),
         "float" => text
             .parse::<f64>()
             .ok()
@@ -395,8 +415,22 @@ const AGGREGATIONS: &[&str] = &["second", "minute", "hour", "day", "week", "mont
 #[component]
 fn StrategyForm(store: StudioStore) -> impl IntoView {
     let graph = store.graph;
-    let symbol = move || graph.with(|g| g.universe_explicit.first().map(|(s, _)| s.clone()).unwrap_or_default());
-    let exchange = move || graph.with(|g| g.universe_explicit.first().map(|(_, e)| e.clone()).unwrap_or_default());
+    let symbol = move || {
+        graph.with(|g| {
+            g.universe_explicit
+                .first()
+                .map(|(s, _)| s.clone())
+                .unwrap_or_default()
+        })
+    };
+    let exchange = move || {
+        graph.with(|g| {
+            g.universe_explicit
+                .first()
+                .map(|(_, e)| e.clone())
+                .unwrap_or_default()
+        })
+    };
     let current_aggregation = graph.with_untracked(|g| g.driving_aggregation.clone());
     view! {
         <div class="studio-inspector__head">

@@ -93,26 +93,45 @@ pub fn ParamsDrawer(
     let patch = move |patch: ControlsPatch| controls.patch(patch);
     let patch_capital = {
         let patch = patch.clone();
-        Callback::new(move |capital| patch(ControlsPatch { capital: Some(capital), ..Default::default() }))
+        Callback::new(move |capital| {
+            patch(ControlsPatch {
+                capital: Some(capital),
+                ..Default::default()
+            })
+        })
     };
     let patch_commission = {
         let patch = patch.clone();
         Callback::new(move |commission| {
-            patch(ControlsPatch { commission: Some(commission), ..Default::default() })
+            patch(ControlsPatch {
+                commission: Some(commission),
+                ..Default::default()
+            })
         })
     };
     let patch_slippage = {
         let patch = patch.clone();
-        Callback::new(move |slippage| patch(ControlsPatch { slippage: Some(slippage), ..Default::default() }))
+        Callback::new(move |slippage| {
+            patch(ControlsPatch {
+                slippage: Some(slippage),
+                ..Default::default()
+            })
+        })
     };
     let patch_benchmark = {
         let patch = patch.clone();
         Callback::new(move |event: web_sys::Event| {
-            patch(ControlsPatch { benchmark: Some(event_target_value(&event)), ..Default::default() })
+            patch(ControlsPatch {
+                benchmark: Some(event_target_value(&event)),
+                ..Default::default()
+            })
         })
     };
     let patch_fill_model = Callback::new(move |event: web_sys::Event| {
-        patch(ControlsPatch { fill_model: Some(event_target_value(&event)), ..Default::default() })
+        patch(ControlsPatch {
+            fill_model: Some(event_target_value(&event)),
+            ..Default::default()
+        })
     });
 
     view! {

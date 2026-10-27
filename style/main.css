@@ -4,6 +4,7 @@
 /* ========================================================================= */
 
 @import "./palette_256.css";
+@import "./home.css";
 
 /* Typography — mirrors noFX `web/src/index.css` exactly. */
 :root {

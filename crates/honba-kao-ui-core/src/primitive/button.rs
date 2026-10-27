@@ -79,24 +79,17 @@ impl HfButtonSize {
 /// ```
 #[component]
 pub fn HfButton(
-    #[prop(optional)]
-    variant: Option<HfButtonVariant>,
-    #[prop(optional)]
-    size: Option<HfButtonSize>,
-    #[prop(optional, into)]
-    disabled: Signal<bool>,
+    #[prop(optional)] variant: Option<HfButtonVariant>,
+    #[prop(optional)] size: Option<HfButtonSize>,
+    #[prop(optional, into)] disabled: Signal<bool>,
     /// Toggle/pressed state — reflected as `aria-pressed` and styled via the
     /// `.hf-button[aria-pressed="true"]` rule, no extra class bookkeeping.
     #[prop(optional, into)]
     active: Option<Signal<bool>>,
-    #[prop(optional)]
-    loading: Option<bool>,
-    #[prop(optional)]
-    on_click: Option<Callback<web_sys::MouseEvent>>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional, into)]
-    title: String,
+    #[prop(optional)] loading: Option<bool>,
+    #[prop(optional)] on_click: Option<Callback<web_sys::MouseEvent>>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional, into)] title: String,
     /// ARIA role passthrough, e.g. `"menuitem"` / `"menuitemradio"` for items
     /// inside a dropdown menu.
     #[prop(optional, into)]
@@ -193,20 +186,16 @@ pub fn HfIconButton(
     /// based on state (e.g. a light/dark theme toggle).
     #[prop(into)]
     icon: Signal<&'static str>,
-    #[prop(optional)]
-    size: Option<u32>,
-    #[prop(optional, into)]
-    disabled: Signal<bool>,
+    #[prop(optional)] size: Option<u32>,
+    #[prop(optional, into)] disabled: Signal<bool>,
     /// Pressed/open state — reflected as `aria-pressed` (only when passed).
     #[prop(optional, into)]
     active: Option<Signal<bool>>,
     /// Set when this button opens a menu/popover (`aria-haspopup` + `aria-expanded`).
     #[prop(optional, into)]
     aria_expanded: Option<Signal<bool>>,
-    #[prop(optional)]
-    on_click: Option<Callback<web_sys::MouseEvent>>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional)] on_click: Option<Callback<web_sys::MouseEvent>>,
+    #[prop(optional, into)] class: String,
     /// Tooltip and accessible name (`aria-label`).
     #[prop(optional, into)]
     title: String,
@@ -225,7 +214,9 @@ pub fn HfIconButton(
     let full_class = if unstyled {
         class
     } else {
-        format!("hf-icon-button {size_class} {class}").trim().to_string()
+        format!("hf-icon-button {size_class} {class}")
+            .trim()
+            .to_string()
     };
     let has_popup = aria_expanded.is_some().then_some("menu");
     let aria_label = title.clone();

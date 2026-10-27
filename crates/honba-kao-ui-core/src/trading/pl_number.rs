@@ -60,7 +60,13 @@ pub fn HfPLNumber(
         "▬"
     };
 
-    let sign = if is_positive && show_sign { "+" } else if is_negative { "-" } else { "" };
+    let sign = if is_positive && show_sign {
+        "+"
+    } else if is_negative {
+        "-"
+    } else {
+        ""
+    };
 
     let abs_value = value.abs();
 
@@ -70,7 +76,9 @@ pub fn HfPLNumber(
         HfPLNumberFormat::Rupees => format!("₹{sign}{abs_value:.2}"),
     };
 
-    let full_class = format!("hfui-plnumber {color_class} {class}").trim().to_string();
+    let full_class = format!("hfui-plnumber {color_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <span class=full_class>
@@ -131,7 +139,9 @@ pub fn HfStatusCircle(
         HfStatus::Warning => "Warning",
     };
 
-    let full_class = format!("hfui-statusbar__statuscircle {color_class} {class}").trim().to_string();
+    let full_class = format!("hfui-statusbar__statuscircle {color_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <span class=full_class role="img" aria-label=status_text title=status_text />
@@ -158,15 +168,16 @@ pub enum HfStatus {
 pub fn HfSideMarker(
     /// Side: Buy (green) or Sell (red).
     side: HfSide,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let color_class = match side {
         HfSide::Buy => "green",
         HfSide::Sell => "red",
     };
 
-    let full_class = format!("row-marker {color_class} {class}").trim().to_string();
+    let full_class = format!("row-marker {color_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <span class=full_class />
@@ -192,8 +203,7 @@ pub fn HfOrderBadge(
     /// Badge variant.
     #[prop(optional)]
     variant: Option<HfBadgeVariant>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let variant = variant.unwrap_or(HfBadgeVariant::Default);
     let variant_class = match variant {
@@ -205,7 +215,9 @@ pub fn HfOrderBadge(
         HfBadgeVariant::Stop => "hf-order-badge--stop",
     };
 
-    let full_class = format!("hf-order-badge {variant_class} {class}").trim().to_string();
+    let full_class = format!("hf-order-badge {variant_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <span class=full_class>{label}</span>
@@ -232,8 +244,7 @@ pub enum HfBadgeVariant {
 pub fn HfRiskBadge(
     /// Rejection reason text.
     reason: &'static str,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let full_class = format!("hf-risk-badge {class}").trim().to_string();
 
@@ -251,8 +262,7 @@ pub fn HfRiskBadge(
 pub fn HfMarketPhase(
     /// Market phase.
     phase: HfMarketPhaseType,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let phase_class = match phase {
         HfMarketPhaseType::PreOpen => "hf-market-phase--pre-open",
@@ -268,7 +278,9 @@ pub fn HfMarketPhase(
         HfMarketPhaseType::Closed => "Closed",
     };
 
-    let full_class = format!("hf-market-phase {phase_class} {class}").trim().to_string();
+    let full_class = format!("hf-market-phase {phase_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <div class=full_class>{phase_text}</div>
@@ -293,8 +305,7 @@ pub enum HfMarketPhaseType {
 pub fn HfTradingMode(
     /// Current trading mode.
     mode: HfTradingModeType,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let mode_class = match mode {
         HfTradingModeType::Sandbox => "hf-trading-mode--sandbox",
@@ -306,7 +317,9 @@ pub fn HfTradingMode(
         HfTradingModeType::Live => "LIVE NSE",
     };
 
-    let full_class = format!("hf-trading-mode {mode_class} {class}").trim().to_string();
+    let full_class = format!("hf-trading-mode {mode_class} {class}")
+        .trim()
+        .to_string();
 
     view! {
         <div class=full_class>{mode_text}</div>
@@ -338,8 +351,7 @@ pub fn HfTradingModeToggle(
     mode: Signal<HfTradingModeType>,
     /// Fires with the newly selected mode.
     on_change: Callback<HfTradingModeType>,
-    #[prop(optional, into)]
-    class: String,
+    #[prop(optional, into)] class: String,
 ) -> impl IntoView {
     let full_class = format!("hf-trading-mode-toggle {class}").trim().to_string();
 

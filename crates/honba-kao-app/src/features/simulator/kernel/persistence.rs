@@ -9,7 +9,7 @@
 use serde::{Deserialize, Serialize};
 use web_sys::Storage;
 
-use crate::features::simulator::kernel::controls::{default_controls, SimulatorControls};
+use crate::features::simulator::kernel::controls::{SimulatorControls, default_controls};
 use crate::features::simulator::kernel::selection::SelectionOrigin;
 
 /// `localStorage` key the portal shares with honba-fe semantics (stable
@@ -87,7 +87,9 @@ struct ControlsRepr {
     end: Option<Option<String>>,
 }
 
-fn period_from_label(label: &str) -> Option<crate::features::simulator::kernel::controls::PeriodPreset> {
+fn period_from_label(
+    label: &str,
+) -> Option<crate::features::simulator::kernel::controls::PeriodPreset> {
     crate::features::simulator::kernel::controls::PeriodPreset::ALL
         .iter()
         .copied()
@@ -178,7 +180,7 @@ pub fn persist_selection(selection: &SimulatorPersisted, storage: &dyn LayoutSto
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::simulator::kernel::controls::{default_controls, PeriodPreset};
+    use crate::features::simulator::kernel::controls::{PeriodPreset, default_controls};
 
     /// In-memory stand-in for `window.localStorage` (fe's test double).
     #[derive(Default)]
@@ -188,7 +190,11 @@ mod tests {
 
     impl LayoutStorage for FakeStorage {
         fn get_item(&self, key: &str) -> Option<String> {
-            self.items.lock().expect("fake storage lock").get(key).cloned()
+            self.items
+                .lock()
+                .expect("fake storage lock")
+                .get(key)
+                .cloned()
         }
 
         fn set_item(&self, key: &str, value: &str) {

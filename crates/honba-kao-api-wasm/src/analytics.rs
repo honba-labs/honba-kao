@@ -25,7 +25,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::calendar::{civil_from_days, days_from_civil, IST_OFFSET_SECONDS};
+use crate::calendar::{IST_OFFSET_SECONDS, civil_from_days, days_from_civil};
 use crate::pairing::{Direction, RoundTrip, RoundTripExitReason, RoundTripStatus};
 
 /// The run payload's five wire metrics (the API's `BacktestMetrics`), as the
@@ -948,7 +948,9 @@ mod tests {
     use crate::pairing::pair_trades;
     use honba_core::rust_decimal::Decimal;
     use honba_core::uuid::Uuid;
-    use honba_core::{Currency, Exchange, FillReport as Trade, InstrumentId, Money, OrderSide, Price, Quantity};
+    use honba_core::{
+        Currency, Exchange, FillReport as Trade, InstrumentId, Money, OrderSide, Price, Quantity,
+    };
 
     const JAN_2: i64 = 1_704_153_600; // 2024-01-02 00:00 UTC
     const HOURS: i64 = 3_600;
@@ -977,11 +979,11 @@ mod tests {
     /// against (fe's `FIXTURE_TRADES`).
     fn fixture_trades() -> Vec<Trade> {
         vec![
-            fill(OrderSide::Buy, 10.0, 100.0, JAN_2, 1.0),                // +100
+            fill(OrderSide::Buy, 10.0, 100.0, JAN_2, 1.0), // +100
             fill(OrderSide::Sell, 10.0, 110.0, JAN_2 + 10 * DAYS, 1.0),
-            fill(OrderSide::Buy, 10.0, 100.0, JAN_2 + 31 * DAYS, 1.0),    // −50
+            fill(OrderSide::Buy, 10.0, 100.0, JAN_2 + 31 * DAYS, 1.0), // −50
             fill(OrderSide::Sell, 10.0, 95.0, JAN_2 + 40 * DAYS, 1.0),
-            fill(OrderSide::Buy, 10.0, 100.0, JAN_2 + 60 * DAYS, 1.0),    // +50
+            fill(OrderSide::Buy, 10.0, 100.0, JAN_2 + 60 * DAYS, 1.0), // +50
             fill(OrderSide::Sell, 10.0, 105.0, JAN_2 + 70 * DAYS, 1.0),
         ]
     }
@@ -1029,9 +1031,15 @@ mod tests {
 
     #[test]
     fn years_between_counts_whole_window_years_and_rejects_inverted_windows() {
-        assert!((years_between(Some("2024-01-01"), Some("2025-01-01")).unwrap() - 366.0 / 365.25).abs() < 1e-6);
+        assert!(
+            (years_between(Some("2024-01-01"), Some("2025-01-01")).unwrap() - 366.0 / 365.25).abs()
+                < 1e-6
+        );
         assert_eq!(years_between(Some("2024-01-02"), Some("2024-01-02")), None);
-        assert!((years_between(Some("2024-01-02"), Some("2024-04-02")).unwrap() - 91.0 / 365.25).abs() < 1e-6);
+        assert!(
+            (years_between(Some("2024-01-02"), Some("2024-04-02")).unwrap() - 91.0 / 365.25).abs()
+                < 1e-6
+        );
         assert_eq!(years_between(None, Some("2024-01-02")), None);
         assert_eq!(years_between(Some("not-a-date"), Some("2024-04-02")), None);
     }
@@ -1098,7 +1106,10 @@ mod tests {
         ]);
         assert_eq!(
             merged,
-            vec![Interval { start: 0, end: 20 }, Interval { start: 30, end: 40 }]
+            vec![
+                Interval { start: 0, end: 20 },
+                Interval { start: 30, end: 40 }
+            ]
         );
         assert!(merge_intervals(&[]).is_empty());
     }
@@ -1127,7 +1138,12 @@ mod tests {
             None
         );
         assert_eq!(
-            exposure_fraction(&input(Some(&metrics), &[], Some(&window()), Some(100_000.0))),
+            exposure_fraction(&input(
+                Some(&metrics),
+                &[],
+                Some(&window()),
+                Some(100_000.0)
+            )),
             Some(0.0)
         );
     }
@@ -1137,8 +1153,13 @@ mod tests {
         let open_trip = pair_trades(&[fill(OrderSide::Buy, 10.0, 100.0, JAN_2, 0.0)]).trips;
         let metrics = fixture_metrics();
         let window = window();
-        let exposure = exposure_fraction(&input(Some(&metrics), &open_trip, Some(&window), Some(100_000.0)))
-            .expect("window is usable");
+        let exposure = exposure_fraction(&input(
+            Some(&metrics),
+            &open_trip,
+            Some(&window),
+            Some(100_000.0),
+        ))
+        .expect("window is usable");
         // entry 2024-01-02 → window end 2024-04-02 covers the whole window.
         assert!((exposure - 1.0).abs() < 1e-6);
     }
@@ -1167,7 +1188,11 @@ mod tests {
         );
         // Peaks after the first winner, before the second trip's loss is realised.
         assert_eq!(
-            series.equity.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
+            series
+                .equity
+                .iter()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max),
             100_098.0
         );
     }
@@ -1181,7 +1206,12 @@ mod tests {
         .trips;
         let window = window();
         let metrics = fixture_metrics();
-        let series = equity_series(&input(Some(&metrics), &winning, Some(&window), Some(100_000.0)));
+        let series = equity_series(&input(
+            Some(&metrics),
+            &winning,
+            Some(&window),
+            Some(100_000.0),
+        ));
         for pair in series.equity.windows(2) {
             assert!(pair[1] >= pair[0], "equity must not decrease");
         }
@@ -1351,9 +1381,18 @@ mod tests {
 
     fn csv_columns() -> Vec<CsvColumn<CsvRow>> {
         vec![
-            CsvColumn { header: "Symbol", value: row_value as fn(&CsvRow) -> String },
-            CsvColumn { header: "PnL", value: row_pnl as fn(&CsvRow) -> String },
-            CsvColumn { header: "Note", value: row_note as fn(&CsvRow) -> String },
+            CsvColumn {
+                header: "Symbol",
+                value: row_value as fn(&CsvRow) -> String,
+            },
+            CsvColumn {
+                header: "PnL",
+                value: row_pnl as fn(&CsvRow) -> String,
+            },
+            CsvColumn {
+                header: "Note",
+                value: row_note as fn(&CsvRow) -> String,
+            },
         ]
     }
 
@@ -1362,8 +1401,16 @@ mod tests {
         let columns = csv_columns();
         let csv = to_csv(
             &[
-                CsvRow { symbol: "TCS".into(), pnl: 10.0, note: None },
-                CsvRow { symbol: "INFY".into(), pnl: -4.0, note: None },
+                CsvRow {
+                    symbol: "TCS".into(),
+                    pnl: 10.0,
+                    note: None,
+                },
+                CsvRow {
+                    symbol: "INFY".into(),
+                    pnl: -4.0,
+                    note: None,
+                },
             ],
             &columns,
         );
@@ -1387,16 +1434,50 @@ mod tests {
         // (design wart W5) — and the slippage column stays empty by rule 4:
         // the journal carries no signal price, so none is invented.
         let columns = vec![
-            CsvColumn { header: "id", value: |r: &JournalRow| r.id.clone() },
-            CsvColumn { header: "entry_ts", value: |r: &JournalRow| format_timestamp(Some(r.entry_ts)) },
-            CsvColumn { header: "exit_ts", value: |r: &JournalRow| format_timestamp(r.exit_ts) },
-            CsvColumn { header: "qty", value: |r: &JournalRow| format!("{}", r.quantity) },
-            CsvColumn { header: "avg_entry", value: |r: &JournalRow| format!("{}", r.avg_entry) },
-            CsvColumn { header: "avg_exit", value: |r: &JournalRow| r.avg_exit.map(|v| format!("{v}")).unwrap_or_default() },
-            CsvColumn { header: "net_pnl", value: |r: &JournalRow| r.realized_pnl.map(|v| format!("{v}")).unwrap_or_default() },
-            CsvColumn { header: "return_pct", value: |r: &JournalRow| r.return_pct.map(|v| format!("{:.4}", v * 100.0)).unwrap_or_default() },
-            CsvColumn { header: "fees", value: |r: &JournalRow| format!("{}", r.fees) },
-            CsvColumn { header: "slippage", value: |_r: &JournalRow| String::new() },
+            CsvColumn {
+                header: "id",
+                value: |r: &JournalRow| r.id.clone(),
+            },
+            CsvColumn {
+                header: "entry_ts",
+                value: |r: &JournalRow| format_timestamp(Some(r.entry_ts)),
+            },
+            CsvColumn {
+                header: "exit_ts",
+                value: |r: &JournalRow| format_timestamp(r.exit_ts),
+            },
+            CsvColumn {
+                header: "qty",
+                value: |r: &JournalRow| format!("{}", r.quantity),
+            },
+            CsvColumn {
+                header: "avg_entry",
+                value: |r: &JournalRow| format!("{}", r.avg_entry),
+            },
+            CsvColumn {
+                header: "avg_exit",
+                value: |r: &JournalRow| r.avg_exit.map(|v| format!("{v}")).unwrap_or_default(),
+            },
+            CsvColumn {
+                header: "net_pnl",
+                value: |r: &JournalRow| r.realized_pnl.map(|v| format!("{v}")).unwrap_or_default(),
+            },
+            CsvColumn {
+                header: "return_pct",
+                value: |r: &JournalRow| {
+                    r.return_pct
+                        .map(|v| format!("{:.4}", v * 100.0))
+                        .unwrap_or_default()
+                },
+            },
+            CsvColumn {
+                header: "fees",
+                value: |r: &JournalRow| format!("{}", r.fees),
+            },
+            CsvColumn {
+                header: "slippage",
+                value: |_r: &JournalRow| String::new(),
+            },
         ];
         let csv = to_csv(&rows, &columns);
         let lines: Vec<&str> = csv.split("\r\n").collect();
@@ -1420,7 +1501,10 @@ mod tests {
     #[test]
     fn format_timestamp_renders_utc_seconds_and_an_em_dash_when_absent() {
         assert_eq!(format_timestamp(Some(JAN_2)), "2024-01-02 00:00");
-        assert_eq!(format_timestamp(Some(JAN_2 + 9 * HOURS + 11 * 60)), "2024-01-02 09:11");
+        assert_eq!(
+            format_timestamp(Some(JAN_2 + 9 * HOURS + 11 * 60)),
+            "2024-01-02 09:11"
+        );
         assert_eq!(format_timestamp(None), "—");
     }
 
@@ -1438,7 +1522,12 @@ mod tests {
         let trips = pair_trades(&fixture_trades()).trips;
         let window = window();
         let metrics = fixture_metrics();
-        let ribbon = ribbon_by_key(&input(Some(&metrics), &trips, Some(&window), Some(100_000.0)));
+        let ribbon = ribbon_by_key(&input(
+            Some(&metrics),
+            &trips,
+            Some(&window),
+            Some(100_000.0),
+        ));
         let by_key = |key: &str| ribbon.iter().find(|(k, _)| *k == key).unwrap().1.clone();
 
         assert_eq!(by_key("total_return").value, Some(metrics.total_return));
@@ -1456,7 +1545,12 @@ mod tests {
         let trips = pair_trades(&fixture_trades()).trips;
         let window = window();
         let metrics = fixture_metrics();
-        let ribbon = ribbon_by_key(&input(Some(&metrics), &trips, Some(&window), Some(100_000.0)));
+        let ribbon = ribbon_by_key(&input(
+            Some(&metrics),
+            &trips,
+            Some(&window),
+            Some(100_000.0),
+        ));
         let by_key = |key: &str| ribbon.iter().find(|(k, _)| *k == key).unwrap().1.clone();
 
         let years = years_between(Some("2024-01-02"), Some("2024-04-02")).unwrap();
@@ -1487,8 +1581,18 @@ mod tests {
         let trips = pair_trades(&fixture_trades()).trips;
         let window = window();
         let metrics = fixture_metrics();
-        let ribbon = ribbon_by_key(&input(Some(&metrics), &trips, Some(&window), Some(100_000.0)));
-        let sortino = ribbon.iter().find(|(k, _)| *k == "sortino").unwrap().1.clone();
+        let ribbon = ribbon_by_key(&input(
+            Some(&metrics),
+            &trips,
+            Some(&window),
+            Some(100_000.0),
+        ));
+        let sortino = ribbon
+            .iter()
+            .find(|(k, _)| *k == "sortino")
+            .unwrap()
+            .1
+            .clone();
         assert_eq!(sortino.value, None);
         assert_eq!(sortino.provenance, MetricProvenance::Unavailable);
         assert!(sortino.note.contains("return series"));
@@ -1498,8 +1602,7 @@ mod tests {
     fn ribbon_marks_cagr_calmar_and_exposure_unavailable_when_the_window_is_unknown() {
         let trips = pair_trades(&fixture_trades()).trips;
         let metrics = fixture_metrics();
-        let ribbon =
-            ribbon_by_key(&input(Some(&metrics), &trips, None, Some(100_000.0)));
+        let ribbon = ribbon_by_key(&input(Some(&metrics), &trips, None, Some(100_000.0)));
         let by_key = |key: &str| ribbon.iter().find(|(k, _)| *k == key).unwrap().1.clone();
 
         assert_eq!(by_key("cagr").provenance, MetricProvenance::Unavailable);
@@ -1528,8 +1631,16 @@ mod tests {
                 .map(|metric| metric.key)
                 .collect::<Vec<_>>(),
             vec![
-                "total_return", "cagr", "sharpe", "sortino", "calmar", "max_drawdown",
-                "win_rate", "profit_factor", "trades", "exposure"
+                "total_return",
+                "cagr",
+                "sharpe",
+                "sortino",
+                "calmar",
+                "max_drawdown",
+                "win_rate",
+                "profit_factor",
+                "trades",
+                "exposure"
             ]
         );
     }
@@ -1538,18 +1649,27 @@ mod tests {
 
     #[test]
     fn format_metric_value_formats_each_kind_including_drawdown_as_negative() {
-        assert_eq!(format_metric_value(Some(0.1234), MetricKind::Percent), "+12.34%");
-        assert_eq!(format_metric_value(Some(-0.05), MetricKind::Percent), "-5.00%");
-        assert_eq!(format_metric_value(Some(0.2), MetricKind::Drawdown), "-20.00%");
+        assert_eq!(
+            format_metric_value(Some(0.1234), MetricKind::Percent),
+            "+12.34%"
+        );
+        assert_eq!(
+            format_metric_value(Some(-0.05), MetricKind::Percent),
+            "-5.00%"
+        );
+        assert_eq!(
+            format_metric_value(Some(0.2), MetricKind::Drawdown),
+            "-20.00%"
+        );
         assert_eq!(format_metric_value(Some(1.5), MetricKind::Ratio), "1.50");
         assert_eq!(format_metric_value(Some(42.0), MetricKind::Count), "42");
         assert!(format_metric_value(Some(1234.5), MetricKind::Currency).contains('1'));
-        assert_eq!(format_metric_value(Some(1234.5), MetricKind::Currency), "1,234.50");
-        assert_eq!(format_metric_value(None, MetricKind::Percent), "—");
         assert_eq!(
-            format_metric_value(Some(f64::NAN), MetricKind::Ratio),
-            "—"
+            format_metric_value(Some(1234.5), MetricKind::Currency),
+            "1,234.50"
         );
+        assert_eq!(format_metric_value(None, MetricKind::Percent), "—");
+        assert_eq!(format_metric_value(Some(f64::NAN), MetricKind::Ratio), "—");
     }
 
     // --- benchmark_instrument_id ----------------------------------------------------------
@@ -1593,6 +1713,8 @@ mod tests {
         let heatmap = monthly_heatmap(&analytics);
         let stats = round_trip_stats(&analytics.trips);
         assert!((heatmap.total_pnl - stats.realized_pnl).abs() < 1e-6);
-        assert!((equity_series(&analytics).final_value - (100_000.0 + heatmap.total_pnl)).abs() < 1e-6);
+        assert!(
+            (equity_series(&analytics).final_value - (100_000.0 + heatmap.total_pnl)).abs() < 1e-6
+        );
     }
 }

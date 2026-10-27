@@ -9,9 +9,9 @@
 use leptos::prelude::*;
 
 use super::market_depth::MarketDepth;
-use crate::shared::data::demo_data;
 use crate::features::workbench::stores::layout_store::DrawerTab;
 use crate::features::workbench::stores::workbench_store::WorkbenchStore;
+use crate::shared::data::demo_data;
 use crate::shared::utils::{currency, percent, quantity};
 
 /// The six drawer tabs in display order.

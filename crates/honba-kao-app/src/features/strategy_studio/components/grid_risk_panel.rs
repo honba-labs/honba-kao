@@ -3,8 +3,8 @@
 
 use leptos::prelude::*;
 
-use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 use crate::shared::utils::currency;
+use honba_kao_ui_core::{HfPanel, HfPanelHeader};
 
 #[component]
 pub fn GridRiskPanel() -> impl IntoView {

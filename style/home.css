@@ -1,0 +1,216 @@
+/* ========================================================================= */
+/* honba-kao Home — Mission Control dashboard stylesheet                     */
+/* Ported from OpenTerminalUI's `.ot-home-widget-*` class contract           */
+/* ========================================================================= */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Page root
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ot-home-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   3.1 Header Ribbon
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ot-home-widget-header-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--darker-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.ot-home-ribbon-body {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ot-home-ribbon-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ot-home-ribbon-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--shade-6);
+}
+
+.ot-home-ribbon-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.ot-home-ribbon-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ot-home-ribbon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background: var(--background-color);
+  color: var(--shade-8);
+  white-space: nowrap;
+}
+
+.ot-home-ribbon-badge--pill {
+  background: var(--primary-0);
+  border-color: var(--primary-1);
+  color: var(--primary-8);
+}
+
+.ot-home-ribbon-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ot-home-ribbon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--shade-8);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.ot-home-ribbon-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--shade-9);
+}
+
+.ot-home-ribbon-btn-label {
+  font-variant-numeric: tabular-nums;
+}
+
+.ot-home-ribbon-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   3.2 Market Heat Strip wrapper
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ot-home-widget-heat-strip-wrap {
+  flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   3.3 Grid Layout
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ot-home-widget-grid {
+  display: grid;
+  grid-template-columns: 1.85fr 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.ot-home-grid-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.ot-home-grid-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.ot-home-grid-bottom {
+  grid-column: 1 / -1;
+  flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Responsive — stack to single column on narrow viewports
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (max-width: 900px) {
+  .ot-home-widget-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ot-home-grid-bottom {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .ot-home-widget-header-ribbon {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ot-home-ribbon-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ot-home-ribbon-left {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ot-home-ribbon-actions {
+    flex-wrap: wrap;
+  }
+
+  .ot-home-ribbon-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ot-home-page {
+    padding: 12px;
+  }
+}

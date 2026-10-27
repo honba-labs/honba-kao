@@ -73,10 +73,26 @@ pub mod css_vars {
     /// Create a full button style from variant tokens.
     pub fn button_style(variant: &str) -> String {
         match variant {
-            "default" => format!("background: {}; color: {}", Tokens::LIGHTER_BACKGROUND, Tokens::TEXT),
-            "green" => format!("background: {}; color: {}", Tokens::BUTTON_GREEN, Tokens::ON_ACCENT),
-            "red" => format!("background: {}; color: {}", Tokens::BUTTON_RED, Tokens::ON_ACCENT),
-            "blue" => format!("background: {}; color: {}", Tokens::BUTTON_BLUE, Tokens::ON_ACCENT),
+            "default" => format!(
+                "background: {}; color: {}",
+                Tokens::LIGHTER_BACKGROUND,
+                Tokens::TEXT
+            ),
+            "green" => format!(
+                "background: {}; color: {}",
+                Tokens::BUTTON_GREEN,
+                Tokens::ON_ACCENT
+            ),
+            "red" => format!(
+                "background: {}; color: {}",
+                Tokens::BUTTON_RED,
+                Tokens::ON_ACCENT
+            ),
+            "blue" => format!(
+                "background: {}; color: {}",
+                Tokens::BUTTON_BLUE,
+                Tokens::ON_ACCENT
+            ),
             "ghost" => format!("background: transparent; color: {}", Tokens::SHADE_6),
             _ => String::new(),
         }
@@ -109,9 +125,8 @@ impl Default for Palette256 {
         // Default dark theme palette (BFX Honey) — first 16 canonical entries,
         // remaining 240 generated as interpolations until palette_256.css is ported.
         const BASE: [&str; 16] = [
-            "#0a1017", "#d9383e", "#00b88d", "#d9b300", "#0073d9", "#b340b3", "#00a3a3",
-            "#d0d7de", "#4f5a62", "#f05359", "#00e0ad", "#fcd206", "#0089ff", "#e05ce0",
-            "#00d9d9", "#ffffff",
+            "#0a1017", "#d9383e", "#00b88d", "#d9b300", "#0073d9", "#b340b3", "#00a3a3", "#d0d7de",
+            "#4f5a62", "#f05359", "#00e0ad", "#fcd206", "#0089ff", "#e05ce0", "#00d9d9", "#ffffff",
         ];
         let colors: [String; 256] = std::array::from_fn(|i| {
             if i < 16 {

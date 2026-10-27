@@ -11,10 +11,10 @@ use serde_json::Value;
 
 use crate::features::simulator::kernel::selection::{StrategyGraphNode, StrategyGraphShape};
 use crate::features::strategy_studio::canvas::geometry::{
-    auto_layout, input_anchor, node_height, output_anchor, smoothstep_path, Position, NODE_WIDTH,
+    NODE_WIDTH, Position, auto_layout, input_anchor, node_height, output_anchor, smoothstep_path,
 };
 use crate::features::strategy_studio::kernel::graph::{
-    node_inputs, node_outputs, NodeCategory, PortKind, ValidationIssue,
+    NodeCategory, PortKind, ValidationIssue, node_inputs, node_outputs,
 };
 
 /// What the editor has selected. Multi-select (rubber band) is out of
@@ -106,7 +106,10 @@ pub struct Scene {
 impl Scene {
     /// Card heights by node id (the fit-to-view input).
     pub fn heights(&self) -> BTreeMap<String, f64> {
-        self.nodes.iter().map(|n| (n.id.clone(), n.height)).collect()
+        self.nodes
+            .iter()
+            .map(|n| (n.id.clone(), n.height))
+            .collect()
     }
 
     /// Card positions by node id.
@@ -158,7 +161,10 @@ pub fn node_chips(graph: &StrategyGraphShape, node: &StrategyGraphNode) -> Vec<S
             if !universe.is_empty() {
                 chips.push(universe);
             }
-            chips.push(format!("{} {}", graph.driving_interval, graph.driving_aggregation));
+            chips.push(format!(
+                "{} {}",
+                graph.driving_interval, graph.driving_aggregation
+            ));
         }
         "condition" => {
             chips.push(op_symbol(param("op").as_deref().unwrap_or("gt")).to_string());
@@ -166,10 +172,21 @@ pub fn node_chips(graph: &StrategyGraphShape, node: &StrategyGraphNode) -> Vec<S
                 chips.push(threshold);
             }
         }
-        "logic" => chips.push(param("op").unwrap_or_else(|| "and".to_string()).to_uppercase()),
+        "logic" => chips.push(
+            param("op")
+                .unwrap_or_else(|| "and".to_string())
+                .to_uppercase(),
+        ),
         "order" => {
-            chips.push(param("side").unwrap_or_else(|| "buy".to_string()).to_uppercase());
-            chips.push(format!("× {}", param("quantity").unwrap_or_else(|| "1".to_string())));
+            chips.push(
+                param("side")
+                    .unwrap_or_else(|| "buy".to_string())
+                    .to_uppercase(),
+            );
+            chips.push(format!(
+                "× {}",
+                param("quantity").unwrap_or_else(|| "1".to_string())
+            ));
         }
         _ => {
             for (name, value) in node.params.iter().take(3) {
@@ -208,10 +225,16 @@ pub fn build_scene(
             .unwrap_or(Position::new(0.0, 0.0))
     };
     let uses_input = |id: &str, port: &str| {
-        graph.edges.iter().any(|e| e.to_node == id && e.to_port == port)
+        graph
+            .edges
+            .iter()
+            .any(|e| e.to_node == id && e.to_port == port)
     };
     let uses_output = |id: &str, port: &str| {
-        graph.edges.iter().any(|e| e.from_node == id && e.from_port == port)
+        graph
+            .edges
+            .iter()
+            .any(|e| e.from_node == id && e.from_port == port)
     };
 
     let nodes: Vec<RenderNode> = graph
@@ -226,7 +249,13 @@ pub fn build_scene(
                 .enumerate()
                 .map(|(i, spec)| {
                     let (x, y) = input_anchor(position, i);
-                    RenderPort { id: spec.id, kind: spec.kind, x, y, connected: uses_input(&node.id, spec.id) }
+                    RenderPort {
+                        id: spec.id,
+                        kind: spec.kind,
+                        x,
+                        y,
+                        connected: uses_input(&node.id, spec.id),
+                    }
                 })
                 .collect();
             let outputs = out_specs
@@ -234,7 +263,13 @@ pub fn build_scene(
                 .enumerate()
                 .map(|(i, spec)| {
                     let (x, y) = output_anchor(position, i);
-                    RenderPort { id: spec.id, kind: spec.kind, x, y, connected: uses_output(&node.id, spec.id) }
+                    RenderPort {
+                        id: spec.id,
+                        kind: spec.kind,
+                        x,
+                        y,
+                        connected: uses_output(&node.id, spec.id),
+                    }
                 })
                 .collect();
             RenderNode {
@@ -262,7 +297,10 @@ pub fn build_scene(
     let port_xy = |node_id: &str, port: &str, output: bool| -> Option<(f64, f64, PortKind)> {
         let node = nodes.iter().find(|n| n.id == node_id)?;
         let ports = if output { &node.outputs } else { &node.inputs };
-        ports.iter().find(|p| p.id == port).map(|p| (p.x, p.y, p.kind))
+        ports
+            .iter()
+            .find(|p| p.id == port)
+            .map(|p| (p.x, p.y, p.kind))
     };
 
     let edges = graph
@@ -276,9 +314,10 @@ pub fn build_scene(
             let to_node = nodes.iter().find(|n| n.id == edge.to_node)?;
             let source = port_xy(&edge.from_node, &edge.from_port, true);
             let target = port_xy(&edge.to_node, &edge.to_port, false);
-            let (sx, sy) = source
-                .map(|(x, y, _)| (x, y))
-                .unwrap_or((from_node.x + from_node.width, from_node.y + from_node.height / 2.0));
+            let (sx, sy) = source.map(|(x, y, _)| (x, y)).unwrap_or((
+                from_node.x + from_node.width,
+                from_node.y + from_node.height / 2.0,
+            ));
             let (tx, ty) = target
                 .map(|(x, y, _)| (x, y))
                 .unwrap_or((to_node.x, to_node.y + to_node.height / 2.0));

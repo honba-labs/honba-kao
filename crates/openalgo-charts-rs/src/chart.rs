@@ -1,7 +1,7 @@
 //! High-level, type-safe Chart and Series abstractions.
 
-use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
 use crate::events::{CrosshairMoveEvent, Subscription};
 use crate::indicators::LiveIndicator;
@@ -45,7 +45,8 @@ impl ChartHandle {
         options: Option<&ChartOptions>,
     ) -> Result<Self, ChartError> {
         let opts_js = if let Some(opts) = options {
-            serde_wasm_bindgen::to_value(opts).map_err(|e| ChartError::Serialization(e.to_string()))?
+            serde_wasm_bindgen::to_value(opts)
+                .map_err(|e| ChartError::Serialization(e.to_string()))?
         } else {
             JsValue::UNDEFINED
         };

@@ -57,22 +57,33 @@ impl QuoteBook {
     /// quote yet. Existing (live) quotes are left alone.
     pub fn seed_synthetic(&mut self, symbols: &[MockSymbol]) {
         for s in symbols {
-            self.quotes.entry(s.ticker.to_string()).or_insert_with(|| QuoteView {
-                ltp: s.ltp.to_string(),
-                change_pct: s.change_pct.to_string(),
-                quality: ProvenanceQuality::Synthetic,
-                source: "mock".into(),
-            });
+            self.quotes
+                .entry(s.ticker.to_string())
+                .or_insert_with(|| QuoteView {
+                    ltp: s.ltp.to_string(),
+                    change_pct: s.change_pct.to_string(),
+                    quality: ProvenanceQuality::Synthetic,
+                    source: "mock".into(),
+                });
         }
     }
 
     /// Applies a frame. Returns `true` when a quote changed.
     pub fn apply_frame(&mut self, frame: &StreamFrame) -> bool {
-        let StreamFrame::Quote { symbol, ltp, change_pct, provenance } = frame else {
+        let StreamFrame::Quote {
+            symbol,
+            ltp,
+            change_pct,
+            provenance,
+        } = frame
+        else {
             return false;
         };
         let quality = map_quality(provenance.quality);
-        if matches!(quality, ProvenanceQuality::Live | ProvenanceQuality::Delayed) {
+        if matches!(
+            quality,
+            ProvenanceQuality::Live | ProvenanceQuality::Delayed
+        ) {
             self.received_live = true;
         }
         let next = QuoteView {
@@ -92,7 +103,10 @@ impl QuoteBook {
     /// `Synthetic`.
     pub fn mark_offline(&mut self) {
         for quote in self.quotes.values_mut() {
-            if matches!(quote.quality, ProvenanceQuality::Live | ProvenanceQuality::Delayed) {
+            if matches!(
+                quote.quality,
+                ProvenanceQuality::Live | ProvenanceQuality::Delayed
+            ) {
                 quote.quality = ProvenanceQuality::Cached;
             }
         }
@@ -120,8 +134,14 @@ impl QuoteBook {
 /// `ws(s)://<host>/api/ws/live`, built from the page location.
 pub fn live_socket_url() -> String {
     let location = web_sys::window().map(|w| w.location());
-    let protocol = location.as_ref().and_then(|l| l.protocol().ok()).unwrap_or_else(|| "http:".into());
-    let host = location.as_ref().and_then(|l| l.host().ok()).unwrap_or_default();
+    let protocol = location
+        .as_ref()
+        .and_then(|l| l.protocol().ok())
+        .unwrap_or_else(|| "http:".into());
+    let host = location
+        .as_ref()
+        .and_then(|l| l.host().ok())
+        .unwrap_or_default();
     let scheme = if protocol == "https:" { "wss:" } else { "ws:" };
     format!("{scheme}//{host}{API_BASE_URL}/ws/live")
 }

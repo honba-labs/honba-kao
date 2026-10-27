@@ -9,7 +9,7 @@
 //! The client seam is a narrow trait, exactly as the run loop's is, so the
 //! store degrades against a mock without the route instead of failing.
 
-use honba_kao_client::{wire::TradesResponse, ClientError};
+use honba_kao_client::{ClientError, wire::TradesResponse};
 
 /// The journal fetch's status (`JournalStatus`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -115,9 +115,7 @@ pub async fn load_journal<C: JournalClient>(client: &C, run_id: &str) -> Journal
 mod tests {
     use super::*;
     use crate::features::simulator::kernel::run::ClientFut;
-    use honba_kao_client::wire::{
-        Exchange, InstrumentId, Trade, WireOrderSide,
-    };
+    use honba_kao_client::wire::{Exchange, InstrumentId, Trade, WireOrderSide};
 
     struct OkJournal(Vec<Trade>);
     struct FailingJournal;
@@ -142,7 +140,8 @@ mod tests {
     }
 
     fn fill(minute: i64) -> Trade {
-        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0).expect("valid timestamp");
+        let ts = chrono::DateTime::from_timestamp(1_704_153_600 + minute * 60, 0)
+            .expect("valid timestamp");
         Trade::new(
             "f",
             "o",
@@ -169,8 +168,9 @@ mod tests {
 
     #[test]
     fn a_missing_route_degrades_to_an_error_state_and_no_markers() {
-        let state =
-            crate::features::simulator::kernel::testing::block_on(async { load_journal(&FailingJournal, "run-1").await });
+        let state = crate::features::simulator::kernel::testing::block_on(async {
+            load_journal(&FailingJournal, "run-1").await
+        });
         assert_eq!(state.status, JournalStatus::Error);
         assert!(state.trades.is_empty());
         assert_eq!(state.error.as_deref(), Some("status 404"));

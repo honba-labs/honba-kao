@@ -79,32 +79,28 @@ pub const FILL_MODEL_DESCRIPTORS: [FillModelDescriptor; 4] = [
         id: "bar_fill",
         name: "Bar Fill (Close / Market)",
         label: "Bar Fill",
-        description:
-            "Fills immediately at bar close / current tick. Standard execution baseline.",
+        description: "Fills immediately at bar close / current tick. Standard execution baseline.",
         badge: "Standard",
     },
     FillModelDescriptor {
         id: "bar_fill_through",
         name: "Bar Fill Through (Limit / Penetration)",
         label: "Bar Fill Through",
-        description:
-            "Strict limit execution: requires intra-bar price to trade strictly through the limit level.",
+        description: "Strict limit execution: requires intra-bar price to trade strictly through the limit level.",
         badge: "Realistic",
     },
     FillModelDescriptor {
         id: "l2",
         name: "L2 Order Book Simulation",
         label: "L2 Simulation",
-        description:
-            "Simulates micro-ticks with adverse bid/ask spread and order-size depth slippage.",
+        description: "Simulates micro-ticks with adverse bid/ask spread and order-size depth slippage.",
         badge: "High Fidelity",
     },
     FillModelDescriptor {
         id: "none",
         name: "None (Signals Only / Paperless)",
         label: "Signals Only",
-        description:
-            "Evaluates all indicators and confluence signals without executing trades or fills.",
+        description: "Evaluates all indicators and confluence signals without executing trades or fills.",
         badge: "Signal Test",
     },
 ];
@@ -118,6 +114,8 @@ pub fn fill_model_descriptor(model: &str) -> Option<&'static FillModelDescriptor
 
 /// Full name of a fill model (`formatFillModel`).
 pub fn format_fill_model(model: &str) -> String {
-    fill_model_descriptor(model)
-        .map_or_else(|| model.to_string(), |descriptor| descriptor.name.to_owned())
+    fill_model_descriptor(model).map_or_else(
+        || model.to_string(),
+        |descriptor| descriptor.name.to_owned(),
+    )
 }

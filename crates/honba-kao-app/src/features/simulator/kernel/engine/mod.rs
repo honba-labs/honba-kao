@@ -29,7 +29,7 @@ pub mod controller;
 pub mod evaluator;
 pub mod indicators;
 
-use honba_api_wasm::calendar::{civil_from_days, IST_OFFSET_SECONDS};
+use honba_api_wasm::calendar::{IST_OFFSET_SECONDS, civil_from_days};
 
 /// fe default `initialCapital`.
 pub const DEFAULT_INITIAL_CAPITAL: f64 = 100_000.0;
@@ -403,7 +403,12 @@ pub fn clock_str(ts: i64) -> String {
 /// `15 Jan, 03:30 pm`, day-first like en-IN.
 pub fn stamp_str(ts: i64) -> String {
     let (month, day, hh, mm, _) = ist_parts(ts);
-    format!("{} {}, {}", day, MONTHS[(month - 1) as usize], clock(hh, mm, None))
+    format!(
+        "{} {}, {}",
+        day,
+        MONTHS[(month - 1) as usize],
+        clock(hh, mm, None)
+    )
 }
 
 #[cfg(test)]
@@ -492,13 +497,19 @@ mod tests {
             clock_str(days_from_civil(2024, 1, 14) * 86_400 + 66_600),
             "12:00:00 am"
         );
-        assert_eq!(stamp_str(days_from_civil(2024, 1, 14) * 86_400 + 66_600), "15 Jan, 12:00 am");
+        assert_eq!(
+            stamp_str(days_from_civil(2024, 1, 14) * 86_400 + 66_600),
+            "15 Jan, 12:00 am"
+        );
     }
 
     #[test]
     fn the_fill_model_keeps_fes_string_spellings() {
         assert_eq!(FillModel::from_name("bar_fill"), FillModel::BarFill);
-        assert_eq!(FillModel::from_name("bar_fill_through"), FillModel::BarFillThrough);
+        assert_eq!(
+            FillModel::from_name("bar_fill_through"),
+            FillModel::BarFillThrough
+        );
         assert_eq!(FillModel::from_name("l2"), FillModel::L2);
         assert_eq!(FillModel::from_name("none"), FillModel::None);
         // Unknown spellings fall back to bar_fill (fe truthiness).

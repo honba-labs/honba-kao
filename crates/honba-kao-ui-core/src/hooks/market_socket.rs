@@ -58,11 +58,12 @@ pub fn use_market_socket(
         });
         ws.set_onopen(Some(open.as_ref().unchecked_ref()));
 
-        let message = Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |ev: web_sys::MessageEvent| {
-            if let Some(text) = ev.data().as_string() {
-                on_text.run(text);
-            }
-        });
+        let message =
+            Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |ev: web_sys::MessageEvent| {
+                if let Some(text) = ev.data().as_string() {
+                    on_text.run(text);
+                }
+            });
         ws.set_onmessage(Some(message.as_ref().unchecked_ref()));
 
         let error = Closure::<dyn FnMut(web_sys::Event)>::new(move |_: web_sys::Event| {

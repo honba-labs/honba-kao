@@ -95,21 +95,40 @@ pub fn smoothstep_path(source: (f64, f64), target: (f64, f64)) -> (String, f64, 
     let (sx, sy) = source;
     let (tx, ty) = target;
     if (ty - sy).abs() < 0.5 && tx >= sx {
-        return (format!("M {sx:.1},{sy:.1} L {tx:.1},{ty:.1}"), (sx + tx) / 2.0, sy);
+        return (
+            format!("M {sx:.1},{sy:.1} L {tx:.1},{ty:.1}"),
+            (sx + tx) / 2.0,
+            sy,
+        );
     }
     if tx >= sx + 2.0 * STEP_OFFSET {
         // Forward: out, one vertical run at the horizontal midpoint, in.
         let mid_x = (sx + tx) / 2.0;
         let points = [(sx, sy), (mid_x, sy), (mid_x, ty), (tx, ty)];
-        (rounded_polyline(&points, CORNER_RADIUS), mid_x, (sy + ty) / 2.0)
+        (
+            rounded_polyline(&points, CORNER_RADIUS),
+            mid_x,
+            (sy + ty) / 2.0,
+        )
     } else {
         // Backward: step out right, cross at the vertical midpoint, step in
         // from the left — never through either card.
         let mid_y = (sy + ty) / 2.0;
         let out_x = sx + STEP_OFFSET;
         let in_x = tx - STEP_OFFSET;
-        let points = [(sx, sy), (out_x, sy), (out_x, mid_y), (in_x, mid_y), (in_x, ty), (tx, ty)];
-        (rounded_polyline(&points, CORNER_RADIUS), (out_x + in_x) / 2.0, mid_y)
+        let points = [
+            (sx, sy),
+            (out_x, sy),
+            (out_x, mid_y),
+            (in_x, mid_y),
+            (in_x, ty),
+            (tx, ty),
+        ];
+        (
+            rounded_polyline(&points, CORNER_RADIUS),
+            (out_x + in_x) / 2.0,
+            mid_y,
+        )
     }
 }
 
@@ -159,9 +178,10 @@ pub fn auto_layout(graph: &StrategyGraphShape) -> BTreeMap<String, Position> {
     for _ in 0..graph.nodes.len() {
         let mut changed = false;
         for edge in &graph.edges {
-            let (Some(&from), Some(&to)) =
-                (depth.get(edge.from_node.as_str()), depth.get(edge.to_node.as_str()))
-            else {
+            let (Some(&from), Some(&to)) = (
+                depth.get(edge.from_node.as_str()),
+                depth.get(edge.to_node.as_str()),
+            ) else {
                 continue;
             };
             if to <= from && from < graph.nodes.len() {
@@ -203,14 +223,21 @@ pub struct Viewport {
 
 impl Default for Viewport {
     fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+        Self {
+            x: 0.0,
+            y: 0.0,
+            zoom: 1.0,
+        }
     }
 }
 
 impl Viewport {
     /// Screen (canvas-local px) → world (user units).
     pub fn to_world(self, local_x: f64, local_y: f64) -> (f64, f64) {
-        ((local_x - self.x) / self.zoom, (local_y - self.y) / self.zoom)
+        (
+            (local_x - self.x) / self.zoom,
+            (local_y - self.y) / self.zoom,
+        )
     }
 
     /// World → screen (canvas-local px).
@@ -224,12 +251,19 @@ impl Viewport {
     pub fn zoom_at(self, local_x: f64, local_y: f64, factor: f64) -> Viewport {
         let zoom = (self.zoom * factor).clamp(ZOOM_MIN, ZOOM_MAX);
         let (wx, wy) = self.to_world(local_x, local_y);
-        Viewport { x: local_x - wx * zoom, y: local_y - wy * zoom, zoom }
+        Viewport {
+            x: local_x - wx * zoom,
+            y: local_y - wy * zoom,
+            zoom,
+        }
     }
 
     /// The `transform` attribute of the world group.
     pub fn transform(self) -> String {
-        format!("translate({:.2},{:.2}) scale({:.4})", self.x, self.y, self.zoom)
+        format!(
+            "translate({:.2},{:.2}) scale({:.4})",
+            self.x, self.y, self.zoom
+        )
     }
 
     /// A viewport that fits every card into a `width × height` canvas with

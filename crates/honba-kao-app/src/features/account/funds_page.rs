@@ -3,8 +3,8 @@
 use leptos::prelude::*;
 
 use crate::shared::api;
-use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 use crate::shared::utils::currency;
+use honba_kao_ui_core::{HfPageHeader, HfPanel, HfPanelHeader};
 
 #[component]
 pub fn FundsPage() -> impl IntoView {

@@ -21,26 +21,16 @@ use leptos::prelude::*;
 /// ```
 #[component]
 pub fn HfInput(
-    #[prop(optional)]
-    r#type: Option<&'static str>,
-    #[prop(optional)]
-    placeholder: Option<&'static str>,
-    #[prop(optional)]
-    value: Option<String>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional)]
-    error: Option<bool>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_input: Option<Callback<web_sys::Event>>,
-    #[prop(optional)]
-    on_change: Option<Callback<web_sys::Event>>,
-    #[prop(optional)]
-    on_focus: Option<Callback<web_sys::FocusEvent>>,
-    #[prop(optional)]
-    on_blur: Option<Callback<web_sys::FocusEvent>>,
+    #[prop(optional)] r#type: Option<&'static str>,
+    #[prop(optional)] placeholder: Option<&'static str>,
+    #[prop(optional)] value: Option<String>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional)] error: Option<bool>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_input: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] on_change: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] on_focus: Option<Callback<web_sys::FocusEvent>>,
+    #[prop(optional)] on_blur: Option<Callback<web_sys::FocusEvent>>,
 ) -> impl IntoView {
     let r#type = r#type.unwrap_or("text");
     let disabled = disabled.unwrap_or(false);
@@ -88,18 +78,12 @@ pub fn HfInput(
 /// HfTextarea — multi-line text input.
 #[component]
 pub fn HfTextarea(
-    #[prop(optional)]
-    placeholder: Option<&'static str>,
-    #[prop(optional)]
-    value: Option<String>,
-    #[prop(optional)]
-    disabled: Option<bool>,
-    #[prop(optional)]
-    rows: Option<u32>,
-    #[prop(optional, into)]
-    class: String,
-    #[prop(optional)]
-    on_input: Option<Callback<web_sys::Event>>,
+    #[prop(optional)] placeholder: Option<&'static str>,
+    #[prop(optional)] value: Option<String>,
+    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional)] rows: Option<u32>,
+    #[prop(optional, into)] class: String,
+    #[prop(optional)] on_input: Option<Callback<web_sys::Event>>,
 ) -> impl IntoView {
     let disabled = disabled.unwrap_or(false);
     let rows = rows.unwrap_or(4);

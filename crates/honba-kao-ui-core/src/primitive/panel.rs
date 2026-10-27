@@ -4,11 +4,7 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn HfPanel(
-    #[prop(optional, into)]
-    class: String,
-    children: Children,
-) -> impl IntoView {
+pub fn HfPanel(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
     view! {
         <section class=format!("hfui-panel {class}").trim().to_string()>
             {children()}
@@ -20,10 +16,8 @@ pub fn HfPanel(
 #[component]
 pub fn HfPanelHeader(
     title: &'static str,
-    #[prop(optional)]
-    counter: Option<usize>,
-    #[prop(optional)]
-    children: Option<Children>,
+    #[prop(optional)] counter: Option<usize>,
+    #[prop(optional)] children: Option<Children>,
 ) -> impl IntoView {
     view! {
         <header class="hfui-panel__header">

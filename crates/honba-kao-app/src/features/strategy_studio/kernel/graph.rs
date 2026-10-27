@@ -71,12 +71,28 @@ pub fn node_inputs(node_type: &str) -> &'static [PortSpec] {
             description: "the series to consume",
         }],
         "condition" => &[
-            PortSpec { id: "left", kind: PortKind::Series, description: "left series" },
-            PortSpec { id: "right", kind: PortKind::Series, description: "right series" },
+            PortSpec {
+                id: "left",
+                kind: PortKind::Series,
+                description: "left series",
+            },
+            PortSpec {
+                id: "right",
+                kind: PortKind::Series,
+                description: "right series",
+            },
         ],
         "logic" => &[
-            PortSpec { id: "a", kind: PortKind::Bool, description: "first signal" },
-            PortSpec { id: "b", kind: PortKind::Bool, description: "second signal" },
+            PortSpec {
+                id: "a",
+                kind: PortKind::Bool,
+                description: "first signal",
+            },
+            PortSpec {
+                id: "b",
+                kind: PortKind::Bool,
+                description: "second signal",
+            },
         ],
         "sizing" | "risk" => &[PortSpec {
             id: "signal",
@@ -84,8 +100,16 @@ pub fn node_inputs(node_type: &str) -> &'static [PortSpec] {
             description: "the signal to size or gate",
         }],
         "order" => &[
-            PortSpec { id: "signal", kind: PortKind::Bool, description: "the signal to fill on" },
-            PortSpec { id: "size", kind: PortKind::Size, description: "optional computed size" },
+            PortSpec {
+                id: "signal",
+                kind: PortKind::Bool,
+                description: "the signal to fill on",
+            },
+            PortSpec {
+                id: "size",
+                kind: PortKind::Size,
+                description: "optional computed size",
+            },
         ],
         // `universe | schedule` have no inputs.
         _ => &[],
@@ -112,18 +136,50 @@ pub fn node_outputs(node_type: &str, node: Option<&StrategyGraphNode>) -> &'stat
         "universe" => BARS,
         "indicator" => match node.and_then(|n| n.indicator.as_deref()) {
             Some("macd") => &[
-                PortSpec { id: "macd", kind: PortKind::Series, description: "MACD line" },
-                PortSpec { id: "signal", kind: PortKind::Series, description: "signal line" },
-                PortSpec { id: "histogram", kind: PortKind::Series, description: "histogram" },
+                PortSpec {
+                    id: "macd",
+                    kind: PortKind::Series,
+                    description: "MACD line",
+                },
+                PortSpec {
+                    id: "signal",
+                    kind: PortKind::Series,
+                    description: "signal line",
+                },
+                PortSpec {
+                    id: "histogram",
+                    kind: PortKind::Series,
+                    description: "histogram",
+                },
             ],
             Some("bollinger") => &[
-                PortSpec { id: "middle", kind: PortKind::Series, description: "middle band" },
-                PortSpec { id: "upper", kind: PortKind::Series, description: "upper band" },
-                PortSpec { id: "lower", kind: PortKind::Series, description: "lower band" },
+                PortSpec {
+                    id: "middle",
+                    kind: PortKind::Series,
+                    description: "middle band",
+                },
+                PortSpec {
+                    id: "upper",
+                    kind: PortKind::Series,
+                    description: "upper band",
+                },
+                PortSpec {
+                    id: "lower",
+                    kind: PortKind::Series,
+                    description: "lower band",
+                },
             ],
             Some("stochastic") => &[
-                PortSpec { id: "k", kind: PortKind::Series, description: "%K" },
-                PortSpec { id: "d", kind: PortKind::Series, description: "%D" },
+                PortSpec {
+                    id: "k",
+                    kind: PortKind::Series,
+                    description: "%K",
+                },
+                PortSpec {
+                    id: "d",
+                    kind: PortKind::Series,
+                    description: "%D",
+                },
             ],
             _ => value(),
         },
@@ -299,25 +355,119 @@ const PERIOD: ParamSpec = ParamSpec {
 /// beyond what `honba-indicators` implements — the tier-1 evaluator and the
 /// chart registry agree with this table; a mismatch is a test failure).
 pub const CATALOGUE: &[CatalogueEntry] = &[
-    CatalogueEntry { kind: "sma", node_type: "indicator", family: "moving_average", summary: "Simple moving average of closes", params: &[PERIOD] },
-    CatalogueEntry { kind: "ema", node_type: "indicator", family: "moving_average", summary: "Exponential moving average of closes", params: &[PERIOD] },
-    CatalogueEntry { kind: "rsi", node_type: "indicator", family: "momentum", summary: "Relative strength index", params: &[PERIOD] },
-    CatalogueEntry { kind: "macd", node_type: "indicator", family: "momentum", summary: "MACD line / signal / histogram", params: &[
-        ParamSpec { name: "fast", kind: "int", default: ParamDefault::Int(12), min: Some(1.0), max: Some(1000.0), step: Some(1.0), description: "fast EMA period" },
-        ParamSpec { name: "slow", kind: "int", default: ParamDefault::Int(26), min: Some(1.0), max: Some(1000.0), step: Some(1.0), description: "slow EMA period" },
-        ParamSpec { name: "signal", kind: "int", default: ParamDefault::Int(9), min: Some(1.0), max: Some(1000.0), step: Some(1.0), description: "signal EMA period" },
-    ] },
-    CatalogueEntry { kind: "bollinger", node_type: "indicator", family: "volatility", summary: "Bollinger bands (middle/upper/lower)", params: &[
-        PERIOD,
-        ParamSpec { name: "k", kind: "float", default: ParamDefault::Float(2.0), min: Some(0.0), max: Some(10.0), step: Some(0.1), description: "band standard-deviation multiple" },
-    ] },
-    CatalogueEntry { kind: "donchian", node_type: "indicator", family: "support_resistance", summary: "Channel high/low over the window", params: &[PERIOD] },
-    CatalogueEntry { kind: "atr", node_type: "indicator", family: "volatility", summary: "Average true range", params: &[PERIOD] },
-    CatalogueEntry { kind: "stochastic", node_type: "indicator", family: "momentum", summary: "Stochastic %K/%D", params: &[
-        PERIOD,
-        ParamSpec { name: "d_period", kind: "int", default: ParamDefault::Int(3), min: Some(1.0), max: Some(1000.0), step: Some(1.0), description: "%D smoothing period" },
-    ] },
-    CatalogueEntry { kind: "williams_r", node_type: "indicator", family: "momentum", summary: "Williams %R", params: &[PERIOD] },
+    CatalogueEntry {
+        kind: "sma",
+        node_type: "indicator",
+        family: "moving_average",
+        summary: "Simple moving average of closes",
+        params: &[PERIOD],
+    },
+    CatalogueEntry {
+        kind: "ema",
+        node_type: "indicator",
+        family: "moving_average",
+        summary: "Exponential moving average of closes",
+        params: &[PERIOD],
+    },
+    CatalogueEntry {
+        kind: "rsi",
+        node_type: "indicator",
+        family: "momentum",
+        summary: "Relative strength index",
+        params: &[PERIOD],
+    },
+    CatalogueEntry {
+        kind: "macd",
+        node_type: "indicator",
+        family: "momentum",
+        summary: "MACD line / signal / histogram",
+        params: &[
+            ParamSpec {
+                name: "fast",
+                kind: "int",
+                default: ParamDefault::Int(12),
+                min: Some(1.0),
+                max: Some(1000.0),
+                step: Some(1.0),
+                description: "fast EMA period",
+            },
+            ParamSpec {
+                name: "slow",
+                kind: "int",
+                default: ParamDefault::Int(26),
+                min: Some(1.0),
+                max: Some(1000.0),
+                step: Some(1.0),
+                description: "slow EMA period",
+            },
+            ParamSpec {
+                name: "signal",
+                kind: "int",
+                default: ParamDefault::Int(9),
+                min: Some(1.0),
+                max: Some(1000.0),
+                step: Some(1.0),
+                description: "signal EMA period",
+            },
+        ],
+    },
+    CatalogueEntry {
+        kind: "bollinger",
+        node_type: "indicator",
+        family: "volatility",
+        summary: "Bollinger bands (middle/upper/lower)",
+        params: &[
+            PERIOD,
+            ParamSpec {
+                name: "k",
+                kind: "float",
+                default: ParamDefault::Float(2.0),
+                min: Some(0.0),
+                max: Some(10.0),
+                step: Some(0.1),
+                description: "band standard-deviation multiple",
+            },
+        ],
+    },
+    CatalogueEntry {
+        kind: "donchian",
+        node_type: "indicator",
+        family: "support_resistance",
+        summary: "Channel high/low over the window",
+        params: &[PERIOD],
+    },
+    CatalogueEntry {
+        kind: "atr",
+        node_type: "indicator",
+        family: "volatility",
+        summary: "Average true range",
+        params: &[PERIOD],
+    },
+    CatalogueEntry {
+        kind: "stochastic",
+        node_type: "indicator",
+        family: "momentum",
+        summary: "Stochastic %K/%D",
+        params: &[
+            PERIOD,
+            ParamSpec {
+                name: "d_period",
+                kind: "int",
+                default: ParamDefault::Int(3),
+                min: Some(1.0),
+                max: Some(1000.0),
+                step: Some(1.0),
+                description: "%D smoothing period",
+            },
+        ],
+    },
+    CatalogueEntry {
+        kind: "williams_r",
+        node_type: "indicator",
+        family: "momentum",
+        summary: "Williams %R",
+        params: &[PERIOD],
+    },
 ];
 
 /// Looks up one catalogue entry by indicator kind.
@@ -327,8 +477,16 @@ pub fn catalogue_entry(kind: &str) -> Option<&'static CatalogueEntry> {
 
 /// The node types the editor palette offers beyond indicators (fe's fixed
 /// set; `transform` is catalogue-reserved but not palette-shipped yet).
-pub const STRUCTURAL_NODE_TYPES: &[&str] =
-    &["universe", "condition", "logic", "sizing", "risk", "order", "schedule", "benchmark"];
+pub const STRUCTURAL_NODE_TYPES: &[&str] = &[
+    "universe",
+    "condition",
+    "logic",
+    "sizing",
+    "risk",
+    "order",
+    "schedule",
+    "benchmark",
+];
 
 /// Whether `kind` is in the derived catalogue.
 pub fn is_known_indicator(kind: &str) -> bool {
@@ -338,7 +496,8 @@ pub fn is_known_indicator(kind: &str) -> bool {
 /// honba-ya's builtin strategy registry (`StrategyRegistry::builtin()`,
 /// verified). A graph whose *name* is here can execute canonically today;
 /// everything else is verified-only and renders the `provisional` path.
-pub const REGISTRY_BUILTIN: &[&str] = &["buy_and_hold", "rsi_reversal", "sma_crossover", "sma_cross"];
+pub const REGISTRY_BUILTIN: &[&str] =
+    &["buy_and_hold", "rsi_reversal", "sma_crossover", "sma_cross"];
 
 /// Whether honba-ya carries this strategy name in its registry today.
 pub fn is_registry_carried(name: &str) -> bool {
@@ -378,7 +537,11 @@ pub fn graph_issues(graph: &StrategyGraphShape) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
 
     if graph.name.trim().is_empty() {
-        issues.push(ValidationIssue::new("missing_name", "the strategy needs a name", None));
+        issues.push(ValidationIssue::new(
+            "missing_name",
+            "the strategy needs a name",
+            None,
+        ));
     }
     if graph.universe_named.is_empty() && graph.universe_explicit.is_empty() {
         issues.push(ValidationIssue::new(
@@ -452,10 +615,7 @@ pub fn graph_issues(graph: &StrategyGraphShape) -> Vec<ValidationIssue> {
                 Some(&node.id),
             ));
         } else if node.node_type == "indicator"
-            && !node
-                .indicator
-                .as_deref()
-                .is_some_and(is_known_indicator)
+            && !node.indicator.as_deref().is_some_and(is_known_indicator)
         {
             issues.push(ValidationIssue::new(
                 "unknown_indicator",
@@ -483,7 +643,10 @@ pub fn graph_issues(graph: &StrategyGraphShape) -> Vec<ValidationIssue> {
         let Some(from) = from else {
             issues.push(ValidationIssue::new(
                 "unknown_from_node",
-                format!("edge `{}` starts at an unknown node `{}`", edge.id, edge.from_node),
+                format!(
+                    "edge `{}` starts at an unknown node `{}`",
+                    edge.id, edge.from_node
+                ),
                 None,
             ));
             continue;
@@ -491,7 +654,10 @@ pub fn graph_issues(graph: &StrategyGraphShape) -> Vec<ValidationIssue> {
         let Some(to) = to else {
             issues.push(ValidationIssue::new(
                 "unknown_to_node",
-                format!("edge `{}` ends at an unknown node `{}`", edge.id, edge.to_node),
+                format!(
+                    "edge `{}` ends at an unknown node `{}`",
+                    edge.id, edge.to_node
+                ),
                 None,
             ));
             continue;
@@ -508,7 +674,11 @@ pub fn graph_issues(graph: &StrategyGraphShape) -> Vec<ValidationIssue> {
         let kind_match = node_outputs(&from.node_type, Some(from))
             .iter()
             .find(|p| p.id == edge.from_port)
-            .zip(node_inputs(&to.node_type).iter().find(|p| p.id == edge.to_port))
+            .zip(
+                node_inputs(&to.node_type)
+                    .iter()
+                    .find(|p| p.id == edge.to_port),
+            )
             .is_some_and(|(o, i)| o.kind == i.kind);
         if !from_ok || !to_ok || !kind_match {
             issues.push(ValidationIssue::new(
@@ -618,7 +788,9 @@ const GATE_OP_PARAMS: &[ParamSpec] = &[ParamSpec {
 pub fn first_cycle_node(graph: &StrategyGraphShape) -> Option<String> {
     let mut adj: std::collections::BTreeMap<&str, Vec<&str>> = std::collections::BTreeMap::new();
     for edge in &graph.edges {
-        adj.entry(edge.from_node.as_str()).or_default().push(edge.to_node.as_str());
+        adj.entry(edge.from_node.as_str())
+            .or_default()
+            .push(edge.to_node.as_str());
     }
     let mut state: std::collections::BTreeMap<&str, u8> = std::collections::BTreeMap::new(); // 0 fresh, 1 open, 2 done
     for node in &graph.nodes {
@@ -724,36 +896,44 @@ pub fn fe_canonical_json(graph: &StrategyGraphShape) -> String {
     doc.insert(
         "nodes".into(),
         serde_json::json!(
-            graph.nodes.iter().map(|node| {
-                let mut out = serde_json::Map::new();
-                out.insert("id".into(), serde_json::json!(node.id));
-                out.insert("type".into(), serde_json::json!(node.node_type));
-                if let Some(label) = &node.label {
-                    out.insert("label".into(), serde_json::json!(label));
-                }
-                if !node.params.is_empty() {
-                    out.insert(
-                        "params".into(),
-                        serde_json::Value::Object(node.params.clone().into_iter().collect()),
-                    );
-                }
-                if let Some(indicator) = &node.indicator {
-                    out.insert("indicator".into(), serde_json::json!(indicator));
-                }
-                serde_json::Value::Object(out)
-            }).collect::<Vec<_>>()
+            graph
+                .nodes
+                .iter()
+                .map(|node| {
+                    let mut out = serde_json::Map::new();
+                    out.insert("id".into(), serde_json::json!(node.id));
+                    out.insert("type".into(), serde_json::json!(node.node_type));
+                    if let Some(label) = &node.label {
+                        out.insert("label".into(), serde_json::json!(label));
+                    }
+                    if !node.params.is_empty() {
+                        out.insert(
+                            "params".into(),
+                            serde_json::Value::Object(node.params.clone().into_iter().collect()),
+                        );
+                    }
+                    if let Some(indicator) = &node.indicator {
+                        out.insert("indicator".into(), serde_json::json!(indicator));
+                    }
+                    serde_json::Value::Object(out)
+                })
+                .collect::<Vec<_>>()
         ),
     );
     doc.insert(
         "edges".into(),
         serde_json::json!(
-            graph.edges.iter().map(|edge| serde_json::json!({
-                "id": edge.id,
-                "from_node": edge.from_node,
-                "from_port": edge.from_port,
-                "to_node": edge.to_node,
-                "to_port": edge.to_port,
-            })).collect::<Vec<_>>()
+            graph
+                .edges
+                .iter()
+                .map(|edge| serde_json::json!({
+                    "id": edge.id,
+                    "from_node": edge.from_node,
+                    "from_port": edge.from_port,
+                    "to_node": edge.to_node,
+                    "to_port": edge.to_port,
+                }))
+                .collect::<Vec<_>>()
         ),
     );
     // `serde_json::Map` is a `BTreeMap` here (no `preserve_order` feature),
@@ -801,13 +981,17 @@ pub fn graph_diff(base: &StrategyGraphShape, candidate: &StrategyGraphShape) -> 
                 for (name, value) in &candidate_node.params {
                     if base_node.params.get(name) != Some(value) {
                         modified = true;
-                        summary.param_changes.push(((*id).to_string(), name.to_string()));
+                        summary
+                            .param_changes
+                            .push(((*id).to_string(), name.to_string()));
                     }
                 }
                 for name in base_node.params.keys() {
                     if !candidate_node.params.contains_key(name) {
                         modified = true;
-                        summary.param_changes.push(((*id).to_string(), name.to_string()));
+                        summary
+                            .param_changes
+                            .push(((*id).to_string(), name.to_string()));
                     }
                 }
                 if modified {
@@ -861,7 +1045,7 @@ pub fn edge_id(from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> St
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::simulator::kernel::selection::{builtin_template, StrategyGraphEdge};
+    use crate::features::simulator::kernel::selection::{StrategyGraphEdge, builtin_template};
 
     fn edge(id: &str, from: &str, from_port: &str, to: &str, to_port: &str) -> StrategyGraphEdge {
         StrategyGraphEdge {
@@ -904,7 +1088,10 @@ mod tests {
             "missing_name must stay first, got {codes:?}"
         );
         for expected in ["missing_universe", "invalid_timeframe", "invalid_warmup"] {
-            assert!(codes.contains(&expected), "expected {expected} in {codes:?}");
+            assert!(
+                codes.contains(&expected),
+                "expected {expected} in {codes:?}"
+            );
         }
     }
 
@@ -937,12 +1124,16 @@ mod tests {
         graph.edges.retain(|e| e.to_node != "o");
         graph.edges.retain(|e| e.to_node != "f");
         let mut fast = graph.nodes[1].clone();
-        fast.params.insert("period".to_string(), serde_json::json!(0));
+        fast.params
+            .insert("period".to_string(), serde_json::json!(0));
         graph.nodes[1] = fast;
         let issues = graph_issues(&graph);
         let codes: Vec<&str> = issues.iter().map(|i| i.code.as_str()).collect();
         for expected in ["no_order", "dangling_node", "param_out_of_range"] {
-            assert!(codes.contains(&expected), "expected {expected} in {codes:?}");
+            assert!(
+                codes.contains(&expected),
+                "expected {expected} in {codes:?}"
+            );
         }
     }
 
@@ -961,7 +1152,9 @@ mod tests {
     fn diff_reports_add_modify_remove() {
         let base = builtin_template().0;
         let mut candidate = base.clone();
-        candidate.nodes[1].params.insert("period".to_string(), serde_json::json!(10));
+        candidate.nodes[1]
+            .params
+            .insert("period".to_string(), serde_json::json!(10));
         candidate.nodes.pop(); // remove the order node
         let mut fresh = default_node("x9", "indicator", Some("ema"));
         fresh.label = Some("Fresh EMA".to_string());
@@ -969,7 +1162,11 @@ mod tests {
         let summary = graph_diff(&base, &candidate);
         assert_eq!(summary.modified_nodes, vec!["f".to_string()]);
         assert_eq!(summary.param_changes.len(), 1);
-        assert!(summary.added_nodes.contains(&"x9".to_string()), "added: {:?}", summary.added_nodes);
+        assert!(
+            summary.added_nodes.contains(&"x9".to_string()),
+            "added: {:?}",
+            summary.added_nodes
+        );
         assert!(
             summary.removed_nodes.contains(&"o".to_string()),
             "removed: {:?}",
@@ -994,12 +1191,17 @@ mod tests {
         );
         assert_eq!(hash, graph_hash(&graph));
         let mut variant = graph;
-        variant.nodes[1].params.insert("period".to_string(), serde_json::json!(10));
+        variant.nodes[1]
+            .params
+            .insert("period".to_string(), serde_json::json!(10));
         assert_eq!(
             graph_hash(&variant),
             "sha256:3db5df483db5df483db5df483db5df483db5df483db5df483db5df483db5df48"
         );
-        let other = StrategyGraphShape { driving_interval: 15, ..builtin_template().0 };
+        let other = StrategyGraphShape {
+            driving_interval: 15,
+            ..builtin_template().0
+        };
         assert_ne!(graph_hash(&builtin_template().0), graph_hash(&other));
     }
 

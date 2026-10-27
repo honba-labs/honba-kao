@@ -8,13 +8,15 @@ use leptos::prelude::*;
 #[component]
 pub fn HfKpi(
     label: &'static str,
-    #[prop(optional, into)]
-    delta: String,
-    #[prop(default = true)]
-    up: bool,
+    #[prop(optional, into)] delta: String,
+    #[prop(default = true)] up: bool,
     children: Children,
 ) -> impl IntoView {
-    let delta_class = if up { "kpi__delta up" } else { "kpi__delta down" };
+    let delta_class = if up {
+        "kpi__delta up"
+    } else {
+        "kpi__delta down"
+    };
     let has_delta = !delta.is_empty();
 
     view! {

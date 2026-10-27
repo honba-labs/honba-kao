@@ -71,7 +71,13 @@ fn fixed_uuid(seed: u64) -> Uuid {
     Uuid::from_u64_pair(0, seed)
 }
 
-fn trade(fill_id: &str, side: OrderSide, qty_units: u64, price_rupees: &str, ts_nanos: u64) -> Trade {
+fn trade(
+    fill_id: &str,
+    side: OrderSide,
+    qty_units: u64,
+    price_rupees: &str,
+    ts_nanos: u64,
+) -> Trade {
     Trade::new(
         fill_id,
         format!("BK-1-{ts_nanos}"),
@@ -120,10 +126,10 @@ fn main() {
             status: RunStatus::Completed,
             metrics: Some(BacktestMetrics {
                 trades: 14,
-                net_pnl: Decimal::new(4_523_055, 2),   // 45230.55
-                sharpe: Decimal::new(187, 2),           // 1.87
-                max_drawdown: Decimal::new(621, 4),     // 0.0621
-                total_return: Decimal::new(4523, 4),    // 0.4523
+                net_pnl: Decimal::new(4_523_055, 2), // 45230.55
+                sharpe: Decimal::new(187, 2),        // 1.87
+                max_drawdown: Decimal::new(621, 4),  // 0.0621
+                total_return: Decimal::new(4523, 4), // 0.4523
             }),
             assumptions: Some(serde_json::json!({
                 "not_modelled": ["market impact", "wire-in latency", "stamp duty"]

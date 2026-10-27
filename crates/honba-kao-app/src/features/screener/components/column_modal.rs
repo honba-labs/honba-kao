@@ -12,7 +12,9 @@ use leptos::prelude::*;
 use honba_kao_ui_core::icons::outline::x_close;
 use honba_kao_ui_core::{HfButton, HfIconButton};
 
-use crate::features::screener::stores::columns::{ColumnCategory, ScreenerType, columns_for_screener, preset_for_tab};
+use crate::features::screener::stores::columns::{
+    ColumnCategory, ScreenerType, columns_for_screener, preset_for_tab,
+};
 use crate::features::screener::stores::screener_store::ScreenerStore;
 
 /// Canonical category order for the tab strip (`ColumnCategory` display

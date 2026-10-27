@@ -13,11 +13,7 @@ pub(super) fn group_int(value: i64) -> String {
         }
         out.push(c);
     }
-    if value < 0 {
-        format!("-{out}")
-    } else {
-        out
-    }
+    if value < 0 { format!("-{out}") } else { out }
 }
 
 /// Format paise as rupees with two decimals, e.g. `1425` -> `14.25`.

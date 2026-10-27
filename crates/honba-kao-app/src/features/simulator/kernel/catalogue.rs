@@ -44,9 +44,11 @@ impl ParamDefault {
     pub fn range(&self) -> (Option<f64>, Option<f64>, Option<f64>) {
         match *self {
             ParamDefault::Int(n) if n <= 0 => (None, None, None),
-            ParamDefault::Int(n) => {
-                (Some(1.0), Some((n as f64 * 3.0).max(n as f64 + 1.0)), Some(1.0))
-            }
+            ParamDefault::Int(n) => (
+                Some(1.0),
+                Some((n as f64 * 3.0).max(n as f64 + 1.0)),
+                Some(1.0),
+            ),
             ParamDefault::Float(d) if d <= 0.0 => (Some(0.0), Some(1.0), Some(1.0)),
             ParamDefault::Float(d) => {
                 let step = (d / 10.0 * 1.0e6).round() / 1.0e6;
@@ -105,12 +107,48 @@ type RawSpec = (
 );
 
 const RAW: &[RawSpec] = &[
-    ("sma", "moving_average", &["close"], &["value"], &[("period", ParamDefault::Int(5))]),
-    ("ema", "moving_average", &["close"], &["value"], &[("period", ParamDefault::Int(5))]),
-    ("rma", "moving_average", &["close"], &["value"], &[("period", ParamDefault::Int(14))]),
-    ("wma", "moving_average", &["close"], &["value"], &[("period", ParamDefault::Int(5))]),
-    ("rsi", "momentum", &["close"], &["value"], &[("period", ParamDefault::Int(14))]),
-    ("atr", "volatility", &["high", "low"], &["value"], &[("period", ParamDefault::Int(14))]),
+    (
+        "sma",
+        "moving_average",
+        &["close"],
+        &["value"],
+        &[("period", ParamDefault::Int(5))],
+    ),
+    (
+        "ema",
+        "moving_average",
+        &["close"],
+        &["value"],
+        &[("period", ParamDefault::Int(5))],
+    ),
+    (
+        "rma",
+        "moving_average",
+        &["close"],
+        &["value"],
+        &[("period", ParamDefault::Int(14))],
+    ),
+    (
+        "wma",
+        "moving_average",
+        &["close"],
+        &["value"],
+        &[("period", ParamDefault::Int(5))],
+    ),
+    (
+        "rsi",
+        "momentum",
+        &["close"],
+        &["value"],
+        &[("period", ParamDefault::Int(14))],
+    ),
+    (
+        "atr",
+        "volatility",
+        &["high", "low"],
+        &["value"],
+        &[("period", ParamDefault::Int(14))],
+    ),
     (
         "macd",
         "trend",
@@ -127,7 +165,10 @@ const RAW: &[RawSpec] = &[
         "volatility",
         &["close"],
         &["upper", "middle", "lower"],
-        &[("length", ParamDefault::Int(20)), ("std", ParamDefault::Float(2.0))],
+        &[
+            ("length", ParamDefault::Int(20)),
+            ("std", ParamDefault::Float(2.0)),
+        ],
     ),
     (
         "donchian",
@@ -204,7 +245,10 @@ mod tests {
     fn ranges_follow_the_fe_derivation() {
         let boll = catalogue_lookup("bollinger").expect("bollinger is in the table");
         let length = boll.params.iter().find(|p| p.name == "length").unwrap();
-        assert_eq!(length.default_value.range(), (Some(1.0), Some(60.0), Some(1.0)));
+        assert_eq!(
+            length.default_value.range(),
+            (Some(1.0), Some(60.0), Some(1.0))
+        );
         let std = boll.params.iter().find(|p| p.name == "std").unwrap();
         assert_eq!(std.type_name, "float");
         // `2.0 / 10 → 0.2` exactly divisible, keeps 6 decimals.

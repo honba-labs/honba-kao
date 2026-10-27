@@ -19,11 +19,11 @@
 
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use honba_kao_client::wire::{BacktestRequest, BacktestResponse, RunStatus};
 use honba_kao_client::ClientError;
+use honba_kao_client::wire::{BacktestRequest, BacktestResponse, RunStatus};
 
 /// A boxed future, so client doubles can be type-erased trait objects
 /// (`dyn`-dispatch is what keeps fe's structural client mock viable here).
@@ -141,7 +141,10 @@ pub fn error_line(detail: &honba_kao_client::wire::ErrorDetail) -> String {
 pub fn apply_run_response(state: &SimRunState, response: Option<&BacktestResponse>) -> SimRunState {
     let Some(response) = response else {
         let mut folded = state.clone();
-        push_log(&mut folded, "The server returned no run payload.".to_string());
+        push_log(
+            &mut folded,
+            "The server returned no run payload.".to_string(),
+        );
         return folded;
     };
     let run_id = if response.run_id.is_empty() {
@@ -184,8 +187,10 @@ pub trait RunClient {
         request: &'a BacktestRequest,
     ) -> ClientFut<'a, Result<BacktestResponse, ClientError>>;
     /// `GET /backtests/{id}` — poll the run.
-    fn get_backtest<'a>(&'a self, id: &'a str)
-    -> ClientFut<'a, Result<BacktestResponse, ClientError>>;
+    fn get_backtest<'a>(
+        &'a self,
+        id: &'a str,
+    ) -> ClientFut<'a, Result<BacktestResponse, ClientError>>;
 }
 
 /// The injected sleep (fe's injectable `sleep`); tests fold in an instant
@@ -293,7 +298,11 @@ pub async fn run_backtest<C: RunClient>(
         if is_terminal_status(state.status) || polls >= max_polls {
             break;
         }
-        if options.abort.as_ref().is_some_and(|abort| abort.is_aborted()) {
+        if options
+            .abort
+            .as_ref()
+            .is_some_and(|abort| abort.is_aborted())
+        {
             state = emit(options, apply_run_error(&state, "run aborted"));
             break;
         }
@@ -432,11 +441,23 @@ mod tests {
     #[test]
     fn folds_pending_and_running_into_running() {
         assert_eq!(fold_status(None), SimRunStatus::Idle);
-        assert_eq!(fold_status(Some(&RunStatus::Pending)), SimRunStatus::Running);
-        assert_eq!(fold_status(Some(&RunStatus::Running)), SimRunStatus::Running);
-        assert_eq!(fold_status(Some(&RunStatus::Completed)), SimRunStatus::Completed);
+        assert_eq!(
+            fold_status(Some(&RunStatus::Pending)),
+            SimRunStatus::Running
+        );
+        assert_eq!(
+            fold_status(Some(&RunStatus::Running)),
+            SimRunStatus::Running
+        );
+        assert_eq!(
+            fold_status(Some(&RunStatus::Completed)),
+            SimRunStatus::Completed
+        );
         assert_eq!(fold_status(Some(&RunStatus::Failed)), SimRunStatus::Failed);
-        assert_eq!(fold_status(Some(&RunStatus::Cancelled)), SimRunStatus::Cancelled);
+        assert_eq!(
+            fold_status(Some(&RunStatus::Cancelled)),
+            SimRunStatus::Cancelled
+        );
     }
 
     #[test]
@@ -461,9 +482,7 @@ mod tests {
             vec![running_response("r1"), completed_response("r1")],
         );
         let mut run_options = options();
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Completed);
         assert_eq!(state.run_id.as_deref(), Some("r1"));
         assert_eq!(state.error, None);
@@ -480,9 +499,7 @@ mod tests {
     fn a_submit_answer_carrying_a_wire_error_folds_to_failed() {
         let client = QueuedClient::completed(failed_wire_response("r1"), vec![]);
         let mut run_options = options();
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Failed);
         assert_eq!(
             state.error.as_deref(),
@@ -501,9 +518,7 @@ mod tests {
             poll_calls: Cell::new(0),
         };
         let mut run_options = options();
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Failed);
         assert_eq!(state.error.as_deref(), Some("network: down"));
         assert_eq!(state.logs.last().unwrap(), "Run failed: network: down");
@@ -537,9 +552,7 @@ mod tests {
         let client = QueuedClient::completed(running_response("r1"), vec![]);
         let mut run_options = options();
         run_options.max_polls = 2;
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Failed);
         assert_eq!(
             state.error.as_deref(),
@@ -555,9 +568,7 @@ mod tests {
         abort.abort();
         let mut run_options = options();
         run_options.abort = Some(abort);
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Failed);
         assert_eq!(state.error.as_deref(), Some("run aborted"));
         assert_eq!(client.poll_calls.get(), 0);
@@ -567,33 +578,26 @@ mod tests {
     fn a_terminal_submit_skips_the_poll_loop() {
         let client = QueuedClient::completed(completed_response("r1"), vec![]);
         let mut run_options = options();
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         assert_eq!(state.status, SimRunStatus::Completed);
         assert_eq!(client.poll_calls.get(), 0);
     }
 
     #[test]
     fn on_update_sees_every_transition() {
-        let client = QueuedClient::completed(
-            running_response("r1"),
-            vec![completed_response("r1")],
-        );
+        let client =
+            QueuedClient::completed(running_response("r1"), vec![completed_response("r1")]);
         // `seen` before `run_options`: the on-update closure borrows it, and
         // reverse drop order keeps the borrow valid until the options drop.
         let seen: RefCell<Vec<SimRunStatus>> = RefCell::new(Vec::new());
         let mut run_options = options();
         {
             let seen = &seen;
-            run_options.on_update =
-                Some(Box::new(move |state: &SimRunState| {
-                    seen.borrow_mut().push(state.status)
-                }));
+            run_options.on_update = Some(Box::new(move |state: &SimRunState| {
+                seen.borrow_mut().push(state.status)
+            }));
         }
-        let state = block_on(async {
-            run_backtest(&client, &request(), &mut run_options).await
-        });
+        let state = block_on(async { run_backtest(&client, &request(), &mut run_options).await });
         drop(state);
         assert_eq!(
             seen.borrow().as_slice(),

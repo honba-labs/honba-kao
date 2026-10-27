@@ -5,8 +5,7 @@
 //! status strip ("All N / Filtered M", shortlist chip, Export CSV).
 
 use honba_kao_ui_core::{
-    HfButton, HfInput, HfSegmentedControl, HfSegmentedControlItem, HfToolbar,
-    HfToolbarSpacer,
+    HfButton, HfInput, HfSegmentedControl, HfSegmentedControlItem, HfToolbar, HfToolbarSpacer,
 };
 use leptos::prelude::*;
 

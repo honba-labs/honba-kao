@@ -5,8 +5,7 @@ use leptos::prelude::*;
 /// HfTabs — tab container managing active state.
 #[component]
 pub fn HfTabs(
-    #[prop(optional)]
-    default_value: Option<&'static str>,
+    #[prop(optional)] default_value: Option<&'static str>,
     children: Children,
 ) -> impl IntoView {
     let default_value = default_value.unwrap_or("");
@@ -21,11 +20,7 @@ pub fn HfTabs(
 
 /// HfTabsList — the list of tab triggers.
 #[component]
-pub fn HfTabsList(
-    #[prop(optional, into)]
-    class: String,
-    children: Children,
-) -> impl IntoView {
+pub fn HfTabsList(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
     view! {
         <div class=format!("hf-tabs__list {class}").trim().to_string() role="tablist">
             {children()}
@@ -37,10 +32,8 @@ pub fn HfTabsList(
 #[component]
 pub fn HfTabsTrigger(
     value: &'static str,
-    #[prop(optional)]
-    on_click: Option<Callback<web_sys::MouseEvent>>,
-    #[prop(optional, into)]
-    _class: String,
+    #[prop(optional)] on_click: Option<Callback<web_sys::MouseEvent>>,
+    #[prop(optional, into)] _class: String,
     children: Children,
 ) -> impl IntoView {
     let parent_active = leptos::prelude::use_context::<leptos::prelude::RwSignal<String>>()
@@ -70,8 +63,7 @@ pub fn HfTabsTrigger(
 #[component]
 pub fn HfTabsContent(
     value: &'static str,
-    #[prop(optional, into)]
-    _class: String,
+    #[prop(optional, into)] _class: String,
     children: Children,
 ) -> impl IntoView {
     let parent_active = leptos::prelude::use_context::<leptos::prelude::RwSignal<String>>()

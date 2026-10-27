@@ -3,11 +3,7 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn HfCard(
-    #[prop(default = "")]
-    title: &'static str,
-    children: Children,
-) -> impl IntoView {
+pub fn HfCard(#[prop(default = "")] title: &'static str, children: Children) -> impl IntoView {
     view! {
         <section class="card">
             {(!title.is_empty()).then(|| view! {

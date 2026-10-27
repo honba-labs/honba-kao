@@ -16,7 +16,9 @@
 
 use serde_json::Value;
 
-use crate::features::simulator::kernel::selection::{StrategyGraphEdge, StrategyGraphNode, StrategyGraphShape};
+use crate::features::simulator::kernel::selection::{
+    StrategyGraphEdge, StrategyGraphNode, StrategyGraphShape,
+};
 
 /// The marker line above the builder block (fe grammar).
 pub const GRAPH_MARKER: &str = "# honba:strategy-graph:v1";
@@ -78,7 +80,11 @@ pub fn py_literal(value: &Value) -> String {
             format!(
                 "{{{}}}",
                 keys.iter()
-                    .map(|key| format!("{}: {}", py_literal(&Value::from(key.as_str())), py_literal(&dict[*key])))
+                    .map(|key| format!(
+                        "{}: {}",
+                        py_literal(&Value::from(key.as_str())),
+                        py_literal(&dict[*key])
+                    ))
                     .collect::<Vec<_>>()
                     .join(", ")
             )
@@ -118,7 +124,11 @@ pub fn to_class_name(name: &str) -> String {
             }
         })
         .collect();
-    let ident = if ident.is_empty() { "StrategyGraph".to_string() } else { ident };
+    let ident = if ident.is_empty() {
+        "StrategyGraph".to_string()
+    } else {
+        ident
+    };
     if ident.starts_with(|ch: char| ch.is_ascii_digit()) {
         format!("S{ident}")
     } else {
@@ -130,9 +140,19 @@ pub fn to_class_name(name: &str) -> String {
 pub fn to_ident(text: &str) -> String {
     let ident: String = text
         .chars()
-        .map(|ch| if ch.is_ascii_alphanumeric() || ch == '_' { ch } else { '_' })
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '_' {
+                ch
+            } else {
+                '_'
+            }
+        })
         .collect();
-    let ident = if ident.is_empty() { "n".to_string() } else { ident };
+    let ident = if ident.is_empty() {
+        "n".to_string()
+    } else {
+        ident
+    };
     if ident.starts_with(|ch: char| ch.is_ascii_digit()) {
         format!("n_{ident}")
     } else {
@@ -274,7 +294,10 @@ fn order_lines(graph: &StrategyGraphShape, node_id: &str) -> Vec<String> {
     let method = if side == "buy" { "buy" } else { "sell" };
     vec![
         format!("        if {signal}:"),
-        format!("            self.{method}(bar.instrument_id, {qty}, reason={})", json_escape(&label)),
+        format!(
+            "            self.{method}(bar.instrument_id, {qty}, reason={})",
+            json_escape(&label)
+        ),
     ]
 }
 
@@ -291,9 +314,9 @@ fn on_bar_body(graph: &StrategyGraphShape) -> Vec<String> {
         match node.node_type.as_str() {
             "universe" => {}
             "indicator" => lines.push(format!("        {local} = self._{local}.update_bar(bar)")),
-            "benchmark" => {
-                lines.push(format!("        {local} = None  # benchmark series is not modelled yet"))
-            }
+            "benchmark" => lines.push(format!(
+                "        {local} = None  # benchmark series is not modelled yet"
+            )),
             "condition" => lines.extend(condition_lines(graph, &node.id, &local)),
             "logic" => lines.extend(logic_lines(graph, &node.id, &local)),
             "sizing" => lines.push(format!(
@@ -311,9 +334,10 @@ fn on_bar_body(graph: &StrategyGraphShape) -> Vec<String> {
                 incoming_ident(graph, &node.id, "input").unwrap_or_else(|| "None".to_string()),
                 json_escape(&display)
             )),
-            "schedule" => {
-                lines.push(format!("        {local} = True  # schedule: {}", json_escape(&display)))
-            }
+            "schedule" => lines.push(format!(
+                "        {local} = True  # schedule: {}",
+                json_escape(&display)
+            )),
             _ => {}
         }
     }
@@ -359,7 +383,9 @@ pub fn generate_code(graph: &StrategyGraphShape, graph_hash: &str) -> String {
     let klass = to_class_name(&graph.name);
     let layout = parameter_layout(graph);
     let mut out: Vec<String> = Vec::new();
-    out.push(format!("\"\"\"{klass}: generated from a Honba StrategyGraph (schema_version 1)."));
+    out.push(format!(
+        "\"\"\"{klass}: generated from a Honba StrategyGraph (schema_version 1)."
+    ));
     out.push(String::new());
     out.push("DO NOT EDIT by hand: regenerate the strategy from the graph instead.".to_string());
     out.push("\"\"\"".to_string());
@@ -367,19 +393,18 @@ pub fn generate_code(graph: &StrategyGraphShape, graph_hash: &str) -> String {
     out.push(GRAPH_MARKER.to_string());
     out.push("from __future__ import annotations".to_string());
     out.push(String::new());
-    out.push(
-        "from honba.strategies.base import Parameter, Strategy".to_string(),
-    );
-    out.push(
-        "from honba.strategies.indicators import build_indicator".to_string(),
-    );
+    out.push("from honba.strategies.base import Parameter, Strategy".to_string());
+    out.push("from honba.strategies.indicators import build_indicator".to_string());
     out.push("from honba.strategies import graph as _graph".to_string());
     out.push(String::new());
     out.push(format!("GRAPH_HASH = {}", json_escape(graph_hash)));
     out.push(String::new());
     out.push("GRAPH = (".to_string());
     out.push("    _graph.StrategyGraph.build(".to_string());
-    out.push(format!("        name={},", py_literal(&Value::from(graph.name.as_str()))));
+    out.push(format!(
+        "        name={},",
+        py_literal(&Value::from(graph.name.as_str()))
+    ));
     out.push(format!(
         "        universe={},",
         py_literal(&universe_value(graph))
@@ -388,21 +413,28 @@ pub fn generate_code(graph: &StrategyGraphShape, graph_hash: &str) -> String {
         "        driving_timeframe={},",
         py_literal(&driving_timeframe_value(graph))
     ));
-    out.push(format!("        warmup_bars={},", py_literal(&Value::from(graph.warmup_bars))));
+    out.push(format!(
+        "        warmup_bars={},",
+        py_literal(&Value::from(graph.warmup_bars))
+    ));
     out.push("    )".to_string());
-    out.push(
-        "    .with_subscriptions(quotes=False, trades=False)".to_string(),
-    );
+    out.push("    .with_subscriptions(quotes=False, trades=False)".to_string());
     for node in &graph.nodes {
         let mut parts: Vec<String> = vec![
             format!("id={}", py_literal(&Value::from(node.id.as_str()))),
             format!("type={}", py_literal(&Value::from(node.node_type.as_str()))),
         ];
         if let Some(label) = &node.label {
-            parts.push(format!("label={}", py_literal(&Value::from(label.as_str()))));
+            parts.push(format!(
+                "label={}",
+                py_literal(&Value::from(label.as_str()))
+            ));
         }
         if let Some(indicator) = &node.indicator {
-            parts.push(format!("indicator={}", py_literal(&Value::from(indicator.as_str()))));
+            parts.push(format!(
+                "indicator={}",
+                py_literal(&Value::from(indicator.as_str()))
+            ));
         }
         if !node.params.is_empty() {
             let params: serde_json::Map<String, Value> = node.params.clone().into_iter().collect();
@@ -425,12 +457,21 @@ pub fn generate_code(graph: &StrategyGraphShape, graph_hash: &str) -> String {
     out.push(String::new());
     out.push(GENERATED_MARKER.to_string());
     out.push(format!("class {klass}(Strategy):"));
-    out.push(format!("    name = {}", py_literal(&Value::from(graph.name.as_str()))));
-    out.push(format!("    warmup_bars = {}", py_literal(&Value::from(graph.warmup_bars))));
+    out.push(format!(
+        "    name = {}",
+        py_literal(&Value::from(graph.name.as_str()))
+    ));
+    out.push(format!(
+        "    warmup_bars = {}",
+        py_literal(&Value::from(graph.warmup_bars))
+    ));
     let indicators = indicator_nodes(graph);
     for (path, spelling) in &layout {
         let (node_id, pname) = path.split_once('.').expect("layout path");
-        let node = indicators.iter().find(|n| n.id == node_id).expect("layout node");
+        let node = indicators
+            .iter()
+            .find(|n| n.id == node_id)
+            .expect("layout node");
         let value = node.params.get(pname).expect("layout param");
         out.push(format!(
             "    {spelling} = Parameter(default={}, description={})",
@@ -602,7 +643,11 @@ fn split_args(text: &str) -> Option<Vec<(String, Value)>> {
         // isolate it up to the separating `=` instead of parsing it as one.
         let eq = rest.find('=')?;
         let key = rest[..eq].trim();
-        if key.is_empty() || !key.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '_') {
+        if key.is_empty()
+            || !key
+                .chars()
+                .all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
+        {
             return None;
         }
         let key = key.to_string();
@@ -623,7 +668,9 @@ fn apply_universe(graph: &mut StrategyGraphShape, value: &Value) {
             for item in items {
                 let symbol = item.get("symbol").and_then(Value::as_str).unwrap_or("");
                 let exchange = item.get("exchange").and_then(Value::as_str).unwrap_or("");
-                graph.universe_explicit.push((symbol.to_string(), exchange.to_string()));
+                graph
+                    .universe_explicit
+                    .push((symbol.to_string(), exchange.to_string()));
             }
         }
     }
@@ -701,7 +748,9 @@ pub fn recognize(source: &str) -> Recognition {
     let mut in_build_call = false;
 
     let arg = |args: &[(String, Value)], name: &str| -> Option<Value> {
-        args.iter().find(|(key, _)| key == name).map(|(_, value)| value.clone())
+        args.iter()
+            .find(|(key, _)| key == name)
+            .map(|(_, value)| value.clone())
     };
 
     while index < lines.len() {
@@ -733,7 +782,10 @@ pub fn recognize(source: &str) -> Recognition {
                 {
                     (split_args(inner.trim_end_matches(')')), "edge")
                 } else {
-                    (split_args(trimmed.trim_end_matches(',').trim_end_matches(')')), "kw")
+                    (
+                        split_args(trimmed.trim_end_matches(',').trim_end_matches(')')),
+                        "kw",
+                    )
                 };
             if let Some(args) = maybe_args {
                 match kind {
@@ -876,11 +928,7 @@ mod tests {
         let graph = builtin_template().0;
         let code = generate_code(&graph, "sha256:x");
         // A hand edit: fast period 5 → 7, exactly the panel's edit shape.
-        let edited = code.replacen(
-            "params={\"period\": 5}",
-            "params={\"period\": 7}",
-            1,
-        );
+        let edited = code.replacen("params={\"period\": 5}", "params={\"period\": 7}", 1);
         assert_ne!(edited, code, "the edit must change the source");
         let recognition = recognize(&edited);
         let recovered = recognition.graph.expect("edited code still recognizes");
@@ -917,10 +965,15 @@ mod tests {
         assert_eq!(py_literal(&serde_json::json!(2.0)), "2");
         assert_eq!(py_literal(&serde_json::json!(0.5)), "0.5");
         assert_eq!(py_literal(&serde_json::json!("a\"b")), "\"a\\\"b\"");
-        let dict: serde_json::Map<String, Value> =
-            serde_json::json!({"period": 5, "kind": "sma"}).as_object().expect("obj").clone();
+        let dict: serde_json::Map<String, Value> = serde_json::json!({"period": 5, "kind": "sma"})
+            .as_object()
+            .expect("obj")
+            .clone();
         // Dict keys print sorted, exactly like fe's literal().
-        assert_eq!(py_literal(&Value::Object(dict)), "{\"kind\": \"sma\", \"period\": 5}");
+        assert_eq!(
+            py_literal(&Value::Object(dict)),
+            "{\"kind\": \"sma\", \"period\": 5}"
+        );
     }
 
     #[test]

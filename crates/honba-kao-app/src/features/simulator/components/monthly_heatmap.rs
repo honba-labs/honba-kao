@@ -30,7 +30,11 @@ fn cell_background(return_pct: Option<f64>, max_abs: f64) -> String {
     let intensity = (pct.abs() / max_abs).min(1.0);
     // 12% .. 80% as an integer percent for color-mix.
     let alpha = (0.12 + intensity * 0.68) * 100.0;
-    let token = if pct >= 0.0 { "var(--pnl-gain)" } else { "var(--pnl-loss)" };
+    let token = if pct >= 0.0 {
+        "var(--pnl-gain)"
+    } else {
+        "var(--pnl-loss)"
+    };
     format!("color-mix(in srgb, {token} {alpha:.0}%, transparent)")
 }
 
@@ -42,7 +46,13 @@ fn cell_text(return_pct: Option<f64>, has_cell: bool) -> String {
     }
     return_pct.map_or_else(
         || "·".to_string(),
-        |value| format!("{}{:.1}%", if value > 0.0 { "+" } else { "" }, value * 100.0),
+        |value| {
+            format!(
+                "{}{:.1}%",
+                if value > 0.0 { "+" } else { "" },
+                value * 100.0
+            )
+        },
     )
 }
 
@@ -208,10 +218,7 @@ mod tests {
         assert_eq!(max, "color-mix(in srgb, var(--pnl-gain) 80%, transparent)");
         // Half-intensity losses land mid-scale.
         let mid = cell_background(Some(-0.01), 0.04);
-        assert_eq!(
-            mid,
-            "color-mix(in srgb, var(--pnl-loss) 29%, transparent)"
-        );
+        assert_eq!(mid, "color-mix(in srgb, var(--pnl-loss) 29%, transparent)");
     }
 
     #[test]
