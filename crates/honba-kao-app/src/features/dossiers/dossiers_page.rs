@@ -1,8 +1,18 @@
 //! Research Dossiers page (Phase 2.5) — a single dossier with its thesis,
 //! tagged evidence claims, revision history and a shareable-snapshot toggle.
 //!
-//! All content is hardcoded mock data. There is no persistence or backend, and
-//! the snapshot link is a placeholder string that is never generated server side.
+//! All content on this page is hardcoded mock data, including the evidence
+//! quotes below. Unlike the Filings tab (`features::security_hub::filings_tab`,
+//! which now runs real citation lookups via `shared::filings::search`), this
+//! page's thesis is about Titan Company, a jewellery retailer with no
+//! corresponding document in the small checked-in sample corpus (which only
+//! covers Reliance, Infosys and TCS) — so wiring it to that module would
+//! either require fabricating a fourth company's filing text or produce
+//! nonsense matches. Left as pure mock for now; see honba-nou#1 /
+//! honba-data#1 / honba-tamashii#1 on GitHub for the tracked work on a real
+//! ingestion + retrieval backend that would eventually cover this page too.
+//! There is also no persistence or backend, and the snapshot link is a
+//! placeholder string that is never generated server side.
 
 use honba_kao_ui_core::{
     HfButton, HfKpi, HfPageHeader, HfPanel, HfPanelHeader, HfTable, HfTableBody, HfTableCell,

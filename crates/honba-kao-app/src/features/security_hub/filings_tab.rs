@@ -1,10 +1,20 @@
 //! Filings Intelligence tab (Phase 2.4) — scored growth/headwind drivers with
 //! verbatim quotes, an "Ask the Filings" QA panel and a guidance tracker.
 //!
-//! All content is hardcoded mock data. There is no RAG or filings backend yet;
-//! the QA panel shows a canned answer for any question. Scores are signed
-//! integers carried as display strings so the mock holds no floating-point values.
+//! Driver *labels and scores* below are a small hand-authored sample list —
+//! a real RAG-driven driver-scoring model is out of scope for this crate.
+//! The *citation* attached to each driver, and the answer shown by "Ask the
+//! Filings", are both real results of running `shared::filings::search`
+//! against a small checked-in sample document corpus (see
+//! `crate::shared::filings`): genuine exact/fuzzy keyword search returning a
+//! verbatim quote, document name, and page number — not a hardcoded
+//! citation string or canned answer map. This is a lightweight local demo
+//! mechanism, not a production RAG pipeline; the guidance tracker numbers
+//! below remain illustrative sample data. See honba-nou#1 / honba-data#1 /
+//! honba-tamashii#1 on GitHub for the tracked work to replace this with a
+//! real ingestion + retrieval backend.
 
+use crate::shared::filings::{self, Citation};
 use honba_kao_ui_core::{
     HfButton, HfInput, HfPanel, HfPanelHeader, HfTable, HfTableBody, HfTableCell, HfTableHeader,
     HfTableHeaderCell, HfTableRow,
@@ -15,38 +25,29 @@ struct Driver {
     score: &'static str,
     gain: bool,
     title: &'static str,
-    quote: &'static str,
-    source: &'static str,
+    /// Keywords passed to `filings::search` to look up this driver's
+    /// verbatim citation at render time.
+    search_query: &'static str,
 }
 
 const GROWTH_ENGINES: &[Driver] = &[
     Driver {
         score: "+85",
         gain: true,
-        title: "Premium segment volume compounding double digits",
-        quote: "Premium product volumes grew 17% year on year, with mix improving for a fifth consecutive quarter.",
-        source: "Q1 FY26 Report, p.14",
+        title: "Jio ARPU expansion on premium plan mix",
+        search_query: "Jio ARPU premium postpaid True-5G",
     },
     Driver {
         score: "+72",
         gain: true,
-        title: "Digital channel now a meaningful revenue contributor",
-        quote: "Digital channels contributed 22% of gross revenue, up from 15% in the prior year.",
-        source: "Q1 FY26 Earnings Call, p.6",
+        title: "Infosys digital revenue now the majority of the book",
+        search_query: "digital revenue large deal total contract value",
     },
     Driver {
         score: "+61",
         gain: true,
-        title: "Capacity expansion commissioned ahead of schedule",
-        quote: "The second line was commissioned two months ahead of plan and is already running at 80% utilisation.",
-        source: "FY25 Annual Report, p.31",
-    },
-    Driver {
-        score: "+48",
-        gain: true,
-        title: "Export order book widening into EU markets",
-        quote: "Order inflows from European customers rose sharply, with three new multi-year supply agreements signed.",
-        source: "Q4 FY25 Investor Presentation, p.9",
+        title: "TCS order book led by cloud and cybersecurity demand",
+        search_query: "order book cloud migration cybersecurity bookings",
     },
 ];
 
@@ -54,23 +55,20 @@ const HEADWINDS: &[Driver] = &[
     Driver {
         score: "-45",
         gain: false,
-        title: "Raw material cost pressure on gross margin",
-        quote: "Gross margin contracted 140 bps as crude-linked feedstock costs were only partially passed through to customers.",
-        source: "Q1 FY26 Report, p.16",
+        title: "O2C margin pressure from crude-linked feedstock costs",
+        search_query: "feedstock costs margin finance costs borrowings",
     },
     Driver {
         score: "-38",
         gain: false,
-        title: "Rising finance cost from debt-funded capex",
-        quote: "Finance costs increased 24% on higher average borrowings to fund the new capacity build-out.",
-        source: "Q1 FY26 Report, p.19",
+        title: "BFSI discretionary spend still muted for Infosys",
+        search_query: "discretionary spending BFSI cost takeout attrition",
     },
     Driver {
         score: "-29",
         gain: false,
-        title: "Contingent liability under tax dispute",
-        quote: "The company has disclosed a contingent liability of INR 412 crore pending appeal before the appellate tribunal.",
-        source: "FY25 Annual Report, p.158",
+        title: "TCS contingent liability under service tax dispute",
+        search_query: "contingent liability service tax appellate tribunal",
     },
 ];
 
@@ -80,6 +78,9 @@ struct GuidanceRow {
     actual: &'static str,
 }
 
+/// Illustrative sample guidance-vs-actual numbers; not sourced from the
+/// filings corpus above (guidance tracking is out of scope for the search
+/// module — it is not a verbatim-quote claim).
 const GUIDANCE: &[GuidanceRow] = &[
     GuidanceRow {
         quarter: "Q4 FY25",
@@ -98,9 +99,26 @@ const GUIDANCE: &[GuidanceRow] = &[
     },
 ];
 
-const MOCK_ANSWER: &str = "Management attributes the premium volume growth to mix shift toward higher-margin SKUs, \
-     while raw material pass-through remains the main margin risk for the next two quarters.";
-const MOCK_CITATION: &str = "Q1 FY26 Report, p.14";
+/// Renders a resolved citation as a verbatim blockquote + source line, or an
+/// honest "no match" state when `filings::search` found nothing.
+#[component]
+fn CitationBlock(citation: Option<Citation>) -> impl IntoView {
+    match citation {
+        Some(c) => view! {
+            <>
+                <blockquote class="filings-tab__quote">{c.quote.clone()}</blockquote>
+                <span class="filings-tab__source">{format!("{}, p.{}", c.document, c.page_number)}</span>
+            </>
+        }
+        .into_any(),
+        None => view! {
+            <span class="filings-tab__source filings-tab__source--missing">
+                "No verbatim match found in the sample filings corpus."
+            </span>
+        }
+        .into_any(),
+    }
+}
 
 #[component]
 fn DriverCard(driver: &'static Driver) -> impl IntoView {
@@ -109,14 +127,16 @@ fn DriverCard(driver: &'static Driver) -> impl IntoView {
     } else {
         "filings-tab__score filings-tab__score--loss tnum"
     };
+    // Real lookup: the quote and page number rendered below come straight
+    // out of `filings::search`, not a literal string in this component.
+    let citation = filings::search(driver.search_query);
     view! {
         <HfPanel class="filings-tab__card">
             <div class="filings-tab__card-head">
                 <span class=score_class>{driver.score}</span>
                 <span class="filings-tab__card-title">{driver.title}</span>
             </div>
-            <blockquote class="filings-tab__quote">{driver.quote}</blockquote>
-            <span class="filings-tab__source">{driver.source}</span>
+            <CitationBlock citation=citation />
         </HfPanel>
     }
 }
@@ -128,7 +148,9 @@ pub fn FilingsTab() -> impl IntoView {
 
     view! {
         <div class="filings-tab">
-            <p class="placeholder__note">"Mock data · no filings backend connected"</p>
+            <p class="placeholder__note">
+                "Driver scores are a hand-authored sample list · citations and QA answers are real lookups against a small checked-in sample document corpus — not a production RAG pipeline"
+            </p>
 
             <section class="filings-tab__section">
                 <h3 class="filings-tab__heading">"Growth Engines"</h3>
@@ -170,16 +192,19 @@ pub fn FilingsTab() -> impl IntoView {
                     asked
                         .get()
                         .map(|q| {
-                            let q = if q.trim().is_empty() {
+                            let display_q = if q.trim().is_empty() {
                                 "(no question entered)".to_string()
                             } else {
-                                q
+                                q.clone()
                             };
+                            // Real query: runs the typed question straight through
+                            // `filings::search`, so the answer below is whatever that
+                            // function actually finds (or a genuine "no match").
+                            let result = filings::search(&q);
                             view! {
                                 <div class="filings-tab__answer">
-                                    <span class="filings-tab__answer-q">{q}</span>
-                                    <p class="filings-tab__answer-text">{MOCK_ANSWER}</p>
-                                    <span class="filings-tab__source">{MOCK_CITATION}</span>
+                                    <span class="filings-tab__answer-q">{display_q}</span>
+                                    <CitationBlock citation=result />
                                 </div>
                             }
                         })

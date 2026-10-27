@@ -7,6 +7,8 @@
 //!   types, translations.
 //! * [`contexts`] — auth, language and confirm-dialog providers.
 //! * [`data`] — shared sample data.
+//! * [`filings`] — real exact-match citation search over a small checked-in
+//!   sample filings corpus (not a production RAG pipeline).
 //! * [`hooks`] — reusable reactive helpers.
 //! * [`stores`] — app-wide reactive stores (trading mode).
 //! * [`theme`] — palette tokens and the theme store.
@@ -18,6 +20,7 @@ pub mod components;
 pub mod constants;
 pub mod contexts;
 pub mod data;
+pub mod filings;
 pub mod hooks;
 pub mod i18n;
 pub mod stores;
