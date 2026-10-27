@@ -15,20 +15,27 @@ use leptos_router::components::{Outlet, ParentRoute, Redirect, Route, Routes};
 use leptos_router::hooks::use_location;
 use leptos_router::path;
 
-use crate::shared::contexts::use_auth;
 use crate::features::account::{FundsPage, SettingsPage};
 use crate::features::auth::{LoginPage, RegisterPage, ResetPasswordPage, SetupPage};
-use crate::features::chart_workstation::ChartWorkstationPage;
-use crate::features::dossiers::DossiersPage;
+use crate::features::backtesting::backtesting_page::BacktestingDeckPage;
+use crate::features::backtesting::BacktestingPage;
 use crate::features::dom::DomPage;
+use crate::features::dossiers::DossiersPage;
 use crate::features::fno::{
     FlowPage, FuturesPage, GreeksHeatmapPage, OiPage, OptionChainPage, OptionGreeksPage,
     StrategyBuilderPage,
 };
 use crate::features::landing::LandingPage;
 use crate::features::launchpad::{LaunchpadPage, PopoutPage};
+use crate::features::model_lab::model_lab_page::ModelLabPageContent;
+use crate::features::model_lab::ModelLabPage;
 use crate::features::mta::MtaPage;
 use crate::features::portfolio::PortfolioPage;
+use crate::features::portfolio_lab::PortfolioLabPage;
+use crate::features::stat_lab::StatLabPage;
+use crate::features::stat_lab::stat_lab_page::StatLabPageContent;
+use crate::features::pair_trading::PairTradingPage;
+use crate::features::pair_trading::pair_trading_page::PairTradingPageContent;
 use crate::features::screener::ScreenerPage;
 use crate::features::security_hub::SecurityHubPage;
 use crate::features::simulator::SimulatorPage;
@@ -37,7 +44,8 @@ use crate::features::tape::TapePage;
 use crate::features::tradebook::TradebookPage;
 use crate::features::workbench::WorkbenchPage;
 use crate::router::app_chrome::AppChrome;
-use crate::router::paths::{Page, ROUTES, get_current_page_for_path};
+use crate::router::paths::{get_current_page_for_path, Page, ROUTES};
+use crate::shared::contexts::use_auth;
 
 #[component]
 pub fn AppRoutes() -> impl IntoView {
@@ -74,6 +82,18 @@ pub fn AppRoutes() -> impl IntoView {
                 <Route path=path!("/workbench") view=WorkbenchPage />
                 <Route path=path!("/strategy") view=StrategyStudioPage />
                 <Route path=path!("/simulator") view=SimulatorPage />
+                // Phase 5: Quant Suite
+                <Route path=path!("/backtesting") view=BacktestingPage />
+                <Route path=path!("/backtesting/deck") view=BacktestingDeckPage />
+                <Route path=path!("/backtesting/model-lab") view=ModelLabPage />
+                <Route path=path!("/backtesting/model-governance") view=ModelLabPage />
+                <Route path=path!("/equity/portfolio/lab") view=PortfolioLabPage />
+                <Route path=path!("/equity/portfolio/optimizer") view=PortfolioLabPage />
+                    // Phase 5.6: Statistical & Pair Trading Labs
+                    <Route path=path!("/equity/stat-lab") view=StatLabPage />
+                    <Route path=path!("/equity/stat-lab/details") view=StatLabPageContent />
+                    <Route path=path!("/equity/pair-trading") view=PairTradingPage />
+                    <Route path=path!("/equity/pair-trading/details") view=PairTradingPageContent />
                 <Route path=path!("/tradebook") view=TradebookPage />
 
                 // --- User cluster -------------------------------------------

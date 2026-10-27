@@ -50,6 +50,12 @@ pub mod routes {
     pub const LAUNCHPAD: &str = "/equity/launchpad";
     /// Launchpad pop-out window (Phase 4.5) — `?panel=<slug>`, outside the shell.
     pub const LAUNCHPAD_POPOUT: &str = "/equity/launchpad/popout";
+    /// Backtesting Deck (Phase 5.1) — strategy templates, runner, and analytics.
+    pub const BACKTESTING: &str = "/backtesting";
+    /// Model Lab (Phase 5.4) — experiment registry and leaderboard.
+    pub const MODEL_LAB: &str = "/backtesting/model-lab";
+    /// Portfolio Lab & Optimizer (Phase 5.5) — strategy blending and optimization.
+    pub const PORTFOLIO_LAB: &str = "/equity/portfolio/lab";
     pub const WORKBENCH: &str = "/workbench";
     pub const STRATEGY: &str = "/strategy";
     pub const SIMULATOR: &str = "/simulator";
@@ -86,6 +92,9 @@ pub enum Page {
     Strategy,
     Simulator,
     Tradebook,
+    Backtesting,
+    ModelLab,
+    PortfolioLab,
     Settings,
     Funds,
     Login,
@@ -116,6 +125,9 @@ impl Page {
             Page::Workbench => "workbench",
             Page::Strategy => "strategy",
             Page::Simulator => "simulator",
+            Page::Backtesting => "backtesting",
+            Page::ModelLab => "model_lab",
+            Page::PortfolioLab => "portfolio_lab",
             Page::Tradebook => "tradebook",
             Page::Settings => "settings",
             Page::Funds => "funds",
@@ -147,6 +159,9 @@ impl Page {
             Page::Workbench => "Workbench",
             Page::Strategy => "Strategy",
             Page::Simulator => "Simulator",
+            Page::Backtesting => "Backtesting",
+            Page::ModelLab => "Model Lab",
+            Page::PortfolioLab => "Portfolio Lab",
             Page::Tradebook => "Tradebook",
             Page::Settings => "Settings",
             Page::Funds => "Funds",
@@ -181,6 +196,11 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::LAUNCHPAD => Some(Page::Launchpad),
         r if r == ROUTES::STRATEGY => Some(Page::Strategy),
         r if r == ROUTES::SIMULATOR => Some(Page::Simulator),
+        r if r == ROUTES::BACKTESTING => Some(Page::Backtesting),
+        r if r == ROUTES::MODEL_LAB => Some(Page::ModelLab),
+        r if r == ROUTES::PORTFOLIO_LAB || r == ROUTES::PORTFOLIO_OPTIMIZER => {
+            Some(Page::PortfolioLab)
+        }
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
         r if r == ROUTES::SETTINGS => Some(Page::Settings),
         r if r == ROUTES::FUNDS => Some(Page::Funds),

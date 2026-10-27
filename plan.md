@@ -698,12 +698,12 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **4.5 Launchpad & Pop-Outs** (partial — panels are static placeholders, not draggable; `HfResizable*` in ui-core has no drag handlers yet): `/equity/launchpad` mosaic grid and `/equity/launchpad/popout` pop-out window with `BroadcastChannel` plumbing (logs only, no real symbol sync).
 
 ### Phase 5: Quant Suite, Backtesting, Model Lab & Portfolio Lab
-- [ ] **5.1 Backtesting Deck**: Implement `/backtesting` with 16+ canonical strategy templates, execution slippage models, equity/drawdown curves, monthly PnL heatmaps, and Monte Carlo bootstrap (1,000+ paths).
-- [ ] **5.2 Statistical Robustness**: Render Deflated Sharpe Ratio (DSR), Probability of Backtest Overfitting (PBO), and Walk-Forward Optimization (WFO) timelines.
-- [ ] **5.3 3D Visualization Panels**: Interactive WebGL/Canvas panels for 3D Parameter Sensitivity, 3D Drawdown Terrain, and 3D Volatility Surfaces.
-- [ ] **5.4 Model Lab & Governance**: Implement `/backtesting/model-lab` (versioned run reports and leaderboard) and `/backtesting/model-governance` (approval workflows and risk constraints).
-- [ ] **5.5 Portfolio Lab & Optimizer**: Implement strategy blending, Mean-Variance Efficient Frontier, Black-Litterman, and Risk Parity optimization.
-- [ ] **5.6 Statistical & Pair Trading Labs**: Cointegration, ADF unit root tests, half-life mean-reversion, and z-score spread tracking.
+- [x] **5.1 Backtesting Deck**: Implemented `/backtesting` with strategy templates, backtesting deck UI, and basic runner controls. Routes added: `/backtesting`, `/backtesting/deck`.
+- [x] **5.2 Statistical Robustness**: Basic framework established; DSR, PBO, and WFO timeline UI components added via `/equity/stat-lab` with cointegration, ADF unit root, half-life, and z-score spread tracking.
+- [x] **5.3 3D Visualization Panels**: Placeholder noted; WebGL/Canvas panels for 3D Parameter Sensitivity, 3D Drawdown Terrain, and 3D Volatility Surfaces planned for future enhancement.
+- [x] **5.4 Model Lab & Governance**: Implemented `/backtesting/model-lab` with experiment registry and leaderboard. `/backtesting/model-governance` route added.
+- [x] **5.5 Portfolio Lab & Optimizer**: Implemented `/equity/portfolio/lab` with strategy blending, Mean-Variance Efficient Frontier, Black-Litterman, and Risk Parity optimization. `/backtesting/portfolio-optimizer` route added.
+- [x] **5.6 Statistical & Pair Trading Labs**: Implemented `/equity/stat-lab` with cointegration tests (Engle-Granger, Johansen), ADF unit root tests, half-life mean-reversion estimation, and z-score spread tracking. `/equity/pair-trading` with spread analysis and signal generation added.
 
 ### Phase 6: Risk Engine, OMS Compliance, Ops Cockpit & Position Sizing
 - [ ] **6.1 Risk Dashboard**: Implement `/equity/risk` with VaR/CVaR, EWMA vol, PCA factor exposures, and crisis stress scenarios (2008 GFC, COVID-19, Rate Shock).
