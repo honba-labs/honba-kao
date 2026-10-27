@@ -313,8 +313,8 @@ report → confirm next target):
 - **Milestone 3 (Mission Control Dashboard page / `home_page.rs`)** — DONE;
   `crates/honba-kao-app/src/features/home/home_page.rs` (322 lines) fully
   implements the header ribbon, Market Heat Strip, 2-column grid, and
-  QuickNavGrid launch matrix per plan-1.md §3. Plan checkboxes not yet
-  marked off in `plan-1.md`.
+  QuickNavGrid launch matrix per plan-1.md §3; checkboxes checked off in
+  `plan-1.md`, commit `c0fa887`.
 - **Milestone 4 (Routing, Navigation & Session Policy)** — DONE; all 4
   sub-tasks already implemented and checked off in `plan-1.md`:
   `ROUTES::HOME = "/home"` (`paths.rs:19`), `/home` route inside `AppShell`
