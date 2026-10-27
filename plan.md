@@ -710,10 +710,10 @@ This revised roadmap replaces previous milestones with a sequenced migration to 
 - [x] **6.2 OMS & Pre-Trade Compliance**: Implement `/equity/oms` with pre-trade checks (OTR, circuit filter limits, restricted symbols) and immutable audit log.
 - [x] **6.3 Operations Console**: Implement `/equity/ops` with Trader/Quant/PM/Risk/System desks, emergency kill switches (Panic Sell All, Cancel All Pending, Halt Engine), and feed health monitoring.
 - [x] **6.4 Position Sizer**: Build `/equity/position-sizer` with Fixed Fractional, Kelly Criterion, ATR volatility-adjusted sizing, and R:R calculations directly wired to `honba-core::sizing`.
-- [ ] **6.5 Shadow Account Reconciler**: Implement `/equity/shadow-account` for automated broker statement vs internal book reconciliation and violation reporting.
+- [x] **6.5 Shadow Account Reconciler**: Implement `/equity/shadow-account` for automated broker statement vs internal book reconciliation and violation reporting.
 
 ### Phase 7: AI Research Agent Console, Multi-Agent Debate & MCP Bridge
-- [ ] **7.1 AgentConsole Drawer (`Ctrl+J`)**: Build slide-over dockable drawer with SSE streaming, message threads, and research memory.
+- [x] **7.1 AgentConsole Drawer (`Ctrl+J`)**: Build slide-over dockable drawer with SSE streaming, message threads, and research memory.
 - [ ] **7.2 Multi-Agent Debate**: Orchestrate bull vs bear debate with portfolio manager decision syntheses.
 - [ ] **7.3 Action Proposals**: Render executable cards (paper order, watchlist, alert) requiring explicit user confirmation before dispatching.
 - [ ] **7.4 Grounding & Citations**: Connect filings RAG quotes with verbatim verification directly into agent message cards.
