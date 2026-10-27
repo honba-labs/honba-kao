@@ -38,6 +38,7 @@ use crate::features::pair_trading::PairTradingPage;
 use crate::features::pair_trading::pair_trading_page::PairTradingPageContent;
 use crate::features::screener::ScreenerPage;
 use crate::features::security_hub::SecurityHubPage;
+use crate::features::risk::RiskPage;
 use crate::features::simulator::SimulatorPage;
 use crate::features::strategy_studio::StrategyStudioPage;
 use crate::features::tape::TapePage;
@@ -95,6 +96,8 @@ pub fn AppRoutes() -> impl IntoView {
                     <Route path=path!("/equity/pair-trading") view=PairTradingPage />
                     <Route path=path!("/equity/pair-trading/details") view=PairTradingPageContent />
                 <Route path=path!("/tradebook") view=TradebookPage />
+                // Phase 6: Risk Engine, OMS Compliance, Ops Cockpit & Position Sizing
+                <Route path=path!("/equity/risk") view=RiskPage />
 
                 // --- User cluster -------------------------------------------
                 <Route path=path!("/settings") view=SettingsPage />

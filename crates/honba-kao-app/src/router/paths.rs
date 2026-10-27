@@ -62,6 +62,8 @@ pub mod routes {
     pub const TRADEBOOK: &str = "/tradebook";
     pub const SETTINGS: &str = "/settings";
     pub const FUNDS: &str = "/funds";
+    /// Risk Dashboard (Phase 6.1) — VaR/CVaR, EWMA vol, PCA, stress scenarios.
+    pub const RISK: &str = "/equity/risk";
 }
 
 /// Alias so call sites read `ROUTES::PORTFOLIO`.
@@ -97,6 +99,7 @@ pub enum Page {
     PortfolioLab,
     Settings,
     Funds,
+    Risk,                      // Phase 6.1
     Login,
     Register,
 }
@@ -128,6 +131,7 @@ impl Page {
             Page::Backtesting => "backtesting",
             Page::ModelLab => "model_lab",
             Page::PortfolioLab => "portfolio_lab",
+            Page::Risk => "risk",
             Page::Tradebook => "tradebook",
             Page::Settings => "settings",
             Page::Funds => "funds",
@@ -204,6 +208,7 @@ pub fn get_current_page_for_path(pathname: &str) -> Option<Page> {
         r if r == ROUTES::TRADEBOOK => Some(Page::Tradebook),
         r if r == ROUTES::SETTINGS => Some(Page::Settings),
         r if r == ROUTES::FUNDS => Some(Page::Funds),
+        r if r == ROUTES::RISK => Some(Page::Risk),
         r if r == ROUTES::LOGIN => Some(Page::Login),
         r if r == ROUTES::REGISTER => Some(Page::Register),
         _ => None,
