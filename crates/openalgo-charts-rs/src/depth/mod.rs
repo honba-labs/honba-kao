@@ -4,22 +4,25 @@
 //! price, spread, and click-to-order dispatch (which level a price taps into).
 //! Also emits engine-friendly series for a canvas cumulative-depth chart.
 
+use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::Decimal;
+
 use crate::types::TimeSeriesPoint;
 
 /// A single book level.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DepthLevel {
-    pub price: f64,
-    pub size: f64,
-    pub cumulative_size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
+    pub cumulative_size: Decimal,
     pub order_count: u32,
 }
 
 /// Result of tapping a price on the depth ladder: the level to trade and side.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OrderDispatch {
-    pub price: f64,
-    pub size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
     pub is_bid: bool, // true = hitting a bid (sell), false = lifting an ask (buy)
 }
 
@@ -28,7 +31,7 @@ pub struct OrderDispatch {
 pub struct DepthLadder {
     pub bids: Vec<DepthLevel>, // sorted descending by price
     pub asks: Vec<DepthLevel>, // sorted ascending by price
-    pub mid: Option<f64>,
+    pub mid: Option<Decimal>,
 }
 
 impl DepthLadder {
@@ -36,15 +39,22 @@ impl DepthLadder {
         Self::default()
     }
 
-    pub fn with_bids(mut self, bids: Vec<DepthLevel>) -> Self {
+    /// Sets the bid side. Levels are sorted descending by price (best bid
+    /// first) regardless of input order, so callers do not need to pre-sort.
+    pub fn with_bids(mut self, mut bids: Vec<DepthLevel>) -> Self {
+        bids.sort_by_key(|l| std::cmp::Reverse(l.price));
         self.bids = bids;
         self
     }
-    pub fn with_asks(mut self, asks: Vec<DepthLevel>) -> Self {
+
+    /// Sets the ask side. Levels are sorted ascending by price (best ask
+    /// first) regardless of input order, so callers do not need to pre-sort.
+    pub fn with_asks(mut self, mut asks: Vec<DepthLevel>) -> Self {
+        asks.sort_by_key(|l| l.price);
         self.asks = asks;
         self
     }
-    pub fn with_mid(mut self, mid: f64) -> Self {
+    pub fn with_mid(mut self, mid: Decimal) -> Self {
         self.mid = Some(mid);
         self
     }
@@ -52,12 +62,12 @@ impl DepthLadder {
     /// Recompute running cumulative size on both sides (bids highest-first,
     /// asks lowest-first) so the ladder is display-ready.
     pub fn compute_cumulative(mut self) -> Self {
-        let mut run = 0.0;
+        let mut run = Decimal::ZERO;
         for level in self.bids.iter_mut() {
             run += level.size;
             level.cumulative_size = run;
         }
-        run = 0.0;
+        run = Decimal::ZERO;
         for level in self.asks.iter_mut() {
             run += level.size;
             level.cumulative_size = run;
@@ -66,14 +76,14 @@ impl DepthLadder {
     }
 
     /// Best bid (highest) and best ask (lowest).
-    pub fn top_of_book(&self) -> (Option<f64>, Option<f64>) {
-        let best_bid = self.bids.iter().max_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
-        let best_ask = self.asks.iter().min_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+    pub fn top_of_book(&self) -> (Option<Decimal>, Option<Decimal>) {
+        let best_bid = self.bids.iter().max_by_key(|l| l.price);
+        let best_ask = self.asks.iter().min_by_key(|l| l.price);
         (best_bid.map(|l| l.price), best_ask.map(|l| l.price))
     }
 
     /// Bid-ask spread in absolute terms; `None` when either side is empty.
-    pub fn spread(&self) -> Option<f64> {
+    pub fn spread(&self) -> Option<Decimal> {
         let (bid, ask) = self.top_of_book();
         match (bid, ask) {
             (Some(b), Some(a)) if a > b => Some(a - b),
@@ -82,13 +92,13 @@ impl DepthLadder {
     }
 
     /// Mid-market price: explicit `mid`, else the top-of-book midpoint.
-    pub fn mid_price(&self) -> Option<f64> {
+    pub fn mid_price(&self) -> Option<Decimal> {
         if let Some(m) = self.mid {
             return Some(m);
         }
         let (bid, ask) = self.top_of_book();
         match (bid, ask) {
-            (Some(b), Some(a)) => Some((a + b) / 2.0),
+            (Some(b), Some(a)) => Some((a + b) / Decimal::TWO),
             _ => None,
         }
     }
@@ -97,16 +107,16 @@ impl DepthLadder {
     /// the tapped price — bids when selling (hit bid), asks when buying (lift
     /// ask). Falls back to the top of book (best price on this side) when the
     /// tap lies outside the book; `None` when the side is empty.
-    pub fn dispatch_at(&self, price: f64, is_bid: bool) -> Option<OrderDispatch> {
+    pub fn dispatch_at(&self, price: Decimal, is_bid: bool) -> Option<OrderDispatch> {
         let side = if is_bid { &self.bids } else { &self.asks };
         if side.is_empty() {
             return None;
         }
-        let top_of_book = side.iter().max_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+        let top_of_book = side.iter().max_by_key(|l| l.price);
         let best = side
             .iter()
             .filter(|level| level.price <= price)
-            .max_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+            .max_by_key(|l| l.price);
         let chosen = best.or(top_of_book).unwrap();
         Some(OrderDispatch {
             price: chosen.price,
@@ -120,8 +130,11 @@ impl DepthLadder {
         self.bids
             .iter()
             .map(|l| TimeSeriesPoint {
-                time: (l.price * 100.0).round() as i64,
-                value: l.cumulative_size,
+                time: (l.price * Decimal::ONE_HUNDRED)
+                    .round()
+                    .to_i64()
+                    .unwrap_or_default(),
+                value: l.cumulative_size.to_f64().unwrap_or_default(),
             })
             .collect()
     }
@@ -131,8 +144,11 @@ impl DepthLadder {
         self.asks
             .iter()
             .map(|l| TimeSeriesPoint {
-                time: (l.price * 100.0).round() as i64,
-                value: l.cumulative_size,
+                time: (l.price * Decimal::ONE_HUNDRED)
+                    .round()
+                    .to_i64()
+                    .unwrap_or_default(),
+                value: l.cumulative_size.to_f64().unwrap_or_default(),
             })
             .collect()
     }
