@@ -234,10 +234,10 @@ impl TermStructure {
 // Thin helper so `render` stays on `TermStructure` without importing bridge at
 // crate root in a way that creates a cycle.
 fn bridge_set_series(
-    id: f64,
+    id: u64,
     kind: &str,
     style_json: &str,
     bars_json: &str,
 ) -> Result<bool, JsValue> {
-    crate::canvas::bridge::set_series(id, kind, style_json, bars_json)
+    crate::canvas::bridge::set_series(id as f64, kind, style_json, bars_json)
 }

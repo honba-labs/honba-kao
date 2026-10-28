@@ -72,8 +72,13 @@ impl SeriesStyle {
 }
 
 /// Opaque chart id returned by the engine.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct ChartId(pub f64);
+///
+/// Integer-typed (u64) per the zero-floats invariant: chart ids are opaque
+/// handles returned by `window.honbaCharts.mountStatic`, never fractional
+/// quantities. The wasm/JS bridge marshals them as f64 at the boundary and we
+/// convert here.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ChartId(pub u64);
 
 /// A mounted canvas chart engine.
 pub struct CanvasEngine {
@@ -130,12 +135,12 @@ impl CanvasEngine {
     /// existing chart is destroyed first so it is not leaked.
     pub fn mount(&mut self) -> Result<ChartId, JsValue> {
         if let Some(existing) = self.id.take() {
-            let _ = bridge::destroy(existing.0);
+            let _ = bridge::destroy(existing.0 as f64);
         }
         self.apply_pending();
         let id = bridge::mount_static(&self.element)?;
-        self.id = Some(ChartId(id));
-        Ok(ChartId(id))
+        self.id = Some(ChartId(id as u64));
+        Ok(ChartId(id as u64))
     }
 
     /// Chart id once mounted, `None` otherwise.
@@ -157,7 +162,7 @@ impl CanvasEngine {
             .map_err(|e| JsValue::from_str(&format!("style serialise: {e}")))?;
         let bars_json = serde_json::to_string(data)
             .map_err(|e| JsValue::from_str(&format!("bars serialise: {e}")))?;
-        bridge::set_series(id.0, self.kind.as_str(), &style_json, &bars_json)
+        bridge::set_series(id.0 as f64, self.kind.as_str(), &style_json, &bars_json)
     }
 
     /// Update or append the last bar via `window.honbaCharts.updateLast` — the
@@ -166,21 +171,32 @@ impl CanvasEngine {
         let id = self.id.ok_or_else(|| JsValue::from_str("chart not mounted"))?;
         let bar_json = serde_json::to_string(candle)
             .map_err(|e| JsValue::from_str(&format!("bar serialise: {e}")))?;
-        bridge::update_last(id.0, &bar_json)
+        bridge::update_last(id.0 as f64, &bar_json)
     }
 
     /// Attach a volume histogram overlay to the primary pane.
     pub fn add_volume_overlay(&self) -> Result<bool, JsValue> {
         let id = self.id.ok_or_else(|| JsValue::from_str("chart not mounted"))?;
-        bridge::add_volume_overlay(id.0)
+        bridge::add_volume_overlay(id.0 as f64)
     }
 
     /// Destroy the chart and release its canvases.
-    pub fn destroy(self) -> Result<bool, JsValue> {
-        if let Some(id) = self.id {
-            bridge::destroy(id.0)
+    pub fn destroy(mut self) -> Result<bool, JsValue> {
+        if let Some(id) = self.id.take() {
+            bridge::destroy(id.0 as f64)
         } else {
             Ok(false)
+        }
+    }
+}
+
+impl Drop for CanvasEngine {
+    /// Release the mounted chart on `window.honbaCharts` when the engine is
+    /// dropped without an explicit [`Self::destroy`], so a chart handle is
+    /// never leaked (issue #70). Degrades gracefully off-wasm32.
+    fn drop(&mut self) {
+        if let Some(id) = self.id {
+            let _ = bridge::destroy(id.0 as f64);
         }
     }
 }
