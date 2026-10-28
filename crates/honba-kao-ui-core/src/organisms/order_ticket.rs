@@ -42,7 +42,7 @@ pub fn HfOrderTicket(
             // Side Toggle Tabs
             <div class="hf-side-tabs grid grid-cols-2 gap-1 bg-surface-subtle p-0.5 rounded">
                 <HfButton
-                    class=format!("py-1.5 text-xs font-bold rounded transition-colors {}", if side.get() == "BUY" { "bg-emerald-600 text-white" } else { "text-text-muted" })
+                    class=Signal::derive(move || format!("py-1.5 text-xs font-bold rounded transition-colors {}", if side.get() == "BUY" { "bg-emerald-600 text-white" } else { "text-text-muted" }))
                     variant=ButtonVariant::Ghost
                     size=ButtonSize::Sm
                     on_click=Callback::new(move |_| side.set("BUY".to_string()))
@@ -50,7 +50,7 @@ pub fn HfOrderTicket(
                     "BUY"
                 </HfButton>
                 <HfButton
-                    class=format!("py-1.5 text-xs font-bold rounded transition-colors {}", if side.get() == "SELL" { "bg-rose-600 text-white" } else { "text-text-muted" })
+                    class=Signal::derive(move || format!("py-1.5 text-xs font-bold rounded transition-colors {}", if side.get() == "SELL" { "bg-rose-600 text-white" } else { "text-text-muted" }))
                     variant=ButtonVariant::Ghost
                     size=ButtonSize::Sm
                     on_click=Callback::new(move |_| side.set("SELL".to_string()))
@@ -100,7 +100,7 @@ pub fn HfOrderTicket(
 
             // Order Action Button
             <HfButton
-                class=format!("w-full py-2 font-bold text-white transition-opacity {}", if side.get() == "BUY" { "bg-emerald-600 hover:bg-emerald-500" } else { "bg-rose-600 hover:bg-rose-500" })
+                class=Signal::derive(move || format!("w-full py-2 font-bold text-white transition-opacity {}", if side.get() == "BUY" { "bg-emerald-600 hover:bg-emerald-500" } else { "bg-rose-600 hover:bg-rose-500" }))
                 variant=ButtonVariant::Primary
                 size=ButtonSize::Md
                 on_click=Callback::new(move |_| {

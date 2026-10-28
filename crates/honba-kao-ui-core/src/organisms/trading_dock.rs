@@ -18,7 +18,7 @@ pub fn HfTradingDock(
             <div class="hf-dock-tabbar flex items-center justify-between px-3 py-1.5 border-b border-border-soft bg-surface-subtle">
                 <div class="flex items-center gap-1">
                     <HfButton
-                        class=format!("flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "positions" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" })
+                        class=Signal::derive(move || format!("flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "positions" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
                         variant=ButtonVariant::Ghost
                         size=ButtonSize::Sm
                         on_click=Callback::new(move |_| active_tab.set("positions".to_string()))
@@ -29,7 +29,7 @@ pub fn HfTradingDock(
                         </span>
                     </HfButton>
                     <HfButton
-                        class=format!("flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "orders" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" })
+                        class=Signal::derive(move || format!("flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "orders" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
                         variant=ButtonVariant::Ghost
                         size=ButtonSize::Sm
                         on_click=Callback::new(move |_| active_tab.set("orders".to_string()))
@@ -40,7 +40,7 @@ pub fn HfTradingDock(
                         </span>
                     </HfButton>
                     <HfButton
-                        class=format!("px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "history" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" })
+                        class=Signal::derive(move || format!("px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "history" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
                         variant=ButtonVariant::Ghost
                         size=ButtonSize::Sm
                         on_click=Callback::new(move |_| active_tab.set("history".to_string()))
@@ -48,7 +48,7 @@ pub fn HfTradingDock(
                         "Order History"
                     </HfButton>
                     <HfButton
-                        class=format!("px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "fills" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" })
+                        class=Signal::derive(move || format!("px-2.5 py-1 text-xs rounded transition-colors {}", if active_tab.get() == "fills" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
                         variant=ButtonVariant::Ghost
                         size=ButtonSize::Sm
                         on_click=Callback::new(move |_| active_tab.set("fills".to_string()))

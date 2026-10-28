@@ -82,13 +82,14 @@ pub fn HfButton(
     #[prop(into, optional)] disabled: Option<Signal<bool>>,
     #[prop(optional)] on_click: Option<Callback<()>>,
     #[prop(into, optional)] aria_label: Option<String>,
-    #[prop(into, optional)] class: Option<String>,
+    /// Extra classes, reactive: accepts a static string or a `Signal<String>`.
+    #[prop(into, optional)] class: Option<Signal<String>>,
     children: Children,
 ) -> impl IntoView {
     let size = size.unwrap_or_default();
     let variant = variant.unwrap_or_default();
     let label = aria_label.unwrap_or_else(|| "Button".to_string());
-    let custom_class = class.unwrap_or_default();
+    let custom_class = class.unwrap_or_else(|| Signal::derive(move || String::new()));
     let disabled = Signal::derive(move || disabled.as_ref().map(|d| d.get()).unwrap_or(false));
     let classes = move || {
         format!(
@@ -102,7 +103,7 @@ pub fn HfButton(
             } else {
                 ""
             },
-            custom_class,
+            custom_class.get(),
         )
     };
 
