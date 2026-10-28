@@ -7,12 +7,16 @@
 
 use crate::canvas::engine::{CanvasEngine, SeriesKind, SeriesStyle};
 use crate::types::CandleData;
+use std::collections::VecDeque;
 use wasm_bindgen::JsValue;
 
 /// A live OHLC bar chart with a bounded bar buffer.
+///
+/// The buffer is a `VecDeque` (ring buffer) rather than a `Vec`: eviction of
+/// the oldest bar at capacity is an O(1) `pop_front`, not an O(n) `remove(0)`.
 pub struct StreamingBarChart {
     engine: CanvasEngine,
-    bars: Vec<CandleData>,
+    bars: VecDeque<CandleData>,
     max_bars: usize,
 }
 
@@ -25,7 +29,7 @@ impl StreamingBarChart {
                 SeriesKind::Bar,
                 SeriesStyle::candlestick("#10b981", "#ef4444"),
             ),
-            bars: Vec::new(),
+            bars: VecDeque::new(),
             max_bars,
         }
     }
@@ -43,26 +47,25 @@ impl StreamingBarChart {
     /// Append a new bar, evicting the oldest when the buffer is full.
     pub fn push(&mut self, bar: CandleData) {
         if self.bars.len() >= self.max_bars {
-            self.bars.remove(0);
+            self.bars.pop_front();
         }
-        self.bars.push(bar);
+        self.bars.push_back(bar);
     }
 
     /// Replace the most recent bar in place (live tick revision).
     pub fn update_last(&mut self, bar: CandleData) {
-        if let Some(last) = self.bars.last_mut() {
+        if let Some(last) = self.bars.back_mut() {
             *last = bar;
         } else {
-            self.bars.push(bar);
+            self.bars.push_back(bar);
         }
     }
 
     /// Replace the entire buffer.
     pub fn set_bars(&mut self, bars: Vec<CandleData>) {
-        self.bars = bars;
-        if self.bars.len() > self.max_bars {
-            let drop = self.bars.len() - self.max_bars;
-            self.bars.drain(..drop);
+        self.bars = VecDeque::from(bars);
+        while self.bars.len() > self.max_bars {
+            self.bars.pop_front();
         }
     }
 
@@ -72,18 +75,21 @@ impl StreamingBarChart {
     pub fn is_empty(&self) -> bool {
         self.bars.is_empty()
     }
-    pub fn bars(&self) -> &[CandleData] {
+    /// The buffered bars (oldest first), indexable like a slice via
+    /// `VecDeque`'s `Index` impl.
+    pub fn bars(&self) -> &VecDeque<CandleData> {
         &self.bars
     }
 
     /// Push the buffered bars to the engine via `setSeries`.
     pub fn commit(&self) -> Result<bool, JsValue> {
-        self.engine.set_series(&self.bars)
+        let bars: Vec<CandleData> = self.bars.iter().cloned().collect();
+        self.engine.set_series(&bars)
     }
 
     /// Stream only the last bar via `updateLast`.
     pub fn commit_last(&self) -> Result<bool, JsValue> {
-        match self.bars.last() {
+        match self.bars.back() {
             Some(bar) => self.engine.update_last(bar),
             None => Ok(false),
         }

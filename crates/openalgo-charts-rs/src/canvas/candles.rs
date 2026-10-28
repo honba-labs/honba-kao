@@ -6,28 +6,29 @@
 
 use crate::canvas::engine::{CanvasEngine, SeriesKind, SeriesStyle};
 use crate::types::CandleData;
+use std::collections::VecDeque;
 use wasm_bindgen::JsValue;
 
 /// A live candlestick chart with a bounded candle buffer.
+///
+/// The buffer is a `VecDeque` (ring buffer) rather than a `Vec`: eviction of
+/// the oldest candle at capacity is an O(1) `pop_front`, not an O(n) `remove(0)`.
 pub struct StreamingCandleChart {
     engine: CanvasEngine,
-    candles: Vec<CandleData>,
+    candles: VecDeque<CandleData>,
     max_candles: usize,
 }
 
 impl StreamingCandleChart {
     /// Create a chart bound to `canvas`, keeping at most `max_candles` candles.
-    pub fn new(
-        canvas: web_sys::HtmlCanvasElement,
-        max_candles: usize,
-    ) -> Self {
+    pub fn new(canvas: web_sys::HtmlCanvasElement, max_candles: usize) -> Self {
         Self {
             engine: CanvasEngine::new(
                 canvas,
                 SeriesKind::Candlestick,
                 SeriesStyle::candlestick("#10b981", "#ef4444"),
             ),
-            candles: Vec::new(),
+            candles: VecDeque::new(),
             max_candles,
         }
     }
@@ -45,27 +46,26 @@ impl StreamingCandleChart {
     /// Append a new candle, evicting the oldest when the buffer is full.
     pub fn push(&mut self, candle: CandleData) {
         if self.candles.len() >= self.max_candles {
-            self.candles.remove(0);
+            self.candles.pop_front();
         }
-        self.candles.push(candle);
+        self.candles.push_back(candle);
     }
 
     /// Replace the most recent candle in place (live tick revision). Appends
     /// when the buffer is empty.
     pub fn update_last(&mut self, candle: CandleData) {
-        if let Some(last) = self.candles.last_mut() {
+        if let Some(last) = self.candles.back_mut() {
             *last = candle;
         } else {
-            self.candles.push(candle);
+            self.candles.push_back(candle);
         }
     }
 
     /// Replace the entire buffer (initial load or full resync).
     pub fn set_candles(&mut self, candles: Vec<CandleData>) {
-        self.candles = candles;
-        if self.candles.len() > self.max_candles {
-            let drop = self.candles.len() - self.max_candles;
-            self.candles.drain(..drop);
+        self.candles = VecDeque::from(candles);
+        while self.candles.len() > self.max_candles {
+            self.candles.pop_front();
         }
     }
 
@@ -78,19 +78,21 @@ impl StreamingCandleChart {
         self.candles.is_empty()
     }
 
-    /// Slice of buffered candles (most recent last).
-    pub fn candles(&self) -> &[CandleData] {
+    /// The buffered candles (oldest first, most recent last), indexable like
+    /// a slice via `VecDeque`'s `Index` impl.
+    pub fn candles(&self) -> &VecDeque<CandleData> {
         &self.candles
     }
 
     /// Push the buffered candles to the engine via `setSeries`.
     pub fn commit(&self) -> Result<bool, JsValue> {
-        self.engine.set_series(&self.candles)
+        let candles: Vec<CandleData> = self.candles.iter().cloned().collect();
+        self.engine.set_series(&candles)
     }
 
     /// Stream only the last candle to the engine via `updateLast`.
     pub fn commit_last(&self) -> Result<bool, JsValue> {
-        match self.candles.last() {
+        match self.candles.back() {
             Some(candle) => self.engine.update_last(candle),
             None => Ok(false),
         }
