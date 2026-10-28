@@ -103,21 +103,21 @@ impl DepthLadder {
         }
     }
 
-    /// Tap a price: returns the highest level on the matching side at or below
-    /// the tapped price — bids when selling (hit bid), asks when buying (lift
-    /// ask). Falls back to the top of book (best price on this side) when the
-    /// tap lies outside the book; `None` when the side is empty.
+    /// Tap a price: returns the level nearest to the tapped price on the
+    /// matching side (bids when selling / hit-bid, asks when buying / lift-ask),
+    /// ties resolving to the lower price so the aggressor never gets the worst
+    /// level on the side. Falls back to nothing only when the side is empty.
+    /// (Previously this inverted ask execution and matched the worst ask.)
     pub fn dispatch_at(&self, price: Decimal, is_bid: bool) -> Option<OrderDispatch> {
         let side = if is_bid { &self.bids } else { &self.asks };
         if side.is_empty() {
             return None;
         }
-        let top_of_book = side.iter().max_by_key(|l| l.price);
-        let best = side
-            .iter()
-            .filter(|level| level.price <= price)
-            .max_by_key(|l| l.price);
-        let chosen = best.or(top_of_book).unwrap();
+        let chosen = side.iter().min_by(|a, b| {
+            let da = if a.price > price { a.price - price } else { price - a.price };
+            let db = if b.price > price { b.price - price } else { price - b.price };
+            da.cmp(&db).then_with(|| a.price.cmp(&b.price))
+        }).unwrap();
         Some(OrderDispatch {
             price: chosen.price,
             size: chosen.size,

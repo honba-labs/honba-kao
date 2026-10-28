@@ -15,6 +15,10 @@ use wasm_bindgen::JsValue;
 /// `Function` / `Reflect` are only exercised by the wasm32 `call` helper.
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Function, Reflect};
+/// `dyn_into` is only exercised by the wasm32 `call` helper, to validate the
+/// looked-up property is actually callable before invoking it.
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsCast;
 
 /// Fetch `window.honbaCharts`, if present.
 #[cfg(target_arch = "wasm32")]
@@ -31,20 +35,46 @@ fn honba_charts() -> Option<JsValue> {
 }
 
 /// Invoke a method on `window.honbaCharts` with the given JSON-serialisable args.
+///
+/// Before casting the looked-up property into a callable `Function`, this
+/// verifies the lookup actually produced one. A missing or non-function
+/// property (e.g. the bridge script loaded an older/incompatible build that
+/// doesn't expose `method`) returns a clear "method not found" `JsValue`
+/// error instead of letting an unchecked `Function::from(undefined)` cast
+/// surface as an opaque JS `TypeError` at the call site.
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
 fn call(method: &str, args: &[JsValue]) -> Result<JsValue, JsValue> {
-    let hc = honba_charts().ok_or_else(|| JsValue::from_str("honbaCharts not mounted"))?;
-    let f = Reflect::get(&hc, &JsValue::from_str(method))?;
-    let func = Function::from(f);
+    let hc = honba_charts()
+        .ok_or_else(|| JsValue::from_str("honba-kao: window.honbaCharts bridge is not mounted"))?;
+    let raw = Reflect::get(&hc, &JsValue::from_str(method))?;
+    let func: Function = raw.dyn_into().map_err(|_| {
+        JsValue::from_str(&format!(
+            "honba-kao: window.honbaCharts.{method} is not available (missing or not a function)"
+        ))
+    })?;
     let arr = js_sys::Array::from_iter(args.iter().cloned());
     func.apply(&JsValue::NULL, &arr)
 }
 
+/// Build a descriptive error for a bridge call made on a non-`wasm32` target,
+/// where `window.honbaCharts` can never exist (there is no JS host at all).
+///
+/// `JsValue::from_str` / `JsValue::from_f64` panic ("function not implemented
+/// on non-wasm32 targets") on host builds, so we return `JsValue::NULL` here
+/// instead of constructing a string error. The error payload itself is
+/// unobservable off-wasm32; what matters is that bridge calls degrade to `Err`
+/// rather than aborting the process with a non-unwinding panic (issue #40).
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
-fn call(_method: &str, _args: &[JsValue]) -> Result<JsValue, JsValue> {
-    Err(JsValue::NULL)
+fn native_stub_error(_method: &str) -> JsValue {
+    JsValue::NULL
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+fn call(method: &str, _args: &[JsValue]) -> Result<JsValue, JsValue> {
+    Err(native_stub_error(method))
 }
 
 // ----------------------------------------------------------------------------
@@ -62,7 +92,7 @@ pub fn mount_static(element: &web_sys::HtmlElement) -> Result<f64, JsValue> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn mount_static(_element: &web_sys::HtmlElement) -> Result<f64, JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("mountStatic"))
 }
 
 /// `setSeries(id, kind, style_json, bars_json)` — replace a series' data.
@@ -92,7 +122,7 @@ pub fn set_series(
     _style_json: &str,
     _bars_json: &str,
 ) -> Result<bool, JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("setSeries"))
 }
 
 /// `updateLast(id, bar_json)` — update/append the last bar (live streaming).
@@ -107,7 +137,7 @@ pub fn update_last(id: f64, bar_json: &str) -> Result<bool, JsValue> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn update_last(_id: f64, _bar_json: &str) -> Result<bool, JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("updateLast"))
 }
 
 /// `addVolumeOverlay(id)` — attach a volume histogram to the primary pane.
@@ -122,7 +152,7 @@ pub fn add_volume_overlay(id: f64) -> Result<bool, JsValue> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn add_volume_overlay(_id: f64) -> Result<bool, JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("addVolumeOverlay"))
 }
 
 /// `destroy(id)` — tear down a chart and release its canvases.
@@ -137,7 +167,7 @@ pub fn destroy(id: f64) -> Result<bool, JsValue> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn destroy(_id: f64) -> Result<bool, JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("destroy"))
 }
 
 /// `refreshThemeAll()` — restyle every mounted chart from the active skin.
@@ -149,5 +179,5 @@ pub fn refresh_theme_all() -> Result<(), JsValue> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn refresh_theme_all() -> Result<(), JsValue> {
-    Err(JsValue::NULL)
+    Err(native_stub_error("refreshThemeAll"))
 }
