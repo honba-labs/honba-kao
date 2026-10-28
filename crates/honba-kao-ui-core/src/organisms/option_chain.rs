@@ -1,4 +1,5 @@
 use crate::molecules::fno::{HfOptionChainRow, OptionLegQuote};
+use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -13,7 +14,10 @@ pub fn HfOptionChain(
     #[prop(into)] spot_price: Signal<f64>,
     #[prop(into)] pairs: Signal<Vec<OptionStrikePair>>,
     #[prop(into)] on_select_leg: Callback<(f64, bool, bool)>, // (strike, is_call, is_buy)
+    #[prop(into, optional)] is_buy: Option<Signal<bool>>,
 ) -> impl IntoView {
+    let is_buy = RwSignal::new(is_buy.as_ref().map(|s| s.get()).unwrap_or(true));
+
     view! {
         <div class="hf-option-chain flex flex-col h-full bg-surface-base border border-border-soft rounded overflow-hidden">
             <div class="hf-chain-header flex justify-between items-center p-3 border-b border-border-soft bg-surface-subtle">
@@ -21,6 +25,25 @@ pub fn HfOptionChain(
                 <div class="flex items-center gap-2 font-mono text-xs">
                     <span class="text-text-muted">"Underlying Spot:"</span>
                     <span class="font-bold text-emerald-400">{move || format!("₹{:.2}", spot_price.get())}</span>
+                </div>
+                <div class="flex items-center gap-1 border-l border-border-soft pl-3">
+                    <span class="text-[10px] text-text-muted">"Side:"</span>
+                    <HfButton
+                        class=move || if is_buy.get() { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }
+                        variant=ButtonVariant::Ghost
+                        size=ButtonSize::Xxs
+                        on_click=Callback::new(move |_| is_buy.set(true))
+                    >
+                        "Buy"
+                    </HfButton>
+                    <HfButton
+                        class=move || if !is_buy.get() { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }
+                        variant=ButtonVariant::Ghost
+                        size=ButtonSize::Xxs
+                        on_click=Callback::new(move |_| is_buy.set(false))
+                    >
+                        "Sell"
+                    </HfButton>
                 </div>
             </div>
 
@@ -57,6 +80,7 @@ pub fn HfOptionChain(
                                         call=pair.call
                                         put=pair.put
                                         on_select_leg=on_select_leg
+                                        is_buy=is_buy
                                     />
                                 }
                             }

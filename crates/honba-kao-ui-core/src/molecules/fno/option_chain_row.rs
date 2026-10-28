@@ -37,7 +37,9 @@ pub fn HfOptionChainRow(
     put: OptionLegQuote,
     #[prop(into)] on_select_leg: Callback<(f64, bool, bool)>, // (strike, is_call, is_buy)
     #[prop(into, optional)] max_oi: Option<u64>,
+    #[prop(into, optional)] is_buy: Option<Signal<bool>>,
 ) -> impl IntoView {
+    let is_buy = is_buy.unwrap_or_else(|| Signal::derive(|| true));
     let max_oi = max_oi.unwrap_or(call.open_interest.max(put.open_interest).max(1));
     let is_call_itm = spot_price > strike;
     let is_put_itm = spot_price < strike;
@@ -53,7 +55,7 @@ pub fn HfOptionChainRow(
                 {format!("{:.1}%", call.iv * 100.0)}
             </td>
             <td class="p-1">{oi_bar(call.open_interest, call.oi_change, max_oi)}</td>
-            <td class="cursor-pointer hover:bg-emerald-500/10 p-1" on:click=move |_| on_select_leg.run((strike, true, true))>
+            <td class="cursor-pointer hover:bg-emerald-500/10 p-1" on:click=move |_| on_select_leg.run((strike, true, is_buy.get()))>
                 <span class=move || format!("{} font-mono", if call.change_pct >= 0.0 { "text-emerald-400" } else { "text-rose-400" })>
                     {format!("{:.2}", call.ltp)}
                 </span>
@@ -72,7 +74,7 @@ pub fn HfOptionChainRow(
             </td>
 
             // PUT SIDE (Right)
-            <td class="cursor-pointer hover:bg-rose-500/10 p-1" on:click=move |_| on_select_leg.run((strike, false, true))>
+            <td class="cursor-pointer hover:bg-rose-500/10 p-1" on:click=move |_| on_select_leg.run((strike, false, is_buy.get()))>
                 <span class=move || format!("{} font-mono", if put.change_pct >= 0.0 { "text-emerald-400" } else { "text-rose-400" })>
                     {format!("{:.2}", put.ltp)}
                 </span>
