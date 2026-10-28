@@ -54,3 +54,22 @@ pub const ROUTE_RISK: &str = "/risk";
 pub const ROUTE_OMS: &str = "/risk/oms";
 pub const ROUTE_OPS: &str = "/risk/ops";
 pub const ROUTE_POSITION_SIZER: &str = "/risk/sizer";
+
+// ---- Legacy v2 route aliases (preserved for bookmarks / deep links) ----
+// Trading cockpit legacy aliases
+pub const ROUTE_LEGACY_WORKBENCH: &str = "/workbench";
+pub const ROUTE_LEGACY_EQUITY_DOM: &str = "/equity/dom";
+pub const ROUTE_LEGACY_EQUITY_TAPE: &str = "/equity/tape";
+pub const ROUTE_LEGACY_EQUITY_CHART_WORKSTATION: &str = "/equity/chart-workstation";
+pub const ROUTE_LEGACY_EQUITY_MTA: &str = "/equity/mta";
+pub const ROUTE_LEGACY_EQUITY_COMPARE: &str = "/equity/compare";
+// Derivatives legacy aliases
+pub const ROUTE_LEGACY_FNO: &str = "/fno";
+pub const ROUTE_LEGACY_FNO_STRATEGY: &str = "/fno/strategy";
+pub const ROUTE_LEGACY_FNO_OI: &str = "/fno/oi";
+pub const ROUTE_LEGACY_FNO_GREEKS: &str = "/fno/greeks";
+// Quant legacy aliases
+pub const ROUTE_LEGACY_BACKTESTING: &str = "/backtesting";
+pub const ROUTE_LEGACY_BACKTESTING_MODEL_LAB: &str = "/backtesting/model-lab";
+// System legacy aliases
+pub const ROUTE_LEGACY_SETTINGS: &str = "/settings";
