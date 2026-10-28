@@ -1,0 +1,762 @@
+/* ========================================================================= */
+/* honba-kao Main Stylesheet (Modeled after bfx-hf-ui-core)                   */
+/* Honors themed background, corners ($border-radius: 5px), shading & tnum   */
+/* ========================================================================= */
+
+@import "./palette_256.css";
+@import "./fonts.css";
+@import "./home.css";
+
+/* Typography — mirrors noFX `web/src/index.css` exactly. */
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", Menlo, Monaco, "Courier New", monospace;
+  /* Institutional typography imported from Secured-Finance */
+  --font-suisse: "Suisse Intl", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-editorial: "GT Super Display", Georgia, serif;
+  --font-roboto-mono: "Roboto Mono", "IBM Plex Mono", Menlo, monospace;
+  --font-plex-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Base Resets */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* noFX typography: Inter over IBM Plex Mono, 16px/400 base, 1.6 rhythm,
+   no synthetic bolding. Components trim sizes per element. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================================================= */
+/* Theme tokens live in themes.css; the registry sets [data-theme] on <html>.  */
+/* These two rules bind the page to whatever skin is active.                   */
+/* ========================================================================= */
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* noFX heading rhythm: tighter tracking, semibold rather than heavy. */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* noFX forces the scrollbar so page layouts stay consistent. */
+html {
+  overflow-y: scroll;
+}
+
+code,
+pre,
+kbd,
+samp,
+.mono {
+  font-family: var(--font-mono);
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* Tabular numbers for financial metrics */
+.tnum,
+.mono,
+.hfui-plnumber,
+.hfui-table td,
+.hfui-table th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* noFX number classes: figures always render in the mono face. */
+.text-profit,
+.text-loss,
+.number-up,
+.number-down {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Table headers — noFX: 12px smallcaps, token letter-spacing. */
+.hfui-table th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Global button typography — noFX element rules. */
+button {
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form controls — noFX element rules on the token contract. */
+input,
+select,
+textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--hair);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-tint);
+  outline: none;
+  background-color: var(--surface-3);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--shade-1);
+  border-radius: 3px;
+  transition: background-color 0.15s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--shade-3);
+}
+
+/* ========================================================================= */
+/* Shell: App Layout & StatusBar                                                */
+/* ========================================================================= */
+
+.hfui-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* StatusBar */
+.hfui-statusbar__wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 16px;
+  background: var(--darker-background-color);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--shade-5);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.hfui-statusbar__left,
+.hfui-statusbar__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hfui-statusbar__statuscircle {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.hfui-statusbar__statuscircle.green {
+  background-color: var(--pnl-gain);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pnl-gain) 60%, transparent);
+}
+
+.hfui-statusbar__statuscircle.yellow {
+  background-color: var(--warning-color);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--warning-color) 60%, transparent);
+}
+
+.hfui-statusbar__statuscircle.red {
+  background-color: var(--pnl-loss);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pnl-loss) 60%, transparent);
+}
+
+.hfui-statusbar__item {
+  display: flex;
+  align-items: center;
+}
+
+.hfui-statusbar__divider {
+  width: 1px;
+  height: 12px;
+  background: var(--border-color);
+}
+
+/* ========================================================================= */
+/* UI Components: Panel (hfui-panel) — ported to the noFX paper card          */
+/* ========================================================================= */
+
+.hfui-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+.hfui-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  height: 46px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--hair);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.hfui-panel__header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* noFX panel titles stay sentence case, 13–14px/600. */
+.hfui-panel__label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.hfui-panel__counter {
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 100px;
+  color: var(--primary-8);
+  background: var(--primary-0);
+  border: 1px solid var(--primary-1);
+}
+
+.hfui-panel__header-tabs {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+}
+
+.hfui-panel__header-tab {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--shade-5);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hfui-panel__header-tab:hover {
+  color: var(--shade-8);
+}
+
+.hfui-panel__header-tab.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.hfui-panel__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hfui-panel__icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+  color: var(--shade-5);
+  background: var(--darker-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hfui-panel__icon-button:hover {
+  color: var(--shade-9);
+  background: var(--shade-0);
+}
+
+.hfui-panel__secondaryheader__wrapper {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--darker-background-color);
+  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  font-size: 12px;
+}
+
+.hfui-panel__content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  position: relative;
+}
+
+/* Panels stacking several short blocks should not spread them over the
+   panel's full height (flex would grow each one). */
+.hfui-panel__content--auto {
+  flex: 0 0 auto;
+  overflow: visible;
+  padding: 12px;
+}
+
+/* ========================================================================= */
+/* UI Components: Buttons (hfui-button)                                      */
+/* ========================================================================= */
+
+.hfui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lighter-background-color);
+  border: 1px solid var(--border-color);
+  color: var(--shade-8);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 5px;
+  padding: 6px 14px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  gap: 6px;
+}
+
+.hfui-button:hover:not(:disabled) {
+  opacity: 0.85;
+  background: var(--shade-0);
+}
+
+.hfui-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.hfui-button.green {
+  background: var(--button-green);
+  border-color: var(--button-green);
+  color: #ffffff;
+}
+
+.hfui-button.red {
+  background: var(--button-red);
+  border-color: var(--button-red);
+  color: #ffffff;
+}
+
+.hfui-button.blue {
+  background: var(--button-blue);
+  border-color: var(--button-blue);
+  color: #ffffff;
+}
+
+.hfui-button.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--shade-6);
+}
+
+.hfui-button.ghost:hover:not(:disabled) {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hfui-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hfui-button.small {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* ========================================================================= */
+/* UI Components: Hf primitives (honba-kao-ui-core)                         */
+/* Token-driven styling for the ui-core crate's HfButton/HfIconButton.      */
+/* ========================================================================= */
+
+.hf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.hf-button:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+.hf-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.hf-button[aria-pressed="true"] {
+  background: var(--primary-0);
+  border-color: var(--primary-1);
+  color: var(--primary-8);
+}
+
+.hf-button--green {
+  background: var(--button-green);
+  border-color: var(--button-green);
+  color: var(--on-accent);
+}
+
+.hf-button--red {
+  background: var(--button-red);
+  border-color: var(--button-red);
+  color: var(--on-accent);
+}
+
+.hf-button--blue {
+  background: var(--button-blue);
+  border-color: var(--button-blue);
+  color: var(--on-accent);
+}
+
+.hf-button--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--shade-6);
+}
+
+.hf-button--ghost:hover:not(:disabled) {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-button--sm {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+
+.hf-button--lg {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.hf-button--loading {
+  opacity: 0.7;
+}
+
+.hf-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hf-button__loader {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: hf-spin 0.6s linear infinite;
+}
+
+@keyframes hf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hf-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--shade-6);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.hf-icon-button:hover:not(:disabled) {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-icon-button:focus-visible {
+  outline: 2px solid var(--primary-1);
+  outline-offset: 2px;
+}
+
+.hf-icon-button[aria-expanded="true"],
+.hf-icon-button[aria-pressed="true"] {
+  background: var(--shade-0);
+  color: var(--shade-9);
+}
+
+.hf-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hf-icon-button--sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+}
+
+.hf-icon-button--lg {
+  width: 40px;
+  height: 40px;
+}
+
+/* ========================================================================= */
+/* UI Components: PLNumber & Badges                                          */
+/* ========================================================================= */
+
+.hfui-plnumber {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.hfui-plnumber.positive,
+.hfui-green {
+  color: var(--pnl-gain) !important;
+}
+
+.hfui-plnumber.negative,
+.hfui-red {
+  color: var(--pnl-loss) !important;
+}
+
+.hfui-plnumber.neutral {
+  color: var(--shade-5);
+}
+
+.hfui-badge {
+  padding: 2px 7px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.hfui-badge.running {
+  background: color-mix(in srgb, var(--pnl-gain) 15%, transparent);
+  color: var(--pnl-gain);
+}
+
+.hfui-badge.paused {
+  background: color-mix(in srgb, var(--warning-color) 15%, transparent);
+  color: var(--warning-color);
+}
+
+.hfui-badge.stopped {
+  background: color-mix(in srgb, var(--pnl-loss) 15%, transparent);
+  color: var(--pnl-loss);
+}
+
+/* Table Row Marker */
+.row-marker {
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.row-marker.green {
+  background-color: var(--pnl-gain);
+}
+
+.row-marker.red {
+  background-color: var(--pnl-loss);
+}
+
+/* ========================================================================= */
+/* Tables (hfui-table)                                                       */
+/* ========================================================================= */
+
+.hfui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.hfui-table th {
+  text-align: left;
+  padding: 8px 10px;
+  color: var(--shade-5);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
+}
+
+.hfui-table td {
+  padding: 8px 10px;
+  color: var(--shade-8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.hfui-table tr:hover td {
+  background-color: var(--primary-0);
+  color: var(--shade-9);
+}
+
+/* ========================================================================= */
+/* Modals (hfui-modal)                                                       */
+/* ========================================================================= */
+
+.hfui-modal__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.hfui-modal__container {
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hfui-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hair);
+}
+
+.hfui-modal__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.hfui-modal__body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.hfui-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 18px;
+  background: var(--surface);
+  border-top: 1px solid var(--hair);
+  gap: 10px;
+}
+
+/* 256 Color Palette Swatch Grid */
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.palette-swatch {
+  height: 24px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.palette-swatch:hover {
+  transform: scale(1.2);
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}

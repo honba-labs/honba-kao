@@ -1,0 +1,1792 @@
+/* ========================================================================= */
+/* honba-kao workbench — ported from the labs `src/apps/workbench-app.tsx`    */
+/* body (toolbar · multi-chart grid · order ticket/modal · trading drawer).  */
+/*                                                                           */
+/* Styled strictly on the 256-token contract (`--background-color`,          */
+/* `--shade-0..9`, `--primary-*`, `--pnl-gain/loss`, `--warning-color`) so    */
+/* every skin restyles the terminal without touching this file.              */
+/* ========================================================================= */
+
+/* --- Full-bleed terminal viewport inside the noFX shell -------------------- */
+/* The workbench is a fixed-height instrument panel: it opts out of the
+   console page padding and fills the shell's main grid area exactly. */
+.app-main:has(> .wb-view) {
+  padding: 0;
+  max-width: none;
+  height: calc(100vh - 72px);
+  overflow: hidden;
+}
+
+.wb-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--canvas);
+}
+
+.wb-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --- Toolbar --------------------------------------------------------------- */
+.wb-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 14px;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wb-toolbar__left,
+.wb-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wb-toolbar__grid-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.wb-toolbar__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shade-5);
+}
+
+.wb-toolbar__preset {
+  font-size: 10px;
+  color: var(--shade-5);
+  opacity: 0.7;
+}
+
+.wb-toolbar__menu {
+  position: relative;
+}
+
+/* Menus opened from the right cluster open leftwards to stay on screen. */
+.wb-menu--right {
+  left: auto;
+  right: 0;
+  flex-direction: column;
+  min-width: 230px;
+}
+
+/* --- Shared buttons ---------------------------------------------------------*/
+.wb-btn,
+.wb-chip,
+.wb-pill,
+.wb-step,
+.wb-toggle,
+.wb-side,
+.wb-submit,
+.wb-menu__item,
+.wb-drawer-tab,
+.wb-strip__open,
+.wb-status {
+  font-family: inherit;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.wb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  background: var(--canvas);
+}
+
+.wb-btn--chrome {
+  color: var(--shade-7);
+}
+
+.wb-btn--engaged {
+  background: var(--lighter-background-color);
+  color: var(--text-color);
+}
+
+.wb-btn__icon {
+  display: inline-flex;
+  color: var(--shade-6);
+}
+
+.wb-caret {
+  font-size: 9px;
+  color: var(--shade-5);
+}
+
+/* --- Popover menu ------------------------------------------------------------*/
+.wb-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--darker-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+}
+
+.wb-menu--pane {
+  flex-direction: column;
+  min-width: 220px;
+  left: 0;
+}
+
+.wb-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+}
+
+.wb-menu__item:hover {
+  background: var(--primary-0);
+  color: var(--text-color);
+}
+
+.wb-menu__item--selected {
+  background: var(--primary-0);
+  color: var(--primary-8);
+}
+
+.wb-menu__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--shade-5);
+}
+
+/* --- Engine state + status pill ----------------------------------------------*/
+.wb-engine {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+}
+
+.wb-engine--active {
+  color: var(--pnl-gain);
+  background: color-mix(in srgb, var(--pnl-gain) 16%, transparent);
+}
+
+.wb-engine--reducing {
+  color: var(--warning-color);
+  background: color-mix(in srgb, var(--warning-color) 16%, transparent);
+}
+
+.wb-engine--halted {
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 16%, transparent);
+}
+
+/* The badge doubles as the state-menu trigger: inherit the widget chrome. */
+button.wb-engine {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+button.wb-engine .wb-caret {
+  font-size: 8px;
+  opacity: 0.7;
+}
+
+.wb-engine--state-menu-label {
+  background: none;
+  padding: 0;
+}
+
+
+.wb-btn--buy {
+  background: var(--button-green);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.wb-btn--sell {
+  background: var(--button-red);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.wb-status {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+.wb-status--info {
+  color: var(--pnl-gain);
+  background: color-mix(in srgb, var(--pnl-gain) 16%, transparent);
+}
+
+.wb-status--error {
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 16%, transparent);
+}
+
+/* --- Layout picker icons ------------------------------------------------------*/
+.wb-layout-icon {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  gap: 1.5px;
+  cursor: pointer;
+}
+
+.wb-layout-icon__cell {
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.wb-cell--a { grid-area: a; }
+.wb-cell--b { grid-area: b; }
+.wb-cell--c { grid-area: c; }
+.wb-cell--d { grid-area: d; }
+
+.wb-layout-icon--single { grid-template: "a" 1fr / 1fr; }
+.wb-layout-icon--cols2 {
+  grid-template: "a b" 1fr / 1fr 1fr;
+}
+.wb-layout-icon--rows2 {
+  grid-template: "a" 1fr "b" 1fr / 1fr;
+}
+.wb-layout-icon--oneTwo {
+  grid-template: "a b" 1fr "a c" 1fr / 1.4fr 1fr;
+}
+.wb-layout-icon--grid4 {
+  grid-template: "a b" 1fr "c d" 1fr / 1fr 1fr;
+}
+
+/* --- Workspace grid + panes -----------------------------------------------------*/
+/* Multi-row `grid-template` puts each row's size right after its area string
+   ("a b" 1fr "c d" 1fr / ...). The old `"a b" "c d" 1fr 1fr / ...` form is
+   invalid CSS, so browsers dropped it and every pane stacked in one cell:
+   the panes' rails and canvases painted over each other's candles. */
+.wb-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.wb-grid--single { grid-template: "a" 1fr / 1fr; }
+.wb-grid--cols2 {
+  grid-template: "a b" 1fr / 1fr 1fr;
+}
+.wb-grid--rows2 {
+  grid-template: "a" 1fr "b" 1fr / 1fr;
+}
+.wb-grid--oneTwo {
+  grid-template: "a b" 1fr "a c" 1fr / 1.4fr 1fr;
+}
+.wb-grid--grid4 {
+  grid-template: "a b" 1fr "c d" 1fr / 1fr 1fr;
+}
+
+.wb-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--background-color);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.wb-pane--active {
+  border-color: var(--primary-9);
+  box-shadow: 0 0 0 1px var(--primary-9);
+}
+
+.wb-pane.hidden-cell {
+  display: none;
+}
+
+.wb-pane__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--background-color);
+}
+
+.wb-pane__symbol,
+.wb-pane__modes,
+.wb-pane__pills {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.wb-pane__symbol {
+  position: relative;
+}
+
+.wb-pane__chart-host {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Symbols + chips */
+.wb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 7px;
+  border: 1px solid var(--border-color);
+  background: var(--darker-background-color);
+  color: var(--shade-6);
+}
+
+.wb-chip--symbol {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-color);
+  padding: 3px 8px;
+}
+
+.wb-chip--engaged {
+  background: var(--lighter-background-color);
+  color: var(--text-color);
+}
+
+.wb-chip--ghost {
+  background: transparent;
+  border-color: transparent;
+  cursor: pointer;
+}
+
+.wb-chip--danger {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-color: transparent;
+  border-radius: 3px;
+  color: var(--pnl-loss);
+  background: color-mix(in srgb, var(--pnl-loss) 14%, transparent);
+}
+
+/* Pills */
+.wb-pill {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--shade-6);
+}
+
+.wb-pill--on {
+  background: var(--primary-0);
+  border-color: var(--primary-1);
+  color: var(--primary-8);
+  font-weight: 700;
+}
+
+/* --- Order ticket --------------------------------------------------------------*/
+.wb-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  min-width: 320px;
+  height: 100%;
+  padding: 14px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: var(--background-color);
+  border-left: 1px solid var(--border-color);
+}
+
+.wb-ticket__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wb-ticket__instrument {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.wb-ticket__exchange {
+  font-size: 12px;
+  color: var(--shade-5);
+}
+
+.wb-ticket__ltp {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--primary-8);
+}
+
+.wb-ticket__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Fields */
+.wb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wb-field__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wb-field__label {
+  font-size: 10px;
+  color: var(--shade-5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wb-field__label--secondary {
+  font-size: 11px;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--shade-6);
+}
+
+.wb-field__hint {
+  font-size: 10px;
+  color: var(--shade-5);
+}
+
+.wb-field-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.wb-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.wb-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  background: var(--canvas);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.wb-input--mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-input--center {
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Toggle rows */
+.wb-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.wb-toggle-grid--modal {
+  gap: 8px;
+}
+
+.wb-side {
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.wb-side--buy {
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--pnl-gain) 16%, transparent);
+  color: var(--pnl-gain);
+}
+
+.wb-side--sell {
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--pnl-loss) 16%, transparent);
+  color: var(--pnl-loss);
+}
+
+.wb-side--on.wb-side--buy {
+  background: var(--button-green);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.wb-side--on.wb-side--sell {
+  background: var(--button-red);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.wb-toggle {
+  padding: 5px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--canvas);
+  color: var(--shade-6);
+  text-align: center;
+}
+
+.wb-toggle--on {
+  border-color: var(--primary-1);
+  background: var(--primary-0);
+  color: var(--primary-8);
+  font-weight: 700;
+}
+
+.wb-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+/* Steppers */
+.wb-steppers {
+  display: flex;
+  gap: 4px;
+}
+
+.wb-steppers .wb-step {
+  flex: 1;
+}
+
+.wb-step {
+  flex: none;
+  padding: 2px 7px;
+  font-size: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  background: var(--darker-background-color);
+  color: var(--shade-6);
+}
+
+.wb-step--square {
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wb-step--chip {
+  padding: 2px 8px;
+}
+
+.wb-step--reset {
+  color: var(--shade-5);
+}
+
+.wb-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wb-stepper-row .wb-input {
+  flex: 1;
+  height: 34px;
+}
+
+.wb-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.wb-chip-row .wb-step--reset {
+  margin-left: auto;
+}
+
+/* Summary */
+.wb-summary {
+  background: var(--canvas);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.wb-summary__row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--shade-6);
+}
+
+.wb-summary__row--strong {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+/* Submit */
+.wb-submit {
+  margin-top: auto;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.wb-submit--buy {
+  background: var(--button-green);
+  color: var(--on-accent);
+}
+
+.wb-submit--sell {
+  background: var(--button-red);
+  color: var(--on-accent);
+}
+
+.wb-submit--halted {
+  background: var(--shade-2);
+  color: var(--shade-6);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* --- Market depth -----------------------------------------------------------*/
+.wb-depth {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.wb-depth__head {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  color: var(--shade-6);
+}
+
+.wb-depth__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.wb-depth__side {
+  min-width: 0;
+}
+
+.wb-depth__cols,
+.wb-depth__row,
+.wb-depth__total {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.wb-depth__cols {
+  color: var(--shade-5);
+  font-size: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 2px;
+  font-family: var(--font-sans);
+}
+
+.wb-depth__row {
+  position: relative;
+  padding: 2px 0;
+}
+
+.wb-depth__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.5;
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.wb-depth__bar--bid {
+  right: 0;
+  background: color-mix(in srgb, var(--pnl-gain) 28%, transparent);
+}
+
+.wb-depth__bar--ask {
+  left: 0;
+  background: color-mix(in srgb, var(--pnl-loss) 28%, transparent);
+}
+
+.wb-depth__row > span:not(.wb-depth__bar) {
+  position: relative;
+  z-index: 1;
+}
+
+.wb-depth__orders {
+  color: var(--shade-5);
+}
+
+.wb-depth__price {
+  font-weight: 600;
+}
+
+.wb-depth__bid,
+.wb-depth__total--bid {
+  color: var(--pnl-gain);
+}
+
+.wb-depth__ask,
+.wb-depth__total--ask {
+  color: var(--pnl-loss);
+}
+
+.wb-depth__total {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+/* --- Modal bookmark ---------------------------------------------------------*/
+.wb-order-modal {
+  width: 460px;
+  max-width: 94vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-order-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wb-order-modal__side {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--on-accent);
+}
+
+.wb-order-modal__side--buy {
+  background: var(--button-green);
+}
+
+.wb-order-modal__side--sell {
+  background: var(--button-red);
+}
+
+.wb-order-modal__venue {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--shade-5);
+  background: var(--canvas);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+}
+
+.wb-order-modal__title > :nth-child(2) {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.wb-order-modal__ltp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--shade-6);
+}
+
+.wb-order-modal__ltp-row strong {
+  font-family: var(--font-mono);
+  color: var(--text-color);
+}
+
+.wb-order-modal__depth-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--primary-8);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.wb-order-modal__depth {
+  padding: 10px;
+  background: var(--canvas);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.wb-order-modal .hfui-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.wb-order-modal .hfui-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wb-order-modal__margin {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wb-order-modal__margin-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+  font-family: var(--font-mono);
+}
+
+.wb-order-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wb-order-modal__actions .wb-submit {
+  margin-top: 0;
+  padding: 7px 20px;
+  font-size: 12px;
+}
+
+.wb-halted-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--pnl-loss) 16%, transparent);
+  border: 1px solid var(--pnl-loss);
+  color: var(--pnl-loss);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wb-validity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--canvas);
+  border: 1px solid var(--border-color);
+}
+
+.wb-validity__tifs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wb-validity__value {
+  font-size: 11px;
+  color: var(--shade-6);
+}
+
+.wb-validity__value strong {
+  font-family: var(--font-mono);
+  color: var(--text-color);
+}
+
+/* --- Trading drawer ----------------------------------------------------------*/
+.wb-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 250px;
+  min-height: 200px;
+  max-height: 340px;
+  background: var(--background-color);
+  border-top: 1px solid var(--border-color);
+  z-index: 10;
+}
+
+.wb-drawer__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 12px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wb-drawer__tab-list {
+  display: flex;
+  gap: 4px;
+}
+
+.wb-drawer-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--shade-6);
+}
+
+.wb-drawer-tab--on {
+  background: var(--darker-background-color);
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+.wb-drawer-tab__count {
+  font-size: 9.5px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--border-color);
+  color: var(--shade-5);
+}
+
+.wb-drawer-tab__count--on {
+  background: var(--primary-0);
+  color: var(--primary-8);
+}
+
+.wb-drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 12px;
+}
+
+.wb-drawer__empty {
+  color: var(--shade-5);
+  font-size: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.wb-drawer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.wb-drawer-table th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--shade-5);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 10px;
+}
+
+.wb-drawer-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wb-drawer-table .num,
+.wb-drawer-table th.num {
+  text-align: right;
+}
+
+.wb-drawer-table__muted {
+  color: var(--shade-5);
+}
+
+.wb-drawer-table__action {
+  text-align: right;
+}
+
+.wb-cell--gain {
+  color: var(--pnl-gain);
+}
+
+.wb-cell--loss {
+  color: var(--pnl-loss);
+}
+
+.wb-status-tag {
+  color: var(--warning-color);
+}
+
+.wb-drawer-table strong {
+  color: var(--text-color);
+}
+
+/* Collapsed strip */
+.wb-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  min-height: 28px;
+  background: var(--canvas);
+  border-top: 1px solid var(--border-color);
+  padding: 0 8px;
+  z-index: 10;
+  user-select: none;
+}
+
+.wb-strip__tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wb-strip .wb-drawer-tab {
+  padding: 2px 8px;
+  font-weight: 500;
+}
+
+.wb-strip__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+}
+
+.wb-strip__name {
+  color: var(--shade-5);
+}
+
+.wb-strip__equity {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.wb-strip__pnl {
+  font-weight: 700;
+}
+
+.wb-strip__pnl--up {
+  color: var(--pnl-gain);
+}
+
+.wb-strip__pnl--down {
+  color: var(--pnl-loss);
+}
+
+.wb-strip__open {
+  font-size: 10.5px;
+  border: none;
+  background: transparent;
+  color: var(--shade-5);
+  padding: 2px 6px;
+}
+
+/* Analytics tab reuses the console KPI cards, laid out inline. */
+.wb-analytics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 10px 2px;
+}
+
+.wb-depth-tab {
+  max-width: 520px;
+  padding: 8px 2px;
+}
+
+/* --- Narrow screens ----------------------------------------------------------*/
+@media (max-width: 1080px) {
+  .app-main:has(> .wb-view) {
+    height: calc(100vh - 66px);
+  }
+}
+
+/* ==========================================================================
+   Symbol search modal + indicator picker + pane header additions (ported
+   from the labs workbench): grouped-interval menu, chart-type menu, applied
+   indicator chips, universal search and the 112-indicator dialog.
+   ========================================================================== */
+
+/* --- Pane header: grouped interval / type menus ----------------------------- */
+.wb-pmenu {
+  position: relative;
+}
+
+.wb-pill--timeframe {
+  min-width: 46px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.wb-menu--grouped {
+  display: grid;
+  gap: 4px;
+  min-width: 230px;
+  padding: 10px;
+}
+
+.wb-menu__group {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.wb-menu__group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+.wb-menu__group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.wb-menu__item--compact {
+  min-width: 40px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  justify-content: center;
+}
+
+/* --- Applied indicator chips -------------------------------------------------*/
+.wb-pane__indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.wb-indicator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 110px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 6px;
+  background: var(--shade-10, rgba(128, 128, 128, 0.14));
+  color: var(--text-color, inherit);
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.wb-indicator-chip__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wb-indicator-chip__remove {
+  border: 0;
+  background: transparent;
+  color: var(--text-color-3, inherit);
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.wb-indicator-chip__remove:hover {
+  color: var(--pnl-loss, var(--danger, #f44336));
+  background: var(--shade-10, rgba(128, 128, 128, 0.14));
+}
+
+.wb-pill--add-indicator {
+  font-family: ui-monospace, monospace;
+  padding: 3px 7px;
+}
+
+/* --- Universal badge / delta rows --------------------------------------------*/
+.wb-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--shade-20, rgba(128, 128, 128, 0.22));
+  color: var(--text-color, inherit);
+}
+
+.wb-delta--up {
+  color: var(--pnl-gain, #26a69a);
+}
+
+.wb-delta--down {
+  color: var(--pnl-loss, #ef5350);
+}
+
+/* --- Symbol search modal ------------------------------------------------------*/
+.wb-search {
+  width: min(680px, 92vw);
+  max-height: 78vh;
+}
+
+.wb-search__title {
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-search__title > span:first-child {
+  font-weight: 600;
+}
+
+.wb-search__hint {
+  font-size: 10px;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+.wb-search__input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--shade-20, rgba(128, 128, 128, 0.3));
+  background: var(--shade-5, rgba(128, 128, 128, 0.08));
+  color: var(--text-color, inherit);
+  font-size: 14px;
+  outline: none;
+}
+
+.wb-search__input:focus {
+  border-color: var(--primary-8, #2962ff);
+}
+
+.wb-search__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.wb-search__results {
+  display: grid;
+  grid-auto-rows: min-content;
+  gap: 2px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.wb-search__row {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr auto minmax(70px, auto);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-color, inherit);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wb-search__row:hover {
+  background: var(--shade-10, rgba(128, 128, 128, 0.14));
+}
+
+.wb-search__symbol {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-search__symbol strong {
+  font-size: 13px;
+}
+
+.wb-search__name {
+  font-size: 11px;
+  color: var(--text-color-2, var(--shade-70, #9aa0ab));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wb-search__quote {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.wb-search__exchange {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+  text-transform: uppercase;
+}
+
+.wb-search__empty {
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+/* --- Indicator picker dialog ---------------------------------------------------*/
+.wb-picker {
+  width: min(560px, 92vw);
+  max-height: 80vh;
+}
+
+.wb-picker__title {
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-picker__title > span:first-child {
+  font-weight: 600;
+}
+
+.wb-picker__hint {
+  font-size: 10px;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+.wb-picker__input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--shade-20, rgba(128, 128, 128, 0.3));
+  background: var(--shade-5, rgba(128, 128, 128, 0.08));
+  color: var(--text-color, inherit);
+  font-size: 13px;
+  outline: none;
+}
+
+.wb-picker__input:focus {
+  border-color: var(--primary-8, #2962ff);
+}
+
+.wb-picker__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 0;
+}
+
+.wb-picker__results {
+  display: grid;
+  grid-auto-rows: min-content;
+  gap: 2px;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
+.wb-picker__row {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: stretch;
+  border-radius: 7px;
+}
+
+.wb-picker__row:hover {
+  background: var(--shade-10, rgba(128, 128, 128, 0.14));
+}
+
+.wb-picker__row--on {
+  background: var(--shade-15, rgba(128, 128, 128, 0.18));
+}
+
+.wb-picker__fav,
+.wb-picker__add {
+  display: flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-color, inherit);
+  cursor: pointer;
+  text-align: left;
+}
+
+.wb-picker__fav {
+  justify-content: center;
+  font-size: 14px;
+  color: var(--palette-warning, #f5a623);
+}
+
+.wb-picker__add {
+  gap: 8px;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.wb-picker__add:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.wb-picker__name {
+  font-size: 12px;
+}
+
+.wb-picker__category {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+.wb-picker__recents {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+.wb-picker__eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-color-3, var(--shade-60, #8a8f9a));
+}
+
+.wb-picker__recent-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* --- Pane header: TradingView-style interval chips --------------------------- */
+.wb-interval-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.wb-pill--open {
+  border-color: var(--primary-1);
+  color: var(--text-color);
+}
+
+/* The `Custom…` row: trigger button in the flyout, editor state when clicked. */
+.wb-menu__custom-row {
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.wb-menu__custom-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--primary-1, var(--border-color));
+  border-radius: 6px;
+  background: var(--shade-5, rgba(128, 128, 128, 0.08));
+  color: var(--text-color);
+}
+
+.wb-menu__custom-input:focus {
+  outline: none;
+}
+
+.wb-menu__custom-apply {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: var(--primary-1);
+  color: var(--on-accent, var(--text-color));
+}
+
+button.wb-menu__custom-row,
+div.wb-menu__custom-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+}
+
+div.wb-menu__custom-row input {
+  flex: 1;
+}
+
+/* --- Drawing rail over the chart --------------------------------------------- */
+.wb-pane__chart-wrap {
+  display: flex;
+  /* Topbar stacks above the chart host. In the default row direction the
+     topbar took a full-height column on the left and the chart started
+     mid-pane (and, squeezed under 640px, the widget dropped into its mobile
+     chrome). */
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.wb-draw-rail {
+  position: absolute;
+  inset-block-start: 104px;     /* clears the Buy/Sell bubble's top-left corner */
+  inset-inline-start: 8px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px;
+  background: color-mix(in srgb, var(--darker-background-color) 78%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+}
+
+.wb-draw-rail__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-color-2);
+}
+
+.wb-draw-rail__btn:hover {
+  background: var(--primary-0);
+  color: var(--text-color);
+}
+
+.wb-draw-rail__btn--on {
+  background: var(--primary-1);
+  color: var(--on-accent, var(--text-color));
+}
+
+.wb-draw-rail__btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wb-draw-rail__sep {
+  height: 1px;
+  margin: 2px 4px;
+  background: var(--border-color);
+}
+
+/* ========================================================================= */
+/* Widget-tier integration: the widget renders its own native topbar and    */
+/* drawing rail; honba-kao only sizes the host.                             */
+/* ========================================================================= */
+
+/* Ensure widget root fills pane chart host */
+.wb-pane__chart-host > .oac-widget {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* One theme: the chart follows honba-kao's app theme (bridge refreshThemeAll),
+   so the native top bar's own light/dark button is hidden. The library has no
+   option for this (TopbarOptions.onTheme is mandatory). */
+.wb-pane__chart-host .oac-widget .oac-topbar__theme {
+  display: none;
+}
+
+/* Icon-only Chart type and Indicators buttons in the native top bar (no
+   library option for compact labels). Only the visible text span is hidden;
+   the glyph, the chevron and the aria-label stay. */
+.wb-pane__chart-host .oac-widget .oac-topbar__type > span:not(.oac-glyph):not(.oac-chev),
+.wb-pane__chart-host .oac-widget .oac-topbar button[aria-label="Indicators"] > span:not(.oac-glyph) {
+  display: none;
+}
+
+/* Short panes (2x2 / rows layouts): the native rail pins its controls block
+   (magnet, lock, hide, delete, undo/redo, ~290px) with `position: sticky;
+   bottom: 0`. When the rail is shorter than that block, the block covers
+   every drawing tool. Let it scroll with the tools instead. */
+.wb-pane__chart-host {
+  container-type: size;
+  container-name: wb-chart-host;
+}
+
+/* Rail drawer (bridge mountRailDrawer): the toggle only exists for short
+   panes; on roomy panes the rail is exactly the library's. */
+.wb-pane__chart-host .oac-widget .oac-rail .honba-rail-drawer {
+  display: none;
+}
+
+@container wb-chart-host (max-height: 880px) {
+  /* Extra scope so this beats the widget's runtime-injected stylesheet. */
+  .wb-pane__chart-host .oac-widget .oac-rail .oac-rail__ctl {
+    position: static;
+  }
+
+  /* Short pane: the secondary controls fold into a drawer behind a toggle,
+     so the drawing-tool groups keep the rail's height. */
+  /* Pinned to the rail's bottom edge so it stays reachable when the tool
+     groups themselves overflow the rail (it scrolls). */
+  .wb-pane__chart-host .oac-widget .oac-rail .honba-rail-drawer {
+    display: grid;
+    place-items: center;
+    margin-top: auto;
+    flex: none;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: inherit;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail.honba-rail--drawer-open .honba-rail-drawer {
+    position: static;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail:not(.honba-rail--drawer-open) .oac-rail__ctl {
+    display: none;
+  }
+
+  .wb-pane__chart-host .oac-widget .oac-rail.honba-rail--drawer-open .honba-rail-drawer {
+    color: var(--oac-accent, currentColor);
+  }
+}
+
+/* Grouped interval menus (bridge mountIntervalGroups) replace the native flat
+   interval pills; the library has no grouped / custom-interval control. The
+   native row stays in the DOM (the widget refreshes it) but is not shown. */
+.wb-pane__chart-host .oac-widget .oac-topbar > .oac-pills:not(.honba-tf) {
+  display: none;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf__chev {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom {
+  width: 240px;
+  padding: 10px;
+  border: 1px solid var(--oac-bd);
+  border-radius: 7px;
+  background: var(--oac-elev);
+  color: var(--oac-tx);
+  box-shadow: var(--oac-shadow);
+  font-size: 12px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--oac-mut);
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__row {
+  display: flex;
+  gap: 6px;
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__row input {
+  flex: 1;
+  min-width: 0;
+  height: var(--oac-ctl-h, 26px);
+  padding: 0 8px;
+  border: 1px solid var(--oac-bd);
+  border-radius: var(--oac-radius, 4px);
+  background: var(--oac-bg, transparent);
+  color: var(--oac-tx);
+}
+
+.wb-pane__chart-host .oac-widget .honba-tf-custom__error {
+  margin: 6px 0 0;
+  color: var(--oac-danger);
+}
+
+/* Account menu over the charts. `.nav-rail` is `position: sticky`, which
+   always makes a stacking context; with `z-index: auto` that context paints at
+   level 0 in DOM order, so everything in <main> after it (the chart hosts,
+   whose canvases sit at z-index 1) covered the rail's account popover, whose
+   own `z-index: 80` only counts inside the rail. Lift the whole rail above
+   the page content, below the sticky header (40).
+   (Belongs beside `.nav-rail` in app.css; kept here because app.css has
+   other in-progress edits.) */
+.nav-rail {
+  z-index: 30;
+}
