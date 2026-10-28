@@ -13,18 +13,24 @@ pub enum RiskLevel {
     VeryHigh,
 }
 
+/// Pure mapping of risk level to (angle, label, css class). Extracted so it
+/// can be unit-tested without a DOM.
+pub(crate) fn risk_style(level: RiskLevel) -> (f64, String, String) {
+    match level {
+        RiskLevel::Low => (-75.0, "Low Risk".to_string(), "text-emerald-400".to_string()),
+        RiskLevel::LowToModerate => (-45.0, "Low to Moderate Risk".to_string(), "text-teal-400".to_string()),
+        RiskLevel::Moderate => (-15.0, "Moderate Risk".to_string(), "text-cyan-400".to_string()),
+        RiskLevel::ModeratelyHigh => (15.0, "Moderately High Risk".to_string(), "text-amber-400".to_string()),
+        RiskLevel::High => (45.0, "High Risk".to_string(), "text-orange-400".to_string()),
+        RiskLevel::VeryHigh => (75.0, "Very High Risk".to_string(), "text-rose-500".to_string()),
+    }
+}
+
 #[component]
 pub fn HfRiskOMeter(
-    level: RiskLevel,
+    #[prop(into)] level: Signal<RiskLevel>,
 ) -> impl IntoView {
-    let (angle_deg, level_label, color_class) = match level {
-        RiskLevel::Low => (-75.0, "Low Risk", "text-emerald-400"),
-        RiskLevel::LowToModerate => (-45.0, "Low to Moderate Risk", "text-teal-400"),
-        RiskLevel::Moderate => (-15.0, "Moderate Risk", "text-cyan-400"),
-        RiskLevel::ModeratelyHigh => (15.0, "Moderately High Risk", "text-amber-400"),
-        RiskLevel::High => (45.0, "High Risk", "text-orange-400"),
-        RiskLevel::VeryHigh => (75.0, "Very High Risk", "text-rose-500"),
-    };
+    let style = Signal::derive(move || risk_style(level.get()));
 
     view! {
         <div class="hf-riskometer-widget flex flex-col items-center gap-1.5 p-3 rounded bg-surface-base border border-border-soft">
@@ -36,16 +42,69 @@ pub fn HfRiskOMeter(
                         stroke="currentColor"
                         stroke_width="2.5"
                         stroke_linecap="round"
-                        transform=format!("rotate({}, 50, 50)", angle_deg)
-                        class=move || format!("transition-transform duration-300 {}", color_class)
+                        transform=move || {
+                            let (a, _, _) = style.get();
+                            format!("rotate({}, 50, 50)", a)
+                        }
+                        class="transition-transform duration-300"
                     />
-                    <circle cx="50" cy="50" r="4" fill="currentColor" class=color_class />
+                    <circle
+                        cx="50" cy="50" r="4" fill="currentColor"
+                        class=move || {
+                            let (_, _, c) = style.get();
+                            c.clone()
+                        }
+                    />
                 </svg>
             </div>
-            <div class=format!("hf-riskometer-badge text-xs font-semibold {}", color_class)>
-                {level_label}
+            <div class=move || {
+                let (_, _, c) = style.get();
+                format!("hf-riskometer-badge text-xs font-semibold {}", c)
+            }>
+                {move || {
+                    let (_, l, _) = style.get();
+                    l.clone()
+                }}
             </div>
             <span class="text-[10px] text-text-muted">"SEBI Risk-o-meter Guidelines"</span>
         </div>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn risk_style_maps_each_level_to_angle_label_and_class() {
+        let cases = [
+            (RiskLevel::Low, -75.0, "Low Risk"),
+            (
+                RiskLevel::LowToModerate,
+                -45.0,
+                "Low to Moderate Risk",
+            ),
+            (RiskLevel::Moderate, -15.0, "Moderate Risk"),
+            (
+                RiskLevel::ModeratelyHigh,
+                15.0,
+                "Moderately High Risk",
+            ),
+            (RiskLevel::High, 45.0, "High Risk"),
+            (RiskLevel::VeryHigh, 75.0, "Very High Risk"),
+        ];
+        for (level, angle, label) in cases {
+            let (a, l, c) = risk_style(level);
+            assert!((a - angle).abs() < f64::EPSILON);
+            assert_eq!(l, label);
+            assert!(!c.is_empty());
+        }
+        // Angles progress monotonically with risk severity.
+        let angles = [
+            risk_style(RiskLevel::Low).0,
+            risk_style(RiskLevel::Moderate).0,
+            risk_style(RiskLevel::High).0,
+        ];
+        assert!(angles[0] < angles[1] && angles[1] < angles[2]);
     }
 }
