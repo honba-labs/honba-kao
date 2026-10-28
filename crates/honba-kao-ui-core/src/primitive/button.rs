@@ -82,13 +82,14 @@ pub fn HfButton(
     #[prop(into, optional)] disabled: Option<Signal<bool>>,
     #[prop(optional)] on_click: Option<Callback<()>>,
     #[prop(into, optional)] aria_label: Option<String>,
-    #[prop(into, optional)] class: Option<String>,
+    /// Extra classes, reactive: accepts a static string or a `Signal<String>`.
+    #[prop(into, optional)] class: Option<Signal<String>>,
     children: Children,
 ) -> impl IntoView {
     let size = size.unwrap_or_default();
     let variant = variant.unwrap_or_default();
     let label = aria_label.unwrap_or_else(|| "Button".to_string());
-    let custom_class = class.unwrap_or_default();
+    let custom_class = class.unwrap_or_else(|| Signal::derive(move || String::new()));
     let disabled = Signal::derive(move || disabled.as_ref().map(|d| d.get()).unwrap_or(false));
     let classes = move || {
         format!(
@@ -102,7 +103,7 @@ pub fn HfButton(
             } else {
                 ""
             },
-            custom_class,
+            custom_class.get(),
         )
     };
 
@@ -216,20 +217,16 @@ pub fn HfCloseButton(
 }
 
 /// Pill-shaped tag button (e.g. for timeframes, filters, quick tags).
-/// `active` is a signal so the active chip highlight stays reactive.
 #[component]
 pub fn HfChip(
-    #[prop(into, optional)] active: Option<Signal<bool>>,
+    #[prop(default = false)] active: bool,
     #[prop(optional)] on_click: Option<Callback<()>>,
     children: Children,
 ) -> impl IntoView {
-    let active = Signal::derive(move || active.as_ref().map(|a| a.get()).unwrap_or(false));
-    let classes = move || {
-        if active.get() {
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-emerald-400 bg-emerald-400/10 text-emerald-300"
-        } else {
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border-strong bg-surface-subtle text-text-muted hover:text-text-high hover:border-text-muted"
-        }
+    let classes = if active {
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-emerald-400 bg-emerald-400/10 text-emerald-300"
+    } else {
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border-strong bg-surface-subtle text-text-muted hover:text-text-high hover:border-text-muted"
     };
 
     view! {

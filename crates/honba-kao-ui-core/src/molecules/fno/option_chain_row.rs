@@ -1,21 +1,22 @@
 //! `HfOptionChainRow` — straddle row coupling CE and PE quotes around a strike.
 //! Ported from the restructure spec (Section 7.4) and `secured-finance-app`.
-//! `strike` and `spot_price` are signals so ITM/ATM/OTM highlighting stays
-//! reactive as the underlying spot moves.
+//! All quote/Greeks values are `Decimal` (zero-floats invariant, issue #33).
 
-use leptos::prelude::*;
 use crate::primitive::{HfMoneynessBadge, Moneyness};
+use leptos::prelude::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OptionLegQuote {
-    pub ltp: f64,
-    pub change_pct: f64,
+    pub ltp: Decimal,
+    pub change_pct: Decimal,
     pub volume: u64,
     pub open_interest: u64,
     pub oi_change: i64,
-    pub iv: f64,
-    pub delta: f64,
-    pub gamma: f64,
+    pub iv: Decimal,
+    pub delta: Decimal,
+    pub gamma: Decimal,
 }
 
 fn oi_bar(oi: u64, oi_change: i64, max_oi: u64) -> impl IntoView {
@@ -33,60 +34,60 @@ fn oi_bar(oi: u64, oi_change: i64, max_oi: u64) -> impl IntoView {
 
 #[component]
 pub fn HfOptionChainRow(
-    strike: Signal<f64>,
-    spot_price: Signal<f64>,
+    strike: Decimal,
+    spot_price: Decimal,
     call: OptionLegQuote,
     put: OptionLegQuote,
-    #[prop(into)] on_select_leg: Callback<(f64, bool, bool)>, // (strike, is_call, is_buy)
+    #[prop(into)] on_select_leg: Callback<(Decimal, bool, bool)>, // (strike, is_call, is_buy)
     #[prop(into, optional)] max_oi: Option<u64>,
+    #[prop(into, optional)] is_buy: Option<Signal<bool>>,
 ) -> impl IntoView {
+    let is_buy = is_buy.unwrap_or_else(|| Signal::derive(|| true));
     let max_oi = max_oi.unwrap_or(call.open_interest.max(put.open_interest).max(1));
-    let is_call_itm = Signal::derive(move || spot_price.get() > strike.get());
-    let is_put_itm = Signal::derive(move || spot_price.get() < strike.get());
-    let is_atm = Signal::derive(move || (spot_price.get() - strike.get()).abs() < (strike.get() * 0.005));
+    let is_call_itm = spot_price > strike;
+    let is_put_itm = spot_price < strike;
+    let is_atm = (spot_price - strike).abs() < (strike * dec!(0.005));
 
     view! {
-        <tr class=move || format!("hf-option-chain-row {}", if is_atm.get() { "bg-surface-elevated font-semibold" } else { "" })>
+        <tr class=move || format!("hf-option-chain-row {}", if is_atm { "bg-surface-elevated font-semibold" } else { "" })>
             // CALL SIDE (Left)
-            <td class=move || format!("{} p-1", if is_call_itm.get() { "bg-emerald-950/20" } else { "" })>
-                {format!("{:.2}", call.delta)}
+            <td class=move || format!("{} p-1", if is_call_itm { "bg-emerald-950/20" } else { "" })>
+                {format!("{}", call.delta.round_dp(4))}
             </td>
-            <td class=move || format!("{} p-1", if is_call_itm.get() { "bg-emerald-950/20" } else { "" })>
-                {format!("{:.1}%", call.iv * 100.0)}
+            <td class=move || format!("{} p-1", if is_call_itm { "bg-emerald-950/20" } else { "" })>
+                {format!("{}%", (call.iv * dec!(100)).round_dp(1))}
             </td>
             <td class="p-1">{oi_bar(call.open_interest, call.oi_change, max_oi)}</td>
-            <td class="cursor-pointer hover:bg-emerald-500/10 p-1" on:click=move |_| on_select_leg.run((strike.get(), true, true))>
-                <span class=move || format!("{} font-mono", if call.change_pct >= 0.0 { "text-emerald-400" } else { "text-rose-400" })>
-                    {format!("{:.2}", call.ltp)}
+            <td class="cursor-pointer hover:bg-emerald-500/10 p-1" on:click=move |_| on_select_leg.run((strike, true, is_buy.get()))>
+                <span class=move || format!("{} font-mono", if call.change_pct >= Decimal::ZERO { "text-emerald-400" } else { "text-rose-400" })>
+                    {format!("{}", call.ltp.round_dp(2))}
                 </span>
             </td>
 
             // CENTER STRIKE
             <td class="hf-strike-cell text-center px-2 py-1 font-mono font-bold bg-surface-subtle border-x border-border-soft">
-                <span>{format!("{:.0}", strike.get())}</span>
-                {move || {
-                    if is_atm.get() {
-                        view! { <HfMoneynessBadge moneyness=Moneyness::ATM /> }.into_any()
-                    } else if is_call_itm.get() {
-                        view! { <HfMoneynessBadge moneyness=Moneyness::ITM /> }.into_any()
-                    } else {
-                        view! { <HfMoneynessBadge moneyness=Moneyness::OTM /> }.into_any()
-                    }
+                <span>{format!("{}", strike.round_dp(2))}</span>
+                {if is_atm {
+                    view! { <HfMoneynessBadge moneyness=Moneyness::ATM /> }.into_any()
+                } else if is_call_itm {
+                    view! { <HfMoneynessBadge moneyness=Moneyness::ITM /> }.into_any()
+                } else {
+                    view! { <HfMoneynessBadge moneyness=Moneyness::OTM /> }.into_any()
                 }}
             </td>
 
             // PUT SIDE (Right)
-            <td class="cursor-pointer hover:bg-rose-500/10 p-1" on:click=move |_| on_select_leg.run((strike.get(), false, true))>
-                <span class=move || format!("{} font-mono", if put.change_pct >= 0.0 { "text-emerald-400" } else { "text-rose-400" })>
-                    {format!("{:.2}", put.ltp)}
+            <td class="cursor-pointer hover:bg-rose-500/10 p-1" on:click=move |_| on_select_leg.run((strike, false, is_buy.get()))>
+                <span class=move || format!("{} font-mono", if put.change_pct >= Decimal::ZERO { "text-emerald-400" } else { "text-rose-400" })>
+                    {format!("{}", put.ltp.round_dp(2))}
                 </span>
             </td>
             <td class="p-1">{oi_bar(put.open_interest, put.oi_change, max_oi)}</td>
-            <td class=move || format!("{} p-1", if is_put_itm.get() { "bg-rose-950/20" } else { "" })>
-                {format!("{:.1}%", put.iv * 100.0)}
+            <td class=move || format!("{} p-1", if is_put_itm { "bg-rose-950/20" } else { "" })>
+                {format!("{}%", (put.iv * dec!(100)).round_dp(1))}
             </td>
-            <td class=move || format!("{} p-1", if is_put_itm.get() { "bg-rose-950/20" } else { "" })>
-                {format!("{:.2}", put.delta)}
+            <td class=move || format!("{} p-1", if is_put_itm { "bg-rose-950/20" } else { "" })>
+                {format!("{}", put.delta.round_dp(4))}
             </td>
         </tr>
     }

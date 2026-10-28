@@ -9,7 +9,7 @@ pub fn HfMosaicWorkspace(
     view! {
         <div class="mosaic-workspace flex flex-col h-full w-full gap-2">
             {toolbar.map(|tb| view! { <div class="mosaic-workspace__toolbar w-full">{tb}</div> })}
-            <div class="mosaic-workspace__tiles flex-grow grid grid-cols-12 gap-2 min-h-0">
+            <div class="mosaic-workspace__tiles flex-grow grid grid-cols-12 gap-2 min-h-0 min-w-0">
                 {children()}
             </div>
         </div>

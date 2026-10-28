@@ -1,10 +1,14 @@
+//! Market tape (time & sales) organism.
+//! All price/size values are `Decimal` (zero-floats invariant, issue #33).
+
 use crate::molecules::core::HfTapeRow;
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TapeTrade {
-    pub price: f64,
-    pub size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
     pub time: String,
     pub is_buyer_maker: bool,
 }
@@ -27,9 +31,16 @@ pub fn HfMarketTape(
             </div>
             <div class="hf-tape-stream flex-grow overflow-y-auto">
                 <For
-                    each=move || trades.get()
-                    key=|tr| format!("{}-{}-{}", tr.time, tr.price, tr.size)
-                    children=move |tr| {
+                    each=move || {
+                        trades
+                            .get()
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, tr)| (i, tr))
+                            .collect::<Vec<_>>()
+                    }
+                    key=|(i, _tr)| format!("tape-{i}")
+                    children=move |(_i, tr)| {
                         let tr_c = tr.clone();
                         let click_cb = on_trade_click.map(|cb| Callback::new(move |_| cb.run(tr_c.clone())));
                         match click_cb {

@@ -36,3 +36,5 @@ chrono = "0.4"
 uuid = { version = "1", features = ["js"] }
 getrandom = { version = "0.2", features = ["js"] }
 num-traits = "0.2"
+rust_decimal.workspace = true
+rust_decimal_macros.workspace = true

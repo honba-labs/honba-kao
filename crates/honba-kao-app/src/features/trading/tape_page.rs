@@ -1,29 +1,30 @@
 use honba_kao_ui_core::organisms::{HfMarketTape, HfMarketTopBar, HfOrderTicket, HfTradingDock, OrderIntent, TapeTrade};
 use honba_kao_ui_core::templates::HfThreeColumnTradingLayout;
 use leptos::prelude::*;
+use rust_decimal_macros::dec;
 use std::sync::Arc;
 
 #[component]
 pub fn TapePage() -> impl IntoView {
     let symbol = RwSignal::new("NIFTY50".to_string());
-    let ltp = RwSignal::new(24500.0);
+    let ltp = RwSignal::new(dec!(24500.0));
 
     let trades = RwSignal::new(vec![
         TapeTrade {
-            price: 24500.5,
-            size: 50.0,
+            price: dec!(24500.5),
+            size: dec!(50.0),
             time: "09:15:02".to_string(),
             is_buyer_maker: false,
         },
         TapeTrade {
-            price: 24500.0,
-            size: 100.0,
+            price: dec!(24500.0),
+            size: dec!(100.0),
             time: "09:15:01".to_string(),
             is_buyer_maker: true,
         },
         TapeTrade {
-            price: 24501.0,
-            size: 25.0,
+            price: dec!(24501.0),
+            size: dec!(25.0),
             time: "09:15:00".to_string(),
             is_buyer_maker: false,
         },
@@ -33,11 +34,11 @@ pub fn TapePage() -> impl IntoView {
         <HfMarketTopBar
             symbol=Signal::derive(move || symbol.get())
             ltp=Signal::derive(move || ltp.get())
-            change_abs=Signal::derive(|| 0.0)
-            change_pct=Signal::derive(|| 0.0)
-            high_24h=Signal::derive(|| 0.0)
-            low_24h=Signal::derive(|| 0.0)
-            volume_24h=Signal::derive(|| 0.0)
+            change_abs=Signal::derive(|| dec!(0.0))
+            change_pct=Signal::derive(|| dec!(0.0))
+            high_24h=Signal::derive(|| dec!(0.0))
+            low_24h=Signal::derive(|| dec!(0.0))
+            volume_24h=Signal::derive(|| dec!(0.0))
         />
     }
     .into_any();
@@ -65,10 +66,10 @@ pub fn TapePage() -> impl IntoView {
         <HfOrderTicket
             symbol=Signal::derive(move || symbol.get())
             mark_price=Signal::derive(move || ltp.get())
-            best_bid=Signal::derive(|| Some(24498.0))
-            best_ask=Signal::derive(|| Some(24502.0))
-            available_capital=Signal::derive(|| 500_000.0)
-            margin_requirement_ratio=Signal::derive(|| 0.15)
+            best_bid=Signal::derive(|| Some(dec!(24498.0)))
+            best_ask=Signal::derive(|| Some(dec!(24502.0)))
+            available_capital=Signal::derive(|| dec!(500000.0))
+            margin_requirement_ratio=Signal::derive(|| dec!(0.15))
             on_submit_order=Callback::new(move |_intent: OrderIntent| {})
         />
     }

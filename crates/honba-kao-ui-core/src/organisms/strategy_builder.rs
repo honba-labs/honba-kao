@@ -1,13 +1,14 @@
 use crate::molecules::fno::{HfStrategyLegRow, StrategyLeg};
 use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[component]
 pub fn HfStrategyBuilder(
     #[prop(into)] legs: RwSignal<Vec<StrategyLeg>>,
-    #[prop(into)] max_profit: Signal<Option<f64>>,
-    #[prop(into)] max_loss: Signal<Option<f64>>,
-    #[prop(into)] breakeven_points: Signal<Vec<f64>>,
+    #[prop(into)] max_profit: Signal<Option<Decimal>>,
+    #[prop(into)] max_loss: Signal<Option<Decimal>>,
+    #[prop(into)] breakeven_points: Signal<Vec<Decimal>>,
     #[prop(into)] on_execute_strategy: Callback<()>,
 ) -> impl IntoView {
     let remove_leg_at = move |idx: usize| {
@@ -30,7 +31,7 @@ pub fn HfStrategyBuilder(
                         <span class="text-text-muted">"Max Profit: "</span>
                         <span class="text-emerald-400 font-bold">
                             {move || match max_profit.get() {
-                                Some(p) => format!("₹{:.2}", p),
+                                Some(p) => format!("₹{}", p.round_dp(2)),
                                 None => "Unlimited".to_string(),
                             }}
                         </span>
@@ -39,7 +40,7 @@ pub fn HfStrategyBuilder(
                         <span class="text-text-muted">"Max Loss: "</span>
                         <span class="text-rose-400 font-bold">
                             {move || match max_loss.get() {
-                                Some(l) => format!("₹{:.2}", l),
+                                Some(l) => format!("₹{}", l.round_dp(2)),
                                 None => "Unlimited".to_string(),
                             }}
                         </span>
@@ -74,7 +75,7 @@ pub fn HfStrategyBuilder(
                             if bes.is_empty() {
                                 "-".to_string()
                             } else {
-                                bes.iter().map(|b| format!("₹{:.2}", b)).collect::<Vec<_>>().join(", ")
+                                bes.iter().map(|b| format!("₹{}", b.round_dp(2))).collect::<Vec<_>>().join(", ")
                             }
                         }}
                     </span>
