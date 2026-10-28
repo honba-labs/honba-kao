@@ -430,6 +430,7 @@
         <a href="#molecules">Molecules</a>
         <a href="#organisms">Organisms</a>
         <a href="#templates">Templates</a>
+        <a href="#charting">Charting &amp; Visualizers</a>
         <a href="#pages">Pages</a>
       </nav>
     </header>
@@ -1587,6 +1588,93 @@
       </div>
     </section>
 
+    <!-- ===================== CHARTING & FINANCIAL VISUALIZERS ===================== -->
+    <section class="section" id="charting">
+      <div class="section__head">
+        <div>
+          <h2 class="section__title">Tier 3.5 — Charting &amp; Financial Visualizers</h2>
+          <span class="section__count">openalgo-charts-rs · Milestone 5</span>
+        </div>
+      </div>
+      <p style="color: var(--hf-text-muted); font-size: 13px;">Canvas engine bindings to <code>window.honbaCharts</code> (vendored OpenAlgo Charts / Lightweight Charts) plus reactive Leptos wrappers, implemented in <code>crates/openalgo-charts-rs/src/</code>. Streaming candle &amp; bar charts, yield-curve term structure with spread bands, and L2 cumulative depth ladder with click-to-order dispatch.</p>
+      <div class="section__grid" style="grid-template-columns: 1fr;">
+
+        <!-- StreamingCandleChart -->
+        <article class="hf-card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+            <h3 class="section__title" style="font-size: 15px; margin: 0; color: var(--hf-text-high);">StreamingCandleChart</h3>
+            <span class="section__count" style="font-size: 11px;">canvas · bounded ring buffer</span>
+          </div>
+          <div style="width: 100%; height: 210px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); position: relative;">
+            <canvas id="chart-candle" width="720" height="210" style="width: 100%; height: 100%; display: block; border-radius: 0.5rem;"></canvas>
+            <div style="position: absolute; left: 10px; top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; color: var(--hf-text-high); text-shadow: 0 1px 2px rgba(0,0,0,0.6);">NIFTY 28 NOV · 1m</div>
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--hf-text-muted); flex-wrap: wrap;">
+            <span>O <b style="color: var(--hf-text-high);">24,580.00</b></span><span>H <b style="color: var(--hf-positive);">24,642.00</b></span><span>L <b style="color: var(--hf-negative);">24,568.00</b></span><span>C <b style="color: var(--hf-positive);">24,612.30</b></span><span>Vol <b>1.84M</b></span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;"><code>CanvasEngine</code> + <code>StreamingCandleChart</code>: bounded candle ring buffer, full-history <code>setSeries</code> on mount, live <code>updateLast</code> tick revision, optional volume overlay via <code>addVolumeOverlay</code>.</p>
+        </article>
+
+        <!-- StreamingBarChart -->
+        <article class="hf-card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+            <h3 class="section__title" style="font-size: 15px; margin: 0; color: var(--hf-text-high);">StreamingBarChart</h3>
+            <span class="section__count" style="font-size: 11px;">canvas · OHLC bars</span>
+          </div>
+          <div style="width: 100%; height: 160px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); position: relative;">
+            <canvas id="chart-bar" width="720" height="160" style="width: 100%; height: 100%; display: block; border-radius: 0.5rem;"></canvas>
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--hf-text-muted); flex-wrap: wrap;">
+            <span>OHLC bars — illiquid tenor / yield-curve proxy</span><span style="color: var(--hf-text-high);">last 200 bars</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;"><code>StreamingBarChart</code>: OHLC bar series (engine <code>"bar"</code> kind) with the same bounded-buffer + live-revision contract as the candlestick chart.</p>
+        </article>
+
+        <!-- Yield Curve / Term Structure -->
+        <article class="hf-card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+            <h3 class="section__title" style="font-size: 15px; margin: 0; color: var(--hf-text-high);">Yield Curve / Term Structure</h3>
+            <span class="section__count" style="font-size: 11px;">TermStructure · spread bands</span>
+          </div>
+          <div style="width: 100%; height: 170px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); position: relative;">
+            <canvas id="chart-yield" width="720" height="170" style="width: 100%; height: 100%; display: block; border-radius: 0.5rem;"></canvas>
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--hf-text-muted); flex-wrap: wrap;">
+            <span><b style="color: var(--hf-positive);">G-Sec:</b> 1D 6.50 · 1M 6.75 · 3M 7.00</span><span><b style="color: #3b82f6;">Corporate AAA:</b> 6.90 · 7.15 · 7.40</span><span style="color: var(--hf-warning);">30–90 spread ≈ 0.45 bps</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;"><code>TermStructure</code>: multi-tenor yield curves with linear interpolation, historical overlays, and spread bands between tenor pairs (<code>spread_at</code>). Rendered as engine <code>"line"</code> series.</p>
+        </article>
+
+        <!-- Depth Ladder -->
+        <article class="hf-card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+            <h3 class="section__title" style="font-size: 15px; margin: 0; color: var(--hf-text-high);">L2 Depth Ladder</h3>
+            <span class="section__count" style="font-size: 11px;">DepthLadder · click-to-order</span>
+          </div>
+          <div style="width: 100%; height: 170px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); position: relative;">
+            <canvas id="chart-depth" width="720" height="170" style="width: 100%; height: 100%; display: block; border-radius: 0.5rem;"></canvas>
+            <div style="position: absolute; left: 10px; top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; color: var(--hf-text-high); text-shadow: 0 1px 2px rgba(0,0,0,0.6);">Bid · Ask cumulative depth</div>
+            <div style="position: absolute; right: 10px; top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--hf-text-muted);">Mid 24,612.30 · Spread 0.25</div>
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--hf-text-muted); flex-wrap: wrap;">
+            <span>Click a level → <code>OrderDispatch</code> (price, size, is_bid)</span><span>top-of-book / spread / mid-price</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;"><code>DepthLadder</code>: cumulative bid/ask volume depth, best-bid/best-ask, spread, mid-price, and click-to-order dispatch; emits engine-friendly bid/ask depth series for canvas rendering.</p>
+        </article>
+
+        <!-- OpenalgoChart Leptos wrapper note -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">OpenalgoChart (Leptos wrapper)</h3>
+          <div style="border: 1px dashed var(--hf-border-soft); border-radius: 0.5rem; background: rgba(255,255,255,0.02); padding: 24px 16px; text-align: center; color: var(--hf-text-muted); font-size: 13px;">
+            <div style="font-weight: 600; color: var(--hf-text-high); margin-bottom: 6px; display: block;">&lt;OpenalgoChart data={candles} theme={theme} kind="candlestick" /&gt;</div>
+            <span class="placeholder__note">Reactive Leptos component: mounts <code>window.honbaCharts.mountStatic</code> on a &lt;canvas&gt;, pushes full history on mount, streams the last bar via <code>updateLast</code> on each data change.</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Signal-driven <code>Signal&lt;Vec&lt;CandleData&gt;&gt;</code> input; graceful degradation when <code>window.honbaCharts</code> is absent (host / non-browser targets).</p>
+        </article>
+
+      </div>
+    </section>
+
     <!-- ===================== PAGES ===================== -->
     <section class="section" id="pages">
       <div class="section__head">
@@ -1745,6 +1833,142 @@
       honba-kao Design System &nbsp;·&nbsp; Atomic Design v3.0 &nbsp;·&nbsp; Components sourced from Secured-Finance atoms/molecules/organisms + OpenTerminalUI terminal design system.
     </footer>
   </div>
+
+  <script>
+    /* =========================================================================
+       honba-kao Design System Showcase — Chart canvas renderers
+       Renders synthetic (demo) data into the Milestone 5 charting canvases so
+       the showcase previews StreamingCandleChart / StreamingBarChart /
+       TermStructure (yield curve) / DepthLadder output.
+       ========================================================================= */
+    (function () {
+      var UP = '#10b981', DOWN = '#ef4444', GRID = '#232a3a', TEXT = '#94a3b8', MUTED = 'rgba(148,163,184,0.45)';
+
+      function ctxOf(id) {
+        var c = document.getElementById(id);
+        return c ? c.getContext('2d') : null;
+      }
+
+      /* ---------- candle / bar OHLC dataset ---------- */
+      function ohlcSeries(base, n, vol) {
+        var out = [], px = base;
+        for (var i = 0; i < n; i++) {
+          var o = px, c = px + (Math.random() - 0.45) * 6, h = Math.max(o, c) + Math.random() * 4, l = Math.min(o, c) - Math.random() * 4;
+          out.push({ o: o, h: h, l: l, c: c, v: vol * (0.5 + Math.random()) });
+          px = c;
+        }
+        return out;
+      }
+
+      var candles = ohlcSeries(24600, 120, 80000);
+      var bars = ohlcSeries(100.50, 90, 12000);
+
+      function drawOhlc(ctx, data, isCandle) {
+        var c = ctx.canvas, w = c.width, h = c.height;
+        ctx.clearRect(0, 0, w, h);
+        var highs = data.map(function (d) { return d.h; }), lows = data.map(function (d) { return d.l; });
+        var hi = Math.max.apply(null, highs), lo = Math.min.apply(null, lows), rng = hi - lo || 1;
+        function y(v) { return Math.round(h - 30 - (v - lo) / rng * (h - 60)); }
+        function x(i) { return Math.round((i + 0.5) * w / data.length); }
+        /* grid */
+        ctx.strokeStyle = GRID; ctx.lineWidth = 1; ctx.beginPath();
+        for (var g = 0; g <= 4; g++) { var yy = h - 30 - (g / 4) * (h - 60); ctx.moveTo(0, yy); ctx.lineTo(w, yy); }
+        ctx.stroke();
+        /* wicks + bodies */
+        var bw = Math.max(2, (w / data.length) * 0.5);
+        for (var i = 0; i < data.length; i++) {
+          var d = data[i], xp = x(i), up = d.c >= d.o;
+          var yh = y(d.h), yl = y(d.l), yo = y(d.o), yc = y(d.c);
+          ctx.beginPath(); ctx.moveTo(xp, yh); ctx.lineTo(xp, yl); ctx.strokeStyle = up ? UP : DOWN; ctx.lineWidth = 1; ctx.stroke();
+          if (isCandle) {
+            ctx.beginPath(); ctx.rect(xp - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc)));
+            ctx.fillStyle = up ? UP : DOWN; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
+          } else {
+            ctx.beginPath(); ctx.moveTo(xp - bw / 2, yo); ctx.lineTo(xp + bw / 2, yo); ctx.strokeStyle = up ? UP : DOWN; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(xp - bw / 2, yc); ctx.lineTo(xp + bw / 2, yc); ctx.stroke();
+          }
+        }
+        ctx.fillStyle = TEXT; ctx.font = '10px "IBM Plex Mono", monospace';
+        ctx.fillText(isCandle ? 'StreamingCandleChart — live updateLast ticks' : 'StreamingBarChart — OHLC bars', 8, h - 7);
+      }
+
+      /* ---------- yield curve dataset ---------- */
+      var curves = [
+        { name: 'G-Sec', color: UP, pts: [{ t: 1, y: 6.50 }, { t: 30, y: 6.75 }, { t: 90, y: 7.00 }, { t: 180, y: 7.15 }, { t: 365, y: 7.20 }] },
+        { name: 'AAA Corp', color: '#3b82f6', pts: [{ t: 1, y: 6.90 }, { t: 30, y: 7.15 }, { t: 90, y: 7.40 }, { t: 180, y: 7.55 }, { t: 365, y: 7.60 }] }
+      ];
+
+      function drawYield(ctx) {
+        var c = ctx.canvas, w = c.width, h = c.height;
+        ctx.clearRect(0, 0, w, h);
+        var all = curves.flatMap(function (cu) { return cu.pts.map(function (p) { return p.y; }); });
+        var hi = Math.max.apply(null, all), lo = Math.min.apply(null, all), rng = hi - lo || 1;
+        var tmax = 365;
+        function x(t) { return Math.round(40 + (t / tmax) * (w - 80)); }
+        function y(v) { return Math.round(h - 24 - (v - lo) / rng * (h - 48)); }
+        ctx.strokeStyle = GRID; ctx.lineWidth = 1; ctx.beginPath();
+        for (var g = 0; g <= 4; g++) { var yy = h - 24 - (g / 4) * (h - 48); ctx.moveTo(40, yy); ctx.lineTo(w - 40, yy); }
+        ctx.stroke();
+        ctx.fillStyle = TEXT; ctx.font = '10px "IBM Plex Mono", monospace';
+        curves.forEach(function (cu) {
+          ctx.beginPath();
+          cu.pts.forEach(function (p, i) {
+            var xp = x(p.t), yp = y(p.y);
+            if (i === 0) ctx.moveTo(xp, yp); else ctx.lineTo(xp, yp);
+            ctx.beginPath(); ctx.arc(xp, yp, 3, 0, 2 * Math.PI); ctx.fillStyle = cu.color; ctx.fill();
+          });
+          ctx.strokeStyle = cu.color; ctx.lineWidth = 2; ctx.stroke();
+          var last = cu.pts[cu.pts.length - 1];
+          ctx.fillStyle = cu.color; ctx.fillText(last.y.toFixed(2), x(last.t) + 6, y(last.y) + 4);
+          ctx.fillStyle = TEXT; ctx.fillText(cu.name, x(cu.pts[0].t) - 40, y(cu.pts[0].y) - 8);
+        });
+        ctx.fillText('TermStructure — tenor vs yield, spread bands between tenor pairs', 8, h - 7);
+      }
+
+      /* ---------- depth ladder dataset ---------- */
+      var mid = 24612.30;
+      var bids = [], asks = [];
+      for (var k = 0; k < 12; k++) {
+        bids.push({ price: mid - (k + 1) * 0.25, size: 450 + Math.random() * 1200 });
+        asks.push({ price: mid + (k + 1) * 0.25, size: 380 + Math.random() * 1100 });
+      }
+      var bcum = 0, acum = 0;
+      bids.forEach(function (b) { bcum += b.size; b.cum = bcum; });
+      asks.forEach(function (a) { acum += a.size; a.cum = acum; });
+      var maxVol = Math.max(bcum, acum);
+
+      function drawDepth(ctx) {
+        var c = ctx.canvas, w = c.width, h = c.height;
+        ctx.clearRect(0, 0, w, h);
+        var cx = w / 2;
+        ctx.strokeStyle = GRID; ctx.lineWidth = 1; ctx.beginPath();
+        ctx.moveTo(cx, 20); ctx.lineTo(cx, h - 24); ctx.stroke();
+        ctx.fillStyle = TEXT; ctx.font = '10px "IBM Plex Mono", monospace';
+        ctx.fillText('BID', 10, 16); ctx.fillText('ASK', w - 40, 16);
+        ctx.fillStyle = MUTED; ctx.fillText(String(mid.toFixed(2)) + ' mid', cx - 44, h - 8);
+        bids.forEach(function (b, i) {
+          var bx = cx - (b.cum / maxVol) * (cx - 10), by = 34 + i * 10;
+          ctx.beginPath(); ctx.rect(bx, by - 5, cx - bx, 8); ctx.fillStyle = UP; ctx.globalAlpha = 0.75; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.fillStyle = TEXT; ctx.fillText(b.price.toFixed(2), bx - 6, by + 3);
+        });
+        asks.forEach(function (a, i) {
+          var ax = cx, aw = (a.cum / maxVol) * (cx - 10), by = 34 + i * 10;
+          ctx.beginPath(); ctx.rect(ax, by - 5, aw, 8); ctx.fillStyle = DOWN; ctx.globalAlpha = 0.75; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.fillStyle = TEXT; ctx.fillText(a.price.toFixed(2), cx + aw + 4, by + 3);
+        });
+        ctx.fillText('DepthLadder — cumulative volume, click-to-order dispatch', 8, h - 7);
+      }
+
+      var cCandle = ctxOf('chart-candle');
+      var cBar = ctxOf('chart-bar');
+      var cYield = ctxOf('chart-yield');
+      var cDepth = ctxOf('chart-depth');
+      if (cCandle) drawOhlc(cCandle, candles, true);
+      if (cBar) drawOhlc(cBar, bars, false);
+      if (cYield) drawYield(cYield);
+      if (cDepth) drawDepth(cDepth);
+    })();
+  </script>
 
 </body>
 </html>
