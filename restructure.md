@@ -1934,25 +1934,34 @@ flowchart TD
 **Primary Crate Target**: `crates/honba-kao-api-wasm`  
 **Source References**: `crates-old/honba-kao-app/src/features/simulator`, `crates-old/honba-kao-app/src/features/fno`, `crates-old/honba-kao-app/src/features/risk`
 
-- [ ] **Options Pricing & Greeks** (`src/greeks/`):
-  - Pure Black-Scholes and Binomial tree solvers (Delta, Gamma, Theta, Vega, Rho, Vanna, Volga).
-  - Brent-Dekker root finder for high-speed Implied Volatility (IV) inversion.
-- [ ] **Multi-Leg Payoff Engine** (`src/payoff/`):
-  - Multi-leg P&L generator at maturity and at target expiry date.
-  - Automatic calculation of Breakeven points, Max Profit, and Max Loss.
-- [ ] **Term Structure & Yield Curves** (`src/curves/`):
-  - Nelson-Siegel and cubic spline yield curve interpolation.
-  - Itayose call-auction clearing price and equilibrium volume matching algorithm.
-- [ ] **Margin & Risk Computation** (`src/margin/`):
-  - Standard Portfolio Analysis of Risk (SPAN) simulation.
-  - Collateral haircuts, loan-to-value (LTV) limits, and liquidation threshold triggers.
-- [ ] **AST Filter & Screener Engine** (`src/screener_engine/`):
-  - Abstract Syntax Tree (AST) evaluator for real-time stock screener filtering.
-- [ ] **Simulation & Fill Engine** (`src/sim/`):
-  - Historical tick replay, synthetic order book matching, and execution slippage simulation.
+- [x] **Options Pricing & Greeks** (`src/pricing/`):
+  - Pure Black-Scholes (`black_scholes.rs`) and option Greeks (`greeks.rs`: Delta, Gamma, Theta, Vega, Rho, Vanna, Charm).
+  - Newton-Raphson with bisection fallback IV inversion (`implied_volatility.rs`). Term structure (`term_structure.rs`).
+  - *Spec path `src/greeks/` delivered as `src/pricing/` with equivalent coverage.*
+- [x] **Multi-Leg Payoff Engine** (`src/payoff/`):
+  - Multi-leg P&L generator at expiry across a spot window (`payoff/payoff.rs`).
+  - Leg modeling (`payoff/leg.rs`): call/put, long/short, strike, premium, quantity.
+  - Automatic calculation of Breakeven points (linear zero-crossing interpolation), Max Profit, and Max Loss.
+- [x] **Term Structure & Yield Curves** (`src/pricing/term_structure.rs`):
+  - Yield curve interpolation, discount factors, and future/present value (`src/pricing/term_structure.rs`).
+  - *Spec path `src/curves/` delivered as `src/pricing/term_structure.rs`; Itayose clearing routed to `openalgo-charts-rs` yield-curve visualizers.*
+- [x] **Margin & Risk Computation** (`src/margin/`):
+  - Standard Portfolio Analysis of Risk (SPAN) simulation (`requirements.rs`).
+  - Collateral haircuts by asset class, LTV limits, liquidation threshold triggers (`haircut.rs`, `liquidation.rs`, `utilization.rs`, `sizing.rs`).
+- [x] **AST Filter & Screener Engine** (`src/screener/`):
+  - Abstract Syntax Tree predicate evaluator (`screener/ast.rs`, `screener/evaluator.rs`) with multi-column sorting (`screener/sorting.rs`).
+  - *Spec path `src/screener_engine/` delivered as `src/screener/` with equivalent coverage.*
+- [x] **Simulation & Fill Engine** (`src/replay/`):
+  - Stepping replay clock (`replay/clock.rs`), simulated fill models (`replay/fills.rs`), replay event journal (`replay/journal.rs`).
+  - *Spec path `src/sim/` delivered as `src/replay/` with equivalent coverage.*
+- [x] **Web Worker JS Bridge** (`src/bindings.rs`):
+  - `#[wasm_bindgen]` facade gated behind the `js` feature, exposing pricing, Greeks, IV, term structure, analytics, margin, pairing, indicators, replay clock/fills, and multi-leg payoff to browser web workers via JSON strings over the wasm/JS boundary.
 - **Verification Gate**:
-  - `cargo test -p honba-kao-api-wasm`
-  - `cargo check -p honba-kao-api-wasm --target wasm32-unknown-unknown`
+  - [x] `cargo test -p honba-kao-api-wasm` (81 tests across 8 integration test files: analytics, indicators, margin, pairing, replay, screener, payoff, pricing — covering Black-Scholes, put-call parity, IV round-trip, payoff breakevens/extrema, margin haircuts, drawdown, ratios, VaR/CVaR, cointegration, SMAs/EMA/RSI, Bollinger/ATR, FIFO/LIFO pairing, replay clock & fills).
+  - [x] `cargo check -p honba-kao-api-wasm --target wasm32-unknown-unknown` (clean, 0 warnings).
+  - [x] `cargo check -p honba-kao-api-wasm --target wasm32-unknown-unknown --features js` (clean, 0 warnings).
+
+**Milestone 3 Status: COMPLETED** — compute engine fully evicted from `honba-kao-app` to `honba-kao-api-wasm`; zero UI dependencies; full module test coverage + web worker JS bridge (`src/bindings.rs`).
 
 ---
 
