@@ -80,6 +80,23 @@ pub fn AppRouter() -> impl IntoView {
                     <Route path=path!("risk/oms") view=OmsPage />
                     <Route path=path!("risk/ops") view=OpsPage />
                     <Route path=path!("risk/sizer") view=PositionSizerPage />
+
+                    // ---- Legacy v2 route aliases (preserved bookmarks / deep links) ----
+                    // See router/paths.rs ROUTE_LEGACY_* constants.
+                    <Route path=path!("workbench") view=CockpitPage />
+                    <Route path=path!("fno") view=OptionChainPage />
+                    <Route path=path!("fno/strategy") view=StrategyBuilderPage />
+                    <Route path=path!("fno/oi") view=OiAnalysisPage />
+                    <Route path=path!("fno/greeks") view=GreeksHeatmapPage />
+                    <Route path=path!("equity/stocks") view=CockpitPage />
+                    <Route path=path!("equity/dom") view=DomPage />
+                    <Route path=path!("equity/tape") view=TapePage />
+                    <Route path=path!("equity/chart-workstation") view=MultiChartPage />
+                    <Route path=path!("equity/mta") view=MtaPage />
+                    <Route path=path!("equity/compare") view=ComparePage />
+                    <Route path=path!("backtesting") view=BacktestingDeckPage />
+                    <Route path=path!("backtesting/model-lab") view=ModelLabPage />
+                    <Route path=path!("settings") view=AccountPage />
                 </ParentRoute>
             </Routes>
         </Router>
