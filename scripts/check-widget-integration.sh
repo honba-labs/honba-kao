@@ -33,7 +33,7 @@ fi
 #    it exposes ~100 grouped tools vs. nine in honba-kao's old custom rail;
 #    see vendor/openalgo-charts/honba-bridge.js createWidget options).
 echo "  Checking widget mount configuration..."
-if grep -r "topbar:\s*true" "$ROOT/vendor/openalgo-charts/honba-bridge.js" 2>/dev/null; then
+if grep -r "topbar:\s*true" "$ROOT/crates/openalgo-charts-rs/vendor/openalgo-charts/honba-bridge.js" 2>/dev/null; then
     echo "❌ FAIL: Widget topbar enabled (topbar:true) — honba-kao owns the topbar"
     ERRORS=$((ERRORS + 1))
 else
@@ -64,7 +64,7 @@ REQUIRED_HIDES=(
     "\.oac-widget \.oac-topbar"
 )
 for pattern in "${REQUIRED_HIDES[@]}"; do
-    if ! grep -q "$pattern" "$ROOT/style/workbench.css" 2>/dev/null; then
+    if ! grep -q "$pattern" "$ROOT/crates/honba-kao-app/assets/style/workbench.css" 2>/dev/null; then
         echo "❌ FAIL: Missing hide rule for $pattern"
         ERRORS=$((ERRORS + 1))
     fi
@@ -84,7 +84,7 @@ REQUIRED_TOKENS=(
     "sell:"
 )
 for token in "${REQUIRED_TOKENS[@]}"; do
-    if ! grep -q "$token" "$ROOT/vendor/openalgo-charts/honba-bridge.js" 2>/dev/null; then
+    if ! grep -q "$token" "$ROOT/crates/openalgo-charts-rs/vendor/openalgo-charts/honba-bridge.js" 2>/dev/null; then
         echo "❌ FAIL: Theme bridge missing mapping for $token"
         ERRORS=$((ERRORS + 1))
     fi
