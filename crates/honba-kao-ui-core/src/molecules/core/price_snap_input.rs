@@ -1,18 +1,20 @@
 use crate::primitive::{HfButton, HfOrderInputBox};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[component]
 pub fn HfPriceSnapInput(
     #[prop(into)] value: RwSignal<String>,
     #[prop(into)] currency_symbol: String,
-    #[prop(into)] best_bid: Signal<Option<f64>>,
-    #[prop(into)] best_ask: Signal<Option<f64>>,
+    #[prop(into)] best_bid: Signal<Option<Decimal>>,
+    #[prop(into)] best_ask: Signal<Option<Decimal>>,
     #[prop(optional)] disabled: bool,
 ) -> impl IntoView {
     let on_mid_click = Callback::new(move |_| {
         if let (Some(bid), Some(ask)) = (best_bid.get(), best_ask.get()) {
-            let mid = (bid + ask) / 2.0;
-            value.set(format!("{:.2}", mid));
+            let mid = (bid + ask) / dec!(2);
+            value.set(format!("{}", mid.round_dp(2)));
         }
     });
 

@@ -1,35 +1,39 @@
+//! Collateral organism — multi-asset collateral manager.
+//! All balance/price/haircut values are `Decimal` (zero-floats invariant, issue #33).
+
 use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CollateralAssetRow {
     pub symbol: String,
     pub name: String,
-    pub balance: f64,
-    pub price: f64,
-    pub haircut_pct: f64,
-    pub collateral_value: f64,
+    pub balance: Decimal,
+    pub price: Decimal,
+    pub haircut_pct: Decimal,
+    pub collateral_value: Decimal,
 }
 
 #[component]
 pub fn HfCollateralOrganism(
     #[prop(into)] assets: Signal<Vec<CollateralAssetRow>>,
-    #[prop(into, optional)] total_collateral_value: Option<Signal<f64>>,
-    #[prop(into)] margin_used: Signal<f64>,
+    #[prop(into, optional)] total_collateral_value: Option<Signal<Decimal>>,
+    #[prop(into)] margin_used: Signal<Decimal>,
     #[prop(into, optional)] on_deposit: Option<Callback<String>>,
     #[prop(into, optional)] on_withdraw: Option<Callback<String>>,
 ) -> impl IntoView {
-    // Haircut evaluation: collateral value = balance × price × (1 − haircut%).
-    // This is the previously-unimplemented haircut evaluation (issue #36).
+    // Haircut evaluation: collateral value = balance x price x (1 - haircut%).
     let rows = Signal::derive(move || {
         assets.get().into_iter().map(|a| {
-            let haircut = a.haircut_pct.clamp(0.0, 100.0);
-            let collateral_value = a.balance * a.price * (1.0 - haircut / 100.0);
+            let haircut = a.haircut_pct.clamp(dec!(0), dec!(100));
+            let collateral_value = a.balance * a.price * (dec!(1) - haircut / dec!(100));
             CollateralAssetRowView { asset: a, collateral_value }
         }).collect::<Vec<_>>()
     });
     let total_collateral = total_collateral_value.unwrap_or_else(|| {
-        Signal::derive(move || rows.get().iter().map(|r| r.collateral_value).sum::<f64>())
+        Signal::derive(move || rows.get().iter().map(|r| r.collateral_value).sum())
     });
 
     view! {
@@ -42,11 +46,11 @@ pub fn HfCollateralOrganism(
                 <div class="flex gap-4 text-xs font-mono">
                     <div>
                         <span class="text-text-muted">"Total Collateral: "</span>
-                        <span class="font-bold text-text-high">{move || format!("₹{:.2}", total_collateral.get())}</span>
+                        <span class="font-bold text-text-high">{move || format!("₹{}", total_collateral.get().round_dp(2))}</span>
                     </div>
                     <div>
                         <span class="text-text-muted">"Margin In Use: "</span>
-                        <span class="font-bold text-amber-400">{move || format!("₹{:.2}", margin_used.get())}</span>
+                        <span class="font-bold text-amber-400">{move || format!("₹{}", margin_used.get().round_dp(2))}</span>
                     </div>
                 </div>
             </div>
@@ -74,10 +78,10 @@ pub fn HfCollateralOrganism(
                                 view! {
                                     <tr class="hover:bg-surface-elevated">
                                         <td class="py-2 px-3 font-sans font-semibold text-text-high">{r.asset.name} <span class="text-text-muted text-[10px]">({r.asset.symbol})</span></td>
-                                        <td class="py-2 px-3 text-right">{format!("{:.4}", r.asset.balance)}</td>
-                                        <td class="py-2 px-3 text-right">{format!("₹{:.2}", r.asset.price)}</td>
-                                        <td class="py-2 px-3 text-right text-amber-400">{format!("{:.1}%", r.asset.haircut_pct)}</td>
-                                        <td class="py-2 px-3 text-right font-bold text-emerald-400">{format!("₹{:.2}", r.collateral_value)}</td>
+                                        <td class="py-2 px-3 text-right">{format!("{}", r.asset.balance.round_dp(4))}</td>
+                                        <td class="py-2 px-3 text-right">{format!("₹{}", r.asset.price.round_dp(2))}</td>
+                                        <td class="py-2 px-3 text-right text-amber-400">{format!("{}%", r.asset.haircut_pct.round_dp(1))}</td>
+                                        <td class="py-2 px-3 text-right font-bold text-emerald-400">{format!("₹{}", r.collateral_value.round_dp(2))}</td>
                                         <td class="py-2 px-3 text-center">
                                             <div class="flex items-center justify-center gap-1">
                                                 {on_deposit.map(|cb| view! {
@@ -114,5 +118,5 @@ pub fn HfCollateralOrganism(
 #[derive(Clone, Debug)]
 struct CollateralAssetRowView {
     asset: CollateralAssetRow,
-    collateral_value: f64,
+    collateral_value: Decimal,
 }

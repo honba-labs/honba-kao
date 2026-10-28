@@ -1,4 +1,10 @@
+//! L2 depth ladder organism — ported from secured-finance `NewOrderBookWidget`.
+//!
+//! All price/size/money values are `Decimal` (zero-floats invariant, issue #33).
+
 use leptos::prelude::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum OrderBookFilter {
@@ -10,9 +16,9 @@ pub enum OrderBookFilter {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookLevel {
-    pub price: f64,
-    pub size: f64,
-    pub cumulative_size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
+    pub cumulative_size: Decimal,
     pub order_count: u32,
 }
 
@@ -20,8 +26,8 @@ pub struct BookLevel {
 pub fn HfOrderBook(
     #[prop(into)] bids: Signal<Vec<BookLevel>>,
     #[prop(into)] asks: Signal<Vec<BookLevel>>,
-    #[prop(into)] spread: Signal<Option<(f64, f64)>>, // (absolute, percentage)
-    #[prop(into)] on_level_click: Callback<(f64, f64, bool)>, // (price, size, is_bid)
+    #[prop(into)] spread: Signal<Option<(Decimal, Decimal)>>, // (absolute, percentage)
+    #[prop(into)] on_level_click: Callback<(Decimal, Decimal, bool)>, // (price, size, is_bid)
     #[prop(into, optional)] filter: Option<Signal<OrderBookFilter>>,
     #[prop(into, optional)] aggregation_options: Option<Vec<f64>>,
     #[prop(into, optional)] active_aggregation: Option<RwSignal<f64>>,
@@ -34,14 +40,18 @@ pub fn HfOrderBook(
     // their sizes, so the aggregation control actually changes the book.
     let aggregate = move |levels: Vec<BookLevel>, side_filter: OrderBookFilter| {
         let active = active_agg.get();
-        let mut buckets: Vec<(f64, f64, u32)> = Vec::new(); // (price, size, order_count)
+        let active_dec = Decimal::from_f64_retain(active).unwrap_or_default();
+        let mut buckets: Vec<(Decimal, Decimal, u32)> = Vec::new(); // (price, size, order_count)
         for level in levels {
             let key = if active > 0.0 {
-                (level.price / active).round() * active
+                (level.price / active_dec).round() * active_dec
             } else {
                 level.price
             };
-            if let Some(pos) = buckets.iter().position(|(p, _, _)| (p - key).abs() < f64::EPSILON) {
+            if let Some(pos) = buckets
+                .iter()
+                .position(|(p, _, _)| (*p - key).abs() < dec!(0.000001))
+            {
                 buckets[pos].1 += level.size;
                 buckets[pos].2 = buckets[pos].2.saturating_add(level.order_count);
             } else {
@@ -53,21 +63,19 @@ pub fn HfOrderBook(
             .map(|(price, size, order_count)| BookLevel {
                 price,
                 size,
-                cumulative_size: 0.0, // filled in below
+                cumulative_size: Decimal::ZERO,
                 order_count,
             })
             .collect();
-        // Running cumulative size.
         match side_filter {
             OrderBookFilter::BidsOnly | OrderBookFilter::All => {
-                // bids displayed highest-first
-                out.sort_by(|a, b| b.price.partial_cmp(&a.price).unwrap_or(std::cmp::Ordering::Equal));
+                out.sort_by(|a, b| b.price.cmp(&a.price));
             }
             OrderBookFilter::AsksOnly => {
-                out.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap_or(std::cmp::Ordering::Equal));
+                out.sort_by(|a, b| a.price.cmp(&b.price));
             }
         }
-        let mut run = 0.0;
+        let mut run = Decimal::ZERO;
         for level in out.iter_mut() {
             run += level.size;
             level.cumulative_size = run;
@@ -77,7 +85,12 @@ pub fn HfOrderBook(
 
     // Max cumulative size per side, used to scale depth bars relative to the
     // widest level on that side (no magic constant).
-    let max_cum = move |levels: &[BookLevel]| levels.iter().map(|l| l.cumulative_size).fold(0.0f64, f64::max);
+    let max_cum = move |levels: &[BookLevel]| {
+        levels
+            .iter()
+            .map(|l| l.cumulative_size)
+            .fold(Decimal::ZERO, Decimal::max)
+    };
 
     let asks_view = move || -> AnyView {
         let raw = asks.get();
@@ -92,7 +105,11 @@ pub fn HfOrderBook(
                 {levels.into_iter().map(|level| {
                     let px = level.price;
                     let sz = level.size;
-                    let width = if max > 0.0 { (level.cumulative_size / max * 100.0).min(100.0) } else { 0.0 };
+                    let width = if max > Decimal::ZERO {
+                        (level.cumulative_size / max * dec!(100)).round()
+                    } else {
+                        dec!(0)
+                    };
                     view! {
                         <div
                             class="hf-book-row relative flex justify-between px-2 py-0.5 hover:bg-rose-500/10 cursor-pointer"
@@ -100,10 +117,10 @@ pub fn HfOrderBook(
                         >
                             <div
                                 class="hf-depth-fill absolute inset-y-0 right-0 bg-rose-500/15"
-                                style=format!("width: {width:.1}%;")
+                                style=format!("width: {}%;", width)
                             />
-                            <span class="relative text-rose-400">{format!("{:.2}", px)}</span>
-                            <span class="relative text-text-muted">{format!("{:.2}", sz)}</span>
+                            <span class="relative text-rose-400">{format!("{}", px.round_dp(2))}</span>
+                            <span class="relative text-text-muted">{format!("{}", sz.round_dp(2))}</span>
                         </div>
                     }
                 }).collect::<Vec<_>>()}
@@ -125,7 +142,11 @@ pub fn HfOrderBook(
                 {levels.into_iter().map(|level| {
                     let px = level.price;
                     let sz = level.size;
-                    let width = if max > 0.0 { (level.cumulative_size / max * 100.0).min(100.0) } else { 0.0 };
+                    let width = if max > Decimal::ZERO {
+                        (level.cumulative_size / max * dec!(100)).round()
+                    } else {
+                        dec!(0)
+                    };
                     view! {
                         <div
                             class="hf-book-row relative flex justify-between px-2 py-0.5 hover:bg-emerald-500/10 cursor-pointer"
@@ -133,10 +154,10 @@ pub fn HfOrderBook(
                         >
                             <div
                                 class="hf-depth-fill absolute inset-y-0 right-0 bg-emerald-500/15"
-                                style=format!("width: {width:.1}%;")
+                                style=format!("width: {}%;", width)
                             />
-                            <span class="relative text-emerald-400">{format!("{:.2}", px)}</span>
-                            <span class="relative text-text-muted">{format!("{:.2}", sz)}</span>
+                            <span class="relative text-emerald-400">{format!("{}", px.round_dp(2))}</span>
+                            <span class="relative text-text-muted">{format!("{}", sz.round_dp(2))}</span>
                         </div>
                     }
                 }).collect::<Vec<_>>()}
@@ -179,7 +200,9 @@ pub fn HfOrderBook(
                         <span>"Spread"</span>
                         <span>
                             {move || match spread.get() {
-                                Some((abs, bps)) => format!("{:.2} ({:.2} bps)", abs, bps),
+                                Some((abs, bps)) => {
+                                    format!("{} ({} bps)", abs.round_dp(2), bps.round_dp(2))
+                                }
                                 None => "-".to_string(),
                             }}
                         </span>

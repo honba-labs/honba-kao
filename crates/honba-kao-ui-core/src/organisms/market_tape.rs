@@ -1,10 +1,14 @@
+//! Market tape (time & sales) organism.
+//! All price/size values are `Decimal` (zero-floats invariant, issue #33).
+
 use crate::molecules::core::HfTapeRow;
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TapeTrade {
-    pub price: f64,
-    pub size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
     pub time: String,
     pub is_buyer_maker: bool,
 }

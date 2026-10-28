@@ -1,19 +1,20 @@
 use crate::molecules::fno::{HfOptionChainRow, OptionLegQuote};
 use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OptionStrikePair {
-    pub strike: f64,
+    pub strike: Decimal,
     pub call: OptionLegQuote,
     pub put: OptionLegQuote,
 }
 
 #[component]
 pub fn HfOptionChain(
-    #[prop(into)] spot_price: Signal<f64>,
+    #[prop(into)] spot_price: Signal<Decimal>,
     #[prop(into)] pairs: Signal<Vec<OptionStrikePair>>,
-    #[prop(into)] on_select_leg: Callback<(f64, bool, bool)>, // (strike, is_call, is_buy)
+    #[prop(into)] on_select_leg: Callback<(Decimal, bool, bool)>, // (strike, is_call, is_buy)
     #[prop(into, optional)] is_buy: Option<Signal<bool>>,
 ) -> impl IntoView {
     let is_buy = RwSignal::new(is_buy.as_ref().map(|s| s.get()).unwrap_or(true));
@@ -24,7 +25,7 @@ pub fn HfOptionChain(
                 <span class="font-bold text-xs text-text-high">"Option Chain (F&O Straddle Matrix)"</span>
                 <div class="flex items-center gap-2 font-mono text-xs">
                     <span class="text-text-muted">"Underlying Spot:"</span>
-                    <span class="font-bold text-emerald-400">{move || format!("₹{:.2}", spot_price.get())}</span>
+                    <span class="font-bold text-emerald-400">{move || format!("₹{}", spot_price.get().round_dp(2))}</span>
                 </div>
                 <div class="flex items-center gap-1 border-l border-border-soft pl-3">
                     <span class="text-[10px] text-text-muted">"Side:"</span>
@@ -70,7 +71,7 @@ pub fn HfOptionChain(
                     <tbody class="divide-y divide-border-soft/40 font-mono">
                         <For
                             each=move || pairs.get()
-                            key=|pair| format!("{:.2}", pair.strike)
+                            key=|pair| format!("{}", pair.strike.round_dp(2))
                             children=move |pair| {
                                 let spot = spot_price.get();
                                 view! {

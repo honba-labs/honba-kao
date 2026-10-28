@@ -1,24 +1,30 @@
+//! Order ticket organism — ported from secured-finance `AdvancedLendingOrderCard`.
+//!
+//! All price/qty/money values are `Decimal` (zero-floats invariant, issue #33).
+
 use crate::molecules::core::{HfPriceSnapInput, HfQuantityChipInput};
 use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OrderIntent {
     pub symbol: String,
     pub side: String,       // "BUY" or "SELL"
     pub order_type: String, // "LIMIT" or "MARKET"
-    pub price: f64,
-    pub quantity: f64,
+    pub price: Decimal,
+    pub quantity: Decimal,
 }
 
 #[component]
 pub fn HfOrderTicket(
     #[prop(into)] symbol: Signal<String>,
-    #[prop(into)] mark_price: Signal<f64>,
-    #[prop(into)] best_bid: Signal<Option<f64>>,
-    #[prop(into)] best_ask: Signal<Option<f64>>,
-    #[prop(into)] available_capital: Signal<f64>,
-    #[prop(into)] margin_requirement_ratio: Signal<f64>,
+    #[prop(into)] mark_price: Signal<Decimal>,
+    #[prop(into)] best_bid: Signal<Option<Decimal>>,
+    #[prop(into)] best_ask: Signal<Option<Decimal>>,
+    #[prop(into)] available_capital: Signal<Decimal>,
+    #[prop(into)] margin_requirement_ratio: Signal<Decimal>,
     #[prop(into)] on_submit_order: Callback<OrderIntent>,
 ) -> impl IntoView {
     let side = RwSignal::new("BUY".to_string());
@@ -28,16 +34,16 @@ pub fn HfOrderTicket(
     let confirmed = RwSignal::new(false); // two-step place: confirm, then submit
 
     let est_notional = Signal::derive(move || {
-        let p = price_str
+        let p: Decimal = price_str
             .get()
-            .parse::<f64>()
+            .parse()
             .unwrap_or_else(|_| mark_price.get());
-        let q = qty_str.get().parse::<f64>().unwrap_or(0.0);
+        let q: Decimal = qty_str.get().parse().unwrap_or(Decimal::ZERO);
         p * q
     });
 
     let est_margin = Signal::derive(move || est_notional.get() * margin_requirement_ratio.get());
-    let est_fee = Signal::derive(move || est_notional.get() * 0.0001);
+    let est_fee = Signal::derive(move || est_notional.get() * dec!(0.0001));
 
     view! {
         <div class="hf-order-ticket flex flex-col gap-3 p-3 bg-surface-base border border-border-soft rounded">
@@ -98,13 +104,13 @@ pub fn HfOrderTicket(
                 <HfQuantityChipInput
                     value=qty_str
                     max_quantity=Signal::derive(move || {
-                        let p = price_str.get().parse::<f64>().unwrap_or_else(|_| mark_price.get());
+                        let p: Decimal = price_str.get().parse().unwrap_or(mark_price.get());
                         let m = margin_requirement_ratio.get();
-                        if p > 0.0 && m > 0.0 {
+                        if p > Decimal::ZERO && m > Decimal::ZERO {
                             // margin-aware: notional x margin ratio must fit in capital
                             available_capital.get() / (p * m)
                         } else {
-                            0.0
+                            Decimal::ZERO
                         }
                     })
                 />
@@ -114,15 +120,15 @@ pub fn HfOrderTicket(
             <div class="hf-ticket-impact flex flex-col gap-1 p-2 rounded bg-surface-subtle text-xs border border-border-soft">
                 <div class="flex justify-between text-text-muted">
                     <span>"Order Value"</span>
-                    <span class="font-mono text-text-high">{move || format!("₹{:.2}", est_notional.get())}</span>
+                    <span class="font-mono text-text-high">{move || format!("₹{}", est_notional.get().round_dp(2))}</span>
                 </div>
                 <div class="flex justify-between text-text-muted">
                     <span>"Est. Fee (1 bp)"</span>
-                    <span class="font-mono text-text-high">{move || format!("₹{:.2}", est_fee.get())}</span>
+                    <span class="font-mono text-text-high">{move || format!("₹{}", est_fee.get().round_dp(2))}</span>
                 </div>
                 <div class="flex justify-between text-text-muted">
                     <span>"Margin Required"</span>
-                    <span class="font-mono text-text-high">{move || format!("₹{:.2}", est_margin.get())}</span>
+                    <span class="font-mono text-text-high">{move || format!("₹{}", est_margin.get().round_dp(2))}</span>
                 </div>
             </div>
 
@@ -135,9 +141,9 @@ pub fn HfOrderTicket(
                     if !confirmed.get() {
                         confirmed.set(true);
                     } else {
-                        let p = price_str.get().parse::<f64>().unwrap_or(0.0);
-                        let q = qty_str.get().parse::<f64>().unwrap_or(0.0);
-                        if p > 0.0 && q > 0.0 {
+                        let p: Decimal = price_str.get().parse().unwrap_or(Decimal::ZERO);
+                        let q: Decimal = qty_str.get().parse().unwrap_or(Decimal::ZERO);
+                        if p > Decimal::ZERO && q > Decimal::ZERO {
                             on_submit_order.run(OrderIntent {
                                 symbol: symbol.get(),
                                 side: side.get(),

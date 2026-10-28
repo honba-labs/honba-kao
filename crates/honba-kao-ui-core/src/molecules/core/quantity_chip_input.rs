@@ -5,18 +5,20 @@
 
 use crate::primitive::{ButtonSize, ButtonVariant, HfButton, HfChip, HfOrderInputBox};
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[component]
 pub fn HfQuantityChipInput(
     #[prop(into)] value: RwSignal<String>,
-    #[prop(into)] max_quantity: Signal<f64>,
+    #[prop(into)] max_quantity: Signal<Decimal>,
     #[prop(default = false)] disabled: bool,
 ) -> impl IntoView {
     let set_percent = move |pct: f64| {
         let max_qty = max_quantity.get();
-        if max_qty > 0.0 {
-            let target = max_qty * (pct / 100.0);
-            value.set(format!("{:.4}", target));
+        if max_qty > Decimal::ZERO {
+            let pct_dec = Decimal::from_f64_retain(pct / 100.0).unwrap_or_default();
+            let target = max_qty * pct_dec;
+            value.set(format!("{}", target.round_dp(4)));
         }
     };
 
