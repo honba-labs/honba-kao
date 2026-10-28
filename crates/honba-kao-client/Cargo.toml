@@ -14,3 +14,10 @@ thiserror.workspace = true
 honba-core.workspace = true
 honba-api.workspace = true
 honba-analytics.workspace = true
+
+# uuid / getrandom are pulled in transitively (via honba-core) and must use
+# the `js` entropy source when compiling to `wasm32-unknown-unknown`. Declaring
+# them here with `features = ["js"]` unifies the feature resolution so the WASM
+# target compiles cleanly.
+uuid = { version = "1", features = ["js"] }
+getrandom = { version = "0.2", features = ["js"] }
