@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -5,9 +6,9 @@ pub struct OrderIntent {
     pub symbol: String,
     pub side: String,       // "BUY" or "SELL"
     pub order_type: String, // "LIMIT", "MARKET", "SL", "SL-M"
-    pub price: Option<f64>,
-    pub trigger_price: Option<f64>,
-    pub quantity: f64,
+    pub price: Option<Decimal>,
+    pub trigger_price: Option<Decimal>,
+    pub quantity: Decimal,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -27,9 +28,9 @@ pub struct OrderResponse {
     pub symbol: String,
     pub side: String,
     pub status: OrderStatus,
-    pub price: Option<f64>,
-    pub quantity: f64,
-    pub filled_quantity: f64,
+    pub price: Option<Decimal>,
+    pub quantity: Decimal,
+    pub filled_quantity: Decimal,
     pub created_at: i64,
 }
 
@@ -39,8 +40,8 @@ pub struct Fill {
     pub order_id: String,
     pub symbol: String,
     pub side: String,
-    pub price: f64,
-    pub quantity: f64,
-    pub fee: f64,
+    pub price: Decimal,
+    pub quantity: Decimal,
+    pub fee: Decimal,
     pub timestamp: i64,
 }

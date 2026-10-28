@@ -33,7 +33,13 @@ pub fn interpolate_yield(curve: &[YieldPoint], target_tenor_months: f64) -> f64 
         let p1 = &curve[i];
         let p2 = &curve[i + 1];
         if target_tenor_months >= p1.tenor_months && target_tenor_months <= p2.tenor_months {
-            let t = (target_tenor_months - p1.tenor_months) / (p2.tenor_months - p1.tenor_months);
+            let denom = p2.tenor_months - p1.tenor_months;
+            // #59: guard against adjacent points with identical tenor months
+            // (division by zero -> NaN).
+            if denom == 0.0 {
+                return p1.rate;
+            }
+            let t = (target_tenor_months - p1.tenor_months) / denom;
             return p1.rate + t * (p2.rate - p1.rate);
         }
     }

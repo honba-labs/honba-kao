@@ -13,11 +13,13 @@ pub fn calculate_implied_volatility(
         return None;
     }
 
-    // Intrinsic value check
+    // #58: true Black-Scholes lower bound for European puts with r > 0 is
+    // K * exp(-r * t) - S, not K - S. Deep ITM puts validly trade below
+    // K - S, so the old check falsely rejected legitimate prices.
     let intrinsic = if is_call {
         (s - k).max(0.0)
     } else {
-        (k - s).max(0.0)
+        (k * (-r * t).exp() - s).max(0.0)
     };
     if price < intrinsic {
         return None;
@@ -75,5 +77,6 @@ pub fn calculate_implied_volatility(
         }
     }
 
-    Some((low + high) * 0.5)
+    // #58: do not fabricate a volatility when the bisection fails to converge.
+    None
 }

@@ -1,31 +1,36 @@
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct MarginUtilization {
-    pub total_collateral: f64,
-    pub margin_used: f64,
-    pub margin_available: f64,
-    pub utilization_ratio: f64,
+    pub total_collateral: Decimal,
+    pub margin_used: Decimal,
+    pub margin_available: Decimal,
+    pub utilization_ratio: Decimal,
     pub is_warning: bool,
     pub is_critical: bool,
 }
 
-pub fn calculate_margin_utilization(total_collateral: f64, margin_used: f64) -> MarginUtilization {
-    let margin_available = (total_collateral - margin_used).max(0.0);
-    let ratio = if total_collateral > 0.0 {
-        (margin_used / total_collateral) * 100.0
-    } else if margin_used > 0.0 {
-        100.0
+pub fn calculate_margin_utilization(total_collateral: Decimal, margin_used: Decimal) -> MarginUtilization {
+    let margin_available = (total_collateral - margin_used).max(Decimal::ZERO);
+    let ratio = if total_collateral > Decimal::ZERO {
+        (margin_used / total_collateral) * dec!(100.0)
+    } else if margin_used > Decimal::ZERO {
+        dec!(100.0)
     } else {
-        0.0
+        Decimal::ZERO
     };
+
+    let warning = dec!(70.0);
+    let critical = dec!(85.0);
 
     MarginUtilization {
         total_collateral,
         margin_used,
         margin_available,
         utilization_ratio: ratio,
-        is_warning: ratio >= 70.0 && ratio < 85.0,
-        is_critical: ratio >= 85.0,
+        is_warning: ratio >= warning && ratio < critical,
+        is_critical: ratio >= critical,
     }
 }

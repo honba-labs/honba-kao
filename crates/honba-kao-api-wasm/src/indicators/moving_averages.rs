@@ -1,4 +1,8 @@
 pub fn calculate_sma(prices: &[f64], period: usize) -> Vec<Option<f64>> {
+    // #62: guard against division by zero when period == 0.
+    if period == 0 {
+        return vec![None; prices.len()];
+    }
     let mut res = Vec::with_capacity(prices.len());
     let mut sum = 0.0;
     for (i, &p) in prices.iter().enumerate() {

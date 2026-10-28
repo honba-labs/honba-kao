@@ -1,23 +1,40 @@
 use super::trade_trip::{Fill, TradeTrip};
-use std::collections::VecDeque;
+use rust_decimal::Decimal;
+use std::collections::{HashMap, VecDeque};
 
 pub fn pair_fills_fifo(fills: &[Fill]) -> Vec<TradeTrip> {
+    // #57: partition fills by symbol so a RELIANCE buy is never matched
+    // against an INFY sell (cross-symbol matching corruption).
+    let mut by_symbol: HashMap<String, Vec<Fill>> = HashMap::new();
+    for fill in fills {
+        by_symbol.entry(fill.symbol.clone()).or_default().push(fill.clone());
+    }
+
+    let mut trips = Vec::new();
+    for symbol_fills in by_symbol.values() {
+        trips.extend(pair_fills_fifo_per_symbol(symbol_fills));
+    }
+    trips
+}
+
+fn pair_fills_fifo_per_symbol(fills: &[Fill]) -> Vec<TradeTrip> {
     let mut trips = Vec::new();
     let mut buy_queue: VecDeque<Fill> = VecDeque::new();
     let mut sell_queue: VecDeque<Fill> = VecDeque::new();
+    let zero = Decimal::ZERO;
 
     for fill in fills {
         if fill.side == "BUY" {
             let mut remaining = fill.quantity;
-            while remaining > 1e-6 && !sell_queue.is_empty() {
+            while !remaining.is_zero() && !sell_queue.is_empty() {
                 let sell = sell_queue.front_mut().unwrap();
                 let matched = remaining.min(sell.quantity);
 
                 let pnl = (sell.price - fill.price) * matched;
-                let pnl_pct = if sell.price > 0.0 {
+                let pnl_pct = if sell.price > zero {
                     (sell.price - fill.price) / sell.price
                 } else {
-                    0.0
+                    zero
                 };
 
                 trips.push(TradeTrip {
@@ -35,27 +52,27 @@ pub fn pair_fills_fifo(fills: &[Fill]) -> Vec<TradeTrip> {
 
                 remaining -= matched;
                 sell.quantity -= matched;
-                if sell.quantity <= 1e-6 {
+                if sell.quantity.is_zero() {
                     sell_queue.pop_front();
                 }
             }
 
-            if remaining > 1e-6 {
+            if !remaining.is_zero() {
                 let mut unhedged = fill.clone();
                 unhedged.quantity = remaining;
                 buy_queue.push_back(unhedged);
             }
         } else {
             let mut remaining = fill.quantity;
-            while remaining > 1e-6 && !buy_queue.is_empty() {
+            while !remaining.is_zero() && !buy_queue.is_empty() {
                 let buy = buy_queue.front_mut().unwrap();
                 let matched = remaining.min(buy.quantity);
 
                 let pnl = (fill.price - buy.price) * matched;
-                let pnl_pct = if buy.price > 0.0 {
+                let pnl_pct = if buy.price > zero {
                     (fill.price - buy.price) / buy.price
                 } else {
-                    0.0
+                    zero
                 };
 
                 trips.push(TradeTrip {
@@ -73,12 +90,12 @@ pub fn pair_fills_fifo(fills: &[Fill]) -> Vec<TradeTrip> {
 
                 remaining -= matched;
                 buy.quantity -= matched;
-                if buy.quantity <= 1e-6 {
+                if buy.quantity.is_zero() {
                     buy_queue.pop_front();
                 }
             }
 
-            if remaining > 1e-6 {
+            if !remaining.is_zero() {
                 let mut unhedged = fill.clone();
                 unhedged.quantity = remaining;
                 sell_queue.push_back(unhedged);

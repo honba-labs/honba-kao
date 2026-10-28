@@ -216,16 +216,20 @@ pub fn HfCloseButton(
 }
 
 /// Pill-shaped tag button (e.g. for timeframes, filters, quick tags).
+/// `active` is a signal so the active chip highlight stays reactive.
 #[component]
 pub fn HfChip(
-    #[prop(default = false)] active: bool,
+    #[prop(into, optional)] active: Option<Signal<bool>>,
     #[prop(optional)] on_click: Option<Callback<()>>,
     children: Children,
 ) -> impl IntoView {
-    let classes = if active {
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-emerald-400 bg-emerald-400/10 text-emerald-300"
-    } else {
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border-strong bg-surface-subtle text-text-muted hover:text-text-high hover:border-text-muted"
+    let active = Signal::derive(move || active.as_ref().map(|a| a.get()).unwrap_or(false));
+    let classes = move || {
+        if active.get() {
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-emerald-400 bg-emerald-400/10 text-emerald-300"
+        } else {
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border-strong bg-surface-subtle text-text-muted hover:text-text-high hover:border-text-muted"
+        }
     };
 
     view! {

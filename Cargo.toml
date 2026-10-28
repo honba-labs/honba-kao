@@ -30,6 +30,7 @@ serde_json = "1"
 serde-wasm-bindgen = "0.6.5"
 rust_decimal = { version = "1", features = ["serde"] }
 rust_decimal_macros = "1"
+urlencoding = "2"
 
 honba-kao-api-wasm = { path = "crates/honba-kao-api-wasm", default-features = false }
 honba-kao-app      = { path = "crates/honba-kao-app" }

@@ -1,12 +1,12 @@
-use honba_kao_ui_core::molecules::wealth::HfSipCalculatorCard;
+use honba_kao_ui_core::{Decimal, molecules::wealth::HfSipCalculatorCard};
 use honba_kao_ui_core::templates::{HfPage, HfTwoColumnSplitLayout};
 use leptos::prelude::*;
 
 #[component]
 pub fn SipPlannerPage() -> impl IntoView {
-    let monthly = RwSignal::new(10_000.0);
-    let years = RwSignal::new(10.0);
-    let annual_return = RwSignal::new(12.0);
+    let monthly = RwSignal::new(Decimal::from(10_000));
+    let years = RwSignal::new(Decimal::from(10));
+    let annual_return = RwSignal::new(Decimal::from(12));
 
     let primary = view! {
         <div class="max-w-xl mx-auto">

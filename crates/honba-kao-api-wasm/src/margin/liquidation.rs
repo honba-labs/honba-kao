@@ -1,51 +1,74 @@
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct LiquidationBuffer {
-    pub liquidation_threshold_ratio: f64,
-    pub current_utilization_ratio: f64,
-    pub buffer_pct: f64,
-    pub est_liquidation_price: Option<f64>,
+    pub liquidation_threshold_ratio: Decimal,
+    pub current_utilization_ratio: Decimal,
+    pub buffer_pct: Decimal,
+    pub est_liquidation_price: Option<Decimal>,
 }
 
 pub fn calculate_liquidation_buffer(
-    entry_price: f64,
-    position_size: f64,
-    collateral: f64,
-    maintenance_margin_rate: f64,
+    entry_price: Decimal,
+    position_size: Decimal,
+    collateral: Decimal,
+    maintenance_margin_rate: Decimal,
     is_long: bool,
 ) -> LiquidationBuffer {
-    if position_size.abs() < 1e-9 || entry_price <= 0.0 {
+    let threshold = dec!(85.0);
+    let zero = Decimal::ZERO;
+
+    // Guard against non-positive spot/size inputs (#59).
+    if position_size.is_zero() || entry_price.is_zero() || entry_price.is_sign_negative() {
         return LiquidationBuffer {
-            liquidation_threshold_ratio: 85.0,
-            current_utilization_ratio: 0.0,
-            buffer_pct: 85.0,
+            liquidation_threshold_ratio: threshold,
+            current_utilization_ratio: zero,
+            buffer_pct: threshold,
             est_liquidation_price: None,
         };
     }
 
     let notional = entry_price * position_size.abs();
-    let current_util = if collateral > 0.0 {
-        ((notional * maintenance_margin_rate) / collateral) * 100.0
+    let maintenance_req = notional * maintenance_margin_rate;
+    let current_util = if collateral > zero {
+        (maintenance_req / collateral) * dec!(100.0)
     } else {
-        100.0
+        dec!(100.0)
     };
 
+    // #56: an active maintenance breach (collateral <= maintenance requirement)
+    // means the position is immediately liquidatable; buffer collapses to zero
+    // and the estimated liquidation price is the entry price (a long never
+    // liquidates as price rises).
+    let in_breach = collateral <= maintenance_req;
     let est_liq = if is_long {
-        let max_loss = collateral - (notional * maintenance_margin_rate);
-        (entry_price - (max_loss / position_size.abs())).max(0.0)
+        if in_breach {
+            Some(entry_price)
+        } else {
+            let max_loss = collateral - maintenance_req;
+            Some((entry_price - (max_loss / position_size.abs())).max(zero))
+        }
     } else {
-        let max_loss = collateral - (notional * maintenance_margin_rate);
-        entry_price + (max_loss / position_size.abs())
+        if in_breach {
+            Some(entry_price)
+        } else {
+            let max_loss = collateral - maintenance_req;
+            Some(entry_price + (max_loss / position_size.abs()))
+        }
     };
 
-    let threshold = 85.0;
-    let buffer = (threshold - current_util).max(0.0);
+    let buffer = if in_breach {
+        zero
+    } else {
+        (threshold - current_util).max(zero)
+    };
 
     LiquidationBuffer {
         liquidation_threshold_ratio: threshold,
         current_utilization_ratio: current_util,
         buffer_pct: buffer,
-        est_liquidation_price: Some(est_liq),
+        est_liquidation_price: est_liq,
     }
 }

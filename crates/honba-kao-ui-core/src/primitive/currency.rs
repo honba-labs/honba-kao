@@ -90,3 +90,33 @@ pub fn HfAssetBadge(
         </div>
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn currency_svg_paths_are_non_empty_and_well_formed() {
+        for currency in [
+            Currency::Inr,
+            Currency::Usd,
+            Currency::Btc,
+            Currency::Eth,
+            Currency::Usdc,
+        ] {
+            let path = currency.svg_path();
+            assert!(!path.is_empty(), "{:?} svg path must not be empty", currency);
+            // Every path must begin with a moveto and contain only valid command letters.
+            let first = path.chars().next().unwrap_or(' ');
+            assert_eq!(first, 'M', "{:?} svg path must start with absolute moveto", currency);
+            for ch in path.chars() {
+                assert!(
+                    "MMLHCSVQTAZmmlhcsvqatz0123456789.-+ ".contains(ch),
+                    "{:?} svg path contains invalid character {:?}",
+                    currency,
+                    ch
+                );
+            }
+        }
+    }
+}

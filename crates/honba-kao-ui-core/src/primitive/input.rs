@@ -1,6 +1,7 @@
 //! `HfInput`, `HfNumberInput`, `HfOrderInputBox`, `HfCheckbox`, `HfRadioButton`,
 //! `HfSelect`, `HfToggle` — form primitive atoms.
 
+use crate::Decimal;
 use leptos::prelude::*;
 use wasm_bindgen::JsCast;
 
@@ -30,21 +31,23 @@ pub fn HfInput(
 }
 
 /// Numeric input with step controls.
+/// Values are `rust_decimal::Decimal` (Zero Floats Policy) — never `f64`.
 #[component]
 pub fn HfNumberInput(
-    #[prop(into)] value: RwSignal<f64>,
+    #[prop(into)] value: RwSignal<Decimal>,
     #[prop(into, optional)] placeholder: Option<String>,
-    #[prop(into, optional)] min: Option<f64>,
-    #[prop(into, optional)] max: Option<f64>,
-    #[prop(into, optional)] step: Option<f64>,
+    #[prop(into, optional)] min: Option<Decimal>,
+    #[prop(into, optional)] max: Option<Decimal>,
+    #[prop(into, optional)] step: Option<Decimal>,
     #[prop(into, optional)] disabled: Option<bool>,
 ) -> impl IntoView {
     let str_val = move || value.get().to_string();
     let disabled = disabled.unwrap_or(false);
     view! {
         <input
-            type="number"
-            class="hf-input flex h-9 w-full rounded-md border border-border-soft bg-surface-base px-3 py-1.5 text-sm text-text-high focus:border-emerald-500 focus:outline-none"
+            type="text"
+            inputmode="decimal"
+            class="hf-input flex h-9 w-full rounded-md border border-border-soft bg-surface-base px-3 py-1.5 text-sm text-text-high font-mono focus:border-emerald-500 focus:outline-none disabled:bg-surface-subtle disabled:text-text-muted disabled:cursor-not-allowed"
             placeholder=placeholder.unwrap_or_default()
             min=min.map(|m| m.to_string())
             max=max.map(|m| m.to_string())
@@ -53,7 +56,7 @@ pub fn HfNumberInput(
             disabled=disabled
             on:input=move |ev: web_sys::Event| {
                 let target: web_sys::HtmlInputElement = ev.target().unwrap().dyn_into().unwrap();
-                if let Ok(v) = target.value().parse::<f64>() {
+                if let Ok(v) = target.value().parse::<Decimal>() {
                     value.set(v);
                 }
             }

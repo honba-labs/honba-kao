@@ -1,27 +1,36 @@
 //! `HfSipCalculatorCard` — compounding projection tool with monthly installment
 //! slider. Projection math may use `honba-kao-api-wasm`; UI molecule here.
+//! All money values use `rust_decimal::Decimal` (Zero Floats Policy).
 
+use crate::{Decimal, HfNumberInput};
+use num_traits::ToPrimitive;
+use rust_decimal_macros::dec;
 use leptos::prelude::*;
-use crate::primitive::HfNumberInput;
 
 #[component]
 pub fn HfSipCalculatorCard(
-    #[prop(into)] monthly: RwSignal<f64>,
-    #[prop(into)] years: RwSignal<f64>,
-    #[prop(into)] annual_return: RwSignal<f64>, // %
+    #[prop(into)] monthly: RwSignal<Decimal>,
+    #[prop(into)] years: RwSignal<Decimal>,
+    #[prop(into)] annual_return: RwSignal<Decimal>, // %
 ) -> impl IntoView {
     let projected = Signal::derive(move || {
         let m = monthly.get();
         let y = years.get();
-        let r = annual_return.get() / 100.0 / 12.0;
-        let n = (y * 12.0) as u32;
-        if r > 0.0 {
-            m * ((1.0 + r).powi(n as i32) - 1.0) / r
+        let r = annual_return.get() / Decimal::from(100) / Decimal::from(12);
+        let n = (y * Decimal::from(12)).to_i32().unwrap_or(0) as u32;
+        if r > Decimal::ZERO {
+            let mut factor = Decimal::ONE;
+            let one_plus_r = Decimal::ONE + r;
+            for _ in 0..n {
+                factor = factor * one_plus_r;
+            }
+            m * (factor - Decimal::ONE) / r
         } else {
-            m * n as f64
+            m * Decimal::from(n)
         }
     });
-    let invested = Signal::derive(move || monthly.get() * years.get() * 12.0);
+    let invested = Signal::derive(move || monthly.get() * years.get() * Decimal::from(12));
+
     view! {
         <div class="hf-sip-calculator rounded-lg border border-border-soft bg-surface-base p-3 shadow-sm">
             <span class="text-xs font-semibold text-text-high uppercase tracking-wide mb-2 block">"SIP Calculator"</span>
@@ -32,11 +41,11 @@ pub fn HfSipCalculatorCard(
                 </div>
                 <div>
                     <span class="text-[10px] text-text-muted block">"Years"</span>
-                    <HfNumberInput value=years placeholder="0" min=0.0 step=1.0 />
+                    <HfNumberInput value=years placeholder="0" min=Decimal::ZERO step=dec!(1) />
                 </div>
                 <div>
                     <span class="text-[10px] text-text-muted block">"Return % p.a."</span>
-                    <HfNumberInput value=annual_return placeholder="0" min=0.0 step=0.1 />
+                    <HfNumberInput value=annual_return placeholder="0" min=Decimal::ZERO step=dec!(0.1) />
                 </div>
                 <div class="col-span-2">
                     <span class="text-[10px] text-text-muted block">"Projected Value (₹)"</span>

@@ -6,16 +6,18 @@
 //!
 //! All computations are pure Rust (no UI, no network, no clock) so they can run
 //! identically in the browser (wasm32-unknown-unknown) and in CLI/unit-test
-//! harnesses.
+//! harnesses. All monetary fields use `rust_decimal::Decimal`.
 
 use crate::payoff::leg::Leg;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 
 /// A single (spot, pnl) sample on the payoff curve.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PayoffPoint {
-    pub spot: f64,
-    pub pnl: f64,
+    pub spot: Decimal,
+    pub pnl: Decimal,
 }
 
 /// Result of running the payoff engine over a spot range.
@@ -24,21 +26,21 @@ pub struct PayoffResult {
     /// Underlying symbols covered by the strategy.
     pub symbols: Vec<String>,
     /// Breakeven spot prices where total P&L crosses zero (ascending).
-    pub breakeven: Vec<f64>,
+    pub breakeven: Vec<Decimal>,
     /// Maximum profit observed over the evaluated spot range.
-    pub max_profit: f64,
+    pub max_profit: Decimal,
     /// Maximum loss observed over the evaluated spot range (negative value).
-    pub max_loss: f64,
+    pub max_loss: Decimal,
     /// Sampled payoff curve points (ascending spot).
     pub points: Vec<PayoffPoint>,
 }
 
 impl PayoffResult {
     /// Total net premium paid (positive) or received (negative) to open the strategy.
-    pub fn net_premium(&self) -> f64 {
+    pub fn net_premium(&self) -> Decimal {
         // Net premium is embedded in the P&L curve at spot = 0 is not meaningful;
         // callers recompute from legs if needed. Kept for API symmetry.
-        0.0
+        Decimal::ZERO
     }
 }
 
@@ -46,9 +48,9 @@ impl PayoffResult {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PayoffConfig {
     /// Lowest spot price to evaluate.
-    pub spot_min: f64,
+    pub spot_min: Decimal,
     /// Highest spot price to evaluate.
-    pub spot_max: f64,
+    pub spot_max: Decimal,
     /// Number of sample points across the window.
     pub steps: usize,
 }
@@ -56,8 +58,8 @@ pub struct PayoffConfig {
 impl Default for PayoffConfig {
     fn default() -> Self {
         Self {
-            spot_min: 0.0,
-            spot_max: 0.0, // derived from strikes at runtime
+            spot_min: dec!(0.0),
+            spot_max: dec!(0.0), // derived from strikes at runtime
             steps: 400,
         }
     }
@@ -84,7 +86,7 @@ impl PayoffEngine {
     }
 
     /// Total P&L of the whole strategy at a given spot price.
-    pub fn pnl(&self, spot: f64) -> f64 {
+    pub fn pnl(&self, spot: Decimal) -> Decimal {
         self.legs.iter().map(|leg| leg.pnl(spot)).sum()
     }
 
@@ -92,19 +94,19 @@ impl PayoffEngine {
     ///
     /// The window spans [0.5 × min_strike, 1.5 × max_strike]. For futures-only
     /// strategies (strike = 0) it falls back to [0, 1000].
-    fn spot_window(&self) -> (f64, f64) {
-        let strikes: Vec<f64> = self
+    fn spot_window(&self) -> (Decimal, Decimal) {
+        let strikes: Vec<Decimal> = self
             .legs
             .iter()
             .map(|l| l.strike)
-            .filter(|&k| k > 0.0)
+            .filter(|&k| k > Decimal::ZERO)
             .collect();
         if strikes.is_empty() {
-            return (0.0, 1000.0);
+            return (dec!(0.0), dec!(1000.0));
         }
-        let min_strike = strikes.iter().cloned().fold(f64::INFINITY, f64::min);
-        let max_strike = strikes.iter().cloned().fold(0.0, f64::max);
-        ((min_strike * 0.5).max(0.0), max_strike * 1.5)
+        let min_strike = strikes.iter().cloned().fold(Decimal::MAX, Decimal::min);
+        let max_strike = strikes.iter().cloned().fold(Decimal::ZERO, Decimal::max);
+        ((min_strike * dec!(0.5)).max(Decimal::ZERO), max_strike * dec!(1.5))
     }
 
     /// Run the payoff evaluation over the configured spot window.
@@ -114,14 +116,14 @@ impl PayoffEngine {
             _ => self.spot_window(),
         };
         let steps = self.config.steps.max(2);
-        let step = (spot_max - spot_min) / (steps - 1) as f64;
+        let step = (spot_max - spot_min) / Decimal::from(steps - 1);
 
         let mut points: Vec<PayoffPoint> = Vec::with_capacity(steps);
-        let mut max_profit = f64::NEG_INFINITY;
-        let mut max_loss = f64::INFINITY;
+        let mut max_profit = Decimal::MIN;
+        let mut max_loss = Decimal::MAX;
 
         for i in 0..steps {
-            let spot = spot_min + step * i as f64;
+            let spot = spot_min + step * Decimal::from(i);
             let pnl = self.pnl(spot);
             points.push(PayoffPoint { spot, pnl });
             max_profit = max_profit.max(pnl);
@@ -148,23 +150,42 @@ impl PayoffEngine {
     ///
     /// Walks the sampled curve and linearly interpolates between consecutive
     /// samples whose P&L changes sign (or touches zero).
-    fn find_breakevens(points: &[PayoffPoint]) -> Vec<f64> {
-        let mut be: Vec<f64> = Vec::new();
+    ///
+    /// #60 fixes:
+    /// 1. The final point is inspected so a trailing exact-zero PnL is not dropped.
+    /// 2. Flat zero-PnL segments (zero-cost collars) do not emit a breakeven for
+    ///    every sampled point.
+    /// 3. Breakevens are deduplicated within an epsilon tolerance.
+    fn find_breakevens(points: &[PayoffPoint]) -> Vec<Decimal> {
+        let mut be: Vec<Decimal> = Vec::new();
+        let eps = dec!(0.001);
+        let zero = Decimal::ZERO;
+
         for window in points.windows(2) {
             let (p0, p1) = (&window[0], &window[1]);
-            if (p0.pnl > 0.0 && p1.pnl < 0.0) || (p0.pnl < 0.0 && p1.pnl > 0.0) {
-                // Linear interpolation of the zero crossing.
+            let crosses = (p0.pnl > zero && p1.pnl < zero) || (p0.pnl < zero && p1.pnl > zero);
+            if crosses {
                 let t = p0.pnl / (p0.pnl - p1.pnl);
-                be.push(p0.spot + t * (p1.spot - p0.spot));
-            } else if p0.pnl == 0.0 {
-                be.push(p0.spot);
+                let spot = p0.spot + t * (p1.spot - p0.spot);
+                if be.last().map_or(true, |last| (spot - *last).abs() >= eps) {
+                    be.push(spot);
+                }
+            } else if p0.pnl.is_zero() {
+                if be.last().map_or(true, |last| (p0.spot - *last).abs() >= eps) {
+                    be.push(p0.spot);
+                }
             }
         }
+
+        // #60: boundary zero-crossing - inspect the final point too.
         if let Some(last) = points.last() {
-            if last.pnl == 0.0 {
-                be.push(last.spot);
+            if last.pnl.is_zero() {
+                if be.last().map_or(true, |last_b| (last.spot - *last_b).abs() >= eps) {
+                    be.push(last.spot);
+                }
             }
         }
+
         be
     }
 }

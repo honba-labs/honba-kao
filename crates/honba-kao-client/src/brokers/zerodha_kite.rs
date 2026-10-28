@@ -20,6 +20,7 @@ use crate::dto::order::{OrderIntent, OrderResponse};
 use crate::dto::portfolio::AccountSummary;
 use crate::websocket::{WsConfig, WsConnection};
 use gloo_net::http::Request;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -228,11 +229,11 @@ impl ZerodhaKite {
         Ok(AccountSummary {
             account_id: "KITE".into(),
             currency: "INR".into(),
-            total_equity: 0.0,
-            available_margin: 0.0,
-            used_margin: 0.0,
-            unrealized_pnl: 0.0,
-            realized_pnl: 0.0,
+            total_equity: dec!(0),
+            available_margin: dec!(0),
+            used_margin: dec!(0),
+            unrealized_pnl: dec!(0),
+            realized_pnl: dec!(0),
         })
     }
 }
@@ -349,9 +350,9 @@ mod tests {
                 symbol: "RELIANCE".into(),
                 side: "BUY".into(),
                 order_type: "LIMIT".into(),
-                price: Some(2500.0),
+                price: Some(dec!(2500.0)),
                 trigger_price: None,
-                quantity: 10.0,
+                quantity: dec!(10.0),
             })
             .unwrap_err();
         assert!(matches!(err, BrokerError::NotImplemented { .. }));

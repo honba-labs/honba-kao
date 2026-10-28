@@ -13,6 +13,19 @@ pub struct OptionGreeks {
 }
 
 pub fn calculate_greeks(s: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) -> OptionGreeks {
+    // #59: reject non-positive spot/strike to avoid division by zero / NaN
+    // (Gamma divides by s * sigma * sqrt_t).
+    if s <= 0.0 || k <= 0.0 {
+        return OptionGreeks {
+            delta: 0.0,
+            gamma: 0.0,
+            theta: 0.0,
+            vega: 0.0,
+            rho: 0.0,
+            vanna: 0.0,
+            charm: 0.0,
+        };
+    }
     if t <= 1e-6 || sigma <= 1e-6 {
         let delta = if is_call {
             if s > k { 1.0 } else { 0.0 }

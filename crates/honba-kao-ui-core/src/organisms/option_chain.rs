@@ -49,11 +49,11 @@ pub fn HfOptionChain(
                             each=move || pairs.get()
                             key=|pair| format!("{:.2}", pair.strike)
                             children=move |pair| {
-                                let spot = spot_price.get();
+                                let strike = Signal::derive(move || pair.strike);
                                 view! {
                                     <HfOptionChainRow
-                                        strike=pair.strike
-                                        spot_price=spot
+                                        strike
+                                        spot_price=spot_price
                                         call=pair.call
                                         put=pair.put
                                         on_select_leg=on_select_leg

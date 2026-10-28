@@ -83,18 +83,81 @@ pub enum Moneyness {
     OTM,
 }
 
+/// Pure mapping of moneyness to (label, css class). Extracted so it can be
+/// unit-tested without a DOM.
+pub(crate) fn moneyness_style(moneyness: Moneyness) -> (String, String) {
+    match moneyness {
+        Moneyness::ITM => (
+            "ITM".to_string(),
+            "bg-emerald-950/20 text-emerald-400 border-emerald-500/30".to_string(),
+        ),
+        Moneyness::ATM => (
+            "ATM".to_string(),
+            "bg-surface-elevated text-text-high border-border-strong font-bold".to_string(),
+        ),
+        Moneyness::OTM => (
+            "OTM".to_string(),
+            "bg-rose-950/20 text-rose-400 border-rose-500/30".to_string(),
+        ),
+    }
+}
+
 #[component]
 pub fn HfMoneynessBadge(
-    #[prop(into)] moneyness: Moneyness,
+    #[prop(into)] moneyness: Signal<Moneyness>,
 ) -> impl IntoView {
-    let (label, class) = match moneyness {
-        Moneyness::ITM => ("ITM", "bg-emerald-950/20 text-emerald-400 border-emerald-500/30"),
-        Moneyness::ATM => ("ATM", "bg-surface-elevated text-text-high border-border-strong font-bold"),
-        Moneyness::OTM => ("OTM", "bg-rose-950/20 text-rose-400 border-rose-500/30"),
-    };
+    let style = Signal::derive(move || moneyness_style(moneyness.get()));
     view! {
-        <span class=format!("hf-moneyness-badge px-1.5 py-0.5 rounded-md text-[10px] font-bold border {}", class)>
-            {label}
+        <span class=move || {
+            let (_, c) = style.get();
+            format!("hf-moneyness-badge px-1.5 py-0.5 rounded-md text-[10px] font-bold border {}", c)
+        }>
+            {move || {
+                let (l, _) = style.get();
+                l.clone()
+            }}
         </span>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn moneyness_style_maps_each_variant_to_label_and_class() {
+        assert_eq!(
+            moneyness_style(Moneyness::ITM),
+            (
+                "ITM".to_string(),
+                "bg-emerald-950/20 text-emerald-400 border-emerald-500/30".to_string()
+            )
+        );
+        assert_eq!(
+            moneyness_style(Moneyness::ATM),
+            (
+                "ATM".to_string(),
+                "bg-surface-elevated text-text-high border-border-strong font-bold".to_string()
+            )
+        );
+        assert_eq!(
+            moneyness_style(Moneyness::OTM),
+            (
+                "OTM".to_string(),
+                "bg-rose-950/20 text-rose-400 border-rose-500/30".to_string()
+            )
+        );
+        // Labels and classes must be non-empty and distinct across variants.
+        let styles = [
+            moneyness_style(Moneyness::ITM),
+            moneyness_style(Moneyness::ATM),
+            moneyness_style(Moneyness::OTM),
+        ];
+        for (label, class) in &styles {
+            assert!(!label.is_empty());
+            assert!(!class.is_empty());
+        }
+        assert_ne!(styles[0].1, styles[1].1);
+        assert_ne!(styles[1].1, styles[2].1);
     }
 }
