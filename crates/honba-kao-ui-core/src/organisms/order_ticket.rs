@@ -22,8 +22,10 @@ pub fn HfOrderTicket(
     #[prop(into)] on_submit_order: Callback<OrderIntent>,
 ) -> impl IntoView {
     let side = RwSignal::new("BUY".to_string());
+    let order_type = RwSignal::new("LIMIT".to_string()); // "LIMIT" or "MARKET"
     let price_str = RwSignal::new("".to_string());
     let qty_str = RwSignal::new("".to_string());
+    let confirmed = RwSignal::new(false); // two-step place: confirm, then submit
 
     let est_notional = Signal::derive(move || {
         let p = price_str
@@ -59,6 +61,26 @@ pub fn HfOrderTicket(
                 </HfButton>
             </div>
 
+            // Order type toggle (LIMIT / MARKET)
+            <div class="hf-side-tabs grid grid-cols-2 gap-1 bg-surface-subtle p-0.5 rounded mt-1">
+                <HfButton
+                    class=Signal::derive(move || format!("py-1.5 text-xs font-bold rounded transition-colors {}", if order_type.get() == "LIMIT" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
+                    variant=ButtonVariant::Ghost
+                    size=ButtonSize::Sm
+                    on_click=Callback::new(move |_| order_type.set("LIMIT".to_string()))
+                >
+                    "Limit"
+                </HfButton>
+                <HfButton
+                    class=Signal::derive(move || format!("py-1.5 text-xs font-bold rounded transition-colors {}", if order_type.get() == "MARKET" { "bg-surface-base text-text-high font-semibold shadow-sm" } else { "text-text-muted hover:text-text-high" }))
+                    variant=ButtonVariant::Ghost
+                    size=ButtonSize::Sm
+                    on_click=Callback::new(move |_| order_type.set("MARKET".to_string()))
+                >
+                    "Market"
+                </HfButton>
+            </div>
+
             // Price Snap Input
             <div class="flex flex-col gap-1">
                 <label class="text-[11px] text-text-muted">"Limit Price"</label>
@@ -77,7 +99,13 @@ pub fn HfOrderTicket(
                     value=qty_str
                     max_quantity=Signal::derive(move || {
                         let p = price_str.get().parse::<f64>().unwrap_or_else(|_| mark_price.get());
-                        if p > 0.0 { available_capital.get() / p } else { 0.0 }
+                        let m = margin_requirement_ratio.get();
+                        if p > 0.0 && m > 0.0 {
+                            // margin-aware: notional x margin ratio must fit in capital
+                            available_capital.get() / (p * m)
+                        } else {
+                            0.0
+                        }
                     })
                 />
             </div>
@@ -98,26 +126,37 @@ pub fn HfOrderTicket(
                 </div>
             </div>
 
-            // Order Action Button
+            // Order Action Button (two-step confirmation: confirm, then submit)
             <HfButton
                 class=Signal::derive(move || format!("w-full py-2 font-bold text-white transition-opacity {}", if side.get() == "BUY" { "bg-emerald-600 hover:bg-emerald-500" } else { "bg-rose-600 hover:bg-rose-500" }))
                 variant=ButtonVariant::Primary
                 size=ButtonSize::Md
                 on_click=Callback::new(move |_| {
-                    let p = price_str.get().parse::<f64>().unwrap_or(0.0);
-                    let q = qty_str.get().parse::<f64>().unwrap_or(0.0);
-                    if p > 0.0 && q > 0.0 {
-                        on_submit_order.run(OrderIntent {
-                            symbol: symbol.get(),
-                            side: side.get(),
-                            order_type: "LIMIT".to_string(),
-                            price: p,
-                            quantity: q,
-                        });
+                    if !confirmed.get() {
+                        confirmed.set(true);
+                    } else {
+                        let p = price_str.get().parse::<f64>().unwrap_or(0.0);
+                        let q = qty_str.get().parse::<f64>().unwrap_or(0.0);
+                        if p > 0.0 && q > 0.0 {
+                            on_submit_order.run(OrderIntent {
+                                symbol: symbol.get(),
+                                side: side.get(),
+                                order_type: order_type.get(),
+                                price: p,
+                                quantity: q,
+                            });
+                            confirmed.set(false);
+                        }
                     }
                 })
             >
-                {move || format!("PLACE {} ORDER", side.get())}
+                {move || {
+                    if confirmed.get() {
+                        "CONFIRM ORDER".to_string()
+                    } else {
+                        format!("PLACE {} ORDER ({})", side.get(), order_type.get())
+                    }
+                }}
             </HfButton>
         </div>
     }
