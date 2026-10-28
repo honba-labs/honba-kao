@@ -7,7 +7,7 @@
 
 use futures_util::StreamExt;
 use honba_kao_client::stream::SseStream;
-use leptos::RwSignal;
+use leptos::prelude::{RwSignal, Update};
 use wasm_bindgen_futures::spawn_local;
 
 /// Bind an SSE stream to a Leptos signal, appending every received message to
@@ -16,7 +16,7 @@ use wasm_bindgen_futures::spawn_local;
 /// The stream is consumed (its receiver is moved into a local task), so call
 /// this once per binding. Returns the underlying `EventSource` so the caller
 /// can close it (e.g. in `on_cleanup`) when the component unmounts.
-pub fn bind_sse_stream<T: 'static>(
+pub fn bind_sse_stream<T: Send + Sync + 'static>(
     stream: SseStream<T>,
     signal: RwSignal<Vec<T>>,
 ) -> web_sys::EventSource {

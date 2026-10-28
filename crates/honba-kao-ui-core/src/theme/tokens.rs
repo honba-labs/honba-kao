@@ -3,7 +3,7 @@
 //! Components emit these class strings so every visual token flows from a single
 //! source of truth instead of ad-hoc inline styles.
 
-use crate::theme::palette::Palette;
+use crate::theme::palette;
 
 /// Tailwind-ish semantic class names mapped to the token palette.
 pub mod class {
@@ -47,24 +47,27 @@ pub fn inject_css_variables() {
         let Some(element) = document.document_element() else {
             return;
         };
-        let style = element.style();
+        use wasm_bindgen::JsCast;
+        let Ok(style) = element.dyn_into::<web_sys::HtmlElement>().map(|el| el.style()) else {
+            return;
+        };
         let set = |name: &str, value: &str| {
             let _ = style.set_property(name, value);
         };
-        set("--hf-bg-dark", Palette::TERMINAL_DARK);
-        set("--hf-surface-base", Palette::SURFACE_BASE);
-        set("--hf-surface-subtle", Palette::SURFACE_SUBTLE);
-        set("--hf-surface-elevated", Palette::SURFACE_ELEVATED);
-        set("--hf-border-soft", Palette::BORDER_SOFT);
-        set("--hf-border-strong", Palette::BORDER_STRONG);
-        set("--hf-text-high", Palette::TEXT_HIGH);
-        set("--hf-text-muted", Palette::TEXT_MUTED);
-        set("--hf-positive", Palette::EMERALD);
-        set("--hf-negative", Palette::CRIMSON);
-        set("--hf-warning", Palette::AMBER);
+        set("--hf-bg-dark", palette::TERMINAL_DARK);
+        set("--hf-surface-base", palette::SURFACE_BASE);
+        set("--hf-surface-subtle", palette::SURFACE_SUBTLE);
+        set("--hf-surface-elevated", palette::SURFACE_ELEVATED);
+        set("--hf-border-soft", palette::BORDER_SOFT);
+        set("--hf-border-strong", palette::BORDER_STRONG);
+        set("--hf-text-high", palette::TEXT_HIGH);
+        set("--hf-text-muted", palette::TEXT_MUTED);
+        set("--hf-positive", palette::EMERALD);
+        set("--hf-negative", palette::CRIMSON);
+        set("--hf-warning", palette::AMBER);
     }
     #[cfg(not(target_arch = "wasm32"))]
-    let _ = Palette::BG;
+    let _ = palette::Palette::BG;
 }
 
 #[cfg(test)]
