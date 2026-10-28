@@ -10,7 +10,7 @@ pub fn HfSparklinePrimitive(
 ) -> impl IntoView {
     let height = height.unwrap_or("h-10");
     let color = color.unwrap_or("text-emerald-400");
-    let (min, max) = Signal::derive(move || {
+    let range = Signal::derive(move || {
         let vals = values.get();
         if vals.is_empty() {
             (0.0, 1.0)
@@ -32,7 +32,7 @@ pub fn HfSparklinePrimitive(
                 class="fill-none stroke-current stroke-1.5"
                 points=move || {
                     let vals = values.get();
-                    let (mn, mx) = (min.get(), max.get());
+                    let (mn, mx) = (range.get().0, range.get().1);
                     let n = vals.len();
                     if n == 0 {
                         String::new()

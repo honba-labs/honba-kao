@@ -69,7 +69,7 @@ pub fn HfButton(
     #[prop(into, optional)] size: Option<ButtonSize>,
     #[prop(into, optional)] variant: Option<ButtonVariant>,
     #[prop(default = false)] full_width: bool,
-    #[prop(default = false)] disabled: bool,
+    #[prop(into, optional)] disabled: Option<Signal<bool>>,
     #[prop(into, optional)] on_click: Option<Callback<()>>,
     #[prop(into, optional)] aria_label: Option<String>,
     children: Children,
@@ -77,13 +77,14 @@ pub fn HfButton(
     let size = size.unwrap_or_default();
     let variant = variant.unwrap_or_default();
     let label = aria_label.unwrap_or_else(|| "Button".to_string());
-
-    let classes = format!(
-        "{} {} {} {}",
-        button_base(disabled),
+    let disabled = Signal::derive(move || disabled.as_ref().map(|d| d.get()).unwrap_or(false));
+    let classes = move || format!(
+        "{} {} {} {} {}",
+        button_base(disabled.get()),
         variant.base_class(),
         size.class(),
-        if full_width { "w-full" } else { "w-fit" }
+        if full_width { "w-full" } else { "w-fit" },
+        if disabled.get() { "opacity-50 cursor-not-allowed" } else { "" }
     );
 
     match href {
@@ -92,29 +93,31 @@ pub fn HfButton(
                 href=href
                 target="_blank"
                 rel="noopener noreferrer"
-                class=classes
+                class=classes.clone()
                 aria-label=label
             >
                 {children()}
             </a>
         }
-        .into_view(),
+        .into_any(),
         None => view! {
             <button
                 type="button"
-                disabled=disabled
-                class=classes
+                disabled=disabled.get()
+                class=classes.clone()
                 aria-label=label
                 on:click=move |_| {
-                    if let Some(cb) = on_click.as_ref() {
-                        cb.call(());
+                    if !disabled.get() {
+                        if let Some(cb) = on_click.as_ref() {
+                            cb.run(());
+                        }
                     }
                 }
             >
                 {children()}
             </button>
         }
-        .into_view(),
+        .into_any(),
     }
 }
 
@@ -143,7 +146,7 @@ pub fn HfIconButton(
             disabled=disabled
             class=classes
             aria-label=label
-            on:click=move |_| on_click.call(())
+            on:click=move |_| on_click.run(())
         >
             {children()}
         </button>
@@ -191,7 +194,7 @@ pub fn HfChip(
             class=classes
             on:click=move |_| {
                 if let Some(cb) = on_click.as_ref() {
-                    cb.call(());
+                    cb.run(());
                 }
             }
         >

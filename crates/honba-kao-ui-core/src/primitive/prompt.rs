@@ -19,12 +19,11 @@ pub fn HfPromptSymbol() -> impl IntoView {
 /// Thinking / processing orb with optional active spin animation.
 #[component]
 pub fn HfThinkingOrb(
-    #[prop(default = false)] active: bool,
+    #[prop(into, optional)] active: Option<Signal<bool>>,
 ) -> impl IntoView {
+    let active = Signal::derive(move || active.as_ref().map(|a| a.get()).unwrap_or(false));
     view! {
-        <span class=format!("hf-thinking-orb inline-block {}",
-            if active { "animate-spin" } else { "" }
-        )>
+        <span class=move || format!("hf-thinking-orb inline-block {}", if active.get() { "animate-spin" } else { "" } )>
             <SvgThinkingOrb />
         </span>
     }

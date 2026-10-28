@@ -4,6 +4,7 @@
 //! with `honba-kao-ui-core` equivalents prefixed `Hf`.
 
 pub mod badge;
+pub mod button;
 pub mod card;
 pub mod color_bar;
 pub mod counter;
@@ -18,19 +19,20 @@ pub mod link;
 pub mod panel;
 pub mod price_yield;
 pub mod prompt;
+pub mod segmented;
 pub mod separator;
 pub mod slider;
 pub mod sort_arrows;
+pub mod sparkline;
 pub mod spinner;
-pub mod segmented;
 pub mod tab;
 pub mod table;
 pub mod timer;
 
-
 pub use badge::{BadgeVariant, HfBadge, HfMoneynessBadge, HfStatusChip, Moneyness};
+pub use button::{ButtonSize, ButtonVariant, HfButton, HfChip, HfCloseButton, HfIconButton};
 pub use card::HfCard;
-pub use color_bar::{ColorBarSegment, HfColorBar};
+pub use color_bar::{ColorBarSegment, HfColorBar, HfOiBar};
 pub use counter::HfCounter;
 pub use currency::{Currency, HfAssetBadge, HfCurrencyIcon, HfCurrencyListItem};
 pub use dialog::{HfDialog, HfDrawer, HfModal};
@@ -45,10 +47,11 @@ pub use link::HfLink;
 pub use panel::{HfPanel, HfPanelHeader, HfSectionGrid};
 pub use price_yield::HfPriceYieldItem;
 pub use prompt::{HfPromptSymbol, HfStatusLed, HfThinkingOrb};
+pub use segmented::{HfSegmentSelector, HfSegmentedControl, HfTraderTabGroup};
 pub use separator::{HfSeparator, SeparatorOrientation};
 pub use slider::HfPercentSlider;
-pub use segmented::{HfSegmentSelector, HfSegmentedControl, HfTraderTabGroup};
 pub use sort_arrows::{HfSortArrows, SortDirection};
+pub use sparkline::HfSparklinePrimitive;
 pub use spinner::HfSpinner;
 pub use tab::{HfSubTab, HfTab};
 pub use table::{HfTable, HfTableCell, HfTableHeader, HfTableRow, TableCellAlign};
