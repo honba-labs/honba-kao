@@ -4,6 +4,7 @@
 //! auto-reconnecting WebSocket feeds, and domain event envelopes.
 //! Zero UI dependencies.
 
+pub mod brokers;
 pub mod dto;
 pub mod events;
 pub mod http;
@@ -11,6 +12,7 @@ pub mod stream;
 pub mod websocket;
 
 // Convenient re-exports
+pub use brokers::*;
 pub use dto::*;
 pub use events::*;
 pub use http::*;
