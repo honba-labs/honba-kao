@@ -1,11 +1,17 @@
+use crate::shared::contexts::HonbaClientContext;
 use honba_kao_ui_core::molecules::fno::OptionLegQuote;
-use honba_kao_ui_core::organisms::{HfMarketTopBar, HfOptionChain, HfOrderTicket, OptionStrikePair};
+use honba_kao_ui_core::organisms::{
+    HfMarketTopBar, HfOptionChain, HfOrderTicket, OptionStrikePair, OrderIntent,
+};
 use honba_kao_ui_core::templates::HfThreeColumnTradingLayout;
 use leptos::prelude::*;
 use rust_decimal_macros::dec;
 
 #[component]
 pub fn OptionChainPage() -> impl IntoView {
+    let client = use_context::<HonbaClientContext>().unwrap_or_else(fallback_client_context);
+    let account = client.account;
+
     let spot = RwSignal::new(dec!(24500.0));
     let ltp = RwSignal::new(dec!(24500.0));
     let pairs = RwSignal::new(vec![
@@ -115,9 +121,23 @@ pub fn OptionChainPage() -> impl IntoView {
             mark_price=Signal::derive(move || ltp.get())
             best_bid=Signal::derive(|| Some(dec!(24498.0)))
             best_ask=Signal::derive(|| Some(dec!(24502.0)))
-            available_capital=Signal::derive(|| dec!(500000.0))
+            available_capital=Signal::derive(move || {
+                account
+                    .get()
+                    .map(|a| a.available_margin)
+                    .unwrap_or(dec!(500000.0))
+            })
             margin_requirement_ratio=Signal::derive(|| dec!(0.15))
-            on_submit_order=Callback::new(|_| {})
+            on_submit_order=Callback::new(move |intent: OrderIntent| {
+                client.submit_order.run(honba_kao_client::dto::order::OrderIntent {
+                    symbol: intent.symbol,
+                    side: intent.side,
+                    order_type: intent.order_type,
+                    price: Some(intent.price),
+                    trigger_price: None,
+                    quantity: intent.quantity,
+                });
+            })
         />
     }
     .into_any();
@@ -137,5 +157,25 @@ pub fn OptionChainPage() -> impl IntoView {
             order_ticket=order_ticket
             dock=dock
         />
+    }
+}
+
+/// Fallback client context when `HonbaClientContext` has not been provided.
+fn fallback_client_context() -> HonbaClientContext {
+    HonbaClientContext {
+        oms_connected: RwSignal::new(false),
+        feed_connected: RwSignal::new(false),
+        latency_ms: RwSignal::new(None),
+        account: RwSignal::new(None),
+        positions: RwSignal::new(vec![]),
+        holdings: RwSignal::new(vec![]),
+        brokers: RwSignal::new(vec![]),
+        orders: RwSignal::new(vec![]),
+        liquidation_warnings: RwSignal::new(vec![]),
+        submit_order: Callback::new(|_| {}),
+        cancel_order: Callback::new(|_| {}),
+        _order_event_source: None,
+        _risk_event_source: None,
+        _agent_event_source: None,
     }
 }
