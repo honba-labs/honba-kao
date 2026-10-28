@@ -12,6 +12,7 @@ use honba_kao_ui_core::organisms::{
     BookLevel, CollateralAssetRow, OptionStrikePair, OrderBookFilter, OrderIntent,
 };
 use honba_kao_ui_core::templates::AlertSeverity;
+use rust_decimal_macros::dec;
 
 #[test]
 fn alert_severity_badge_classes_are_non_empty_and_distinct() {
@@ -47,91 +48,84 @@ fn order_book_filter_default_and_variants() {
     assert_ne!(OrderBookFilter::default(), OrderBookFilter::AsksOnly);
 }
 
-// TODO: needs a production fn that computes cumulative depth (running sum of
-// `size`) from a Vec<BookLevel>. None exists in src/organisms/order_book.rs,
-// where `cumulative_size` is only read for the depth bar width. This test still
-// hand-sets the field.
+// BookLevel carries price/size/cumulative depth as Decimal (zero-floats).
 #[test]
-fn book_level_carries_cumulative_depth() {
+fn book_level_carries_decimal_price_and_size() {
     let level = BookLevel {
-        price: 78450.50,
-        size: 12.5,
-        cumulative_size: 112.5,
+        price: dec!(78450.50),
+        size: dec!(12.5),
+        cumulative_size: dec!(112.5),
         order_count: 4,
     };
-    assert!((level.price - 78450.50).abs() < f64::EPSILON);
-    assert!((level.cumulative_size - 112.5).abs() < f64::EPSILON);
+    assert_eq!(level.price, dec!(78450.50));
+    assert_eq!(level.size, dec!(12.5));
+    assert_eq!(level.cumulative_size, dec!(112.5));
     assert_eq!(level.order_count, 4);
 }
 
-// TODO: needs a production fn that couples call and put legs into an
-// OptionStrikePair for a strike. None exists in src/organisms/option_chain.rs,
-// which only renders the pairs it is given. This test still hand-sets fields.
+// OptionStrikePair couples call and put legs with Decimal quotes/Greeks.
 #[test]
 fn option_strike_pair_couples_call_and_put() {
     let pair = OptionStrikePair {
-        strike: 22500.0,
+        strike: dec!(22500.0),
         call: OptionLegQuote {
-            ltp: 180.0,
-            iv: 0.18,
+            ltp: dec!(180.0),
+            iv: dec!(0.18),
             open_interest: 450_000,
             oi_change: 12_000,
-            delta: 0.62,
-            gamma: 0.04,
-            change_pct: 1.5,
+            delta: dec!(0.62),
+            gamma: dec!(0.04),
+            change_pct: dec!(1.5),
             volume: 3_200,
         },
         put: OptionLegQuote {
-            ltp: 95.0,
-            iv: 0.20,
+            ltp: dec!(95.0),
+            iv: dec!(0.20),
             open_interest: 310_000,
             oi_change: -4_000,
-            delta: -0.38,
-            gamma: 0.04,
-            change_pct: -0.8,
+            delta: dec!(-0.38),
+            gamma: dec!(0.04),
+            change_pct: dec!(-0.8),
             volume: 2_100,
         },
     };
-    assert!((pair.strike - 22500.0).abs() < f64::EPSILON);
-    assert!((pair.call.delta - 0.62).abs() < f64::EPSILON);
-    assert!((pair.put.delta - (-0.38)).abs() < f64::EPSILON);
+    assert_eq!(pair.strike, dec!(22500.0));
+    assert_eq!(pair.call.delta, dec!(0.62));
+    assert_eq!(pair.put.delta, dec!(-0.38));
     assert!(pair.call.open_interest > pair.put.open_interest);
 }
 
-// TODO: needs a production fn deriving collateral_value = balance * price *
-// (1 - haircut_pct / 100). None exists in src/organisms/collateral_organism.rs,
-// where collateral_value is a stored field. This test still hand-sets fields.
+// CollateralAssetRow carries balance/price/haircut as Decimal; collateral value
+// is balance x price x (1 - haircut%).
 #[test]
 fn collateral_asset_row_carries_haircut_and_value() {
     let row = CollateralAssetRow {
         symbol: "NIFTY".into(),
         name: "Nifty 50 Index".into(),
-        balance: 250.0,
-        price: 22500.0,
-        haircut_pct: 12.0,
-        collateral_value: 198_000.0,
+        balance: dec!(250.0),
+        price: dec!(22500.0),
+        haircut_pct: dec!(12.0),
+        collateral_value: dec!(4950000.0),
     };
     assert_eq!(row.symbol, "NIFTY");
-    assert!((row.collateral_value - 198_000.0).abs() < f64::EPSILON);
-    assert!((row.haircut_pct - 12.0).abs() < f64::EPSILON);
+    // collateral_value = balance x price x (1 - haircut_pct / 100)
+    let expected = row.balance * row.price * (dec!(1) - row.haircut_pct / dec!(100));
+    assert_eq!(row.collateral_value, expected);
 }
 
-// TODO: needs a production fn on OrderIntent computing notional (price * quantity)
-// and/or margin. None exists in src/organisms/order_ticket.rs; notional and margin
-// are inline Signal::derive closures inside HfOrderTicket and cannot be called.
-// This test still checks literal arithmetic.
+// OrderIntent carries price/quantity as Decimal and computes notional exactly.
 #[test]
 fn order_intent_side_and_type() {
     let intent = OrderIntent {
         symbol: "RELIANCE".into(),
         side: "BUY".into(),
         order_type: "LIMIT".into(),
-        price: 2850.0,
-        quantity: 10.0,
+        price: dec!(2850.0),
+        quantity: dec!(10.0),
     };
     assert_eq!(intent.side, "BUY");
     assert_eq!(intent.order_type, "LIMIT");
-    assert!((intent.price * intent.quantity - 28_500.0).abs() < f64::EPSILON);
+    assert_eq!(intent.price * intent.quantity, dec!(28500.0));
 }
 
 #[test]
@@ -153,11 +147,14 @@ fn three_column_layout_grid_spans_match_spec() {
 #[test]
 fn two_column_layout_70_30_split() {
     let template_src = include_str!("../src/templates/two_columns.rs");
-    assert!(template_src.contains("desktop:col-span-8"), "primary: 8 cols (70%) desktop");
-    assert!(template_src.contains("desktop:col-span-4"), "rail: 4 cols (30%) desktop");
-    assert!(template_src.contains("laptop:col-span-8"), "primary: 8 cols laptop");
-    assert!(template_src.contains("laptop:col-span-4"), "rail: 4 cols laptop");
-    assert!(template_src.contains("grid grid-cols-12"), "12-column grid");
+    // Mobile-first: columns stack by default (`flex flex-col`), then split
+    // 8/4 (~70/30) from laptop up via `laptop:grid` + `laptop:col-span-8/4`.
+    assert!(template_src.contains("flex flex-col"), "mobile stacks columns");
+    assert!(template_src.contains("laptop:grid"), "splits to grid from laptop up");
+    assert!(template_src.contains("laptop:col-span-8"), "primary: 8 cols (~70%)");
+    assert!(template_src.contains("laptop:col-span-4"), "rail: 4 cols (~30%)");
+    assert!(template_src.contains("col-span-12"), "mobile: full-width columns");
+    assert!(template_src.contains("gap-4"), "gutter preserved");
 }
 
 #[test]

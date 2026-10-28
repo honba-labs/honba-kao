@@ -2,6 +2,7 @@ use honba_kao_ui_core::molecules::crypto::HfLiquidationProgressBar;
 use honba_kao_ui_core::organisms::{CollateralAssetRow, HfCollateralOrganism};
 use honba_kao_ui_core::templates::{HfPage, HfTwoColumnSplitLayout};
 use leptos::prelude::*;
+use rust_decimal_macros::dec;
 
 #[component]
 pub fn PortfolioPage() -> impl IntoView {
@@ -9,26 +10,26 @@ pub fn PortfolioPage() -> impl IntoView {
         CollateralAssetRow {
             symbol: "INR".to_string(),
             name: "Indian Rupee (Cash)".to_string(),
-            balance: 250_000.0,
-            price: 1.0,
-            haircut_pct: 0.0,
-            collateral_value: 250_000.0,
+            balance: dec!(250000.0),
+            price: dec!(1.0),
+            haircut_pct: dec!(0.0),
+            collateral_value: dec!(250000.0),
         },
         CollateralAssetRow {
             symbol: "RELIANCE".to_string(),
             name: "Reliance Industries".to_string(),
-            balance: 100.0,
-            price: 2950.0,
-            haircut_pct: 15.0,
-            collateral_value: 250_750.0,
+            balance: dec!(100.0),
+            price: dec!(2950.0),
+            haircut_pct: dec!(15.0),
+            collateral_value: dec!(250750.0),
         },
     ]);
 
     let primary = view! {
         <HfCollateralOrganism
             assets=Signal::derive(move || assets.get())
-            total_collateral_value=Signal::derive(|| 500_750.0)
-            margin_used=Signal::derive(|| 125_000.0)
+            total_collateral_value=Signal::derive(|| dec!(500750.0))
+            margin_used=Signal::derive(|| dec!(125000.0))
         />
     }
     .into_any();

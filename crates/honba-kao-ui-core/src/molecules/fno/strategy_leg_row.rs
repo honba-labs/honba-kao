@@ -2,13 +2,14 @@
 //! and lot multiplier.
 
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StrategyLeg {
     pub side: String, // "BUY" / "SELL"
-    pub strike: f64,
+    pub strike: Decimal,
     pub expiry: String,
-    pub lots: f64,
+    pub lots: Decimal,
 }
 
 #[component]
@@ -24,10 +25,10 @@ pub fn HfStrategyLegRow(
             <div class="hf-leg-side flex items-center gap-1">
                 <span class=move || format!("{} font-bold", side_color.get())>{move || leg.get().side.clone()}</span>
                 <span class="text-text-muted">" × "</span>
-                <span class="font-mono">{move || format!("{:.0}", leg.get().lots)}</span>
+                <span class="font-mono">{move || format!("{}", leg.get().lots.round_dp(2))}</span>
             </div>
             <div class="hf-leg-strike text-center font-mono text-text-high">
-                {move || format!("{:.0}", leg.get().strike)}
+                {move || format!("{}", leg.get().strike.round_dp(2))}
             </div>
             <span class="text-text-muted">{move || leg.get().expiry.clone()}</span>
             <button

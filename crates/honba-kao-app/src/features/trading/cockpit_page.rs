@@ -4,58 +4,59 @@ use honba_kao_ui_core::organisms::{
 use honba_kao_ui_core::templates::HfThreeColumnTradingLayout;
 use leptos::prelude::*;
 use openalgo_charts::OpenalgoChart;
+use rust_decimal_macros::dec;
 use std::sync::Arc;
 
 #[component]
 pub fn CockpitPage() -> impl IntoView {
     let symbol = RwSignal::new("NIFTY50".to_string());
-    let ltp = RwSignal::new(24500.0);
-    let change_abs = RwSignal::new(125.5);
-    let change_pct = RwSignal::new(0.52);
+    let ltp = RwSignal::new(dec!(24500.0));
+    let change_abs = RwSignal::new(dec!(125.5));
+    let change_pct = RwSignal::new(dec!(0.52));
 
     let bids = RwSignal::new(vec![
         BookLevel {
-            price: 24498.0,
-            size: 150.0,
-            cumulative_size: 150.0,
+            price: dec!(24498.0),
+            size: dec!(150.0),
+            cumulative_size: dec!(150.0),
             order_count: 5,
         },
         BookLevel {
-            price: 24495.0,
-            size: 300.0,
-            cumulative_size: 450.0,
+            price: dec!(24495.0),
+            size: dec!(300.0),
+            cumulative_size: dec!(450.0),
             order_count: 8,
         },
         BookLevel {
-            price: 24490.0,
-            size: 500.0,
-            cumulative_size: 950.0,
+            price: dec!(24490.0),
+            size: dec!(500.0),
+            cumulative_size: dec!(950.0),
             order_count: 12,
         },
     ]);
 
     let asks = RwSignal::new(vec![
         BookLevel {
-            price: 24502.0,
-            size: 120.0,
-            cumulative_size: 120.0,
+            price: dec!(24502.0),
+            size: dec!(120.0),
+            cumulative_size: dec!(120.0),
             order_count: 4,
         },
         BookLevel {
-            price: 24505.0,
-            size: 280.0,
-            cumulative_size: 400.0,
+            price: dec!(24505.0),
+            size: dec!(280.0),
+            cumulative_size: dec!(400.0),
             order_count: 7,
         },
         BookLevel {
-            price: 24510.0,
-            size: 450.0,
-            cumulative_size: 850.0,
+            price: dec!(24510.0),
+            size: dec!(450.0),
+            cumulative_size: dec!(850.0),
             order_count: 10,
         },
     ]);
 
-    let spread = RwSignal::new(Some((4.0, 1.63)));
+    let spread = RwSignal::new(Some((dec!(4.0), dec!(1.63))));
 
     let top_bar = view! {
         <HfMarketTopBar
@@ -63,9 +64,9 @@ pub fn CockpitPage() -> impl IntoView {
             ltp=Signal::derive(move || ltp.get())
             change_abs=Signal::derive(move || change_abs.get())
             change_pct=Signal::derive(move || change_pct.get())
-            high_24h=Signal::derive(|| 24550.0)
-            low_24h=Signal::derive(|| 24380.0)
-            volume_24h=Signal::derive(|| 15_200_000.0)
+            high_24h=Signal::derive(|| dec!(24550.0))
+            low_24h=Signal::derive(|| dec!(24380.0))
+            volume_24h=Signal::derive(|| dec!(15200000.0))
         />
     }
     .into_any();
@@ -91,10 +92,10 @@ pub fn CockpitPage() -> impl IntoView {
         <HfOrderTicket
             symbol=Signal::derive(move || symbol.get())
             mark_price=Signal::derive(move || ltp.get())
-            best_bid=Signal::derive(|| Some(24498.0))
-            best_ask=Signal::derive(|| Some(24502.0))
-            available_capital=Signal::derive(|| 500_000.0)
-            margin_requirement_ratio=Signal::derive(|| 0.15)
+            best_bid=Signal::derive(|| Some(dec!(24498.0)))
+            best_ask=Signal::derive(|| Some(dec!(24502.0)))
+            available_capital=Signal::derive(|| dec!(500000.0))
+            margin_requirement_ratio=Signal::derive(|| dec!(0.15))
             on_submit_order=Callback::new(move |_intent: OrderIntent| {})
         />
     }

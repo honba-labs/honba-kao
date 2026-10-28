@@ -1,9 +1,10 @@
 use leptos::prelude::*;
+use rust_decimal::Decimal;
 
 #[component]
 pub fn HfTapeRow(
-    price: f64,
-    size: f64,
+    price: Decimal,
+    size: Decimal,
     time: String,
     is_buyer_maker: bool,
     #[prop(into, optional)] on_click: Option<Callback<()>>,
@@ -22,8 +23,8 @@ pub fn HfTapeRow(
                 }
             }
         >
-            <span class=side_class>{format!("{:.2}", price)}</span>
-            <span class="text-text-muted">{format!("{:.4}", size)}</span>
+            <span class=side_class>{format!("{}", price.round_dp(2))}</span>
+            <span class="text-text-muted">{format!("{}", size.round_dp(4))}</span>
             <span class="text-[10px] text-text-muted">{time}</span>
         </div>
     }
