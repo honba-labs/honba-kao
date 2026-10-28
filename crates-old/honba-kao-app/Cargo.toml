@@ -1,0 +1,39 @@
+[package]
+name = "honba-kao-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+honba-kao-client.workspace = true
+honba-kao-ui-core.workspace = true
+honba-core.workspace = true
+honba-api-wasm.workspace = true
+honba-indicators.workspace = true
+openalgo-charts.workspace = true
+leptos.workspace = true
+leptos_router.workspace = true
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+console_error_panic_hook.workspace = true
+tracing.workspace = true
+tracing-wasm.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlInputElement", "MouseEvent", "KeyboardEvent", "FocusEvent", "Location", "Storage", "MediaQueryList", "Event", "EventTarget", "CustomEvent", "Blob", "BlobPropertyBag", "Url", "BroadcastChannel", "MessageEvent", "console"] }
+flow-rs-leptos = "0.1.0-beta.2"
+flow-rs-core = "0.1.0-beta.2"
+rust_decimal = "1.43"
+chrono = "0.4"
+num-traits = "0.2"
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "realtime_feed"
+harness = false

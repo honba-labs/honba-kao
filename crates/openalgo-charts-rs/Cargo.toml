@@ -2,23 +2,8 @@
 name = "openalgo-charts-rs"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.75"
-authors = ["Honba Labs <dev@honba.io>"]
 license = "Apache-2.0"
-description = "High-performance Rust bindings and reactive Leptos/Dioxus components for OpenAlgo Charts (TradingView Lightweight Charts fork)"
-readme = "README.md"
-repository = "https://github.com/dev-pmallapp/openalgo-charts-rs"
-homepage = "https://github.com/dev-pmallapp/openalgo-charts-rs"
-documentation = "https://docs.rs/openalgo-charts-rs"
-keywords = ["charts", "trading", "lightweight-charts", "leptos", "dioxus"]
-categories = ["web-programming", "gui", "visualization"]
-include = [
-    "src/**/*",
-    "examples/**/*",
-    "Cargo.toml",
-    "README.md",
-    "LICENSE",
-]
+description = "High-performance Rust bindings and reactive Leptos components for charts"
 
 [lib]
 name = "openalgo_charts"
@@ -50,11 +35,3 @@ tracing = { version = "0.1", optional = true }
 default = ["leptos", "tracing"]
 leptos = ["dep:leptos"]
 tracing = ["dep:tracing"]
-
-[dev-dependencies]
-console_error_panic_hook = "0.1"
-
-[package.metadata.docs.rs]
-all-features = true
-targets = ["wasm32-unknown-unknown"]
-rustdoc-args = ["--cfg", "docsrs"]

@@ -5,17 +5,14 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-description = "WASM compute surface for Honba frontend (wasm32-unknown-unknown)"
+description = "WASM compute surface for Honba frontend"
 
 [lib]
 name = "honba_api_wasm"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# The `wasm-bindgen` JS facade (the exports in `src/lib.rs`). On by default so `wasm-pack` builds
-# for external JS callers are unchanged; Rust callers in the workspace turn it off and use the
-# typed module APIs.
-default = ["js"]
+default = []
 js = ["dep:wasm-bindgen"]
 
 [dependencies]
