@@ -1,4 +1,4 @@
-use super::connection::WsConnection;
+use super::connection::{WsConnection, WsConfig};
 use crate::dto::market::Level2Book;
 
 pub struct DepthFeed {
@@ -10,11 +10,16 @@ impl DepthFeed {
     where
         F: FnMut(Level2Book) + 'static,
     {
-        let conn = WsConnection::connect(ws_url, move |raw| {
-            if let Ok(book) = serde_json::from_str::<Level2Book>(&raw) {
-                on_book(book);
-            }
-        })?;
+        let conn = WsConnection::connect(
+            ws_url,
+            move |raw| {
+                if let Ok(book) = serde_json::from_str::<Level2Book>(&raw) {
+                    on_book(book);
+                }
+            },
+            |_| {}, // lifecycle events are surfaced via `conn.is_connected()`
+            WsConfig::default(),
+        )?;
 
         let sub_msg = serde_json::json!({
             "action": "subscribe",
