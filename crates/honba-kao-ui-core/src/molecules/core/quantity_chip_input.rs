@@ -3,8 +3,8 @@
 //! Ported from `secured-finance-app` molecule patterns and the restructure spec
 //! (Section 7.2).
 
+use crate::primitive::{ButtonSize, ButtonVariant, HfButton, HfChip, HfOrderInputBox};
 use leptos::prelude::*;
-use crate::primitive::{HfButton, HfOrderInputBox, HfChip, ButtonVariant, ButtonSize};
 
 #[component]
 pub fn HfQuantityChipInput(
@@ -31,16 +31,16 @@ pub fn HfQuantityChipInput(
                 <HfButton
                     variant=ButtonVariant::Ghost
                     size=ButtonSize::Sm
-                    on_click=move |_| set_percent(100.0)
+                    on_click=Callback::new(move |_| set_percent(100.0))
                 >
                     "Max"
                 </HfButton>
             </div>
             <div class="hf-qty-chips-row flex items-center gap-1">
-                <HfChip selected=false on_click=move |_| set_percent(25.0)>"25%"</HfChip>
-                <HfChip selected=false on_click=move |_| set_percent(50.0)>"50%"</HfChip>
-                <HfChip selected=false on_click=move |_| set_percent(75.0)>"75%"</HfChip>
-                <HfChip selected=false on_click=move |_| set_percent(100.0)>"100%"</HfChip>
+                <HfChip active=false on_click=Callback::new(move |_| set_percent(25.0))>"25%"</HfChip>
+                <HfChip active=false on_click=Callback::new(move |_| set_percent(50.0))>"50%"</HfChip>
+                <HfChip active=false on_click=Callback::new(move |_| set_percent(75.0))>"75%"</HfChip>
+                <HfChip active=false on_click=Callback::new(move |_| set_percent(100.0))>"100%"</HfChip>
             </div>
         </div>
     }

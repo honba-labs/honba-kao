@@ -1,9 +1,5 @@
-//! `HfPriceSnapInput` — price input with instant Best-Bid / Mid / Best-Ask snapping.
-//! Ported from `secured-finance-app` molecule patterns and the restructure spec
-//! (Section 7.2).
-
+use crate::primitive::{HfButton, HfOrderInputBox};
 use leptos::prelude::*;
-use crate::primitive::{HfButton, HfOrderInputBox, ButtonVariant, ButtonSize};
 
 #[component]
 pub fn HfPriceSnapInput(
@@ -11,20 +7,20 @@ pub fn HfPriceSnapInput(
     #[prop(into)] currency_symbol: String,
     #[prop(into)] best_bid: Signal<Option<f64>>,
     #[prop(into)] best_ask: Signal<Option<f64>>,
-    #[prop(default = false)] disabled: bool,
+    #[prop(optional)] disabled: bool,
 ) -> impl IntoView {
-    let on_mid_click = move |_| {
+    let on_mid_click = Callback::new(move |_| {
         if let (Some(bid), Some(ask)) = (best_bid.get(), best_ask.get()) {
             let mid = (bid + ask) / 2.0;
             value.set(format!("{:.2}", mid));
         }
-    };
-    let mid_disabled = Signal::derive(move || {
-        disabled || best_bid.get().is_none() || best_ask.get().is_none()
     });
 
+    let is_btn_disabled =
+        Signal::derive(move || disabled || best_bid.get().is_none() || best_ask.get().is_none());
+
     view! {
-        <div class="hf-price-snap-input flex items-center gap-1.5">
+        <div class="hf-price-snap-input flex items-center gap-1.5 w-full">
             <HfOrderInputBox
                 value=value
                 adornment=currency_symbol
@@ -32,9 +28,10 @@ pub fn HfPriceSnapInput(
                 disabled=disabled
             />
             <HfButton
-                variant=ButtonVariant::Outline
-                size=ButtonSize::Sm
-                disabled=mid_disabled
+                class="hf-snap-btn px-2 text-xs"
+                variant=crate::primitive::ButtonVariant::Outline
+                size=crate::primitive::ButtonSize::Sm
+                disabled=is_btn_disabled
                 on_click=on_mid_click
             >
                 "Mid"

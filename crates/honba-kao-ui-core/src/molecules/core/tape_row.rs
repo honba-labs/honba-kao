@@ -17,7 +17,7 @@ pub fn HfTapeRow(
         <div
             class="hf-tape-row flex items-center justify-between px-2 py-0.5 hover:bg-surface-elevated font-mono text-xs cursor-pointer"
             on:click=move |_| {
-                if let Some(cb) = on_click {
+                if let Some(cb) = on_click.as_ref() {
                     cb.run(());
                 }
             }
