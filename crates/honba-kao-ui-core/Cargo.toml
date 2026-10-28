@@ -29,3 +29,4 @@ chrono = { version = "0.4", features = ["serde"] }
 rust_decimal.workspace = true
 rust_decimal_macros.workspace = true
 num-traits = "0.2"
+honba-kao-api-wasm.workspace = true

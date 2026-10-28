@@ -1,6 +1,11 @@
-use honba_kao_ui_core::{Decimal, primitive::HfNumberInput};
+use honba_api_wasm::margin::{
+    calculate_per_share_risk, calculate_position_sizing, calculate_risk_amount,
+    calculate_suggested_shares,
+};
 use honba_kao_ui_core::templates::{HfPage, HfTwoColumnSplitLayout};
+use honba_kao_ui_core::{Decimal, primitive::HfNumberInput};
 use leptos::prelude::*;
+use rust_decimal_macros::dec;
 
 #[component]
 pub fn PositionSizerPage() -> impl IntoView {
@@ -9,21 +14,32 @@ pub fn PositionSizerPage() -> impl IntoView {
     let entry_price = RwSignal::new(Decimal::from(2500));
     let stop_loss = RwSignal::new(Decimal::from(2450));
 
-    let risk_amount = move || -> Decimal {
-        account_equity.get() * (risk_pct.get() / Decimal::from(100))
-    };
-    let per_share_risk = move || -> Decimal {
-        (entry_price.get() - stop_loss.get()).abs()
-    };
-    let suggested_shares = move || -> Decimal {
-        let risk = per_share_risk();
-        if risk > Decimal::ZERO {
-            (risk_amount() / risk).trunc() // whole units
-        } else {
+    // All numerical algorithms evicted to honba-kao-api-wasm::margin (Zero Floats Policy).
+    let risk_amount = move || calculate_risk_amount(account_equity.get(), risk_pct.get());
+    let per_share_risk = move || calculate_per_share_risk(entry_price.get(), stop_loss.get());
+    let suggested_shares = move || calculate_suggested_shares(risk_amount(), per_share_risk());
+    let total_notional = move || suggested_shares() * entry_price.get();
+
+    // Kelly / volatility-target sizing via the compute engine.
+    let position_sizing = Signal::derive(move || {
+        calculate_position_sizing(
+            account_equity.get(),
+            dec!(0.55), // assumed win rate
+            dec!(1.5),  // assumed win/loss ratio
+            dec!(0.10), // 10% annual vol target
+            dec!(0.20), // 20% annual asset vol
+        )
+    });
+
+    let kelly_allocation = move || {
+        let ps = position_sizing.get();
+        let pct = if account_equity.get().is_zero() {
             Decimal::ZERO
-        }
+        } else {
+            (ps.recommended_notional / account_equity.get()) * dec!(100)
+        };
+        format!("{:.2}% of total portfolio equity", pct)
     };
-    let total_notional = move || -> Decimal { suggested_shares() * entry_price.get() };
 
     let primary = view! {
         <div class="flex flex-col gap-4">
@@ -55,7 +71,7 @@ pub fn PositionSizerPage() -> impl IntoView {
                     "Dynamic fractional Kelly multiplier applied against covariance risk matrix to cap leverage and drawdown."
                 </p>
                 <div class="text-xs font-mono bg-surface-subtle p-3 rounded border border-border-soft text-text-muted">
-                    "Optimal Half-Kelly Allocation: 8.4% of total portfolio equity"
+                    {move || format!("Optimal Half-Kelly Allocation: {}", kelly_allocation())}
                 </div>
             </div>
         </div>
