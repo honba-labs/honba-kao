@@ -1,12 +1,12 @@
 use honba_kao_ui_core::molecules::quant::HfBacktestMetricCard;
-use honba_kao_ui_core::templates::HfPage;
+use honba_kao_ui_core::templates::HfMosaicWorkspace;
 use leptos::prelude::*;
 
 #[component]
 pub fn BacktestingDeckPage() -> impl IntoView {
     view! {
-        <HfPage title="Quantitative Strategy Backtesting" subtitle="Walk-forward optimization, parameter sweeps, and execution slippage breakdown">
-            <div class="grid grid-cols-1 laptop:grid-cols-4 gap-4">
+        <HfMosaicWorkspace>
+            <div class="col-span-12 laptop:col-span-12 p-4 grid grid-cols-1 laptop:grid-cols-4 gap-4 h-full">
                 <HfBacktestMetricCard
                     label="CAGR"
                     value="24.5%"
@@ -28,6 +28,12 @@ pub fn BacktestingDeckPage() -> impl IntoView {
                     positive=true
                 />
             </div>
-        </HfPage>
+            <div class="col-span-12 laptop:col-span-12 p-4 rounded border border-border-soft bg-surface-base h-full">
+                <span class="text-xs font-bold text-text-high font-mono block mb-1">"Equity Curve & Drawdown"</span>
+                <div class="h-[300px] flex items-center justify-center text-xs text-text-muted border border-border-soft rounded bg-surface-subtle">
+                    "Walk-forward optimization and parameter sweeps rendered via api-wasm analytics."
+                </div>
+            </div>
+        </HfMosaicWorkspace>
     }
 }
