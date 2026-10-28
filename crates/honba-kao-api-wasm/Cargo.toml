@@ -21,4 +21,6 @@ honba-core.workspace = true
 honba-indicators.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+uuid = { version = "1", features = ["js"] }
+getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen = { version = "0.2", optional = true }
