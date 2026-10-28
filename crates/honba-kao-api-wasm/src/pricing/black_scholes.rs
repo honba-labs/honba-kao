@@ -27,6 +27,10 @@ fn erf(x: f64) -> f64 {
 }
 
 pub fn black_scholes_call(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
+    // #59: reject non-positive spot/strike to avoid ln(0)/NaN propagation.
+    if s <= 0.0 || k <= 0.0 {
+        return 0.0;
+    }
     if t <= 0.0 {
         return (s - k).max(0.0);
     }
@@ -41,6 +45,10 @@ pub fn black_scholes_call(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
 }
 
 pub fn black_scholes_put(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
+    // #59: reject non-positive spot/strike to avoid ln(0)/NaN propagation.
+    if s <= 0.0 || k <= 0.0 {
+        return 0.0;
+    }
     if t <= 0.0 {
         return (k - s).max(0.0);
     }

@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -18,7 +19,7 @@ pub enum Predicate {
     Comparison {
         field: String,
         op: Operator,
-        value: f64,
+        value: Decimal,
     },
     TextComparison {
         field: String,

@@ -8,9 +8,16 @@
 //! All structured data crosses the wasm/JS boundary as JSON strings, so no
 //! complex type marshaling is required. JS callers `JSON.parse` the results and
 //! `JSON.stringify` the inputs.
+//
+//! #63: `from_json` now returns a `Result` instead of panicking on malformed
+//! input, so an invalid JSON payload can never abort WASM linear memory.
 
+use serde::de::DeserializeOwned;
 use serde::Serialize;
+use rust_decimal::Decimal;
+use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use wasm_bindgen::prelude::*;
+use std::collections::HashMap;
 
 use crate::analytics::{
     calculate_cointegration, calculate_drawdown, calculate_performance_ratios,
@@ -32,15 +39,36 @@ use crate::pricing::{
     discount_factor, future_value, interpolate_yield, present_value,
 };
 use crate::replay::{simulate_fill_price, FillModel, ReplayClock};
+use crate::screener::{evaluate_predicate, sort_indices, Predicate};
 
 fn to_json<T: Serialize + ?Sized>(value: &T) -> String {
     serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())
 }
 
-fn from_json<T: serde::de::DeserializeOwned>(json: &str) -> T {
-    serde_json::from_str(json).unwrap_or_else(|_| {
-        panic!("invalid JSON input: {}", json.chars().take(120).collect::<String>())
-    })
+/// Parse JSON, returning a descriptive error string instead of panicking
+/// (#63). An unhandled panic in `wasm32-unknown-unknown` aborts WASM linear
+/// memory and crashes the browser worker thread.
+fn from_json<T: DeserializeOwned>(json: &str) -> Result<T, String> {
+    serde_json::from_str(json).map_err(|e| format!("invalid JSON input: {e}"))
+}
+
+/// Convert a rust_decimal value to an f64 for the JS boundary (JS numbers are
+/// IEEE-754 doubles). Internal compute remains exact Decimal.
+fn dec_to_f64(d: Decimal) -> f64 {
+    d.to_f64().unwrap_or(0.0)
+}
+
+/// Convert an f64 from the JS boundary into Decimal for internal compute.
+fn f64_to_dec(x: f64) -> Decimal {
+    Decimal::from_f64(x).unwrap_or(Decimal::ZERO)
+}
+
+/// Run a fallible JSON computation, emitting `{"error": "..."}` on failure.
+fn json_or_error<T: Serialize, F: FnOnce() -> Result<T, String>>(f: F) -> String {
+    match f() {
+        Ok(value) => to_json(&value),
+        Err(e) => to_json(&serde_json::json!({ "error": e })),
+    }
 }
 
 /// ---- Options Pricing -------------------------------------------------------
@@ -92,22 +120,28 @@ pub fn bs_future_value(cash_flow: f64, rate: f64, time_years: f64) -> f64 {
 
 #[wasm_bindgen]
 pub fn bs_interpolate_yield(curve_json: &str, target_tenor_months: f64) -> f64 {
-    let curve: Vec<crate::pricing::term_structure::YieldPoint> = from_json(curve_json);
-    interpolate_yield(&curve, target_tenor_months)
+    match from_json::<Vec<crate::pricing::term_structure::YieldPoint>>(curve_json) {
+        Ok(curve) => interpolate_yield(&curve, target_tenor_months),
+        Err(_) => 0.0,
+    }
 }
 
 /// ---- Analytics -------------------------------------------------------------
 
 #[wasm_bindgen]
 pub fn analytics_drawdown(equity_curve_json: &str) -> String {
-    let curve: Vec<f64> = from_json(equity_curve_json);
-    to_json(&calculate_drawdown(&curve))
+    json_or_error(|| {
+        let curve = from_json::<Vec<f64>>(equity_curve_json)?;
+        Ok(calculate_drawdown(&curve))
+    })
 }
 
 #[wasm_bindgen]
 pub fn analytics_var_cvar(returns_json: &str) -> String {
-    let returns: Vec<f64> = from_json(returns_json);
-    to_json(&calculate_var_and_cvar(&returns))
+    json_or_error(|| {
+        let returns = from_json::<Vec<f64>>(returns_json)?;
+        Ok(calculate_var_and_cvar(&returns))
+    })
 }
 
 #[wasm_bindgen]
@@ -117,24 +151,28 @@ pub fn analytics_ratios(
     max_drawdown_pct: f64,
     annual_risk_free_rate: f64,
 ) -> String {
-    let returns: Vec<f64> = from_json(returns_json);
-    let pnl: Vec<f64> = from_json(trades_pnl_json);
-    to_json(&calculate_performance_ratios(
-        &returns,
-        &pnl,
-        max_drawdown_pct,
-        annual_risk_free_rate,
-    ))
+    json_or_error(|| {
+        let returns = from_json::<Vec<f64>>(returns_json)?;
+        let pnl = from_json::<Vec<f64>>(trades_pnl_json)?;
+        Ok(calculate_performance_ratios(
+            &returns,
+            &pnl,
+            max_drawdown_pct,
+            annual_risk_free_rate,
+        ))
+    })
 }
 
 #[wasm_bindgen]
 pub fn analytics_cointegration(y_json: &str, x_json: &str) -> String {
-    let y: Vec<f64> = from_json(y_json);
-    let x: Vec<f64> = from_json(x_json);
-    match calculate_cointegration(&y, &x) {
-        Some(r) => to_json(&r),
-        None => "null".to_string(),
-    }
+    json_or_error(|| {
+        let y = from_json::<Vec<f64>>(y_json)?;
+        let x = from_json::<Vec<f64>>(x_json)?;
+        match calculate_cointegration(&y, &x) {
+            Some(r) => Ok(r),
+            None => Err("no cointegration".into()),
+        }
+    })
 }
 
 /// ---- Margin & Risk ---------------------------------------------------------
@@ -151,22 +189,29 @@ pub fn margin_haircut(asset_class: &str) -> f64 {
         "Crypto" => AssetClass::Crypto,
         _ => AssetClass::Cash,
     };
-    get_standard_haircut(class)
+    dec_to_f64(get_standard_haircut(class))
 }
 
 #[wasm_bindgen]
 pub fn margin_collateral_value(balance: f64, price: f64, haircut_pct: f64) -> f64 {
-    calculate_collateral_value(balance, price, haircut_pct)
+    dec_to_f64(calculate_collateral_value(
+        f64_to_dec(balance),
+        f64_to_dec(price),
+        f64_to_dec(haircut_pct),
+    ))
 }
 
 #[wasm_bindgen]
 pub fn margin_fno(notional: f64, is_spread: bool) -> String {
-    to_json(&calculate_fno_margin(notional, is_spread))
+    to_json(&calculate_fno_margin(f64_to_dec(notional), is_spread))
 }
 
 #[wasm_bindgen]
 pub fn margin_kelly(win_rate: f64, win_loss_ratio: f64) -> f64 {
-    calculate_kelly_criterion(win_rate, win_loss_ratio)
+    dec_to_f64(calculate_kelly_criterion(
+        f64_to_dec(win_rate),
+        f64_to_dec(win_loss_ratio),
+    ))
 }
 
 #[wasm_bindgen]
@@ -175,7 +220,11 @@ pub fn margin_vol_target(
     target_vol_annual: f64,
     asset_vol_annual: f64,
 ) -> f64 {
-    calculate_volatility_target_size(portfolio_value, target_vol_annual, asset_vol_annual)
+    dec_to_f64(calculate_volatility_target_size(
+        f64_to_dec(portfolio_value),
+        f64_to_dec(target_vol_annual),
+        f64_to_dec(asset_vol_annual),
+    ))
 }
 
 #[wasm_bindgen]
@@ -187,11 +236,11 @@ pub fn margin_position_sizing(
     asset_vol_annual: f64,
 ) -> String {
     to_json(&calculate_position_sizing(
-        portfolio_value,
-        win_rate,
-        win_loss_ratio,
-        target_vol_annual,
-        asset_vol_annual,
+        f64_to_dec(portfolio_value),
+        f64_to_dec(win_rate),
+        f64_to_dec(win_loss_ratio),
+        f64_to_dec(target_vol_annual),
+        f64_to_dec(asset_vol_annual),
     ))
 }
 
@@ -204,64 +253,81 @@ pub fn margin_liquidation_buffer(
     is_long: bool,
 ) -> String {
     to_json(&calculate_liquidation_buffer(
-        entry_price,
-        position_size,
-        collateral,
-        maintenance_margin_rate,
+        f64_to_dec(entry_price),
+        f64_to_dec(position_size),
+        f64_to_dec(collateral),
+        f64_to_dec(maintenance_margin_rate),
         is_long,
     ))
 }
 
 #[wasm_bindgen]
 pub fn margin_utilization(total_collateral: f64, margin_used: f64) -> String {
-    to_json(&calculate_margin_utilization(total_collateral, margin_used))
+    to_json(&calculate_margin_utilization(
+        f64_to_dec(total_collateral),
+        f64_to_dec(margin_used),
+    ))
 }
 
 /// ---- Execution Pairing -----------------------------------------------------
 
 #[wasm_bindgen]
 pub fn pairing_fifo(fills_json: &str) -> String {
-    let fills: Vec<Fill> = from_json(fills_json);
-    to_json(&pair_fills_fifo(&fills))
+    json_or_error(|| {
+        let fills = from_json::<Vec<Fill>>(fills_json)?;
+        Ok(pair_fills_fifo(&fills))
+    })
 }
 
 #[wasm_bindgen]
 pub fn pairing_lifo(fills_json: &str) -> String {
-    let fills: Vec<Fill> = from_json(fills_json);
-    to_json(&pair_fills_lifo(&fills))
+    json_or_error(|| {
+        let fills = from_json::<Vec<Fill>>(fills_json)?;
+        Ok(pair_fills_lifo(&fills))
+    })
 }
 
 /// ---- Technical Indicators --------------------------------------------------
 
 #[wasm_bindgen]
 pub fn indicator_sma(prices_json: &str, period: usize) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    to_json(&calculate_sma(&prices, period))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        Ok(calculate_sma(&prices, period))
+    })
 }
 
 #[wasm_bindgen]
 pub fn indicator_ema(prices_json: &str, period: usize) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    to_json(&calculate_ema(&prices, period))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        Ok(calculate_ema(&prices, period))
+    })
 }
 
 #[wasm_bindgen]
 pub fn indicator_rsi(prices_json: &str, period: usize) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    to_json(&calculate_rsi(&prices, period))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        Ok(calculate_rsi(&prices, period))
+    })
 }
 
 #[wasm_bindgen]
 pub fn indicator_roc(prices_json: &str, period: usize) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    to_json(&crate::indicators::momentum::calculate_roc(&prices, period))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        Ok(crate::indicators::momentum::calculate_roc(&prices, period))
+    })
 }
 
 #[wasm_bindgen]
 pub fn indicator_vwap(prices_json: &str, volumes_json: &str) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    let volumes: Vec<f64> = from_json(volumes_json);
-    to_json(&calculate_vwap(&prices, &volumes))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        let volumes = from_json::<Vec<f64>>(volumes_json)?;
+        Ok(calculate_vwap(&prices, &volumes))
+    })
 }
 
 #[wasm_bindgen]
@@ -271,10 +337,12 @@ pub fn indicator_atr(
     closes_json: &str,
     period: usize,
 ) -> String {
-    let highs: Vec<f64> = from_json(highs_json);
-    let lows: Vec<f64> = from_json(lows_json);
-    let closes: Vec<f64> = from_json(closes_json);
-    to_json(&calculate_atr(&highs, &lows, &closes, period))
+    json_or_error(|| {
+        let highs = from_json::<Vec<f64>>(highs_json)?;
+        let lows = from_json::<Vec<f64>>(lows_json)?;
+        let closes = from_json::<Vec<f64>>(closes_json)?;
+        Ok(calculate_atr(&highs, &lows, &closes, period))
+    })
 }
 
 #[wasm_bindgen]
@@ -283,8 +351,10 @@ pub fn indicator_bollinger(
     period: usize,
     num_std: f64,
 ) -> String {
-    let prices: Vec<f64> = from_json(prices_json);
-    to_json(&calculate_bollinger_bands(&prices, period, num_std))
+    json_or_error(|| {
+        let prices = from_json::<Vec<f64>>(prices_json)?;
+        Ok(calculate_bollinger_bands(&prices, period, num_std))
+    })
 }
 
 /// ---- Replay / Simulation ---------------------------------------------------
@@ -320,22 +390,68 @@ pub fn replay_fill(
         }
         _ => FillModel::Immediate,
     };
-    simulate_fill_price(order_price, market_price, is_buy, fill_model)
+    dec_to_f64(simulate_fill_price(
+        order_price.map(f64_to_dec),
+        f64_to_dec(market_price),
+        is_buy,
+        fill_model,
+    ))
 }
 
 /// ---- Multi-Leg Payoff ------------------------------------------------------
 
 #[wasm_bindgen]
 pub fn payoff_evaluate(legs_json: &str) -> String {
-    let legs: Vec<Leg> = from_json(legs_json);
-    let engine = PayoffEngine::new(legs);
-    to_json(&engine.evaluate())
+    json_or_error(|| {
+        let legs = from_json::<Vec<Leg>>(legs_json)?;
+        let engine = PayoffEngine::new(legs);
+        Ok(engine.evaluate())
+    })
 }
 
 #[wasm_bindgen]
 pub fn payoff_evaluate_config(legs_json: &str, config_json: &str) -> String {
-    let legs: Vec<Leg> = from_json(legs_json);
-    let config: PayoffConfig = from_json(config_json);
-    let engine = PayoffEngine::with_config(legs, config);
-    to_json(&engine.evaluate())
+    json_or_error(|| {
+        let legs = from_json::<Vec<Leg>>(legs_json)?;
+        let config = from_json::<PayoffConfig>(config_json)?;
+        let engine = PayoffEngine::with_config(legs, config);
+        Ok(engine.evaluate())
+    })
+}
+
+/// ---- Screener --------------------------------------------------------------
+
+/// #63: expose the screener predicate engine to web workers.
+#[wasm_bindgen]
+pub fn screener_evaluate(
+    predicate_json: &str,
+    num_fields_json: &str,
+    text_fields_json: &str,
+) -> String {
+    json_or_error(|| {
+        let pred = from_json::<Predicate>(predicate_json)?;
+        let num_fields: HashMap<String, Decimal> = from_json(num_fields_json)?;
+        let text_fields: HashMap<String, String> = from_json(text_fields_json)?;
+        Ok(serde_json::json!({
+            "result": evaluate_predicate(&pred, &num_fields, &text_fields)
+        }))
+    })
+}
+
+/// #63: expose screener sorting to web workers. Returns the ascending sort
+/// order of indices for the supplied numeric values.
+#[wasm_bindgen]
+pub fn screener_sort(len: usize, values_json: &str) -> String {
+    json_or_error(|| {
+        let values = from_json::<Vec<f64>>(values_json)?;
+        let n = values.len().min(len);
+        let indices = sort_indices(n, |a, b| {
+            values
+                .get(a)
+                .and_then(|va| values.get(b).map(|vb| va.partial_cmp(vb)))
+                .flatten()
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        Ok(serde_json::json!({ "indices": indices }))
+    })
 }

@@ -5,16 +5,16 @@
 //! server frames (`EventEnvelope` carrying `TickerUpdate`, `OrderBookUpdate`,
 //! `TradePrint`, `OrderStateChange`, `LiquidationAlert`).
 //!
-//! This test runs natively (no browser / `web_sys` required) and exercises the
-//! exact `serde` serialization used by `honba-kao-client`'s WebSocket transport
-//! (`websocket::connection.rs`) and domain events (`events.rs`). The wasm-side
-//! `web_sys::WebSocket` wiring is exercised by the trunk/browser build.
+//! All monetary fields use `rust_decimal::Decimal` (#64). Decimal values are
+//! exact, so wire payloads such as `2500.50` no longer degrade to
+//! `2500.0500000000001819`.
 
 use honba_kao_client::dto::market::{BookLevelDto, Level2Book, Quote, Ticker, TradeTick};
 use honba_kao_client::dto::order::{Fill, OrderIntent, OrderResponse, OrderStatus};
 use honba_kao_client::dto::portfolio::{AccountSummary, Holding, Position};
 use honba_kao_client::dto::risk::{LiquidationWarning, MarginSummary};
 use honba_kao_client::events::{DomainEvent, EventEnvelope};
+use rust_decimal_macros::dec;
 
 fn round_trip<T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug>(
     value: &T,
@@ -32,19 +32,19 @@ fn ticker_update_frame_round_trip() {
         timestamp: 1_730_000_000,
         payload: DomainEvent::TickerUpdate(Ticker {
             symbol: "RELIANCE".into(),
-            ltp: 2500.50,
-            change_abs: 12.5,
-            change_pct: 0.50,
-            high_24h: 2520.0,
-            low_24h: 2480.0,
-            volume_24h: 3_400_000.0,
+            ltp: dec!(2500.50),
+            change_abs: dec!(12.5),
+            change_pct: dec!(0.50),
+            high_24h: dec!(2520.0),
+            low_24h: dec!(2480.0),
+            volume_24h: dec!(3_400_000.0),
             timestamp: 1_730_000_000,
         }),
     };
     round_trip(&envelope, "ticker update envelope");
 
     // Incoming WebSocket text frame deserializes into the typed envelope.
-    let frame = r#"{"event_id":"evt-001","timestamp":1730000000,"payload":{"TickerUpdate":{"symbol":"RELIANCE","ltp":2500.5,"change_abs":12.5,"change_pct":0.5,"high_24h":2520.0,"low_24h":2480.0,"volume_24h":3400000.0,"timestamp":1730000000}}}"#;
+    let frame = r#"{"event_id":"evt-001","timestamp":1730000000,"payload":{"TickerUpdate":{"symbol":"RELIANCE","ltp":"2500.50","change_abs":"12.5","change_pct":"0.50","high_24h":"2520.0","low_24h":"2480.0","volume_24h":"3400000.0","timestamp":1730000000}}}"#;
     let parsed: EventEnvelope = serde_json::from_str(frame).expect("parse ticker frame");
     assert_eq!(parsed, envelope);
 }
@@ -57,17 +57,21 @@ fn order_book_update_frame_round_trip() {
         payload: DomainEvent::OrderBookUpdate(Level2Book {
             symbol: "NIFTY24NOV22500CE".into(),
             bids: vec![
-                BookLevelDto { price: 2499.0, size: 1200.0, order_count: 15 },
-                BookLevelDto { price: 2498.5, size: 800.0, order_count: 9 },
+                BookLevelDto { price: dec!(2499.0), size: dec!(1200.0), order_count: 15 },
+                BookLevelDto { price: dec!(2498.5), size: dec!(800.0), order_count: 9 },
             ],
             asks: vec![
-                BookLevelDto { price: 2500.5, size: 1100.0, order_count: 14 },
-                BookLevelDto { price: 2501.0, size: 950.0, order_count: 11 },
+                BookLevelDto { price: dec!(2500.5), size: dec!(1100.0), order_count: 14 },
+                BookLevelDto { price: dec!(2501.0), size: dec!(950.0), order_count: 11 },
             ],
             timestamp: 1_730_000_001,
         }),
     };
     round_trip(&envelope, "order book update envelope");
+
+    let frame = r#"{"event_id":"evt-002","timestamp":1730000001,"payload":{"OrderBookUpdate":{"symbol":"NIFTY24NOV22500CE","bids":[{"price":"2499.0","size":"1200.0","order_count":15},{"price":"2498.5","size":"800.0","order_count":9}],"asks":[{"price":"2500.5","size":"1100.0","order_count":14},{"price":"2501.0","size":"950.0","order_count":11}],"timestamp":1730000001}}}"#;
+    let parsed: EventEnvelope = serde_json::from_str(frame).expect("parse order book frame");
+    assert_eq!(parsed, envelope);
 }
 
 #[test]
@@ -77,13 +81,17 @@ fn trade_print_frame_round_trip() {
         timestamp: 1_730_000_002,
         payload: DomainEvent::TradePrint(TradeTick {
             symbol: "RELIANCE".into(),
-            price: 2500.50,
-            size: 50.0,
+            price: dec!(2500.50),
+            size: dec!(50.0),
             timestamp: 1_730_000_002,
             is_buyer_maker: false,
         }),
     };
     round_trip(&envelope, "trade print envelope");
+
+    let frame = r#"{"event_id":"evt-003","timestamp":1730000002,"payload":{"TradePrint":{"symbol":"RELIANCE","price":"2500.50","size":"50.0","timestamp":1730000002,"is_buyer_maker":false}}}"#;
+    let parsed: EventEnvelope = serde_json::from_str(frame).expect("parse trade print frame");
+    assert_eq!(parsed, envelope);
 }
 
 #[test]
@@ -96,13 +104,17 @@ fn order_state_change_frame_round_trip() {
             symbol: "RELIANCE".into(),
             side: "BUY".into(),
             status: OrderStatus::PartiallyFilled,
-            price: Some(2500.50),
-            quantity: 100.0,
-            filled_quantity: 40.0,
+            price: Some(dec!(2500.50)),
+            quantity: dec!(100.0),
+            filled_quantity: dec!(40.0),
             created_at: 1_730_000_003,
         }),
     };
     round_trip(&envelope, "order state change envelope");
+
+    let frame = r#"{"event_id":"evt-004","timestamp":1730000003,"payload":{"OrderStateChange":{"order_id":"ORD-0001","symbol":"RELIANCE","side":"BUY","status":"PartiallyFilled","price":"2500.50","quantity":"100.0","filled_quantity":"40.0","created_at":1730000003}}}"#;
+    let parsed: EventEnvelope = serde_json::from_str(frame).expect("parse order state frame");
+    assert_eq!(parsed, envelope);
 }
 
 #[test]
@@ -112,14 +124,18 @@ fn liquidation_alert_frame_round_trip() {
         timestamp: 1_730_000_004,
         payload: DomainEvent::LiquidationAlert(LiquidationWarning {
             symbol: "NIFTY24NOV22500PE".into(),
-            position_size: 75.0,
-            liquidation_price: 2450.0,
-            mark_price: 2475.0,
-            buffer_pct: 5.0,
+            position_size: dec!(75.0),
+            liquidation_price: dec!(2450.0),
+            mark_price: dec!(2475.0),
+            buffer_pct: dec!(5.0),
             is_critical: true,
         }),
     };
     round_trip(&envelope, "liquidation alert envelope");
+
+    let frame = r#"{"event_id":"evt-005","timestamp":1730000004,"payload":{"LiquidationAlert":{"symbol":"NIFTY24NOV22500PE","position_size":"75.0","liquidation_price":"2450.0","mark_price":"2475.0","buffer_pct":"5.0","is_critical":true}}}"#;
+    let parsed: EventEnvelope = serde_json::from_str(frame).expect("parse liquidation frame");
+    assert_eq!(parsed, envelope);
 }
 
 #[test]
@@ -129,11 +145,15 @@ fn outgoing_order_intent_frame_round_trip() {
         symbol: "RELIANCE".into(),
         side: "SELL".into(),
         order_type: "LIMIT".into(),
-        price: Some(2510.0),
-        trigger_price: Some(2505.0),
-        quantity: 25.0,
+        price: Some(dec!(2510.0)),
+        trigger_price: Some(dec!(2505.0)),
+        quantity: dec!(25.0),
     };
     round_trip(&intent, "order intent frame");
+
+    let frame = r#"{"symbol":"RELIANCE","side":"SELL","order_type":"LIMIT","price":"2510.0","trigger_price":"2505.0","quantity":"25.0"}"#;
+    let parsed: OrderIntent = serde_json::from_str(frame).expect("parse order intent frame");
+    assert_eq!(parsed, intent);
 }
 
 #[test]
@@ -144,9 +164,9 @@ fn fill_and_portfolio_dto_round_trip() {
             order_id: "ORD-0001".into(),
             symbol: "RELIANCE".into(),
             side: "BUY".into(),
-            price: 2500.50,
-            quantity: 40.0,
-            fee: 2.50,
+            price: dec!(2500.50),
+            quantity: dec!(40.0),
+            fee: dec!(2.50),
             timestamp: 1_730_000_005,
         },
         "fill dto",
@@ -155,22 +175,22 @@ fn fill_and_portfolio_dto_round_trip() {
         &AccountSummary {
             account_id: "ACC-001".into(),
             currency: "INR".into(),
-            total_equity: 4_850_000.0,
-            available_margin: 2_810_000.0,
-            used_margin: 1_760_000.0,
-            unrealized_pnl: 42_500.0,
-            realized_pnl: 12_000.0,
+            total_equity: dec!(4_850_000.0),
+            available_margin: dec!(2_810_000.0),
+            used_margin: dec!(1_760_000.0),
+            unrealized_pnl: dec!(42_500.0),
+            realized_pnl: dec!(12_000.0),
         },
         "account summary dto",
     );
     round_trip(
         &Holding {
             symbol: "TCS".into(),
-            quantity: 500.0,
-            average_price: 3160.0,
-            current_price: 3240.0,
-            pnl: 40_000.0,
-            pnl_pct: 2.53,
+            quantity: dec!(500.0),
+            average_price: dec!(3160.0),
+            current_price: dec!(3240.0),
+            pnl: dec!(40_000.0),
+            pnl_pct: dec!(2.53),
         },
         "holding dto",
     );
@@ -178,31 +198,31 @@ fn fill_and_portfolio_dto_round_trip() {
         &Position {
             symbol: "NIFTY24NOV22500CE".into(),
             side: "LONG".into(),
-            quantity: 50.0,
-            entry_price: 120.0,
-            current_price: 145.0,
-            unrealized_pnl: 1250.0,
-            leverage: 5.0,
+            quantity: dec!(50.0),
+            entry_price: dec!(120.0),
+            current_price: dec!(145.0),
+            unrealized_pnl: dec!(1250.0),
+            leverage: dec!(5.0),
         },
         "position dto",
     );
     round_trip(
         &MarginSummary {
-            total_collateral: 2_000_000.0,
-            margin_utilized: 1_400_000.0,
-            margin_available: 600_000.0,
-            utilization_pct: 70.0,
-            haircut_discount: 15.0,
+            total_collateral: dec!(2_000_000.0),
+            margin_utilized: dec!(1_400_000.0),
+            margin_available: dec!(600_000.0),
+            utilization_pct: dec!(70.0),
+            haircut_discount: dec!(15.0),
         },
         "margin summary dto",
     );
     round_trip(
         &Quote {
             symbol: "RELIANCE".into(),
-            bid_price: 2500.25,
-            bid_size: 300.0,
-            ask_price: 2500.75,
-            ask_size: 420.0,
+            bid_price: dec!(2500.25),
+            bid_size: dec!(300.0),
+            ask_price: dec!(2500.75),
+            ask_size: dec!(420.0),
             timestamp: 1_730_000_000,
         },
         "quote dto",
@@ -243,7 +263,7 @@ fn mock_ws_connection_send_receive_contract() {
         order_type: "MARKET".into(),
         price: None,
         trigger_price: None,
-        quantity: 5.0,
+        quantity: dec!(5.0),
     };
     let outgoing = serde_json::to_string(&intent).unwrap();
     ws.send(&outgoing);
@@ -258,8 +278,8 @@ fn mock_ws_connection_send_receive_contract() {
             side: "BUY".into(),
             status: OrderStatus::Open,
             price: None,
-            quantity: 5.0,
-            filled_quantity: 0.0,
+            quantity: dec!(5.0),
+            filled_quantity: dec!(0.0),
             created_at: 1_730_000_010,
         }),
     };

@@ -7,12 +7,15 @@ license.workspace = true
 [dependencies]
 gloo-net.workspace = true
 serde.workspace = true
+serde_json.workspace = true
+rust_decimal.workspace = true
+rust_decimal_macros.workspace = true
+urlencoding.workspace = true
 wasm-bindgen.workspace = true
 js-sys.workspace = true
 futures-channel.workspace = true
 sha2.workspace = true
 web-sys = { version = "0.3", features = ["EventSource", "MessageEvent", "WebSocket", "BinaryType", "Window", "CloseEvent"] }
-serde_json.workspace = true
 thiserror.workspace = true
 honba-core.workspace = true
 honba-api.workspace = true

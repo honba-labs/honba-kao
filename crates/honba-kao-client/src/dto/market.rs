@@ -1,41 +1,42 @@
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Ticker {
     pub symbol: String,
-    pub ltp: f64,
-    pub change_abs: f64,
-    pub change_pct: f64,
-    pub high_24h: f64,
-    pub low_24h: f64,
-    pub volume_24h: f64,
+    pub ltp: Decimal,
+    pub change_abs: Decimal,
+    pub change_pct: Decimal,
+    pub high_24h: Decimal,
+    pub low_24h: Decimal,
+    pub volume_24h: Decimal,
     pub timestamp: i64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Bar {
     pub timestamp: i64,
-    pub open: f64,
-    pub high: f64,
-    pub low: f64,
-    pub close: f64,
-    pub volume: f64,
+    pub open: Decimal,
+    pub high: Decimal,
+    pub low: Decimal,
+    pub close: Decimal,
+    pub volume: Decimal,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Quote {
     pub symbol: String,
-    pub bid_price: f64,
-    pub bid_size: f64,
-    pub ask_price: f64,
-    pub ask_size: f64,
+    pub bid_price: Decimal,
+    pub bid_size: Decimal,
+    pub ask_price: Decimal,
+    pub ask_size: Decimal,
     pub timestamp: i64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct BookLevelDto {
-    pub price: f64,
-    pub size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
     pub order_count: u32,
 }
 
@@ -50,8 +51,8 @@ pub struct Level2Book {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct TradeTick {
     pub symbol: String,
-    pub price: f64,
-    pub size: f64,
+    pub price: Decimal,
+    pub size: Decimal,
     pub timestamp: i64,
     pub is_buyer_maker: bool,
 }

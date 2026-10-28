@@ -20,8 +20,7 @@ pub fn bind_sse_stream<T: Send + Sync + 'static>(
     stream: SseStream<T>,
     signal: RwSignal<Vec<T>>,
 ) -> web_sys::EventSource {
-    let event_source = stream.event_source;
-    let mut receiver = stream.receiver;
+    let (event_source, mut receiver) = stream.into_parts();
 
     spawn_local(async move {
         while let Some(msg) = receiver.next().await {

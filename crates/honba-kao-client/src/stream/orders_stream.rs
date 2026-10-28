@@ -23,10 +23,10 @@ pub fn connect_orders_stream(url: &str) -> Result<SseStream<OrderResponse>, Stri
     });
 
     es.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
-    onmessage.forget();
 
     Ok(SseStream {
         event_source: es,
         receiver: rx,
+        _closure: Some(onmessage),
     })
 }
