@@ -8,7 +8,8 @@ license.workspace = true
 gloo-net.workspace = true
 serde.workspace = true
 wasm-bindgen.workspace = true
-web-sys = { version = "0.3", features = ["EventSource", "MessageEvent", "WebSocket", "BinaryType"] }
+js-sys.workspace = true
+web-sys = { version = "0.3", features = ["EventSource", "MessageEvent", "WebSocket", "BinaryType", "Window", "CloseEvent"] }
 serde_json.workspace = true
 thiserror.workspace = true
 honba-core.workspace = true
