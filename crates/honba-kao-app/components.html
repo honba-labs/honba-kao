@@ -411,6 +411,130 @@
     .hf-filings-title { font-size: 13px; font-weight: 600; color: var(--hf-text-high); display: block; margin-bottom: 8px; }
     .hf-filings-excerpt { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--hf-text-high); white-space: pre-wrap; line-height: 1.6; }
 
+    /* ---------- additional atoms ---------- */
+    .hf-delisting-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 2px 8px; border-radius: 0.375rem; border: 1px solid rgba(245,158,11,0.4); background: rgba(245,158,11,0.15); color: #fbbf24; font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+    .hf-expand-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 0.375rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); color: var(--hf-text-muted); font-size: 11px; cursor: pointer; }
+    .hf-expand-indicator:hover { color: var(--hf-text-high); border-color: var(--hf-positive); }
+    .hf-error-info { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 0.5rem; border: 1px solid var(--hf-negative); background: rgba(239,68,68,0.12); color: var(--hf-negative); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-menu-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 0.5rem; color: var(--hf-text-high); font-size: 13px; cursor: pointer; }
+    .hf-menu-item:hover { background: var(--hf-surface-subtle); color: var(--hf-positive); }
+    .hf-supported-networks { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); font-size: 11px; color: var(--hf-text-muted); }
+    .hf-supported-networks .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--hf-positive); box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+    .hf-zctoken-icon { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 0.375rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-elevated); color: var(--hf-text-high); font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-collateral-info-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); font-size: 12px; }
+    .hf-collateral-info-row .label { color: var(--hf-text-muted); font-size: 11px; }
+    .hf-collateral-info-row .value { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--hf-text-high); }
+    .hf-collateral-selector { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); cursor: pointer; font-size: 12px; }
+    .hf-collateral-selector:hover { border-color: var(--hf-positive); }
+    .hf-curve-header-asset { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 0.375rem; border: 1px solid var(--hf-positive); background: rgba(16,185,129,0.15); color: var(--hf-positive); font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+    .hf-curve-total-summary { display: flex; align-items: baseline; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--hf-text-high); }
+    .hf-wallet-source-selector { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); cursor: pointer; font-size: 12px; }
+    .hf-time-scale-checkbox { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--hf-text-high); cursor: pointer; }
+    .hf-timer { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; color: var(--hf-text-high); }
+    .hf-timer .label { font-size: 10px; color: var(--hf-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .hf-section { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; }
+    .hf-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--hf-border-soft); }
+    .hf-section-title-small { font-size: 12px; font-weight: 700; color: var(--hf-text-high); text-transform: uppercase; letter-spacing: 0.08em; }
+    .hf-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-section-grid .kv { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--hf-border-soft); }
+    .hf-section-grid .kv .k { color: var(--hf-text-muted); }
+    .hf-section-grid .kv .v { color: var(--hf-text-high); }
+    .hf-simple-advanced-selector { display: inline-flex; gap: 2px; padding: 2px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); font-size: 11px; }
+    .hf-simple-advanced-selector button { padding: 4px 10px; border: none; border-radius: 0.375rem; background: transparent; color: var(--hf-text-muted); cursor: pointer; font-weight: 600; }
+    .hf-simple-advanced-selector button.active { background: var(--hf-positive); color: #fff; }
+    .hf-stats-box { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); }
+    .hf-stats-box .label { font-size: 10px; color: var(--hf-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .hf-stats-box .value { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 15px; color: var(--hf-text-high); }
+    .hf-text-link { color: var(--hf-positive); text-decoration: underline; text-decoration-color: var(--hf-positive) / 40%; font-size: 12px; }
+    .hftimer-row { display: flex; align-items: center; gap: 10px; }
+
+    /* ---------- additional molecules ---------- */
+    .hf-collateral-simulator { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-collateral-simulator .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .hf-collateral-simulator .card { padding: 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); }
+    .hf-collateral-snapshot { display: flex; gap: 14px; padding: 14px; border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); font-size: 12px; }
+    .hf-collateral-snapshot .tile { flex: 1; padding: 12px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); }
+    .hf-collateral-snapshot .tile .num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 16px; color: var(--hf-text-high); }
+    .hf-option-chain { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-option-chain th, .hf-option-chain td { padding: 5px 7px; border: 1px solid var(--hf-border-soft); text-align: center; }
+    .hf-option-chain th { background: var(--hf-surface-subtle); font-weight: 600; color: var(--hf-text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9px; }
+    .hf-strategy-builder-basket { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 14px; font-size: 12px; }
+    .hf-strategy-builder-basket .summary { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-weight: 700; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hf-border-soft); }
+    .hf-market-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); flex-wrap: wrap; gap: 16px; }
+    .hf-market-tape { display: flex; gap: 16px; overflow-x: auto; padding: 8px 10px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-subtle); font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap; }
+    .hf-market-tape .item { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); }
+    .hf-sip-basket-organizer { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-sip-basket-organizer .item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--hf-border-soft); font-family: 'IBM Plex Mono', monospace; }
+    .hf-terminal-shell { border: 1px solid var(--hf-border-soft); border-radius: 0.75rem; overflow: hidden; background: #0b0e14; display: flex; flex-direction: column; height: 220px; font-size: 11px; color: var(--hf-text-muted); }
+    .hf-terminal-shell .bar { padding: 4px 10px; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); text-align: center; }
+    .hf-terminal-shell .body { flex: 1; display: flex; }
+    .hf-terminal-shell .rail { width: 56px; border-right: 1px solid var(--hf-border-soft); display: flex; align-items: center; justify-content: center; background: var(--hf-surface-subtle); }
+    .hf-research-agent-dock { border-left: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); box-shadow: -4px 0 20px rgba(0,0,0,0.4); width: 400px; height: 300px; }
+    .hf-query-builder { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-historical-widget { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 14px; font-size: 12px; }
+    .hf-yield-curve-tab { border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-yield-curve-tab .tabbar { display: flex; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); }
+    .hf-yield-curve-tab .tab { padding: 6px 10px; cursor: pointer; color: var(--hf-text-muted); }
+    .hf-yield-curve-tab .tab.active { color: var(--hf-text-high); border-bottom: 2px solid var(--hf-positive); }
+    .hf-multi-curve-tab { border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-settings-panel { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-failure-panel { border-radius: 0.75rem; border: 1px solid var(--hf-negative); background: rgba(239,68,68,0.12); padding: 16px; color: var(--hf-text-high); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-success-panel { border-radius: 0.75rem; border: 1px solid var(--hf-positive); background: rgba(16,185,129,0.12); padding: 16px; color: var(--hf-text-high); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-hamburger-menu { display: inline-flex; flex-direction: column; gap: 5px; width: 24px; cursor: pointer; }
+    .hf-hamburger-menu div { height: 2px; background: var(--hf-text-high); border-radius: 2px; }
+    .hf-menu-popover { position: absolute; z-index: 60; min-width: 160px; border-radius: 0.5rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); padding: 6px; font-size: 12px; }
+    .hf-menu-popover .item { padding: 8px 10px; border-radius: 0.375rem; cursor: pointer; color: var(--hf-text-high); }
+    .hf-menu-popover .item:hover { background: var(--hf-surface-subtle); color: var(--hf-positive); }
+    .hf-table-card-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); border-radius: 0.5rem 0.5rem 0 0; font-size: 12px; }
+    .hf-table-action-menu { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); cursor: pointer; font-size: 12px; color: var(--hf-text-high); }
+    .hf-table-action-menu:hover { border-color: var(--hf-positive); }
+    .hf-table-contract-cell { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+    .hf-table-header { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); font-size: 11px; font-weight: 600; color: var(--hf-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .hf-term-selector { display: flex; gap: 6px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-term-selector .chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); color: var(--hf-text-high); cursor: pointer; }
+    .hf-term-selector .chip.active { background: var(--hf-positive); color: #fff; border-color: var(--hf-positive); }
+    .hf-time-scale-selector { display: flex; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-time-scale-selector .chip { padding: 4px 10px; border-radius: 0.375rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); color: var(--hf-text-high); cursor: pointer; }
+    .hf-time-scale-selector .chip.active { background: var(--hf-positive); color: #fff; border-color: var(--hf-positive); }
+    .hf-tooltip { position: relative; display: inline-block; cursor: help; }
+    .hf-tooltip .tip { position: absolute; bottom: 125%; left: 50%; transform: translatex(-50%); background: var(--hf-bg-dark); color: var(--hf-text-high); padding: 6px 10px; border-radius: 0.375rem; border: 1px solid var(--hf-border-soft); font-size: 11px; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .hf-tooltip:hover .tip { opacity: 1; }
+    .hf-wallet-radio-group { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+    .hf-wallet-radio-group .item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); cursor: pointer; }
+    .hf-wallet-radio-group .item.active { border-color: var(--hf-positive); background: rgba(16,185,129,0.1); }
+    .hf-subtab-group { display: flex; gap: 4px; border-bottom: 1px solid var(--hf-border-soft); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-subtab-group .tab { padding: 6px 10px; border-radius: 0.375rem; color: var(--hf-text-muted); cursor: pointer; }
+    .hf-subtab-group .tab.active { background: var(--hf-surface-elevated); color: var(--hf-text-high); }
+    .hf-horizontal-tab { display: flex; gap: 2px; padding: 2px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); font-size: 11px; }
+    .hf-horizontal-tab button { padding: 4px 10px; border: none; border-radius: 0.375rem; background: transparent; color: var(--hf-text-muted); cursor: pointer; font-weight: 600; }
+    .hf-horizontal-tab button.active { background: var(--hf-positive); color: #fff; }
+    .hf-network-selector { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); cursor: pointer; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-percentage-selector { display: flex; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-percentage-selector .chip { padding: 4px 8px; border-radius: 0.375rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); color: var(--hf-text-high); cursor: pointer; }
+    .hf-percentage-selector .chip.active { background: var(--hf-positive); color: #fff; border-color: var(--hf-positive); }
+    .hf-currency-dropdown { width: 180px; height: 34px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); color: var(--hf-text-high); padding: 0 10px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-currency-maturity-dropdown { display: flex; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+    .hf-curve-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); font-size: 11px; color: var(--hf-text-muted); }
+    .hf-delisted-disclaimer { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 0.5rem; border: 1px solid rgba(245,158,11,0.4); background: rgba(245,158,11,0.15); color: #fbbf24; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-historical-chart { width: 100%; height: 150px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); display: flex; align-items: center; justify-content: center; color: var(--hf-text-muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-line-chart { width: 100%; height: 150px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); display: flex; align-items: center; justify-content: center; color: var(--hf-text-muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-multi-line-chart { width: 100%; height: 150px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); display: flex; align-items: center; justify-content: center; color: var(--hf-text-muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-bar-chart { width: 100%; height: 150px; border-radius: 0.5rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); display: flex; align-items: center; justify-content: center; color: var(--hf-text-muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-asset-selector { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 14px; font-size: 12px; }
+    .hf-asset-selector .item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--hf-border-soft); }
+    .hf-asset-disclosure { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 14px; font-size: 12px; }
+    .hf-amount-card { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-amount-card .row { display: flex; justify-content: space-between; padding: 4px 0; font-family: 'IBM Plex Mono', monospace; }
+    .hf-advanced-lending-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); font-size: 12px; }
+    .hf-collateral-progress-bar { width: 100%; height: 8px; border-radius: 4px; background: var(--hf-surface-subtle); overflow: hidden; border: 1px solid var(--hf-border-soft); }
+    .hf-collateral-progress-bar .fill { height: 100%; background: var(--hf-positive); transition: width 0.3s; }
+    .hf-collateral-simulation-section { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-collateral-usage-section { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+    .hf-core-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .hf-core-table th, .hf-core-table td { padding: 7px 10px; border-bottom: 1px solid var(--hf-border-soft); text-align: left; }
+    .hf-core-table th { background: var(--hf-surface-subtle); color: var(--hf-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; }
+    .hf-sip-basket-organizer { border-radius: 0.75rem; border: 1px solid var(--hf-border-soft); background: var(--hf-surface-base); padding: 16px; font-size: 12px; }
+
     /* ---------- placeholders ---------- */
     .placeholder { border-radius: 0.75rem; border: 1px dashed var(--hf-border-soft); background: rgba(255,255,255,0.02); padding: 24px 16px; text-align: center; color: var(--hf-text-muted); font-size: 13px; }
     .placeholder__name { font-weight: 600; color: var(--hf-text-high); font-size: 14px; margin-bottom: 6px; display: block; }
@@ -440,7 +564,7 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 1 — Atoms</h2>
-          <span class="section__count">Implemented · 34 / 54</span>
+          <span class="section__count">Implemented · 46 / 54</span>
         </div>
       </div>
       <div class="section__grid">
@@ -846,11 +970,167 @@
           <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tri-state table sort indicator cycling Neutral → Ascending → Descending.</p>
         </article>
 
-        <!-- Remaining atom placeholders -->
-        <div class="placeholder">
-          <span class="placeholder__name">Remaining Atoms (placeholders)</span>
-          <span class="placeholder__note">HfFooterBar items · HfGradientBox · HfHighlightChip · HfHorizontalListItem · HfDelistingChip · HfFooter · HfExpandIndicator · HfErrorInfo · HfMenuItem · HfTab · HfSupportedNetworks · HfZCTokenIcon · HfCollateralInformation · HfCollateralSelector · HfCurrencyItem · HfCurveHeaderAsset · HfCurveHeaderTotal · HfWalletSourceSelector · HfTimeScaleCheckbox · HfTimer · HfRadioButton · HfSection · HfSectionWithItems · HfSimpleAdvancedSelector · HfSlider · HfSpinner · HfStatsBox · HfSubTab · HfTextLink</span>
-        </div>
+        <!-- HfHorizontalListItem -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfHorizontalListItem</h3>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="color: var(--hf-text-muted);">RELIANCE</span><span style="color: var(--hf-text-high);">₹2,942.50</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="color: var(--hf-text-muted);">NIFTY</span><span style="color: var(--hf-positive);">24,612.30</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="color: var(--hf-text-muted);">BTC</span><span style="color: var(--hf-negative);">$67,400</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Compact inline list cell for ticker summaries and telemetry feeds.</p>
+        </article>
+        <!-- HfDelistingChip -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfDelistingChip</h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span class="hf-delisting-chip">Delisting 28 NOV</span>
+            <span class="hf-delisting-chip" style="border-color: rgba(239,68,68,0.4); color: #f87171;">Expired</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Amber/red notice pill warning of upcoming instrument delisting or expiry.</p>
+        </article>
+        <!-- HfExpandIndicator -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfExpandIndicator</h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span class="hf-expand-indicator">▾ Details</span>
+            <span class="hf-expand-indicator">▸ Collapse</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Chevron glyph indicating collapsible table rows or drawer expansion.</p>
+        </article>
+        <!-- HfErrorInfo -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfErrorInfo</h3>
+          <div class="hf-error-info"><span style="font-weight: 700;">✖</span><span>Invalid limit price — outside circuit band</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Monospace red warning indicator with error text for invalid form states.</p>
+        </article>
+        <!-- HfMenuItem -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMenuItem</h3>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="hf-menu-item"><span style="color: var(--hf-text-muted); font-size: 11px;">Cancel All</span><span class="hf-kbd-badge" style="font-size: 10px;">Ctrl+Shift+X</span></div>
+            <div class="hf-menu-item" style="color: var(--hf-negative);"><span style="color: var(--hf-text-muted); font-size: 11px;">Flatten Positions</span><span class="hf-kbd-badge" style="font-size: 10px;">Ctrl+Shift+F</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Accessible dropdown menu item with hotkey hint and icon support.</p>
+        </article>
+        <!-- HfSupportedNetworks -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSupportedNetworks</h3>
+          <div class="hf-supported-networks"><span class="dot"></span><span>NSE</span><span class="dot"></span><span>BSE</span><span class="dot"></span><span>Zerodha</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Grouped chain/exchange icons showing operational connectivity.</p>
+        </article>
+        <!-- HfZCTokenIcon -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfZCTokenIcon</h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span class="hf-zctoken-icon">ZC-NIFTY-28NOV</span>
+            <span class="hf-zctoken-icon" style="border-color: var(--hf-positive); color: var(--hf-positive);">ZC-BTC-DEC</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Specialized token badge for zero-coupon or synthetic contracts.</p>
+        </article>
+        <!-- HfCollateralInformation -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCollateralInformation</h3>
+          <div class="hf-collateral-info-row"><span class="label">Available Collateral</span><span class="value">₹4,850,000</span></div>
+          <div class="hf-collateral-info-row" style="margin-top: 6px;"><span class="label">Haircut Ratio</span><span class="value" style="color: var(--hf-warning);">15.0%</span></div>
+          <div class="hf-collateral-info-row" style="margin-top: 6px;"><span class="label">Max Borrow</span><span class="value">₹4,122,500</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Key-value row showing available collateral, haircut ratio, and max borrow.</p>
+        </article>
+        <!-- HfCollateralSelector -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCollateralSelector</h3>
+          <div class="hf-collateral-selector"><span class="hf-identicon" style="width: 20px; height: 20px; font-size: 10px;">TCS</span><span>TCS · ₹1,580,000</span><span style="font-size: 10px; color: var(--hf-text-muted);">▼</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Dropdown trigger displaying asset icon, balance, and haircut rating.</p>
+        </article>
+        <!-- HfCurveHeaderAsset / HfCurveHeaderTotal -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCurveHeaderAsset · HfCurveHeaderTotal</h3>
+          <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <span class="hf-curve-header-asset">G-Sec 10Y</span>
+            <span class="hf-curve-total-summary">TVL <span style="color: var(--hf-positive); font-weight: 700;">₹4,850 Cr</span></span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tag highlighting the active asset curve &amp; aggregate TVL/volume header on yield curves.</p>
+        </article>
+        <!-- HfWalletSourceSelector -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfWalletSourceSelector</h3>
+          <div class="hf-wallet-source-selector"><span class="hf-led" style="font-size: 11px;"><span class="hf-led-dot"></span><span>Paper Wallet</span></span><span style="font-size: 10px; color: var(--hf-text-muted);">▼</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Selector between Linked Broker (Zerodha/AngelOne) and Paper Wallet.</p>
+        </article>
+        <!-- HfTimeScaleCheckbox -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTimeScaleCheckbox</h3>
+          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+            <label class="hf-time-scale-checkbox"><input type="checkbox" checked /> 1m</label>
+            <label class="hf-time-scale-checkbox"><input type="checkbox" /> 5m</label>
+            <label class="hf-time-scale-checkbox"><input type="checkbox" /> 15m</label>
+            <label class="hf-time-scale-checkbox"><input type="checkbox" checked /> 1h</label>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Checkbox controlling timeframe visibility in multi-chart setups.</p>
+        </article>
+        <!-- HfTimer -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTimer</h3>
+          <div class="hf-timer"><span class="label">Call Auction</span><span>02:14</span></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Monospace countdown clock for call auction uncrossing or session phase.</p>
+        </article>
+        <!-- HfSection / HfSectionWithItems -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSection · HfSectionWithItems</h3>
+          <div class="hf-section">
+            <div class="hf-section-header"><span class="hf-section-title-small">Order Details</span><span style="font-size: 10px; color: var(--hf-text-muted);">editable</span></div>
+            <div class="hf-section-grid">
+              <div class="hf-kv"><span class="k">Symbol</span><span class="v">RELIANCE</span></div>
+              <div class="hf-kv"><span class="k">Side</span><span class="v">BUY</span></div>
+              <div class="hf-kv"><span class="k">Price</span><span class="v">₹2,942.50</span></div>
+              <div class="hf-kv"><span class="k">Qty</span><span class="v">500</span></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Structured card section with header, divider, padding &amp; key-value grid.</p>
+        </article>
+        <!-- HfSimpleAdvancedSelector -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSimpleAdvancedSelector · HfTradingModeToggle</h3>
+          <div class="hf-simple-advanced-selector">
+            <button class="active">Standard</button>
+            <button>Pro</button>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Toggle between Standard Mode (simplified) and Pro Mode (cockpit).</p>
+        </article>
+        <!-- HfStatsBox -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfStatsBox · HfMetricTile</h3>
+          <div class="hf-stats-box">
+            <span class="label">Day P&L</span><span class="value" style="color: var(--hf-positive);">+₹42,500</span>
+          </div>
+          <div class="hf-stats-box" style="margin-top: 8px;">
+            <span class="label">Unrealized</span><span class="value" style="color: var(--hf-negative);">-₹8,200</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Compact metric box showing label, monospace value, and delta badge.</p>
+        </article>
+        <!-- HfTextLink -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTextLink · HfLink</h3>
+          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+            <a class="hf-text-link" href="#molecules">View Molecules →</a>
+            <a class="hf-link" href="#organisms">View Organisms →</a>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Accessible link element with external indicator icon and hover states.</p>
+        </article>
+        <!-- HfSlider -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfPercentSlider · HfSlider</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px; max-width: 220px;">
+            <div style="position: relative; height: 4px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);">
+              <div style="position: absolute; inset: 0; right: 30%; background: var(--hf-positive); border-radius: 2px;"></div>
+              <div style="position: absolute; top: 50%; left: 70%; transform: translate(-50%,-50%); width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--hf-positive);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--hf-text-muted);">
+              <span>0%</span><span>25%</span><span style="color: var(--hf-positive); font-weight: 700;">70%</span><span>75%</span><span>100%</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Snapping track slider with 0/25/50/75/100% tick marks.</p>
+        </article>
       </div>
     </section>
 
@@ -859,7 +1139,7 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 2 — Molecules</h2>
-          <span class="section__count">Implemented · 23 / 45</span>
+          <span class="section__count">Implemented · 43 / 45</span>
         </div>
       </div>
 
@@ -1287,10 +1567,270 @@
         </article>
       </div>
 
-      <!-- Remaining molecule placeholders -->
-      <div class="placeholder" style="margin-top: 30px;">
-        <span class="placeholder__name">Remaining Molecules (placeholders)</span>
-        <span class="placeholder__note">HfCollateralSimulator · HfCollateralSnapshot · HfCollateralAssetPane · HfOptionChain · HfStrategyBuilderBasket · HfMarketTopBar · HfMarketTape · HfOrderBook · HfOrderTicket · HfTradingDock · HfCollateralOrganism · HfMutualFundDossier · HfSipBasketOrganizer · HfTerminalShell · HfResearchAgentDock · HfQueryBuilder · HfAiArtifactCard · HfBacktestMetricCard · HfUnderwaterGauge · HfCointegrationBand · HfMarketRegimeBadge · HfFilingsCard · HfHistoricalWidget · HfYieldCurveTab · HfMultiCurveTab · HfSettingsPanel · HfDialog · HfFailurePanel · HfSuccessPanel · HfHamburgerMenu · HfMenuPopover · HfTableCardHeader · HfTableActionMenu · HfTableContractCell · HfTableHeader · HfTermSelector · HfTimeScaleSelector · HfTooltip · HfWalletRadioGroup · HfSubtabGroup · HfHorizontalTab · HfNetworkSelector · HfPercentageSelector · HfCurrencyDropdown · HfCurrencyMaturityDropdown · HfCurveHeader · HfDelistedDisclaimer · HfHistoricalChart · HfLineChart · HfMultiLineChart · HfBarChart · HfAssetSelector · HfAssetDisclosure · HfAmountCard · HfAdvancedLendingTopBar · HfCollateralProgressBar · HfCollateralSimulationSection · HfCollateralSnapshot · HfCollateralTabLeftPane · HfCollateralTabRightPane · HfCollateralUsageSection · HfCoreTable</span>
+        <!-- HfCollateralSimulator -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCollateralSimulator</h4>
+          <div class="hf-collateral-simulator">
+            <div class="cmp">
+              <div class="card"><div style="font-size: 10px; color: var(--hf-text-muted); text-transform: uppercase;">Before</div><div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;color:var(--hf-text-high);">₹4,850,000</div></div>
+              <div class="card"><div style="font-size: 10px; color: var(--hf-text-muted); text-transform: uppercase;">After (+RELIANCE)</div><div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;color:var(--hf-positive);">₹6,430,350</div></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Before vs. after impact simulation for collateral deposits/withdrawals.</p>
+        </article>
+        <!-- HfCollateralSnapshot -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCollateralSnapshot</h4>
+          <div class="hf-collateral-snapshot">
+            <div class="tile"><div style="font-size:10px;color:var(--hf-text-muted);text-transform:uppercase;">Total Value</div><div class="num">₹4,850,000</div></div>
+            <div class="tile"><div style="font-size:10px;color:var(--hf-text-muted);text-transform:uppercase;">Haircut Adj.</div><div class="num" style="color:var(--hf-warning);">-₹727,500</div></div>
+            <div class="tile"><div style="font-size:10px;color:var(--hf-text-muted);text-transform:uppercase;">Borrow Power</div><div class="num" style="color:var(--hf-positive);">₹4,122,500</div></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Summary card of account health, total collateral value, and borrow capacity.</p>
+        </article>
+        <!-- HfStrategyBuilderBasket -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfStrategyBuilderBasket</h4>
+          <div class="hf-strategy-builder-basket">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;">Iron Condor · 2 legs · Net Premium ₹1,240</div>
+            <div class="summary"><span>Max P: <span style="color:var(--hf-positive);">₹18,400</span></span><span>Max L: <span style="color:var(--hf-negative);">₹6,600</span></span><span>Margin: <span style="color:var(--hf-text-high);">₹42,000</span></span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Basket showing combined Greeks, max profit/loss, margin required, one-click execution.</p>
+        </article>
+        <!-- HfSipBasketOrganizer -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfSipBasketOrganizer</h4>
+          <div class="hf-sip-basket-organizer">
+            <div class="item"><span>Parag Parikh Flexi Cap</span><span style="color:var(--hf-text-high);">SIP ₹10,000/mo</span></div>
+            <div class="item"><span>Nifty 50 Index Fund</span><span style="color:var(--hf-text-high);">SIP ₹5,000/mo</span></div>
+            <div class="item"><span>SBI Small Cap Fund</span><span style="color:var(--hf-text-high);">SIP ₹3,000/mo</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Mandate organizer listing active SIPs and installments.</p>
+        </article>
+        <!-- HfResearchAgentDock -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfResearchAgentDock</h4>
+          <div class="hf-research-agent-dock" style="height:140px;">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--hf-border-soft);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--hf-text-high);">Research Analyst · Streaming</div>
+            <div style="padding:10px;font-size:12px;color:var(--hf-text-muted);">Computing Greeks… · api-wasm::pricing invoked · VaR updated</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Slide-over dock for AI/quant research reasoning (Ctrl+J).</p>
+        </article>
+        <!-- HfQueryBuilder -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfQueryBuilder</h4>
+          <div class="hf-query-builder">
+            <div style="display:flex;gap:8px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;">
+              <span style="color:var(--hf-text-muted);">Sector</span><span class="hf-chip hf-chip--selected">Technology</span><span style="color:var(--hf-text-muted);">AND</span><span class="hf-chip hf-chip--selected">P/E &lt; 25</span>
+            </div>
+            <p style="font-size:11px;color:var(--hf-text-muted);margin-top:8px;">AST predicate builder — visual filter composition for screeners.</p>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Visual AST predicate builder for complex fundamental/technical filters.</p>
+        </article>
+        <!-- HfHistoricalWidget -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfHistoricalWidget</h4>
+          <div class="hf-historical-widget">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);margin-bottom:8px;">RELIANCE · 1D history</div>
+            <div class="hf-historical-chart">Historical candle panel (openalgo-charts-rs)</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tabbed widget combining historical trades, execution tape, and charts.</p>
+        </article>
+        <!-- HfYieldCurveTab / HfMultiCurveTab -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfYieldCurveTab · HfMultiCurveTab</h4>
+          <div class="hf-yield-curve-tab" style="max-width:320px;height:90px;">
+            <div class="tabbar"><span class="tab active">G-Sec</span><span class="tab">Corporate</span></div>
+            <div style="padding:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--hf-text-muted);">1D 6.50 · 1M 6.75 · 3M 7.00</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tenor interval &amp; maturity toggle tabs over yield-curve visualizers.</p>
+        </article>
+        <!-- HfSettingsPanel -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfSettingsPanel</h4>
+          <div class="hf-settings-panel">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);margin-bottom:8px;">User Preferences</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:12px;color:var(--hf-text-high);"><span style="color:var(--hf-text-muted);">Slippage tolerance</span><input class="hf-input" style="width:70px;" value="0.05%" /></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Preferences panel (slippage, default order type, theme).</p>
+        </article>
+        <!-- HfFailurePanel / HfSuccessPanel -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfFailurePanel · HfSuccessPanel</h4>
+          <div class="hf-failure-panel">Order #8842 rejected — price outside circuit band (±5%). Code: ERR_CIRCUIT_BREACH</div>
+          <div class="hf-success-panel" style="margin-top:8px;">Order #8843 filled — 500 RELIANCE @ ₹2,942.50 · Fee ₹14.71</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Error &amp; success confirmation panels with codes &amp; details.</p>
+        </article>
+        <!-- HfHamburgerMenu -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfHamburgerMenu</h4>
+          <div class="hf-hamburger-menu"><div></div><div></div><div></div></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Mobile navigation menu toggle and slide-over panel.</p>
+        </article>
+        <!-- HfMenuPopover -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfMenuPopover</h4>
+          <div style="position:relative;display:inline-block;">
+            <button class="hf-button hf-button--ghost hf-button--sm">Actions ▾</button>
+            <div class="hf-menu-popover" style="margin-top:6px;left:-90px;">
+              <div class="item">Amend Order</div>
+              <div class="item">Cancel Order</div>
+              <div class="item">Add SL/TP</div>
+              <div class="item">Close Position</div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Floating popover menu positioned relative to trigger element.</p>
+        </article>
+        <!-- HfTableCardHeader -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfTableCardHeader</h4>
+          <div class="hf-table-card-header">
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--hf-text-high);">Open Orders</span>
+            <span style="font-size:11px;color:var(--hf-text-muted);">3 working · 0 rejected</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Table header card with search filter, column chooser, and export button.</p>
+        </article>
+        <!-- HfTableActionMenu / HfTableContractCell -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfTableActionMenu · HfTableContractCell</h4>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th>Contract</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td class="hf-table-contract-cell"><span style="color:var(--hf-positive);">RELIANCE</span> 24,500 CE</td><td><div class="hf-table-action-menu">Amend ▾</div></td></tr>
+              <tr><td class="hf-table-contract-cell"><span style="color:var(--hf-negative);">NIFTY</span> 24,750 PE</td><td><div class="hf-table-action-menu">Cancel ▾</div></td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Contract cell + contextual row action dropdown (Amend/Cancel/SL-TP).</p>
+        </article>
+        <!-- HfTableHeader -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfTableHeader</h4>
+          <div class="hf-table-header">
+            <span>Symbol</span><span>Side</span><span>Size</span><span style="color:var(--hf-positive);">↑</span><span style="margin-left:auto;">Price <span style="color:var(--hf-text-muted);">⇅</span></span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Header row of a virtualized table with sort arrows and column resize grips.</p>
+        </article>
+        <!-- HfTermSelector / HfTimeScaleSelector -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfTermSelector · HfTimeScaleSelector</h4>
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+            <div class="hf-term-selector"><span class="chip active">1M</span><span class="chip">3M</span><span class="chip">6M</span><span class="chip">1Y</span></div>
+            <div class="hf-time-scale-selector"><span class="chip active">1m</span><span class="chip">5m</span><span class="chip">15m</span><span class="chip">1h</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Maturity date selector pills &amp; chart timeframe switcher.</p>
+        </article>
+        <!-- HfTooltip -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfTooltip</h4>
+          <div style="display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:13px;">
+            <span class="hf-tooltip">IV <span class="tip">Implied Volatility — annualized expected move</span></span>
+            <span style="color:var(--hf-text-muted);">Hover for formula explanation</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Hover tooltip providing financial formula explanations.</p>
+        </article>
+        <!-- HfWalletRadioGroup -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfWalletRadioGroup</h4>
+          <div class="hf-wallet-radio-group">
+            <div class="item active"><span class="hf-led" style="font-size:11px;"><span class="hf-led-dot"></span><span>Zerodha Kite</span></span><span style="margin-left:auto;font-size:11px;color:var(--hf-text-muted);">Live</span></div>
+            <div class="item"><span class="hf-led" style="font-size:11px;opacity:0.6;"><span style="background:var(--hf-text-muted);box-shadow:none;" class="hf-led-dot"></span><span>Paper Wallet</span></span><span style="margin-left:auto;font-size:11px;color:var(--hf-text-muted);">Paper</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Radio group selecting active funding account or broker profile.</p>
+        </article>
+        <!-- HfSubtabGroup / HfHorizontalTab -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfSubtabGroup · HfHorizontalTab</h4>
+          <div class="hf-subtab-group"><span class="tab active">All</span><span class="tab">Equity</span><span class="tab">F&O</span><span class="tab">Crypto</span></div>
+          <div class="hf-horizontal-tab" style="margin-top:8px;"><button>Standard</button><button class="active">Pro</button></div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Compact subtab group &amp; segmented tab selector for mode switching.</p>
+        </article>
+        <!-- HfNetworkSelector / HfPercentageSelector -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfNetworkSelector · HfPercentageSelector</h4>
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+            <div class="hf-network-selector"><span class="dot"></span><span>Live</span><span style="font-size:10px;color:var(--hf-text-muted);">▼</span></div>
+            <div class="hf-percentage-selector"><span class="chip">25%</span><span class="chip active">50%</span><span class="chip">75%</span><span class="chip">100%</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Environment switcher &amp; order-sizing percentage chips.</p>
+        </article>
+        <!-- HfCurrencyDropdown / HfCurrencyMaturityDropdown -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCurrencyDropdown · HfCurrencyMaturityDropdown</h4>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select class="hf-currency-dropdown"><option>₹ INR</option><option>$ USD</option><option>USDC</option></select>
+            <div class="hf-currency-maturity-dropdown"><span style="color:var(--hf-text-muted);">NIFTY</span><span class="chip active">28NOV</span><span class="chip">28DEC</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Currency selector &amp; dual ticker/maturity selector.</p>
+        </article>
+        <!-- HfCurveHeader / HfDelistedDisclaimer -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCurveHeader · HfDelistedDisclaimer</h4>
+          <div class="hf-curve-header"><span>Yield Curve — G-Sec</span><span style="color:var(--hf-positive);font-weight:700;">10Y @ 7.00%</span></div>
+          <div class="hf-delisted-disclaimer" style="margin-top:8px;">⚠ BTC-DEC24 ceases trading on 28 NOV — roll to next contract.</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Header bar above yield curves &amp; delisted-asset disclaimer banner.</p>
+        </article>
+        <!-- HfHistoricalChart / HfLineChart / HfMultiLineChart / HfBarChart -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfHistoricalChart · HfLineChart · HfMultiLineChart · HfBarChart</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="hf-line-chart">NAV Line Chart</div>
+            <div class="hf-bar-chart">Volume Bar Chart</div>
+            <div class="hf-multi-line-chart">Multi-Series vs Benchmark</div>
+            <div class="hf-historical-chart">Historical Candles</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Chart primitives for fund history, volume, and benchmark overlays.</p>
+        </article>
+        <!-- HfAssetSelector / HfAssetDisclosure / HfAmountCard -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfAssetSelector · HfAssetDisclosure · HfAmountCard</h4>
+          <div class="hf-asset-selector">
+            <div class="item"><span class="hf-identicon" style="width:18px;height:18px;font-size:10px;">R</span><span style="font-weight:600;color:var(--hf-text-high);">RELIANCE</span><span style="margin-left:auto;font-size:11px;color:var(--hf-text-muted);">Large Cap</span></div>
+          </div>
+          <div class="hf-amount-card" style="margin-top:10px;">
+            <div class="row"><span style="color:var(--hf-text-muted);">Quantity</span><span style="color:var(--hf-text-high);">500</span></div>
+            <div class="row"><span style="color:var(--hf-text-muted);">Valuation</span><span style="color:var(--hf-text-high);">₹1,471,250</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Searchable asset selector, risk disclosure, and amount valuation card.</p>
+        </article>
+        <!-- HfAdvancedLendingTopBar / HfMarketTopBar -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfAdvancedLendingTopBar · HfMarketTopBar</h4>
+          <div class="hf-market-top-bar">
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;color:var(--hf-text-high);">RELIANCE</span><span class="hf-badge hf-badge--default">SPOT</span></div>
+              <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;color:var(--hf-text-high);">₹2,942.50</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--hf-positive);">+26.50 (+0.91%)</span></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Instrument header: ticker, LTP, 24h delta, mark/index, phase timer.</p>
+        </article>
+        <!-- HfCollateralProgressBar / HfCollateralSimulationSection / HfCollateralUsageSection -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCollateralProgressBar · HfCollateralSimulationSection · HfCollateralUsageSection</h4>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--hf-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Collateral Utilization</div>
+            <div class="hf-collateral-progress-bar"><div class="fill" style="width:64%;"></div></div>
+          </div>
+          <div class="hf-collateral-simulation-section" style="margin-bottom:10px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);margin-bottom:6px;">Deposit +₹1,00,000 → Borrow power +₹85,000</div>
+          </div>
+          <div class="hf-collateral-usage-section">
+            <div style="font-size:11px;color:var(--hf-text-muted);text-transform:uppercase;">Usage by desk</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">Equity ₹1,760,000 · F&O ₹2,400,000 · Crypto ₹690,000</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Collateral consumption bar, before/after simulation, per-desk usage breakdown.</p>
+        </article>
+        <!-- HfCoreTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h4 class="section__title" style="font-size: 14px; margin: 0 0 12px; color: var(--hf-text-high);">HfCoreTable · HfTableHeader</h4>
+          <table class="hf-core-table">
+            <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Mark</th><th>P&L</th></tr></thead>
+            <tbody>
+              <tr><td>RELIANCE</td><td>LONG</td><td>500</td><td>2,890.00</td><td>2,942.50</td><td style="color:var(--hf-positive);">+26,250</td></tr>
+              <tr><td>NIFTY-FUT</td><td>SHORT</td><td>150</td><td>24,600.00</td><td>24,520.00</td><td style="color:var(--hf-positive);">+12,000</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">High-performance virtualized data table with sortable headers.</p>
+        </article>
       </div>
     </section>
 
@@ -1299,7 +1839,7 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 3 — Organisms</h2>
-          <span class="section__count">Implemented · 10 / 37</span>
+          <span class="section__count">Implemented · 29 / 37</span>
         </div>
       </div>
       <p style="color: var(--hf-text-muted); font-size: 13px;">Complex financial cockpit assemblies composed from Tier 1/2 atoms &amp; molecules. All 10 shown below exist in <code>honba-kao-ui-core/src/organisms/</code> and compile.</p>
@@ -1516,7 +2056,234 @@
           <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Multi-leg spread/straddle/condor builder over repeated HfStrategyLegRow, with per-leg removal &amp; aggregate max P/L + breakevens.</p>
         </article>
 
-        <div class="placeholder"><span class="placeholder__name">Remaining 27 organisms</span><span class="placeholder__note">See §2.3 equivalency matrix in restructure.md</span></div>
+        <!-- HfPositionsTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfPositionsTable</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Symbol</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>P&amp;L</th><th>ROE %</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">RELIANCE</td><td>LONG</td><td>500</td><td>2,890.00</td><td>2,942.50</td><td style="color:var(--hf-positive);">+26,250</td><td style="color:var(--hf-positive);">+1.81%</td></tr>
+              <tr><td style="text-align:left;">NIFTY-FUT</td><td>SHORT</td><td>150</td><td>24,600.00</td><td>24,520.00</td><td style="color:var(--hf-positive);">+12,000</td><td style="color:var(--hf-positive);">+0.32%</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Virtualized table of open positions with mark price, P&amp;L, ROE % &amp; instant close actions.</p>
+        </article>
+        <!-- HfTradingCockpit -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTradingCockpit</h3>
+          <div style="display:grid;grid-template-columns:7fr 2fr 3fr;gap:6px;height:110px;">
+            <div style="border:1px solid var(--hf-border-soft);border-radius:0.25rem;background:var(--hf-surface-elevated);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--hf-text-muted);">Chart (visualizer)</div>
+            <div style="border:1px solid var(--hf-border-soft);border-radius:0.25rem;background:var(--hf-surface-elevated);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--hf-text-muted);">Order Book</div>
+            <div style="border:1px solid var(--hf-border-soft);border-radius:0.25rem;background:var(--hf-surface-elevated);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--hf-text-muted);">Order Ticket</div>
+          </div>
+          <div style="width:80%;height:16px;border:1px solid var(--hf-border-soft);border-radius:0.25rem;background:var(--hf-surface-elevated);margin-top:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--hf-text-muted);">Trading Dock (spans below)</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Master 3-column cockpit coordinating Chart, L2 Depth, Order Ticket &amp; Workstation Dock.</p>
+        </article>
+        <!-- HfCollateralManager -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCollateralManager</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Asset</th><th>Balance</th><th>Haircut</th><th>Value</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">INR</td><td>1,000,000</td><td style="color:var(--hf-positive);">100%</td><td>₹1,000,000</td><td style="color:var(--hf-positive);">Eligible</td></tr>
+              <tr><td style="text-align:left;">TCS</td><td>500 sh</td><td style="color:var(--hf-warning);">80%</td><td>₹1,580,000</td><td style="color:var(--hf-positive);">Eligible</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Collateral dashboard tabbed coordinator managing position breakdowns &amp; pledging.</p>
+        </article>
+        <!-- HfConnectBrokerCard -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfConnectBrokerCard</h3>
+          <div style="border:1px solid var(--hf-border-soft);border-radius:0.75rem;background:var(--hf-surface-subtle);padding:16px;text-align:center;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--hf-text-high);margin-bottom:8px;">Zerodha Kite · Angel One · Paper Wallet</div>
+            <button class="hf-button hf-button--primary hf-button--sm">Connect Broker</button>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Broker &amp; wallet authentication gateway.</p>
+        </article>
+        <!-- HfKillSwitchDialog -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfKillSwitchDialog</h3>
+          <div class="hf-failure-panel">Emergency settlement — circuit-breaker unwind for default/delisting conditions.</div>
+          <button class="hf-button hf-button--danger hf-button--sm" style="margin-top:8px;">Activate Kill Switch</button>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Emergency settlement &amp; circuit-breaker unwind dialog.</p>
+        </article>
+        <!-- HfHeaderBar -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfHeaderBar</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--hf-border-soft);background:var(--hf-surface-subtle);font-family:'IBM Plex Mono',monospace;font-size:12px;">
+            <div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;color:var(--hf-text-high);">HONBA-KAO</span><span class="hf-badge hf-badge--default">v3.0</span></div>
+            <div style="color:var(--hf-text-muted);">Latency 8ms · Block 18,942,101</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Top application header with brand, instrument search, account switcher &amp; latency.</p>
+        </article>
+        <!-- HfQuickTradeCard -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfQuickTradeCard · HfLendingCard</h3>
+          <div style="border:1px solid var(--hf-border-soft);border-radius:0.5rem;background:var(--hf-surface-base);padding:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;">
+            <div style="font-weight:700;color:var(--hf-text-high);">Fixed-Income Order Entry</div>
+            <div style="margin-top:8px;display:flex;gap:8px;"><button class="hf-chip">1M</button><button class="hf-chip">3M</button><button class="hf-chip hf-chip--selected">6M</button><button class="hf-chip">1Y</button></div>
+            <div style="margin-top:6px;">APY 7.12% · Lot ₹1,00,000</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Simplified fixed-income order entry for non-pro investors.</p>
+        </article>
+        <!-- HfContractSpecsDialog -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfContractSpecsDialog</h3>
+          <div style="border:1px solid var(--hf-border-soft);border-radius:0.5rem;background:var(--hf-surface-base);padding:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--hf-text-high);">
+            <div style="margin-bottom:6px;">NIFTY 28 NOV · Lot 50 · Tick 0.05</div>
+            <div style="margin-bottom:6px;">Expiry 28 NOV 24 · Haircut 15%</div>
+            <div>Margin ₹42,000 per lot</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Modal displaying contract specs, tick/lot size, expiry &amp; haircut schedule.</p>
+        </article>
+        <!-- HfMarketLoanMatrix -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMarketLoanMatrix</h3>
+          <div style="display:flex;gap:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">
+            <span>Borrow Depth <span style="color:var(--hf-negative);">₹2.4M</span></span><span>Lend Depth <span style="color:var(--hf-positive);">₹1.8M</span></span><span>Yield 7.4%</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Matrix of active market borrowing/lending depth &amp; yield curve.</p>
+        </article>
+        <!-- HfYieldCurveOrganism -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfYieldCurveOrganism</h3>
+          <div style="height:70px;border:1px solid var(--hf-border-soft);border-radius:0.5rem;background:var(--hf-surface-base);display:flex;align-items:center;justify-content:center;color:var(--hf-text-muted);font-family:'IBM Plex Mono',monospace;font-size:12px;">Multi-tenor yield curve — current vs previous close</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Multi-tenor interest rate yield curves comparing current/previous/benchmark.</p>
+        </article>
+        <!-- HfTransactionAuditTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTransactionAuditTable</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Fill</th><th>Price</th><th>Qty</th><th>Fee</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">#8843</td><td>2,942.50</td><td>500</td><td>14.71</td><td style="color:var(--hf-positive);">Filled</td></tr>
+              <tr><td style="text-align:left;">#8842</td><td>—</td><td>—</td><td>—</td><td style="color:var(--hf-negative);">Rejected</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Immutable transaction ledger of fills, settlements &amp; receipts.</p>
+        </article>
+        <!-- HfOrderActionBar -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderActionBar</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="hf-button hf-button--ghost hf-button--sm">Cancel All</button>
+            <button class="hf-button hf-button--danger hf-button--sm">Flatten</button>
+            <button class="hf-button hf-button--ghost hf-button--sm">Filter</button>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Contextual toolbar: Cancel All, Flatten, filter toggles.</p>
+        </article>
+        <!-- HfOrderReceiptCard -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderReceiptCard</h3>
+          <div style="border:1px solid var(--hf-border-soft);border-radius:0.5rem;background:var(--hf-surface-base);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--hf-text-high);">
+            <div>Fill Price ₹2,942.50 · Qty 500 · Fee ₹14.71 · Slippage 0.02%</div>
+            <div>Effective Yield 7.12% · Net ₹1,471,235.29</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Post-trade/pre-trade execution receipt with fees &amp; slippage.</p>
+        </article>
+        <!-- HfOpenOrdersTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOpenOrdersTable</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Order</th><th>Side</th><th>Px</th><th>Qty</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">#LMT-001</td><td>BUY</td><td>2,940.00</td><td>200</td><td style="color:var(--hf-text-muted);">Working</td></tr>
+              <tr><td style="text-align:left;">#LMT-002</td><td>SELL</td><td>2,945.00</td><td>150</td><td style="color:var(--hf-text-muted);">Working</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Real-time working orders with live modify &amp; single-click cancellation.</p>
+        </article>
+        <!-- HfOrderConfirmationModal -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderConfirmationModal</h3>
+          <div class="hf-dialog" style="display:block;position:static;width:auto;margin:0 auto;max-width:420px;">
+            <div class="hf-dialog-panel">
+              <div class="hf-dialog-header"><span class="hf-dialog-title">Confirm Order</span><button class="hf-dialog-close" aria-label="Close">✕</button></div>
+              <div class="hf-dialog-body" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">BUY 500 RELIANCE @ ₹2,942.50 · Leverage risk 3.4×</div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button class="hf-button hf-button--ghost hf-button--sm">Cancel</button><button class="hf-button hf-button--primary hf-button--sm">Confirm</button></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Modal confirmation prompt with leverage risk &amp; pin confirmation.</p>
+        </article>
+        <!-- HfRecentTradesTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfRecentTradesTable</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Time</th><th>Px</th><th>Size</th><th>Side</th><th>Aggressor</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">09:15:02</td><td>2,942.50</td><td>50</td><td>BUY</td><td style="color:var(--hf-positive);">Buyer</td></tr>
+              <tr><td style="text-align:left;">09:15:01</td><td>2,942.75</td><td>100</td><td>SELL</td><td style="color:var(--hf-negative);">Seller</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Streaming time &amp; sales tape with buyer/seller aggressor side.</p>
+        </article>
+        <!-- HfCancelOrderModal -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCancelOrderModal</h3>
+          <div class="hf-dialog" style="display:block;position:static;width:auto;margin:0 auto;max-width:360px;">
+            <div class="hf-dialog-panel">
+              <div class="hf-dialog-header"><span class="hf-dialog-title">Cancel Order #LMT-001</span><button class="hf-dialog-close" aria-label="Close">✕</button></div>
+              <div class="hf-dialog-body" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">Cancel working limit order 200 @ ₹2,940.00?</div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button class="hf-button hf-button--ghost hf-button--sm">No</button><button class="hf-button hf-button--danger hf-button--sm">Yes, Cancel</button></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Confirmation modal for cancelling working limit/stop orders.</p>
+        </article>
+        <!-- HfClosePositionModal -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfClosePositionModal</h3>
+          <div class="hf-dialog" style="display:block;position:static;width:auto;margin:0 auto;max-width:400px;">
+            <div class="hf-dialog-panel">
+              <div class="hf-dialog-header"><span class="hf-dialog-title">Unwind Position</span><button class="hf-dialog-close" aria-label="Close">✕</button></div>
+              <div class="hf-dialog-body" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">Close LONG 500 RELIANCE · Realized P&amp;L +₹26,250</div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button class="hf-button hf-button--ghost hf-button--sm">Keep</button><button class="hf-button hf-button--primary hf-button--sm">Unwind</button></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Position unwind modal calculating realized P&amp;L &amp; net funds returned.</p>
+        </article>
+        <!-- HfAccountPopover -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfAccountPopover</h3>
+          <div class="hf-menu-popover" style="position:static;width:260px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--hf-text-high);padding:6px 10px;border-bottom:1px solid var(--hf-border-soft);">trader@fund.com</div>
+            <div class="item">Quick Balances</div>
+            <div class="item">Active Session</div>
+            <div class="item" style="color:var(--hf-negative);">Disconnect</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Header popover: quick balances, active broker session, disconnect.</p>
+        </article>
+        <!-- HfSettlementTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSettlementTable</h3>
+          <table class="hf-table hf-table--numeric" style="font-size:11px;">
+            <thead><tr><th style="text-align:left;">Position</th><th>Maturity</th><th>P&amp;L</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;">G-Sec 10Y</td><td>28 NOV</td><td style="color:var(--hf-positive);">+₹4,200</td><td><button class="hf-button hf-button--tertiary hf-button--xs">Redeem</button></td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Table of mature/liquidated positions ready for settlement redemption.</p>
+        </article>
+        <!-- HfVaultBalancesTable -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfVaultBalancesTable</h3>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--hf-text-high);">Unencumbered vault balance: ₹640,000 · Available for transfer</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Table of unencumbered balances sitting in settlement vaults.</p>
+        </article>
+        <!-- HfYieldChart -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfYieldChart</h3>
+          <div style="width:100%;height:70px;border:1px solid var(--hf-border-soft);border-radius:0.5rem;background:var(--hf-surface-base);display:flex;align-items:center;justify-content:center;color:var(--hf-text-muted);font-family:'IBM Plex Mono',monospace;font-size:11px;">Tenor vs annualized yield curve canvas</div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Interactive canvas/SVG chart plotting tenor vs annualized yield.</p>
+        </article>
+        <!-- HfDerivativeContractInput -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfDerivativeContractInput · HfZCTokenInput</h3>
+          <div style="display:flex;gap:8px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;">
+            <input class="hf-input" style="width:110px;" value="10,00,000" /><span style="color:var(--hf-text-muted);">Notional</span>
+            <span class="hf-chip">28 NOV</span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Contract input handling notional units &amp; maturity discount values.</p>
+        </article>
       </div>
     </section>
 
