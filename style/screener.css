@@ -2406,3 +2406,235 @@
 .sc-rangebar-cell[data-trend="range-bound"] .sc-rangebar-cell__trend {
   color: var(--muted);
 }
+
+/* ========================================================================= */
+/* Screener v2: hero deck controls, screen setup deck, query builder,       */
+/* custom formula sheet, multi-market scan (Milestone 3, plan-screener.md)  */
+/* ========================================================================= */
+
+/* --- Hero deck: saved-views control + run button ------------------------ */
+.sc-saved-views-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sc-saved-views-control__restore {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+  max-width: 160px;
+}
+
+.sc-hero-deck__run {
+  margin-left: auto;
+}
+
+/* --- Screen setup deck shell --------------------------------------------- */
+.sc-screen-setup {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sc-empty-note {
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* --- Query container (QueryBar + QueryBuilder drawer) --------------------- */
+.sc-query-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sc-query-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sc-query-bar__input {
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.sc-query-bar__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- GUI query builder rows ----------------------------------------------- */
+.sc-query-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sc-qb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+}
+
+.sc-qb-row__field {
+  flex: 1 1 140px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sc-qb-row__op {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-8);
+  min-width: 24px;
+  text-align: center;
+}
+
+.sc-qb-row__value {
+  flex: 0 0 100px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.sc-qb-combinator {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: var(--surface-3);
+}
+
+/* --- Custom formula screener ----------------------------------------------- */
+.sc-custom-formula {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 20px;
+}
+
+.sc-custom-formula__input {
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.sc-formula-cheatsheet {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sc-formula-cheatsheet__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sc-formula-cheatsheet__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sc-formula-token {
+  padding: 3px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--primary-8);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.sc-formula-token:hover {
+  border-color: var(--primary-8);
+  background: color-mix(in srgb, var(--primary-8) 14%, var(--surface-2));
+}
+
+/* --- Multi-market scan panel ------------------------------------------------ */
+.sc-multi-market-scan {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sc-multi-market-scan__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sc-multi-market-scan__run {
+  align-self: flex-start;
+}
+
+/* --- Saved tab: saved-view rows --------------------------------------------- */
+.sc-saved-views {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 20px 16px;
+}
+
+.sc-saved-view-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sc-saved-view-row__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sc-saved-view-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

@@ -1,9 +1,9 @@
 //! Screener / market view — the Leptos composition of the labs app's
-//! `ScreenerPage.tsx` + `DockableWorkspace`: the filter bar, the
-//! table/heatmap view switch inside the split workspace, the symbol
-//! detail drawer docked on the right and the three configuration dialogs
-//! (screen catalog, filters, columns), all over the page-scoped
-//! `ScreenerStore`.
+//! `ScreenerPage.tsx` + `DockableWorkspace`: the hero deck + screen setup
+//! deck (Milestone 3), the filter bar, the table/heatmap view switch inside
+//! the split workspace, the symbol detail drawer docked on the right and
+//! the three configuration dialogs (screen catalog, filters, columns), all
+//! over the page-scoped `ScreenerStore`.
 //!
 //! The labs hotkeys are mirrored here: `.` opens the screen catalog and
 //! `Shift+N` saves the current view as a new custom screen (ignored while
@@ -17,7 +17,9 @@ use crate::features::screener::components::factor_heatmap::FactorHeatmap;
 use crate::features::screener::components::filter_bar::FilterBar;
 use crate::features::screener::components::filters_modal::FiltersModal;
 use crate::features::screener::components::heatmap::ScreenerHeatmap;
+use crate::features::screener::components::hero_deck::HeroDeck;
 use crate::features::screener::components::open_screen_modal::OpenScreenModal;
+use crate::features::screener::components::screen_setup::ScreenSetup;
 use crate::features::screener::components::screener_table::ScreenerTable;
 use crate::features::screener::stores::screener_store::{ScreenerStore, ViewMode};
 use wasm_bindgen::prelude::*;
@@ -124,6 +126,8 @@ pub fn ScreenerPage() -> impl IntoView {
 
     view! {
         <div class="sc-view">
+            <HeroDeck />
+            <ScreenSetup />
             <FilterBar />
 
             <div class="sc-view__body">
