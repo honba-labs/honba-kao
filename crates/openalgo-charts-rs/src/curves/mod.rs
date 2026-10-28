@@ -116,14 +116,19 @@ impl TermStructure {
     }
 
     /// The spread (long yield minus short yield) for a band, interpolated at the
-    /// band's tenor pair; `None` when either side cannot be interpolated.
+    /// band's tenor pair. Curves that cannot interpolate either side of the band
+    /// are skipped; `None` only when no curve covers both tenors.
     pub fn spread_at(&self, band: &SpreadBand) -> Option<f64> {
         // Evaluate each curve at both tenors and average across curves that
         // cover both tenors — a composite spread when multiple curves exist.
         let mut spreads = Vec::new();
         for curve in &self.curves {
-            let short = curve.interpolate(band.short_tenor_days)?;
-            let long = curve.interpolate(band.long_tenor_days)?;
+            let Some(short) = curve.interpolate(band.short_tenor_days) else {
+                continue;
+            };
+            let Some(long) = curve.interpolate(band.long_tenor_days) else {
+                continue;
+            };
             spreads.push(long - short);
         }
         if spreads.is_empty() {

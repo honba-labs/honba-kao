@@ -93,25 +93,24 @@ impl DepthLadder {
         }
     }
 
-    /// Tap a price: returns the nearest level on the matching side that can
-    /// fill the tap — bids when selling (hit bid), asks when buying (lift ask).
-    /// Dispatches to the nearest level at-or-beyond the tapped price.
-    pub fn dispatch_at(&self, _price: f64, is_bid: bool) -> Option<OrderDispatch> {
+    /// Tap a price: returns the highest level on the matching side at or below
+    /// the tapped price — bids when selling (hit bid), asks when buying (lift
+    /// ask). Falls back to the top of book (best price on this side) when the
+    /// tap lies outside the book; `None` when the side is empty.
+    pub fn dispatch_at(&self, price: f64, is_bid: bool) -> Option<OrderDispatch> {
         let side = if is_bid { &self.bids } else { &self.asks };
         if side.is_empty() {
             return None;
         }
-        let best = if is_bid {
-            // Hitting a bid: the best (highest) bid at or below the tapped price
-            // is the most aggressive price the buyer will accept; tap the top.
-            side.iter().max_by(|a, b| a.price.partial_cmp(&b.price).unwrap())
-        } else {
-            // Lifting an ask: the best (lowest) ask at or above the tapped price.
-            side.iter().min_by(|a, b| a.price.partial_cmp(&b.price).unwrap())
-        };
-        best.map(|l| OrderDispatch {
-            price: l.price,
-            size: l.size,
+        let top_of_book = side.iter().max_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+        let best = side
+            .iter()
+            .filter(|level| level.price <= price)
+            .max_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+        let chosen = best.or(top_of_book).unwrap();
+        Some(OrderDispatch {
+            price: chosen.price,
+            size: chosen.size,
             is_bid,
         })
     }
