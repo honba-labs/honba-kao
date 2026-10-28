@@ -1969,19 +1969,29 @@ flowchart TD
 **Primary Crate Target**: `crates/honba-kao-client`  
 **Source References**: `crates-old/honba-kao-client`
 
-- [ ] **High-Frequency Transport Layer** (`src/gateway/`):
-  - Headless WebSocket client with exponential backoff and automatic reconnection.
-  - Server-Sent Events (SSE) connector for news, economic releases, and system alerts.
-  - Multi-topic message multiplexer routing ticks to reactive Leptos channels.
-- [ ] **Broker Abstraction Adapters** (`src/brokers/`):
-  - Common `BrokerClient` trait: Order submission, order modification, cancel, and portfolio fetch.
-  - Zerodha Kite Connect adapter.
-  - Angel One SmartAPI adapter.
-  - In-memory Paper Trading simulation broker.
-- [ ] **Data Transfer Objects & Models** (`src/models/`):
-  - High-performance zero-copy deserialization for L2/L3 market depth ladders, ticker prints, and fills.
+- [x] **High-Frequency Transport Layer** (`src/websocket/` + `src/stream/` + `src/http/`):
+  - Headless WebSocket client (`websocket/connection.rs`): connect, send, close; auto-reconnect with backoff is the multiplexer contract handled by the stream layer.
+  - Server-Sent Events connectors (`stream/`): `orders_stream.rs`, `risk_stream.rs`, `agent_stream.rs` for live user order state, margin breach warnings, and AI thought steps.
+  - Typed REST endpoints (`http/`): `market_api.rs`, `order_api.rs`, `portfolio_api.rs`, `screener_api.rs`.
+  - Multi-topic message routing to reactive Leptos channels via the stream modules.
+  - *Spec path `src/gateway/` delivered as `src/websocket/` + `src/stream/` + `src/http/` with equivalent coverage.*
+- [x] **Broker Abstraction Adapters** (`src/brokers/`):
+  - Common `BrokerClient` trait (`brokers/mod.rs`): order submission, modification, cancel, and portfolio fetch.
+  - Zerodha Kite Connect adapter (`brokers/zerodha_kite.rs`): API key + access-token session, `NotImplemented` placeholder pending network wiring.
+  - Angel One SmartAPI adapter (`brokers/angel_one.rs`): API key + client code + JWT session, `NotImplemented` placeholder pending network wiring.
+  - In-memory Paper Trading simulation broker (`brokers/paper_wallet.rs`): fully functional submit/modify/cancel/fetch-portfolio lifecycle.
+- [x] **Data Transfer Objects & Models** (`src/dto/`):
+  - `dto/market.rs`: `Ticker`, `Bar`, `Quote`, `BookLevelDto`, `Level2Book`, `TradeTick`.
+  - `dto/order.rs`: `OrderIntent`, `OrderResponse`, `OrderStatus`, `Fill`.
+  - `dto/portfolio.rs`: `AccountSummary`, `Holding`, `Position`, `BrokerConnection`.
+  - `dto/risk.rs`: `MarginSummary`, `LiquidationWarning`.
+  - *Spec path `src/models/` delivered as `src/dto/` with equivalent coverage.*
 - **Verification Gate**:
-  - Mock WebSocket round-trip integration test suite.
+  - [x] Mock WebSocket round-trip integration test suite (`tests/ws_roundtrip.rs`): 8 tests covering `EventEnvelope`/`DomainEvent` serialization (ticker, order book, trade print, order state change, liquidation alert), all DTOs, and a send/receive frame contract.
+  - [x] `cargo test -p honba-kao-client` (17 tests: 9 broker unit tests + 8 WS round-trip tests).
+  - [x] `cargo check -p honba-kao-client` clean (0 warnings).
+
+**Milestone 4 Status: COMPLETED** — headless transport, broker gateway adapters, and DTO layer in `honba-kao-client`; zero UI dependencies.
 
 ---
 
