@@ -3,7 +3,10 @@
 //! `CanvasEngine` owns a chart id returned by `window.honbaCharts.mountStatic`
 //! and exposes `set_series` / `update_last` / `destroy`. A chart is "mounted"
 //! once the host supplies a canvas element; until then the engine holds the
-//! pending configuration and applies it on mount.
+//! pending `kind`/`style`/`theme` configuration. [`CanvasEngine::mount`] folds
+//! any pending theme into the active style (see [`CanvasEngine::apply_pending`])
+//! before mounting, and guards against leaking a previously mounted chart if
+//! called again on the same engine.
 
 use crate::canvas::bridge;
 use crate::types::CandleData;
@@ -82,8 +85,9 @@ pub struct CanvasEngine {
 }
 
 impl CanvasEngine {
-    /// Prepare an engine bound to `element`. The chart is not mounted until
-    /// [`Self::mount`] is called (or [`Self::apply_pending`] after mount).
+    /// Prepare an engine bound to `element`, using `kind`/`style` as the
+    /// initial series configuration. The chart is not mounted until
+    /// [`Self::mount`] is called.
     pub fn new(
         element: web_sys::HtmlCanvasElement,
         kind: SeriesKind,
@@ -98,14 +102,37 @@ impl CanvasEngine {
         }
     }
 
+    /// Set the pending theme. Immediately folds it into the active
+    /// [`SeriesStyle`] via [`Self::apply_pending`], so [`Self::style`]
+    /// reflects it right away even before [`Self::mount`] runs.
     pub fn with_theme(mut self, theme: crate::theme::ChartTheme) -> Self {
         self.theme = Some(theme);
+        self.apply_pending();
         self
     }
 
+    /// Fold the pending theme (set via [`Self::with_theme`]) into the active
+    /// series style, so the colors used by the next [`Self::set_series`] /
+    /// [`Self::update_last`] call reflect it. This touches no bridge/JS
+    /// state — it is a pure, idempotent, Rust-side update — so it is safe to
+    /// call at any time; [`Self::mount`] calls it automatically.
+    pub fn apply_pending(&mut self) {
+        if let Some(theme) = self.theme.as_ref() {
+            self.style.up_color = Some(theme.up_color.clone());
+            self.style.down_color = Some(theme.down_color.clone());
+            self.style.color = Some(theme.up_color.clone());
+        }
+    }
+
     /// Mount the chart on the bound canvas via `window.honbaCharts.mountStatic`.
-    /// Returns the chart id.
+    /// Returns the chart id. If this engine already has a mounted chart
+    /// (i.e. `mount` is called a second time on the same engine), the
+    /// existing chart is destroyed first so it is not leaked.
     pub fn mount(&mut self) -> Result<ChartId, JsValue> {
+        if let Some(existing) = self.id.take() {
+            let _ = bridge::destroy(existing.0);
+        }
+        self.apply_pending();
         let id = bridge::mount_static(&self.element)?;
         self.id = Some(ChartId(id));
         Ok(ChartId(id))
@@ -114,6 +141,12 @@ impl CanvasEngine {
     /// Chart id once mounted, `None` otherwise.
     pub fn id(&self) -> Option<ChartId> {
         self.id
+    }
+
+    /// The active series style — reflects any theme folded in via
+    /// [`Self::apply_pending`].
+    pub fn style(&self) -> &SeriesStyle {
+        &self.style
     }
 
     /// Replace the whole series (candles/bars/line/area). Serialises `data` to
