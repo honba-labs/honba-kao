@@ -177,8 +177,13 @@
     .hf-table th { font-weight: 600; color: var(--hf-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: var(--hf-surface-subtle); }
     .hf-table--numeric td, .hf-table--numeric th { text-align: right; font-family: "IBM Plex Mono", monospace; }
 
-    /* ---------- dialogs ---------- */
-    .hf-dialog { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; }
+    /* ---------- dialogs ----------
+       Hidden by default; the "Open ..." demo buttons add the --open modifier
+       class via inline onclick, and the backdrop/close/cancel buttons remove
+       it again. Without the `display: none` default these render permanently
+       open as a fixed, viewport-covering overlay on page load. */
+    .hf-dialog { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; }
+    .hf-dialog.hf-dialog--open { display: flex; }
     .hf-dialog-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
     .hf-dialog-panel { position: relative; width: 100%; max-width: 560px; border-radius: 1rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
     .hf-dialog-header { padding: 16px 20px; border-bottom: 1px solid var(--hf-border-soft); display: flex; align-items: center; justify-content: space-between; }
@@ -187,9 +192,10 @@
     .hf-dialog-close:hover { color: var(--hf-text-high); background: var(--hf-surface-subtle); }
     .hf-dialog-body { padding: 20px; overflow: auto; }
 
-    .hf-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; }
+    .hf-modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; }
+    .hf-modal.hf-modal--open { display: flex; }
     .hf-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
-    .hf-modal { position: relative; width: 100%; max-width: 480px; border-radius: 1rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); flex-direction: column; overflow: hidden; }
+    .hf-modal-panel { position: relative; width: 100%; max-width: 480px; border-radius: 1rem; border: 1px solid var(--hf-border-strong); background: var(--hf-surface-base); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
     .hf-modal-header { padding: 16px 20px; border-bottom: 1px solid var(--hf-border-soft); }
     .hf-modal-body { padding: 20px; }
     .hf-modal-footer { padding: 16px 20px; border-top: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle); display: flex; justify-content: flex-end; gap: 10px; }
@@ -433,7 +439,7 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 1 — Atoms</h2>
-          <span class="section__count">Implemented · 28 / 54</span>
+          <span class="section__count">Implemented · 34 / 54</span>
         </div>
       </div>
       <div class="section__grid">
@@ -644,7 +650,7 @@
           <!-- Modal -->
           <div class="hf-modal" id="demo-modal">
             <div class="hf-modal-backdrop" onclick="document.getElementById('demo-modal').classList.remove('hf-modal--open')"></div>
-            <div class="hf-modal">
+            <div class="hf-modal-panel">
               <div class="hf-modal-header">
                 <span class="hf-dialog-title">Liquidation Risk</span>
               </div>
@@ -750,10 +756,99 @@
           <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Monospace countdown clock for session phases.</p>
         </article>
 
+        <!-- ColorBar / OiBar -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfColorBar · HfOiBar</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px; max-width: 240px;">
+            <div style="display: flex; gap: 1px; height: 4px; border-radius: 2px; overflow: hidden;">
+              <div style="flex: 62; background: var(--hf-positive); opacity: 0.6;" title="Bid depth 620 @ 2,941.50"></div>
+              <div style="flex: 38; background: var(--hf-negative); opacity: 0.6;" title="Ask depth 380 @ 2,942.75"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="flex: 1; height: 8px; border-radius: 4px; background: var(--hf-surface-subtle); overflow: hidden; border: 1px solid var(--hf-border-soft);">
+                <div style="width: 64%; height: 100%; background: rgba(16,185,129,0.6);"></div>
+              </div>
+              <span style="font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-text-muted);">OI 64,200</span>
+              <span style="font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-positive);">+1,840</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Cumulative L2 depth bar (bid/ask emerald/crimson) &amp; Open Interest gauge with change delta.</p>
+        </article>
+
+        <!-- OrderDisplayBox -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderDisplayBox</h3>
+          <div style="display: flex; flex-direction: column; gap: 6px; max-width: 220px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: 'IBM Plex Mono', monospace;"><span style="color: var(--hf-text-muted);">Exec Price</span><span style="color: var(--hf-text-high);">₹2,942.50</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: 'IBM Plex Mono', monospace;"><span style="color: var(--hf-text-muted);">Yield (YTM)</span><span style="color: var(--hf-text-high);">7.12%</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: 'IBM Plex Mono', monospace;"><span style="color: var(--hf-text-muted);">Notional</span><span style="color: var(--hf-text-high);">₹1,471,250.00</span></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Read-only tabular key-value display for execution prices, yields &amp; notionals.</p>
+        </article>
+
+        <!-- PriceYieldItem -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfPriceYieldItem</h3>
+          <div style="display: flex; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-text-high);">₹99.84</span>
+              <span style="font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-positive);">YTM 7.12%</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-text-high);">₹142.50</span>
+              <span style="font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--hf-negative);">IV 28.4%</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Two-tier display coupling cash price with derived APR / YTM / option IV.</p>
+        </article>
+
+        <!-- SegmentedControl / SegmentSelector / TraderTabGroup -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSegmentedControl · HfSegmentSelector · HfTraderTabGroup</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+            <div style="display: inline-flex; gap: 2px; padding: 2px; border-radius: 0.5rem; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);">
+              <button style="padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 0.375rem; border: none; background: var(--hf-positive); color: #fff;">Day</button>
+              <button style="padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 0.375rem; border: none; background: transparent; color: var(--hf-text-muted);">IOC</button>
+              <button style="padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 0.375rem; border: none; background: transparent; color: var(--hf-text-muted);">GTD</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 2px; border-radius: 0.375rem; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft); width: 180px;">
+              <button style="padding: 6px 0; font-size: 11px; font-weight: 700; border-radius: 0.25rem; border: none; background: var(--hf-positive); color: #fff;">BUY</button>
+              <button style="padding: 6px 0; font-size: 11px; font-weight: 700; border-radius: 0.25rem; border: none; background: transparent; color: var(--hf-text-muted);">SELL</button>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Horizontal pill mode switcher (SegmentSelector is an alias) &amp; terminal Buy/Sell tab group.</p>
+        </article>
+
+        <!-- PercentSlider -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfPercentSlider</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px; max-width: 220px;">
+            <div style="position: relative; height: 4px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);">
+              <div style="position: absolute; inset: 0; right: 50%; background: var(--hf-positive); border-radius: 2px;"></div>
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--hf-positive);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--hf-text-muted);">
+              <span>0%</span><span>25%</span><span style="color: var(--hf-positive); font-weight: 700;">50%</span><span>75%</span><span>100%</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Snapping track slider with 0/25/50/75/100% tick marks.</p>
+        </article>
+
+        <!-- SortArrows -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfSortArrows</h3>
+          <div style="display: flex; gap: 16px; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px;">
+            <span style="color: var(--hf-text-muted);">Symbol <span>⇅</span></span>
+            <span style="color: var(--hf-text-high);">LTP <span style="color: var(--hf-positive);">↑</span></span>
+            <span style="color: var(--hf-text-high);">Volume <span style="color: var(--hf-negative);">↓</span></span>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tri-state table sort indicator cycling Neutral → Ascending → Descending.</p>
+        </article>
+
         <!-- Remaining atom placeholders -->
         <div class="placeholder">
           <span class="placeholder__name">Remaining Atoms (placeholders)</span>
-          <span class="placeholder__note">HfOrderDisplayBox · HfColorBar · HfPriceYieldItem · HfSortArrows · HfSegmentedControl · HfTraderTabGroup · HfPercentSlider · HfSlider · HfFooterBar items · HfPriceYieldItem · HfGradientBox · HfHighlightChip · HfHorizontalListItem · HfDelistingChip · HfFooter · HfExpandIndicator · HfErrorInfo · HfMenuItem · HfTab · HfSupportedNetworks · HfZCTokenIcon · HfCollateralInformation · HfCollateralSelector · HfCurrencyItem · HfCurveHeaderAsset · HfCurveHeaderTotal · HfWalletSourceSelector · HfTimeScaleCheckbox · HfTimer · HfRadioButton · HfSection · HfSectionWithItems · HfSimpleAdvancedSelector · HfSortArrows · HfSpinner · HfStatsBox · HfSubTab · HfTextLink</span>
+          <span class="placeholder__note">HfFooterBar items · HfGradientBox · HfHighlightChip · HfHorizontalListItem · HfDelistingChip · HfFooter · HfExpandIndicator · HfErrorInfo · HfMenuItem · HfTab · HfSupportedNetworks · HfZCTokenIcon · HfCollateralInformation · HfCollateralSelector · HfCurrencyItem · HfCurveHeaderAsset · HfCurveHeaderTotal · HfWalletSourceSelector · HfTimeScaleCheckbox · HfTimer · HfRadioButton · HfSection · HfSectionWithItems · HfSimpleAdvancedSelector · HfSlider · HfSpinner · HfStatsBox · HfSubTab · HfTextLink</span>
         </div>
       </div>
     </section>
@@ -1203,21 +1298,224 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 3 — Organisms</h2>
-          <span class="section__count">Planned · 0 / 37</span>
+          <span class="section__count">Implemented · 10 / 37</span>
         </div>
       </div>
-      <p style="color: var(--hf-text-muted); font-size: 13px;">Complex financial cockpit assemblies. Scheduled for Milestone 6 — placeholders below.</p>
-      <div class="section__grid">
-        <div class="placeholder"><span class="placeholder__name">HfOrderBook</span><span class="placeholder__note">L2 visual depth ladder with click-to-fill</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfOrderTicket</span><span class="placeholder__note">Side tabs, mid snap, margin preview</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfTradingDock</span><span class="placeholder__note">Tabbed workstation: positions / orders / history</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfCollateralOrganism</span><span class="placeholder__note">Multi-asset collateral manager</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfOptionChain</span><span class="placeholder__note">Unified F&O matrix CE/PE + Greeks</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfMarketTape</span><span class="placeholder__note">Streaming time &amp; sales print tape</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfMarketTopBar</span><span class="placeholder__note">Instrument header: LTP, delta, phase timer</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfMutualFundDossier</span><span class="placeholder__note">Fact sheet: NAV, risk-o-meter, holdings</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfTerminalShell</span><span class="placeholder__note">Bloomberg terminal root shell</span></div>
-        <div class="placeholder"><span class="placeholder__name">Remaining 28 organisms</span><span class="placeholder__note">See §2.3 equivalency matrix in restructure.md</span></div>
+      <p style="color: var(--hf-text-muted); font-size: 13px;">Complex financial cockpit assemblies composed from Tier 1/2 atoms &amp; molecules. All 10 shown below exist in <code>honba-kao-ui-core/src/organisms/</code> and compile.</p>
+      <div class="section__grid" style="grid-template-columns: 1fr;">
+
+        <!-- OrderBook -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderBook</h3>
+          <div style="max-width: 340px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden; font-family: 'IBM Plex Mono', monospace; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--hf-border-soft); background: var(--hf-surface-subtle);">
+              <span style="font-weight: 600; color: var(--hf-text-high); font-family: Inter, sans-serif;">Order Book</span>
+              <select class="hf-select" style="width: auto; height: 24px; font-size: 10px; padding: 0 6px;"><option>0.05</option><option>0.10</option><option>0.50</option></select>
+            </div>
+            <div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(239,68,68,0.15); width: 72%;"></div><span style="position: relative; color: var(--hf-negative);">2,943.25</span><span style="position: relative; color: var(--hf-text-muted);">640</span></div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(239,68,68,0.15); width: 48%;"></div><span style="position: relative; color: var(--hf-negative);">2,943.00</span><span style="position: relative; color: var(--hf-text-muted);">410</span></div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(239,68,68,0.15); width: 28%;"></div><span style="position: relative; color: var(--hf-negative);">2,942.75</span><span style="position: relative; color: var(--hf-text-muted);">230</span></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: var(--hf-surface-subtle); border-top: 1px solid var(--hf-border-soft); border-bottom: 1px solid var(--hf-border-soft); color: var(--hf-text-muted); font-size: 11px;">
+              <span>Spread</span><span>0.25 (0.85 bps)</span>
+            </div>
+            <div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(16,185,129,0.15); width: 34%;"></div><span style="position: relative; color: var(--hf-positive);">2,942.50</span><span style="position: relative; color: var(--hf-text-muted);">320</span></div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(16,185,129,0.15); width: 58%;"></div><span style="position: relative; color: var(--hf-positive);">2,942.25</span><span style="position: relative; color: var(--hf-text-muted);">520</span></div>
+              <div style="position: relative; display: flex; justify-content: space-between; padding: 3px 10px;"><div style="position: absolute; inset: 0; left: auto; background: rgba(16,185,129,0.15); width: 81%;"></div><span style="position: relative; color: var(--hf-positive);">2,942.00</span><span style="position: relative; color: var(--hf-text-muted);">710</span></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">L2 depth ladder: cumulative-fill asks above a spread row, bids below, aggregation selector &amp; click-to-fill rows (price, size, is_bid).</p>
+        </article>
+
+        <!-- OrderTicket -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOrderTicket</h3>
+          <div style="max-width: 320px; display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 2px; border-radius: 0.375rem; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);">
+              <button style="padding: 6px 0; font-size: 12px; font-weight: 700; border-radius: 0.25rem; border: none; background: var(--hf-positive); color: #fff;">BUY</button>
+              <button style="padding: 6px 0; font-size: 12px; font-weight: 700; border-radius: 0.25rem; border: none; background: transparent; color: var(--hf-text-muted);">SELL</button>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--hf-text-muted); display: block; margin-bottom: 4px;">Limit Price</label>
+              <div class="hf-price-snap-input"><div class="hf-order-input-box"><span class="hf-adornment">₹</span><input class="hf-order-input" value="2,942.50" readonly /></div><button class="hf-button hf-button--outline hf-button--sm" style="padding: 0 10px;">Mid</button></div>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--hf-text-muted); display: block; margin-bottom: 4px;">Quantity</label>
+              <div class="hf-quantity-chip-input"><div class="hf-qty-input-row"><input class="hf-order-input" value="500" readonly /><button class="hf-button hf-button--ghost hf-button--sm">Max</button></div><div class="hf-qty-chips-row"><span class="hf-chip">25%</span><span class="hf-chip hf-chip--selected">50%</span><span class="hf-chip">75%</span><span class="hf-chip">100%</span></div></div>
+            </div>
+            <div class="hf-estimation-fields">
+              <div class="hf-estimation-row"><span class="hf-estimation-label">Order Value</span><span class="hf-estimation-value">₹1,471,250</span></div>
+              <div class="hf-estimation-row"><span class="hf-estimation-label">Est. Fee (1 bp)</span><span class="hf-estimation-value">₹147.13</span></div>
+              <div class="hf-estimation-row"><span class="hf-estimation-label">Margin Required</span><span class="hf-estimation-value">₹147,125</span></div>
+            </div>
+            <button class="hf-button hf-button--primary hf-button--full">PLACE BUY ORDER</button>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Composes HfPriceSnapInput + HfQuantityChipInput + live margin/fee estimation behind a Buy/Sell side toggle.</p>
+        </article>
+
+        <!-- TradingDock -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTradingDock</h3>
+          <div style="max-width: 560px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--hf-surface-subtle); border-bottom: 1px solid var(--hf-border-soft);">
+              <div style="display: flex; gap: 4px;">
+                <button class="hf-subtab hf-subtab--active" style="display: flex; align-items: center; gap: 6px;">Positions <span class="hf-badge hf-badge--default" style="padding: 1px 6px;">3</span></button>
+                <button class="hf-subtab" style="display: flex; align-items: center; gap: 6px;">Open Orders <span class="hf-badge hf-badge--default" style="padding: 1px 6px;">2</span></button>
+                <button class="hf-subtab">Order History</button>
+                <button class="hf-subtab">Trade Fills</button>
+              </div>
+              <button class="hf-button hf-button--danger hf-button--xs">Cancel All</button>
+            </div>
+            <table class="hf-table hf-table--numeric">
+              <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Mark</th><th>P&amp;L</th></tr></thead>
+              <tbody>
+                <tr><td>RELIANCE</td><td>LONG</td><td>500</td><td>2,890.00</td><td>2,942.50</td><td style="color: var(--hf-positive);">+26,250</td></tr>
+                <tr><td>NIFTY-FUT</td><td>SHORT</td><td>150</td><td>24,600.00</td><td>24,520.00</td><td style="color: var(--hf-positive);">+12,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Tabbed workstation (Positions / Open Orders / History / Fills) with badge counts over any ChildrenFn view, &amp; optional bulk Cancel All.</p>
+        </article>
+
+        <!-- CollateralOrganism -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfCollateralOrganism</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--hf-border-soft); margin-bottom: 10px; font-size: 12px;">
+            <span style="color: var(--hf-text-muted);">Collateral &amp; Margin Management</span>
+            <div style="display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace;"><span><span style="color: var(--hf-text-muted);">Total:</span> <strong style="color: var(--hf-text-high);">₹4,850,000</strong></span><span><span style="color: var(--hf-text-muted);">Used:</span> <strong style="color: var(--hf-warning);">₹1,760,000</strong></span></div>
+          </div>
+          <table class="hf-table hf-table--numeric">
+            <thead><tr><th style="text-align: left;">Asset</th><th>Balance</th><th>Price</th><th>Haircut</th><th>Collateral Value</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align: left;">TCS</td><td>500.0000</td><td>₹3,950.00</td><td style="color: var(--hf-warning);">20.0%</td><td style="color: var(--hf-positive);">₹1,580,000</td><td style="text-align: center;"><button class="hf-button hf-button--tertiary hf-button--xs">Deposit</button> <button class="hf-button hf-button--ghost hf-button--xs">Withdraw</button></td></tr>
+              <tr><td style="text-align: left;">RELIANCE</td><td>1200.0000</td><td>₹2,942.50</td><td style="color: var(--hf-warning);">15.0%</td><td style="color: var(--hf-positive);">₹3,000,350</td><td style="text-align: center;"><button class="hf-button hf-button--tertiary hf-button--xs">Deposit</button> <button class="hf-button hf-button--ghost hf-button--xs">Withdraw</button></td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Multi-asset collateral manager — per-asset haircut &amp; collateral value, with deposit/withdraw actions per row.</p>
+        </article>
+
+        <!-- OptionChain -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfOptionChain</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft); border-radius: 0.5rem 0.5rem 0 0; font-size: 12px;">
+            <span style="font-weight: 700; color: var(--hf-text-high);">Option Chain — NIFTY 28 NOV</span>
+            <span style="font-family: 'IBM Plex Mono', monospace;"><span style="color: var(--hf-text-muted);">Spot:</span> <strong style="color: var(--hf-positive);">₹24,612.30</strong></span>
+          </div>
+          <table class="hf-option-chain" style="border-top: none; border-radius: 0 0 0.5rem 0.5rem;">
+            <thead>
+              <tr><th colspan="4" style="color: var(--hf-positive);">CALLS (CE)</th><th>STRIKE</th><th colspan="4" style="color: var(--hf-negative);">PUTS (PE)</th></tr>
+              <tr><th>Δ</th><th>IV</th><th>OI</th><th>LTP</th><th>₹</th><th>LTP</th><th>OI</th><th>IV</th><th>Δ</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="hf-oc-call">0.62</td><td class="hf-oc-call">28.4%</td><td class="hf-oc-call">12,400</td><td class="hf-oc-price hf-oc-price--up">142.50</td>
+                <td class="hf-oc-strike"><span class="hf-oc-moneyness hf-oc-moneyness--atm">ATM</span><br>24,600</td>
+                <td class="hf-oc-price hf-oc-price--down">138.20</td><td class="hf-oc-put">11,900</td><td class="hf-oc-put">26.1%</td><td class="hf-oc-put">-0.38</td>
+              </tr>
+              <tr>
+                <td class="hf-oc-call">0.45</td><td class="hf-oc-call">24.1%</td><td class="hf-oc-call">8,900</td><td class="hf-oc-price hf-oc-price--up">89.30</td>
+                <td class="hf-oc-strike"><span class="hf-oc-moneyness hf-oc-moneyness--otm">OTM</span><br>24,700</td>
+                <td class="hf-oc-price hf-oc-price--down">195.40</td><td class="hf-oc-put">15,200</td><td class="hf-oc-put">31.2%</td><td class="hf-oc-put">-0.55</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Unified CE/PE straddle matrix built from repeated HfOptionChainRow pairs around the ATM strike; click-to-trade per leg.</p>
+        </article>
+
+        <!-- MarketTape -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMarketTape</h3>
+          <div style="max-width: 340px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: var(--hf-surface-subtle); border-bottom: 1px solid var(--hf-border-soft); font-size: 11px;">
+              <span style="font-weight: 600; color: var(--hf-text-high);">Market Tape (Time &amp; Sales)</span><span style="color: var(--hf-text-muted);">Live</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 6px;">
+              <div class="hf-tape-row hf-tape-row--buy"><span>10:32:01.104</span><span class="side">BUY</span><span>₹2,942.50</span><span>1,240</span></div>
+              <div class="hf-tape-row hf-tape-row--sell"><span>10:32:01.210</span><span class="side">SELL</span><span>₹2,942.75</span><span>850</span></div>
+              <div class="hf-tape-row hf-tape-row--buy"><span>10:32:01.333</span><span class="side">BUY</span><span>₹2,942.25</span><span>410</span></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Streaming time &amp; sales print tape over HfTapeRow, aggressor-side colored, optional click-to-inspect.</p>
+        </article>
+
+        <!-- MarketTopBar -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMarketTopBar</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-base); flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 15px; color: var(--hf-text-high);">RELIANCE</span><span class="hf-badge hf-badge--default">SPOT</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 17px; color: var(--hf-text-high);">₹2,942.50</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--hf-positive);">+26.50 (+0.91%)</span></div>
+              <div style="display: flex; gap: 14px; font-size: 11px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">
+                <span>24h H: <span style="color: var(--hf-text-high);">2,958.00</span></span>
+                <span>24h L: <span style="color: var(--hf-text-high);">2,901.20</span></span>
+                <span>24h Vol: <span style="color: var(--hf-text-high);">4.21M</span></span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;"><button class="hf-button hf-button--secondary hf-button--xs">Watchlist</button><button class="hf-button hf-button--ghost hf-button--xs">Alert</button></div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Instrument header: symbol, LTP, signed change, 24h H/L/Vol &amp; a free-form actions slot.</p>
+        </article>
+
+        <!-- MutualFundDossier -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMutualFundDossier</h3>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 1px solid var(--hf-border-soft); margin-bottom: 12px;">
+            <div><strong style="color: var(--hf-text-high); font-size: 14px;">Parag Parikh Flexi Cap Fund</strong><div style="font-size: 11px; color: var(--hf-text-muted);">Equity · Flexi Cap</div></div>
+            <div style="text-align: right; font-family: 'IBM Plex Mono', monospace;"><div style="font-weight: 700; color: var(--hf-text-high);">NAV: ₹78.42</div><div style="font-size: 11px; color: var(--hf-text-muted);">AUM: ₹68,400 Cr · TER 0.63%</div></div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div style="padding: 10px; border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; background: var(--hf-surface-subtle);">
+              <div style="font-size: 10px; color: var(--hf-text-muted); text-transform: uppercase; margin-bottom: 6px;">Trailing Returns</div>
+              <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 12px;"><span>1Y <strong style="color: var(--hf-positive);">22.4%</strong></span><span>3Y <strong style="color: var(--hf-positive);">18.9%</strong></span><span>5Y <strong style="color: var(--hf-positive);">21.1%</strong></span></div>
+            </div>
+            <div class="hf-riskometer" style="padding: 10px;">
+              <div class="hf-riskometer-dial" style="width: 120px; height: 60px;"><svg viewBox="0 0 100 55"><path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#333" stroke-width="8" /><line class="hf-riskometer-needle" x1="50" y1="50" x2="50" y2="15" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" /><circle cx="50" cy="50" r="4" fill="#f59e0b" /></svg></div>
+              <div class="hf-riskometer-badge" style="color: var(--hf-warning); font-size: 11px;">Very High Risk</div>
+            </div>
+            <div class="hf-asset-allocation" style="height: 10px; align-self: center;">
+              <div class="hf-allocation-seg" style="background: var(--hf-positive); width: 88%;"></div>
+              <div class="hf-allocation-seg" style="background: #3b82f6; width: 7%;"></div>
+              <div class="hf-allocation-seg" style="background: var(--hf-warning); width: 5%;"></div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Fact sheet composing a trailing-returns matrix + HfRiskOMeter + HfAssetAllocationBar.</p>
+        </article>
+
+        <!-- TerminalShell -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTerminalShell</h3>
+          <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.5rem; overflow: hidden; font-size: 11px; color: var(--hf-text-muted);">
+            <div style="padding: 6px 10px; background: var(--hf-surface-subtle); border-bottom: 1px solid var(--hf-border-soft); text-align: center;">header slot — GoBar / market strip / account</div>
+            <div style="display: flex; min-height: 120px;">
+              <div style="width: 60px; border-right: 1px solid var(--hf-border-soft); display: flex; align-items: center; justify-content: center; background: var(--hf-surface-subtle);">nav rail</div>
+              <div style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative;">content viewport — routed page</div>
+            </div>
+            <div style="padding: 6px 10px; background: var(--hf-surface-subtle); border-top: 1px solid var(--hf-border-soft); text-align: center;">footer slot — latency / protocol / status</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Root application shell: header + nav rail + scrollable content viewport + footer, with an optional overlay slot (Agent Console / GoBar).</p>
+        </article>
+
+        <!-- StrategyBuilder -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfStrategyBuilder</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--hf-border-soft); margin-bottom: 10px; font-size: 12px;">
+            <div><strong style="color: var(--hf-text-high);">Multi-Leg Strategy Builder</strong><div style="font-size: 11px; color: var(--hf-text-muted);">Iron Condor · NIFTY 28 NOV</div></div>
+            <div style="display: flex; gap: 14px; font-family: 'IBM Plex Mono', monospace;"><span>Max P: <strong style="color: var(--hf-positive);">₹18,400</strong></span><span>Max L: <strong style="color: var(--hf-negative);">₹6,600</strong></span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="hf-strategy-leg-row"><div class="hf-leg-side hf-leg-side--sell">SELL × 2</div><div class="hf-leg-strike">24,500 CE</div><span class="hf-leg-expiry">28 NOV</span><button class="hf-leg-remove">✕</button></div>
+            <div class="hf-strategy-leg-row"><div class="hf-leg-side hf-leg-side--buy">BUY × 2</div><div class="hf-leg-strike">24,750 CE</div><span class="hf-leg-expiry">28 NOV</span><button class="hf-leg-remove">✕</button></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hf-border-soft);">
+            <span style="font-size: 11px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">Breakeven: ₹24,580, ₹24,920</span>
+            <button class="hf-button hf-button--primary hf-button--sm">Execute All Legs</button>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Multi-leg spread/straddle/condor builder over repeated HfStrategyLegRow, with per-leg removal &amp; aggregate max P/L + breakevens.</p>
+        </article>
+
+        <div class="placeholder"><span class="placeholder__name">Remaining 27 organisms</span><span class="placeholder__note">See §2.3 equivalency matrix in restructure.md</span></div>
       </div>
     </section>
 
@@ -1226,17 +1524,66 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 4 — Templates</h2>
-          <span class="section__count">Planned · 0 / 6</span>
+          <span class="section__count">Implemented · 4 / 6</span>
         </div>
       </div>
-      <p style="color: var(--hf-text-muted); font-size: 13px;">Structural layout grids. Scheduled for Milestone 6.</p>
-      <div class="section__grid">
-        <div class="placeholder"><span class="placeholder__name">HfPage</span><span class="placeholder__note">Standard container + alert stack</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfThreeColumnTradingLayout</span><span class="placeholder__note">Pro trading cockpit (3-column)</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfTwoColumnSplitLayout</span><span class="placeholder__note">70/30 asymmetric portfolio split</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfMosaicWorkspace</span><span class="placeholder__note">Multi-pane flexible grid</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfClosablePanel</span><span class="placeholder__note">Dockable panel container</span></div>
-        <div class="placeholder"><span class="placeholder__name">HfSettlementStepContainer</span><span class="placeholder__note">Multi-step settlement container</span></div>
+      <p style="color: var(--hf-text-muted); font-size: 13px;">Structural layout grids from <code>honba-kao-ui-core/src/templates/</code>. This showcase document itself is wrapped by the live app in an <code>HfPage</code> container — the first card below diagrams that same wrapper rather than re-nesting it.</p>
+      <div class="section__grid" style="grid-template-columns: 1fr;">
+
+        <!-- HfPage -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfPage · HfAlertBannerStack</h3>
+          <div style="max-width: 480px; border: 1px dashed var(--hf-border-soft); border-radius: 0.5rem; padding: 14px;">
+            <div style="font-size: 9px; color: var(--hf-text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">page-container · mx-auto, responsive px/py, max-width class</div>
+            <div class="hf-alert-banner hf-alert-banner--warning" style="margin-bottom: 10px;"><span class="hf-alert-icon">⚠</span><span>alert_banner slot (HfAlertBannerStack)</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--hf-border-soft); padding-bottom: 8px; margin-bottom: 10px;"><strong style="color: var(--hf-text-high); font-size: 13px;">title / subtitle</strong><span style="font-size: 11px; color: var(--hf-text-muted);">actions slot</span></div>
+            <div style="height: 56px; border: 1px dashed var(--hf-border-soft); border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--hf-text-muted);">page-body — children()</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Standard page container enforcing margins/max-width with an optional alert-banner stack &amp; standardized header.</p>
+        </article>
+
+        <!-- HfThreeColumnTradingLayout -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfThreeColumnTradingLayout</h3>
+          <div style="max-width: 560px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="height: 20px; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-subtle); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">market_tape (optional)</div>
+            <div style="height: 20px; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-subtle); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">top_bar</div>
+            <div style="display: grid; grid-template-columns: 7fr 2fr 3fr; gap: 6px; height: 100px;">
+              <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted); text-align: center;">visualizer<br>(chart / payoff)</div>
+              <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted); text-align: center;">market_<br>depth</div>
+              <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted); text-align: center;">order_<br>ticket</div>
+            </div>
+            <div style="width: 75%; height: 32px; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">dock — spans cols 1–2 (9/12)</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Pro trading cockpit: tape + top bar, then a 12-col grid (visualizer 7 / depth 2 / ticket 3), with a dock spanning 9/12 below.</p>
+        </article>
+
+        <!-- HfTwoColumnSplitLayout -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfTwoColumnSplitLayout</h3>
+          <div style="max-width: 480px; display: grid; grid-template-columns: 8fr 4fr; gap: 8px; height: 90px;">
+            <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--hf-text-muted);">primary (col-span-8)</div>
+            <div style="border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--hf-text-muted);">rail (col-span-4)</div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">70/30 asymmetric split for portfolio, collateral &amp; wealth dashboards; <code>reverse_on_mobile</code> flips stacking order on narrow screens.</p>
+        </article>
+
+        <!-- HfMosaicWorkspace -->
+        <article class="hf-card" style="padding: 20px;">
+          <h3 class="section__title" style="font-size: 15px; margin: 0 0 10px; color: var(--hf-text-high);">HfMosaicWorkspace</h3>
+          <div style="max-width: 480px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="height: 18px; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-subtle); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">toolbar (optional)</div>
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; height: 90px;">
+              <div style="grid-column: span 5; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">tile (span 5)</div>
+              <div style="grid-column: span 4; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">tile (span 4)</div>
+              <div style="grid-column: span 3; border: 1px solid var(--hf-border-soft); border-radius: 0.25rem; background: var(--hf-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--hf-text-muted);">tile (span 3)</div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--hf-text-muted); margin-top: 10px;">Free-form 12-column tile grid (children choose their own <code>col-span-N</code>) — used by the Backtest Deck &amp; Strategy Studio pages.</p>
+        </article>
+
+        <div class="placeholder"><span class="placeholder__name">HfClosablePanel</span><span class="placeholder__note">Dockable panel container — not yet in templates/ (planned)</span></div>
+        <div class="placeholder"><span class="placeholder__name">HfSettlementStepContainer</span><span class="placeholder__note">Multi-step settlement container — not yet in templates/ (planned)</span></div>
       </div>
     </section>
 
@@ -1245,23 +1592,152 @@
       <div class="section__head">
         <div>
           <h2 class="section__title">Tier 5 — Pages</h2>
-          <span class="section__count">Planned · 0 / 12</span>
+          <span class="section__count">Composition sketches · 12 / 12</span>
         </div>
       </div>
-      <p style="color: var(--hf-text-muted); font-size: 13px;">Domain trading &amp; research views. Scheduled for Milestone 7.</p>
+      <p style="color: var(--hf-text-muted); font-size: 13px;">Domain trading &amp; research views, routed via <code>router/routes.rs</code> (paths from <code>router/paths.rs</code>). These are lightweight wireframe sketches of each page's composition, not pixel-accurate replicas — several of the underlying feature pages are themselves still thin stubs mid-restructure.</p>
       <div class="section__grid">
-        <div class="placeholder"><span class="placeholder__name">CockpitPage</span><span class="placeholder__note">Trading workstation (HfThreeColumnTradingLayout)</span></div>
-        <div class="placeholder"><span class="placeholder__name">PortfolioHubPage</span><span class="placeholder__note">Portfolio &amp; margin hub (HfTwoColumnSplitLayout)</span></div>
-        <div class="placeholder"><span class="placeholder__name">OptionChainPage</span><span class="placeholder__note">F&O workstation</span></div>
-        <div class="placeholder"><span class="placeholder__name">StrategyBuilderPage</span><span class="placeholder__note">Multi-leg strategy builder</span></div>
-        <div class="placeholder"><span class="placeholder__name">MutualFundsPage</span><span class="placeholder__note">Fund discovery &amp; comparison</span></div>
-        <div class="placeholder"><span class="placeholder__name">SipPlannerPage</span><span class="placeholder__note">SIP calculator &amp; mandate organizer</span></div>
-        <div class="placeholder"><span class="placeholder__name">QuantLabPage</span><span class="placeholder__note">Quant research &amp; simulator</span></div>
-        <div class="placeholder"><span class="placeholder__name">BacktestDeckPage</span><span class="placeholder__note">Backtesting deck (HfMosaicWorkspace)</span></div>
-        <div class="placeholder"><span class="placeholder__name">ScreenerPage</span><span class="placeholder__note">AST predicate filters</span></div>
-        <div class="placeholder"><span class="placeholder__name">SecurityHubPage</span><span class="placeholder__note">Single-ticker dossier</span></div>
-        <div class="placeholder"><span class="placeholder__name">AuthPage</span><span class="placeholder__note">Login / registration / 2FA</span></div>
-        <div class="placeholder"><span class="placeholder__name">HomePage</span><span class="placeholder__note">Executive summary dashboard</span></div>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">CockpitPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/trading (alias /trading/cockpit)</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 10px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="display: grid; grid-template-columns: 7fr 2fr 3fr; gap: 3px; height: 46px;">
+              <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            </div>
+            <div style="width: 75%; height: 14px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfThreeColumnTradingLayout → HfMarketTopBar + chart + HfOrderBook + HfOrderTicket + HfTradingDock.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">PortfolioHubPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/portfolio (component: PortfolioPage)</code>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: 8fr 4fr; gap: 3px; height: 70px;">
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfTwoColumnSplitLayout → HfTradingDock (positions, primary) + HfCollateralOrganism (rail).</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">OptionChainPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/derivatives/option-chain</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 12px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 58px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfMarketTopBar + HfOptionChain (CE/PE straddle matrix).</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">StrategyBuilderPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/derivatives/strategy</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 16px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 16px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 32px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfStrategyBuilder (leg rows) + HfOptionPayoffChart.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">MutualFundsPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/wealth/mutual-funds</code>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; height: 66px;">
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">Grid of HfMutualFundDossier cards — fund discovery &amp; comparison.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">SipPlannerPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/wealth/sip</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="height: 32px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 30px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfSipCalculatorCard + HfRollingReturnsVisualizer.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">QuantLabPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/quant/simulator (component: SimulatorPage)</code>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 62px;">
+            <div style="grid-column: span 7; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="grid-column: span 5; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="grid-column: span 12; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfMosaicWorkspace tiles → equity curve, drawdown, trade log.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">BacktestDeckPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/quant/backtesting (component: BacktestingDeckPage)</code>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 62px;">
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="grid-column: span 4; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfMosaicWorkspace → HfBacktestMetricCard tiles + HfUnderwaterGauge + equity curve.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">ScreenerPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/screener</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; gap: 3px;">
+              <div style="width: 26%; height: 12px; border-radius: 999px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="width: 26%; height: 12px; border-radius: 999px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="width: 26%; height: 12px; border-radius: 999px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            </div>
+            <div style="height: 44px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfFilterPill row (AST predicate builder) + HfTable results.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">SecurityHubPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/research/security</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="height: 14px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 20px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            <div style="height: 20px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfMarketTopBar + HfFilingsCard + HfSparklinePrimitive — single-ticker dossier.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">AuthPage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/auth</code>
+          <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; height: 62px;">
+            <div style="width: 60%; height: 100%; border-radius: 4px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">Centered HfCard with HfInput fields + HfButton — login / registration / 2FA.</p>
+        </article>
+
+        <article class="hf-card" style="padding: 16px;">
+          <h3 class="section__title" style="font-size: 14px; margin: 0 0 2px; color: var(--hf-text-high);">HomePage</h3>
+          <code style="font-size: 10px; color: var(--hf-text-muted); font-family: 'IBM Plex Mono', monospace;">/</code>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; gap: 3px;">
+              <div style="flex: 1; height: 18px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="flex: 1; height: 18px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+              <div style="flex: 1; height: 18px; border-radius: 2px; background: var(--hf-surface-elevated); border: 1px solid var(--hf-border-soft);"></div>
+            </div>
+            <div style="height: 34px; border-radius: 2px; background: var(--hf-surface-subtle); border: 1px solid var(--hf-border-soft);"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--hf-text-muted); margin-top: 10px;">HfPage wrapper → stat tiles (HfCounter / HfBacktestMetricCard) + summary sparkline panel.</p>
+        </article>
+
       </div>
     </section>
 

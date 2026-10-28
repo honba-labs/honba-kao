@@ -14,7 +14,11 @@ pub fn SiteFooter() -> impl IntoView {
                 <span>"|"</span>
                 <span>"FEED: 100 ticks/s"</span>
             </div>
-            <div>
+            <div class="flex items-center gap-3">
+                <a href="/components.html" target="_blank" rel="noopener" class="hover:text-text-high">
+                    "Components"
+                </a>
+                <span>"|"</span>
                 <span>"HONBA-KAO v3.0 Institutional"</span>
             </div>
         </footer>
