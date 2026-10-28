@@ -30,10 +30,10 @@ pub fn connect_agent_stream(url: &str) -> Result<SseStream<AgentStep>, String> {
     });
 
     es.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
-    onmessage.forget();
 
     Ok(SseStream {
         event_source: es,
         receiver: rx,
+        _closure: Some(onmessage),
     })
 }

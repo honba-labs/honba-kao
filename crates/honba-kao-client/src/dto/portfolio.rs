@@ -1,35 +1,36 @@
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct AccountSummary {
     pub account_id: String,
     pub currency: String,
-    pub total_equity: f64,
-    pub available_margin: f64,
-    pub used_margin: f64,
-    pub unrealized_pnl: f64,
-    pub realized_pnl: f64,
+    pub total_equity: Decimal,
+    pub available_margin: Decimal,
+    pub used_margin: Decimal,
+    pub unrealized_pnl: Decimal,
+    pub realized_pnl: Decimal,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Holding {
     pub symbol: String,
-    pub quantity: f64,
-    pub average_price: f64,
-    pub current_price: f64,
-    pub pnl: f64,
-    pub pnl_pct: f64,
+    pub quantity: Decimal,
+    pub average_price: Decimal,
+    pub current_price: Decimal,
+    pub pnl: Decimal,
+    pub pnl_pct: Decimal,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Position {
     pub symbol: String,
     pub side: String, // "LONG" or "SHORT"
-    pub quantity: f64,
-    pub entry_price: f64,
-    pub current_price: f64,
-    pub unrealized_pnl: f64,
-    pub leverage: f64,
+    pub quantity: Decimal,
+    pub entry_price: Decimal,
+    pub current_price: Decimal,
+    pub unrealized_pnl: Decimal,
+    pub leverage: Decimal,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

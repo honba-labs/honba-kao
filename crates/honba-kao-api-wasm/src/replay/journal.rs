@@ -14,7 +14,10 @@ pub struct ReplayJournal {
 }
 
 impl ReplayJournal {
-    pub fn new(events: Vec<ReplayEvent>) -> Self {
+    pub fn new(mut events: Vec<ReplayEvent>) -> Self {
+        // #61: validate/sort events by timestamp so `next_event_until` never
+        // halts prematurely on an out-of-sequence event.
+        events.sort_by_key(|e| e.timestamp);
         Self { events, cursor: 0 }
     }
 
