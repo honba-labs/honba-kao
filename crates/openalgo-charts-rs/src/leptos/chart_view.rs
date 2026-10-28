@@ -34,7 +34,7 @@ pub fn OpenalgoChart(
     #[prop(into, optional)] kind: Signal<Option<String>>,
 ) -> impl IntoView {
     let canvas_ref = NodeRef::<leptos::html::Canvas>::new();
-    let chart_id = RwSignal::new(None::<f64>);
+    let chart_id = RwSignal::new(None::<u64>);
     // `initialized` means "the initial full history has been committed to the
     // engine"; afterwards each change is classified as a cheap incremental
     // update or a full replacement (see the effect below).
@@ -63,13 +63,13 @@ pub fn OpenalgoChart(
         let id = if chart_id.get_untracked().is_none() {
             match bridge::mount_static(&canvas) {
                 Ok(id) => {
-                    chart_id.set(Some(id));
+                    chart_id.set(Some(id as u64));
                     id
                 }
                 Err(_) => return, // engine not available outside a browser
             }
         } else {
-            chart_id.get_untracked().expect("chart id set once mounted")
+            chart_id.get_untracked().expect("chart id set once mounted") as f64
         };
 
         if data.is_empty() {
@@ -144,7 +144,7 @@ pub fn OpenalgoChart(
 
     on_cleanup(move || {
         if let Some(id) = chart_id.get_untracked() {
-            let _ = bridge::destroy(id);
+            let _ = bridge::destroy(id as f64);
         }
     });
 
