@@ -37,17 +37,20 @@ fn alert_severity_badge_classes_are_non_empty_and_distinct() {
     );
 }
 
+// TODO: enumerate every OrderBookFilter variant once production exposes an
+// `ALL` const or iterator; none exists in src/organisms/order_book.rs, so only
+// the default is checked here.
 #[test]
 fn order_book_filter_default_and_variants() {
     assert_eq!(OrderBookFilter::default(), OrderBookFilter::All);
-    let variants = [
-        OrderBookFilter::All,
-        OrderBookFilter::BidsOnly,
-        OrderBookFilter::AsksOnly,
-    ];
-    assert_eq!(variants.len(), 3);
+    assert_ne!(OrderBookFilter::default(), OrderBookFilter::BidsOnly);
+    assert_ne!(OrderBookFilter::default(), OrderBookFilter::AsksOnly);
 }
 
+// TODO: needs a production fn that computes cumulative depth (running sum of
+// `size`) from a Vec<BookLevel>. None exists in src/organisms/order_book.rs,
+// where `cumulative_size` is only read for the depth bar width. This test still
+// hand-sets the field.
 #[test]
 fn book_level_carries_cumulative_depth() {
     let level = BookLevel {
@@ -61,6 +64,9 @@ fn book_level_carries_cumulative_depth() {
     assert_eq!(level.order_count, 4);
 }
 
+// TODO: needs a production fn that couples call and put legs into an
+// OptionStrikePair for a strike. None exists in src/organisms/option_chain.rs,
+// which only renders the pairs it is given. This test still hand-sets fields.
 #[test]
 fn option_strike_pair_couples_call_and_put() {
     let pair = OptionStrikePair {
@@ -92,6 +98,9 @@ fn option_strike_pair_couples_call_and_put() {
     assert!(pair.call.open_interest > pair.put.open_interest);
 }
 
+// TODO: needs a production fn deriving collateral_value = balance * price *
+// (1 - haircut_pct / 100). None exists in src/organisms/collateral_organism.rs,
+// where collateral_value is a stored field. This test still hand-sets fields.
 #[test]
 fn collateral_asset_row_carries_haircut_and_value() {
     let row = CollateralAssetRow {
@@ -107,6 +116,10 @@ fn collateral_asset_row_carries_haircut_and_value() {
     assert!((row.haircut_pct - 12.0).abs() < f64::EPSILON);
 }
 
+// TODO: needs a production fn on OrderIntent computing notional (price * quantity)
+// and/or margin. None exists in src/organisms/order_ticket.rs; notional and margin
+// are inline Signal::derive closures inside HfOrderTicket and cannot be called.
+// This test still checks literal arithmetic.
 #[test]
 fn order_intent_side_and_type() {
     let intent = OrderIntent {
