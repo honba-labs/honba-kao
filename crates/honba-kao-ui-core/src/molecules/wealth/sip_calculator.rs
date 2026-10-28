@@ -1,11 +1,11 @@
 //! `HfSipCalculatorCard` — compounding projection tool with monthly installment
-//! slider. Projection math may use `honba-kao-api-wasm`; UI molecule here.
+//! slider. Projection math is computed in `honba-kao-api-wasm::analytics`.
 //! All money values use `rust_decimal::Decimal` (Zero Floats Policy).
 
 use crate::{Decimal, HfNumberInput};
-use num_traits::ToPrimitive;
-use rust_decimal_macros::dec;
+use honba_api_wasm::analytics::calculate_sip_projection;
 use leptos::prelude::*;
+use rust_decimal_macros::dec;
 
 #[component]
 pub fn HfSipCalculatorCard(
@@ -13,23 +13,12 @@ pub fn HfSipCalculatorCard(
     #[prop(into)] years: RwSignal<Decimal>,
     #[prop(into)] annual_return: RwSignal<Decimal>, // %
 ) -> impl IntoView {
-    let projected = Signal::derive(move || {
-        let m = monthly.get();
-        let y = years.get();
-        let r = annual_return.get() / Decimal::from(100) / Decimal::from(12);
-        let n = (y * Decimal::from(12)).to_i32().unwrap_or(0) as u32;
-        if r > Decimal::ZERO {
-            let mut factor = Decimal::ONE;
-            let one_plus_r = Decimal::ONE + r;
-            for _ in 0..n {
-                factor = factor * one_plus_r;
-            }
-            m * (factor - Decimal::ONE) / r
-        } else {
-            m * Decimal::from(n)
-        }
+    let sip = Signal::derive(move || {
+        calculate_sip_projection(monthly.get(), years.get(), annual_return.get())
     });
-    let invested = Signal::derive(move || monthly.get() * years.get() * Decimal::from(12));
+    let projected = Signal::derive(move || sip.get().projected);
+    let invested = Signal::derive(move || sip.get().invested);
+    let gains = Signal::derive(move || sip.get().gains);
 
     view! {
         <div class="hf-sip-calculator rounded-lg border border-border-soft bg-surface-base p-3 shadow-sm">
@@ -54,7 +43,7 @@ pub fn HfSipCalculatorCard(
             </div>
             <div class="hf-sip-split flex justify-between text-[10px] text-text-muted mt-1">
                 <span>{move || format!("Invested: {:.2}", invested.get())}</span>
-                <span class="text-emerald-400">{move || format!("Gains: {:.2}", projected.get() - invested.get())}</span>
+                <span class="text-emerald-400">{move || format!("Gains: {:.2}", gains.get())}</span>
             </div>
         </div>
     }
