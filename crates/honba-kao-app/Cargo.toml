@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 honba-kao-client.workspace = true
 honba-kao-ui-core.workspace = true
 honba-core.workspace = true
-honba-api-wasm.workspace = true
+honba-kao-api-wasm.workspace = true
 honba-indicators.workspace = true
 openalgo-charts.workspace = true
 leptos.workspace = true
@@ -31,4 +31,6 @@ web-sys = { version = "0.3", features = [
     "BlobPropertyBag", "Url", "BroadcastChannel", "MessageEvent", "console"
 ] }
 chrono = "0.4"
+uuid = { version = "1", features = ["js"] }
+getrandom = { version = "0.2", features = ["js"] }
 num-traits = "0.2"

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-mode="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>本場・顔 honba-kao</title>
+
+  <!-- Typography: Inter & IBM Plex Mono via Google Fonts, plus institutional Swiss & Mono fonts from Secured-Finance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Institutional Font Assets (Suisse Intl, GT Super Display, Roboto Mono, IBM Plex Sans) -->
+  <link data-trunk rel="copy-dir" href="assets/fonts" data-target-path="fonts" />
+  <link data-trunk rel="css" href="assets/style/fonts.css" />
+
+  <link data-trunk rel="css" href="assets/style/palette_256.css" />
+  <link data-trunk rel="css" href="assets/style/main.css" />
+  <link data-trunk rel="css" href="assets/style/themes.css" />
+  <link data-trunk rel="css" href="assets/style/app.css" />
+  <link data-trunk rel="css" href="assets/style/home.css" />
+  <link data-trunk rel="css" href="assets/style/workbench.css" />
+  <link data-trunk rel="css" href="assets/style/screener.css" />
+  <link data-trunk rel="css" href="assets/style/simulator.css" />
+  <link data-trunk rel="css" href="assets/style/strategy_studio.css" />
+  <link data-trunk rel="css" href="assets/style/brand.css" />
+  <link data-trunk rel="css" href="assets/style/command_bar.css" />
+
+  <!-- openalgo-charts: vendored ESM bundle + the Rust⇄JS bridge in openalgo-charts-rs crate -->
+  <link data-trunk rel="copy-dir" href="../openalgo-charts-rs/vendor/openalgo-charts" data-target-path="openalgo-charts" />
+  <script type="module" src="/openalgo-charts/honba-bridge.js"></script>
+
+  <link data-trunk rel="rust" href="Cargo.toml" />
+</head>
+<body></body>
+</html>

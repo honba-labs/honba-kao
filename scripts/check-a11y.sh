@@ -12,7 +12,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UI_CORE="$ROOT/crates/honba-kao-ui-core/src"
-STYLE="$ROOT/style"
+STYLE="$ROOT/crates/honba-kao-app/assets/style"
 
 ERRORS=0
 
