@@ -30,15 +30,23 @@ pub fn HfThinkingOrb(
 }
 
 /// Status led / dot for live mode, crosshair sync, broker latency.
+/// `live` is a signal so the led color stays reactive.
 #[component]
 pub fn HfStatusLed(
-    #[prop(default = false)] live: bool,
+    #[prop(into, optional)] live: Option<Signal<bool>>,
     #[prop(into, optional)] label: Option<String>,
 ) -> impl IntoView {
-    let color = if live { "bg-emerald-500 box-shadow-[0_0_8px_rgba(16,185,129,0.6)]" } else { "bg-text-muted" };
+    let live = Signal::derive(move || live.as_ref().map(|l| l.get()).unwrap_or(false));
+    let color = move || {
+        if live.get() {
+            "bg-emerald-500 box-shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+        } else {
+            "bg-text-muted"
+        }
+    };
     view! {
         <div class="hf-status-led flex items-center gap-1.5 text-[11px] text-text-muted">
-            <span class=format!("hf-led-dot w-2 h-2 rounded-full {}", color)></span>
+            <span class=move || format!("hf-led-dot w-2 h-2 rounded-full {}", color())></span>
             {label.map(|l| view! { <span>{l}</span> })}
         </div>
     }

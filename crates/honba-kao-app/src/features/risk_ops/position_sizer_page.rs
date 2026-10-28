@@ -1,28 +1,29 @@
-use honba_kao_ui_core::primitive::HfNumberInput;
+use honba_kao_ui_core::{Decimal, primitive::HfNumberInput};
 use honba_kao_ui_core::templates::{HfPage, HfTwoColumnSplitLayout};
 use leptos::prelude::*;
 
 #[component]
 pub fn PositionSizerPage() -> impl IntoView {
-    let account_equity = RwSignal::new(1_000_000.0);
-    let risk_pct = RwSignal::new(1.0); // 1%
-    let entry_price = RwSignal::new(2500.0);
-    let stop_loss = RwSignal::new(2450.0);
+    let account_equity = RwSignal::new(Decimal::from(1_000_000));
+    let risk_pct = RwSignal::new(Decimal::from(1)); // 1%
+    let entry_price = RwSignal::new(Decimal::from(2500));
+    let stop_loss = RwSignal::new(Decimal::from(2450));
 
-    let risk_amount = move || -> f64 { account_equity.get() * (risk_pct.get() / 100.0) };
-    let per_share_risk = move || -> f64 {
-        let diff: f64 = entry_price.get() - stop_loss.get();
-        diff.abs()
+    let risk_amount = move || -> Decimal {
+        account_equity.get() * (risk_pct.get() / Decimal::from(100))
     };
-    let suggested_shares = move || -> f64 {
-        let risk: f64 = per_share_risk();
-        if risk > 0.0 {
-            (risk_amount() / risk).floor()
+    let per_share_risk = move || -> Decimal {
+        (entry_price.get() - stop_loss.get()).abs()
+    };
+    let suggested_shares = move || -> Decimal {
+        let risk = per_share_risk();
+        if risk > Decimal::ZERO {
+            (risk_amount() / risk).trunc() // whole units
         } else {
-            0.0
+            Decimal::ZERO
         }
     };
-    let total_notional = move || -> f64 { suggested_shares() * entry_price.get() };
+    let total_notional = move || -> Decimal { suggested_shares() * entry_price.get() };
 
     let primary = view! {
         <div class="flex flex-col gap-4">
@@ -67,19 +68,19 @@ pub fn PositionSizerPage() -> impl IntoView {
             <div class="flex flex-col gap-3 text-xs">
                 <div class="flex justify-between py-1 border-b border-border-soft">
                     <span class="text-text-muted">"Maximum Risk Budget"</span>
-                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{:.2}", risk_amount())}</span>
+                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{}", risk_amount())}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-border-soft">
                     <span class="text-text-muted">"Risk Per Share"</span>
-                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{:.2}", per_share_risk())}</span>
+                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{}", per_share_risk())}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-border-soft">
                     <span class="text-text-muted">"Suggested Quantity"</span>
-                    <span class="font-mono font-bold text-semantic-success text-sm">{move || format!("{:.0} units", suggested_shares())}</span>
+                    <span class="font-mono font-bold text-semantic-success text-sm">{move || format!("{} units", suggested_shares())}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-border-soft">
                     <span class="text-text-muted">"Total Trade Notional"</span>
-                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{:.2}", total_notional())}</span>
+                    <span class="font-mono font-medium text-text-primary">{move || format!("₹{}", total_notional())}</span>
                 </div>
             </div>
         </div>
