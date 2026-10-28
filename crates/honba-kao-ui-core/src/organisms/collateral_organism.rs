@@ -14,11 +14,24 @@ pub struct CollateralAssetRow {
 #[component]
 pub fn HfCollateralOrganism(
     #[prop(into)] assets: Signal<Vec<CollateralAssetRow>>,
-    #[prop(into)] total_collateral_value: Signal<f64>,
+    #[prop(into, optional)] total_collateral_value: Option<Signal<f64>>,
     #[prop(into)] margin_used: Signal<f64>,
     #[prop(into, optional)] on_deposit: Option<Callback<String>>,
     #[prop(into, optional)] on_withdraw: Option<Callback<String>>,
 ) -> impl IntoView {
+    // Haircut evaluation: collateral value = balance × price × (1 − haircut%).
+    // This is the previously-unimplemented haircut evaluation (issue #36).
+    let rows = Signal::derive(move || {
+        assets.get().into_iter().map(|a| {
+            let haircut = a.haircut_pct.clamp(0.0, 100.0);
+            let collateral_value = a.balance * a.price * (1.0 - haircut / 100.0);
+            CollateralAssetRowView { asset: a, collateral_value }
+        }).collect::<Vec<_>>()
+    });
+    let total_collateral = total_collateral_value.unwrap_or_else(|| {
+        Signal::derive(move || rows.get().iter().map(|r| r.collateral_value).sum::<f64>())
+    });
+
     view! {
         <div class="hf-collateral-organism flex flex-col gap-3 p-4 bg-surface-base border border-border-soft rounded">
             <div class="flex justify-between items-center pb-3 border-b border-border-soft">
@@ -29,7 +42,7 @@ pub fn HfCollateralOrganism(
                 <div class="flex gap-4 text-xs font-mono">
                     <div>
                         <span class="text-text-muted">"Total Collateral: "</span>
-                        <span class="font-bold text-text-high">{move || format!("₹{:.2}", total_collateral_value.get())}</span>
+                        <span class="font-bold text-text-high">{move || format!("₹{:.2}", total_collateral.get())}</span>
                     </div>
                     <div>
                         <span class="text-text-muted">"Margin In Use: "</span>
@@ -52,19 +65,19 @@ pub fn HfCollateralOrganism(
                     </thead>
                     <tbody class="divide-y divide-border-soft/40 font-mono">
                         <For
-                            each=move || assets.get()
-                            key=|a| a.symbol.clone()
-                            children=move |a| {
-                                let sym = a.symbol.clone();
+                            each=move || rows.get()
+                            key=|r| r.asset.symbol.clone()
+                            children=move |r| {
+                                let sym = r.asset.symbol.clone();
                                 let sym_c1 = sym.clone();
                                 let sym_c2 = sym;
                                 view! {
                                     <tr class="hover:bg-surface-elevated">
-                                        <td class="py-2 px-3 font-sans font-semibold text-text-high">{a.name} <span class="text-text-muted text-[10px]">({a.symbol})</span></td>
-                                        <td class="py-2 px-3 text-right">{format!("{:.4}", a.balance)}</td>
-                                        <td class="py-2 px-3 text-right">{format!("₹{:.2}", a.price)}</td>
-                                        <td class="py-2 px-3 text-right text-amber-400">{format!("{:.1}%", a.haircut_pct)}</td>
-                                        <td class="py-2 px-3 text-right font-bold text-emerald-400">{format!("₹{:.2}", a.collateral_value)}</td>
+                                        <td class="py-2 px-3 font-sans font-semibold text-text-high">{r.asset.name} <span class="text-text-muted text-[10px]">({r.asset.symbol})</span></td>
+                                        <td class="py-2 px-3 text-right">{format!("{:.4}", r.asset.balance)}</td>
+                                        <td class="py-2 px-3 text-right">{format!("₹{:.2}", r.asset.price)}</td>
+                                        <td class="py-2 px-3 text-right text-amber-400">{format!("{:.1}%", r.asset.haircut_pct)}</td>
+                                        <td class="py-2 px-3 text-right font-bold text-emerald-400">{format!("₹{:.2}", r.collateral_value)}</td>
                                         <td class="py-2 px-3 text-center">
                                             <div class="flex items-center justify-center gap-1">
                                                 {on_deposit.map(|cb| view! {
@@ -96,4 +109,10 @@ pub fn HfCollateralOrganism(
             </div>
         </div>
     }
+}
+
+#[derive(Clone, Debug)]
+struct CollateralAssetRowView {
+    asset: CollateralAssetRow,
+    collateral_value: f64,
 }

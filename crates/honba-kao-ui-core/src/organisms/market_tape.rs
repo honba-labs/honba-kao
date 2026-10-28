@@ -27,9 +27,16 @@ pub fn HfMarketTape(
             </div>
             <div class="hf-tape-stream flex-grow overflow-y-auto">
                 <For
-                    each=move || trades.get()
-                    key=|tr| format!("{}-{}-{}", tr.time, tr.price, tr.size)
-                    children=move |tr| {
+                    each=move || {
+                        trades
+                            .get()
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, tr)| (i, tr))
+                            .collect::<Vec<_>>()
+                    }
+                    key=|(i, _tr)| format!("tape-{i}")
+                    children=move |(_i, tr)| {
                         let tr_c = tr.clone();
                         let click_cb = on_trade_click.map(|cb| Callback::new(move |_| cb.run(tr_c.clone())));
                         match click_cb {
