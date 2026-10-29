@@ -986,3 +986,68 @@ honba-kao` port effort (`nsh-port-m3-m4` branch) still needs a human
 reconciliation decision — nothing in this session's two crypto batches
 changes that; still a decision for the user, not something to resolve
 unilaterally.
+
+## 16. 2026-10-29: NSH port, Phase 2 — `quant/go_bar`, Phase 2 fully done
+
+**Phase/Slice Status**: `go_bar` ported, closing out `quant` (and with it,
+every domain — `core`, `fno`, `quant`, `crypto`, `wealth`). `cargo check -p
+honba-kao-ui-core`: 0 errors/0 warnings, whole crate. `cargo fmt --check`
+clean on both touched files.
+
+**Correction to §14's note above (961-966)**: "no scroll-container
+primitive" was wrong — `nsh_core::prelude::scroll()` exists and is already
+used by `agent_console.rs` (`scroll().flex_1().child(..)`); what's missing
+is only a *max-height* style modifier (`style.rs` has no `max_h`, only
+`overflow_hidden()`), not a scroll container itself. `go_bar`'s suggestion
+list uses `scroll().h(px(200.0))...` (a fixed height, not a max) to
+reproduce the original's `max-h-[200px] overflow-y-auto`. **This means
+`collateral_asset_pane`'s dropped `max-h-[300px] overflow-y-auto` (§15)
+was fixable with `scroll()` too** — left as-is since it's already
+committed and passed review, not revisited here, but worth a follow-up
+pass if anyone's touching that file again; don't repeat the "no scroll
+primitive" mistake elsewhere.
+
+**Other discoveries, for whoever starts Phase 3**:
+- `nsh_core::element::flow::{when, If}` (Leptos `<Show>`'s analog) is
+  `pub(crate) mod flow;` in nsh-core — **not reachable from this crate**.
+  The usable public alternative for "mount this subtree only while a
+  condition holds" is `dynamic(f: impl Fn() -> E + 'static) -> AnyElement`
+  returning `Option<AnyElement>` (`impl<T: IntoElement> IntoElements for
+  Option<T>` exists). Gate it on a `computed(..)` boolean rather than the
+  raw list/value itself if the thing inside has its own `each()` — a
+  `computed` only notifies on an actual value change, so the inner region
+  isn't torn down and rebuilt on every unrelated keystroke, only on a real
+  transition. `go_bar`'s suggestion panel does this (gated on `!filtered
+  .is_empty()`, not on `filtered` directly).
+- A plain arrow key (or any keystroke `Keystroke::edits_text()` considers
+  text-editing — unmodified chars, or ctrl/cmd+`a/c/v/x/y/z`) is **not**
+  delivered by a surface-wide `on_key`/`on_key_with` while a text input
+  has focus unless you pass `KeyOptions { when: nsh_core::keymap::When::
+  Always, .. }` — the default `When::Auto` suppresses it so the input can
+  use the key itself. `go_bar`'s Up/Down navigation needed this; watch for
+  the same gotcha on any future molecule that wants arrow-key/Enter-style
+  navigation while a sibling input is focused.
+- `nsh_base::Sheet` (`primitive/base/dialog.rs` wraps it as `HfDialog`/
+  `HfModal`/`HfDrawer`) already handles backdrop-press-to-close and
+  Escape-to-close internally — don't hand-roll a backdrop click handler
+  with `stop_propagation`, or a manual Escape binding, for any future
+  modal/overlay molecule. Use `Sheet::element(SheetProps {..})` directly
+  when `HfDialog`/`HfModal`'s fixed header/footer chrome doesn't fit (as
+  `go_bar` did), and listen for `SheetEvent::OpenChange(false, _)` as the
+  single authoritative "please close" signal.
+- The raw `nsh_core::element::input()` builder's `.auto_focus(true)`
+  ("focused when it appears") reproduces a Leptos `Effect` that focuses an
+  input on mount, for free, whenever the input sits inside a region that's
+  conditionally (re)mounted (a `Sheet`'s body, a `dynamic(..)`, etc.) — no
+  `element_ref`/`ElementRef::focus()` needed for that specific case.
+
+**Immediate Next Step**: Phase 2 (`molecules/`) is fully done. Re-enable
+`organisms`, `templates`, `hooks`, `icons` one module at a time in
+`lib.rs` (currently commented out) and port each the same way, per
+`nsh-port.md`'s phased plan — expect every one of them to currently call
+the pre-fix Leptos-style APIs of the primitives/molecules they use, same
+caution as Phase 1→2's transition.
+
+**Still unresolved, carried over from §13**: the parallel `m3-m4/
+honba-kao` port effort still needs a human reconciliation decision before
+more Phase 3 work — nothing in this session changes that.
