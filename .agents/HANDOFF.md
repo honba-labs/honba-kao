@@ -562,3 +562,59 @@ each: read the molecule's current Leptos source, read the real
 its domain `mod.rs` lines, `cargo check -p honba-kao-ui-core` (confirm
 `molecules` is still reachable from `lib.rs` first), `cargo fmt` the
 touched files only, commit.
+
+## 8. 2026-10-29: NSH port, Phase 2 — 6 tile/gauge/bar molecules
+
+**Phase/Slice Status**: `backtest_card`, `cointegration_band`,
+`underwater_gauge` (quant) and `asset_allocation_bar`, `risk_o_meter`,
+`rolling_returns` (wealth) ported. **Correction to §4's "chart molecules"
+framing and the port plan's own list**: none of these 6 has a multi-point
+data series — they're single-value tiles/badges/bars (the port plan's
+description of this batch validating `Plot` against "drawdown shading"
+etc. does not match the actual current code). Only `payoff_chart` (§7) is
+a real `Plot` consumer so far. `cointegration_band`/`underwater_gauge`/
+`asset_allocation_bar`/`risk_o_meter`/`rolling_returns`/`backtest_card` are
+all plain `view()` compositions, same tier as `primitive/card.rs` /
+`separator.rs`'s `HfColorBar` (the exact pattern `asset_allocation_bar`
+now follows).
+
+`cargo check -p honba-kao-ui-core`: 0 errors/0 warnings. New
+`tests/risk_o_meter.rs` (`cargo check -p honba-kao-ui-core --test
+risk_o_meter`): clean — its own test target, independent of the
+pre-existing broken `tests/layout_invariants.rs`.
+
+**Decisions & Discoveries**:
+- `risk_o_meter`'s needle dial (SVG arc + rotated needle + dot) is not
+  ported: **nsh has no SVG or arc primitive at all**, same gap Phase 1 hit
+  in `primitive/sparkline.rs`. Renders the zone label + its original
+  Tailwind color class only (`risk_style()`'s angle is computed, unused).
+  If a real radial gauge is wanted later, it needs `nsh_core`'s raw
+  `canvas()`/`Painter` API (see `nsh_base::plot::grid`/`line` for how
+  `nsh_base` itself draws with it) — nobody has attempted this yet for a
+  non-`Plot` shape.
+- `risk_o_meter`'s in-file `#[cfg(test)]` block (a pre-existing AGENTS.md
+  §3.2 violation, predating this port) moved to `tests/risk_o_meter.rs`;
+  `risk_style` is now `pub` (was `pub(crate)`) so the integration test can
+  reach it.
+- `nsh`'s tooltip takes an element, not a string — `asset_allocation_bar`'s
+  per-segment `title="Equity"` etc. tooltips are dropped (color-only
+  legend now); same constraint will hit any other molecule that had a
+  plain-string native `title`.
+- Minor faithfully-carried-over oddity, not introduced by this port:
+  `backtest_card`'s `positive` tint still lands on an empty text node (the
+  *original* Leptos version had the same empty `<span>`, so it already had
+  no visible effect) — left as-is to match existing behavior; worth a
+  follow-up if the tile is ever supposed to show a sign icon.
+- **Callers not yet updated**: `honba-kao-app`'s `backtesting_deck_page.rs`,
+  `pair_trading_page.rs`, `asset_allocation_page.rs`, and
+  `organisms/mutual_fund_dossier.rs` still call these 6 molecules with the
+  old Leptos signatures (`Signal<T>` props, string `class`). They will not
+  compile against the new signatures — expected and out of scope per the
+  port plan (`honba-kao-app` wiring is Phase 5), not a regression from this
+  batch.
+
+**Immediate Next Step**: input-composition molecules next per §4
+(`estimation_fields`, `price_snap_input`, `quantity_chip_input`,
+`sip_calculator` — note `sip_calculator` is in `wealth/`, the other three
+in `core/`), then the remaining bespoke `View` compositions (the rest of
+`core`, `fno`, `quant`, `crypto`). Same loop as §7's Next Step.

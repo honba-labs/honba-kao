@@ -1,8 +1,11 @@
 //! `HfAssetAllocationBar` — segmented bar showing Equity, Debt, Cash, Gold weights.
 
-use leptos::prelude::*;
+use nsh_core::element::NoEvent;
+use nsh_core::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
+use crate::theme::tokens::HonbaStyle;
+
+#[derive(Clone, Debug, Default, PartialEq, JsObject)]
 pub struct Allocation {
     pub equity: f64,
     pub debt: f64,
@@ -10,30 +13,42 @@ pub struct Allocation {
     pub gold: f64,
 }
 
+/// Props for [`HfAssetAllocationBar`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfAssetAllocationBarProps {
+    pub alloc: Prop<Allocation>,
+}
+
+/// A bar split into Equity / Debt / Cash / Gold segments, each sized by its
+/// share of the total. Zero total draws an empty bar.
 #[component]
 pub fn HfAssetAllocationBar(
-    alloc: Signal<Allocation>,
-) -> impl IntoView {
-    let total = Signal::derive(move || {
-        let a = alloc.get();
-        a.equity + a.debt + a.cash + a.gold
-    });
-    view! {
-        <div class="hf-asset-allocation w-full h-2 rounded-full bg-surface-subtle overflow-hidden border border-border-soft">
-            {move || {
-                let t = total.get();
-                let seg = |v: f64, _color: &'static str| {
-                    if t > 0.0 { (v / t * 100.0).min(100.0) } else { 0.0 }
-                };
-                view! {
-                    <div class="hf-segments flex h-full">
-                        <div class="hf-segment bg-emerald-500" style=format!("width: {:.1}%;", seg(alloc.get().equity, "equity")) title="Equity" />
-                        <div class="hf-segment bg-blue-500" style=format!("width: {:.1}%;", seg(alloc.get().debt, "debt")) title="Debt" />
-                        <div class="hf-segment bg-amber-500" style=format!("width: {:.1}%;", seg(alloc.get().cash, "cash")) title="Cash" />
-                        <div class="hf-segment bg-rose-500" style=format!("width: {:.1}%;", seg(alloc.get().gold, "gold")) title="Gold" />
-                    </div>
-                }
-            }}
-        </div>
-    }
+    props: HfAssetAllocationBarProps,
+    cx: Scope<NoEvent>,
+) -> impl IntoElement {
+    let _ = cx;
+    let a = props.alloc.get_untracked();
+    let total = a.equity + a.debt + a.cash + a.gold;
+
+    // Share of the total as a percentage; `flex_grow` splits the bar by these.
+    let share = |v: f64| -> f32 {
+        if total > 0.0 {
+            (v / total * 100.0).clamp(0.0, 100.0) as f32
+        } else {
+            0.0
+        }
+    };
+
+    view()
+        .flex()
+        .w_full()
+        .h(px(8.0))
+        .rounded_full()
+        .overflow_hidden()
+        .surface_muted()
+        .border_soft()
+        .child(view().flex_grow(share(a.equity)).h_full().bg(rgb(0x10b981)))
+        .child(view().flex_grow(share(a.debt)).h_full().bg(rgb(0x3b82f6)))
+        .child(view().flex_grow(share(a.cash)).h_full().bg(rgb(0xf59e0b)))
+        .child(view().flex_grow(share(a.gold)).h_full().bg(rgb(0xf43f5e)))
 }
