@@ -437,3 +437,188 @@ in §4 above. By the time this entry was written, Milestones 4-6 also
 appeared to be progressing concurrently per the commit log; whoever picks
 up next should re-check §4's status against `git log` rather than trusting
 it as current, since it was not updated by the concurrent session.
+
+## 6. 2026-10-29: NSH (nsh.dev) port — Phase 1 (primitives) in progress
+
+**Why**: the user wants `honba-kao` re-platformed from Leptos (WASM/browser
+CSR) onto NSH (nsh.dev, source `github.com/longbridge/nsh`), a Rust-native
+retained-view UI framework with per-platform native rendering backends
+(iOS/Android/macOS/Windows/Linux, plus a Web backend that itself compiles to
+`wasm32-unknown-unknown` — verified, not SSR/JS) instead of Leptos/DOM. Goal:
+pure-Rust `#[component]` authoring everywhere (the TSX/JS path NSH also
+offers was explicitly rejected), reusing `nsh_base`'s unstyled primitives
+(Button, Switch, Progress, AlertDialog, Sheet, Tabs, Toast, DataTable, Dock,
+Plot, …) under Honba's existing atomic-design tiers instead of hand-rolling
+everything. NSH is also from Longbridge, unrelated to the earlier
+`longbridge.cloud` marketing-site investigation (§ not in this file — that
+was a dead end for trading-UI components; nsh.dev is the real target).
+
+**Where the work lives**: branch `feat/honba-kao-nsh-port`, in its own
+worktree at `/home/pmallapp/Devel/Finance/honba-workspace/honba-kao-wt-nsh-port`
+(sibling to this `honba-kao` checkout, same convention as the existing
+`honba-kao-wt-drawing-zero-floats` worktree). **Nothing is committed yet** —
+every change so far is uncommitted in that worktree's working tree. The
+branch was created from `main` at `373d83a` (pre the M8 merges in §5/above);
+it has NOT been rebased onto current `main` (`0836ea5` as of this entry) —
+whoever continues should decide whether to rebase before or after finishing
+Phase 1, since current `main` only added test files and a few Leptos
+primitives (`menu.rs`, `tabs.rs`, `toggle.rs`) that this port hasn't touched.
+
+**Read first**: `nsh-port.md` at the repo root — architecture summary,
+primitive/molecule/organism/template → NSH mapping, 7-phase migration plan,
+showcase-page design, risks. A previous agent had already started Phase 1
+(the `primitive/` layer) before this session; this session found it broken
+(dropped props, invented APIs) and has been repairing it file-by-file.
+
+**Current state of `crates/honba-kao-ui-core`**:
+- `lib.rs` temporarily comments out `molecules`/`organisms`/`templates`/
+  `hooks`/`icons` (all still Leptos, ~49 files reference `leptos` directly)
+  so `primitive`+`theme` can be checked in isolation:
+  `cargo check -p honba-kao-ui-core --manifest-path crates/honba-kao-ui-core/Cargo.toml`.
+  Re-enable each module only when its own phase is actually ported — don't
+  uncomment them to "see the real error count," it's not meaningful until
+  then.
+- **Confirmed compiling**: `theme/tokens.rs`, `primitive/base/button.rs`,
+  `primitive/base/switch.rs`, `primitive/base/progress.rs`,
+  `primitive/base/dialog.rs` (minus `HfAlertDialog`, see below),
+  `primitive/counter.rs`'s `HfCounter` (not `HfAuctionTimer` in the same
+  file — still broken, see below).
+- **Current error count**: 198 errors (`cargo check` as above), down from
+  ~800+ insertions/guesswork originally. Re-run to get the live number —
+  it moves as both fixes and ripple-breaks (see note below) land.
+- Dead pre-port Leptos files already deleted (superseded by `base/*.rs` or
+  merged elsewhere): `primitive/{button,color_bar,dialog,input,link,slider,
+  spinner}.rs`. `color_bar.rs`'s content lives in `separator.rs` now.
+
+**Two systemic bugs found and fixed at the root — read before touching any
+more files, they apply crate-wide**:
+1. **`#[component] fn X(props, cx: Scope<EventType>)` requires `EventType`
+   to be declared in *this* crate** with `#[derive(Debug, Clone, PartialEq,
+   Event)]`. Confirmed straight from `nsh-macros-0.3.0`'s own doc comment on
+   `#[derive(Event)]`: "The derive makes a hidden macro of the enum's name,
+   which the component's `#[component]` expands, so the enum and the
+   component are of one crate." You can **never** reuse `nsh_base::
+   SwitchEvent`/`SheetEvent`/`ButtonEvent` etc. directly as your own
+   `Scope<T>` — compiles with a misleading "cannot find macro `XxxEvent`...
+   it is an enum, not a macro" error. Fix: declare a local mirror enum
+   (e.g. `HfSwitchEvent`) with the derive, and translate the real
+   `nsh_base` event into it inside `.on_event(|e: &RealEvent| cx.emit(...))`.
+   `Scope<NoEvent>` is exempt (nsh-macros skips the hidden-macro codegen
+   when the event type's last path segment is literally `NoEvent`).
+2. **`theme/tokens.rs`'s `HonbaStyle` trait must never redeclare a method
+   name its supertrait `Styled` already provides** (e.g. it used to have
+   its own `rounded_md`/`rounded_full` with identical semantics to
+   `Styled::rounded_md`/`rounded_full` — deleted). Any such collision makes
+   every call site ambiguous (E0034, "multiple applicable items in scope").
+   Before adding any new `HonbaStyle` method, grep
+   `~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/nsh-core-0.3.0/src/element/style.rs`
+   for the name first.
+
+**Other recurring, already-fixed mistakes to watch for in remaining files**
+(leftovers from the original interrupted mechanical Leptos→NSH conversion):
+- `nsh_core::FontWeight::X`, `nsh_core::px(...)`, `nsh_core::rgb(...)`,
+  `nsh_core::style::FontWeight::X` — none of these fully-qualified paths
+  exist. `FontWeight`/`px`/`rgb`/`AdaptiveColor` are only real as **bare**
+  names via the `use nsh_core::prelude::*;` every file already has.
+- `.flex_dir_col()` / `.flex_dir_row()` are not real methods — the real
+  ones are `.flex_col()` / `.flex_row()` (fixed in `table.rs`,
+  `display_box.rs`, `panel.rs`, `counter.rs`; grep the rest before
+  assuming they're clean).
+- `Scope::new()` is `pub(crate)` inside `nsh_core::element::once` —
+  unreachable from this crate. Use `TheComponent::element(TheComponentProps
+  { .. })` instead (a default trait method from `Component`/
+  `ComponentElement::new`).
+- `Option<Box<dyn Fn(..)>>` callback props don't satisfy `#[derive(Props)]`
+  (needs every field `Clone + PartialEq`, plus `JsValue` for value-kind
+  fields). This is *why* point 1 above exists — the fix is always "give
+  the component its own `Event` enum," never a boxed closure prop.
+- Before putting any type inside a `#[derive(Props)]` struct, confirm it
+  implements `JsValue` in the real source — don't assume. (`AdaptiveColor`
+  does **not**; `Color` does. Caught in `base/progress.rs`.)
+- **Breaking-change ripple**: fixing `base/button.rs` removed its
+  `on_click: Option<Callback<()>>`-style props entirely (replaced by
+  `.on_press(..)` on the returned element, via its own `HfButtonEvent`).
+  Any not-yet-fixed file that still constructs `HfButton`/`HfIconButton`/
+  `HfChip`/`HfCloseButton` with an `on_click` prop will now fail to
+  compile — that's expected, not a new bug, fix it the same way when you
+  get to that file (this is likely part of why the error count went up,
+  not down, across some of these fixes — a few previously-separate "prop
+  doesn't exist" errors became "no such field" errors on the caller side
+  instead). Same caution applies once `base/input.rs`/`base/tabs.rs`/
+  `base/toast.rs` are fixed — anything still calling their old
+  callback-style API elsewhere in `primitive/` will need the same ripple
+  fix.
+
+**Grounding resources — use these, don't guess**:
+- Real vendored source for `nsh-core`/`nsh-base`/`nsh-macros` 0.3.0 (the
+  exact pinned version): `~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/
+  {nsh-core-0.3.0,nsh-base-0.3.0,nsh-macros-0.3.0}/src/`. If it's not there,
+  `cargo fetch --manifest-path crates/honba-kao-ui-core/Cargo.toml` pulls it.
+- `git show HEAD:crates/honba-kao-ui-core/src/primitive/<file>.rs` recovers
+  the **exact** pre-port Leptos original for any file that still shows as
+  "modified" (uncommitted) — the single best way to recover a dropped prop's
+  real name/type instead of inferring it. (Files already fully replaced,
+  like `base/*.rs`, have no such original — they're new.)
+- An already-fixed sibling file (e.g. `base/switch.rs`, `counter.rs`) is a
+  better template for the `Prop<T>`/`#[derive(Props)]`/`#[component]` idiom
+  than re-deriving it from the nsh-core source each time.
+
+**Known remaining work, not yet touched or still known-broken**:
+- `primitive/`: `badge.rs`, `card.rs`, `currency.rs`, `display_box.rs`,
+  `footer.rs`, `identicon.rs`, `kbd.rs`, `panel.rs`, `price_yield.rs`,
+  `prompt.rs`, `segmented.rs`, `separator.rs` (already merged with
+  `color_bar.rs`'s content, may still need an API-correctness pass),
+  `sort_arrows.rs`, `sparkline.rs`, `tab.rs`, `table.rs`, `timer.rs` — each
+  needs the same treatment: read in full, diff against `git show HEAD:...`,
+  verify every call against the real vendored source, fix.
+  `counter.rs`'s `HfAuctionTimer` (same file as the now-fixed `HfCounter`)
+  still has an undeclared `seconds` identifier, a `Prop<Option<String>>:
+  Props` trait-bound error, a `flex_dir_col`→`flex_col` fix still needed at
+  its own call site (only `HfCounter`'s was fixed), and the
+  `nsh_core::FontWeight` qualified-path bug — it did not exist in the
+  pre-port Leptos file, so there's no original to recover it from; whoever
+  fixes it has to design its prop surface fresh (cross-check against
+  `timer.rs`'s `HfTimer`, which may have the identical bug/shape).
+- `primitive/base/`: `input.rs`, `link.rs`, `slider.rs`, `tabs.rs`,
+  `toast.rs` — not yet touched. Expect the same `Scope::new()` /
+  callback-prop / cross-crate-event bug classes found in the other four.
+- `primitive/mod.rs` (and `primitive/base/mod.rs`) still `pub use
+  dialog::HfAlertDialog`, but `dialog.rs` deliberately doesn't define it —
+  `nsh_base::AlertDialog` is an imperative native alert (`AlertDialogOptions
+  ::show()`, no children slot) fundamentally incompatible with `HfDialog`/
+  `HfModal`/`HfDrawer`'s children-based design, so it needs its own,
+  separate implementation (or the stale re-export should just be deleted if
+  no longer wanted). This is a known pre-existing compile error, unrelated
+  to anything else above.
+- Once `primitive/` is fully compiling clean: re-enable `molecules`,
+  `organisms`, `templates`, `hooks`, `icons` one module at a time in
+  `lib.rs` (currently commented out) and port each the same way, per
+  `nsh-port.md`'s phased plan. Expect every one of them to currently call
+  the pre-fix Leptos-style APIs of the primitives they use.
+
+**Process notes for whoever continues** (per this session's experience —
+context ballooned badly going bigger, see repeated corrections this
+session): work **one file at a time** (occasionally 2-3 trivially-related
+files, e.g. three new `base/` shims that were all still correct), never a
+whole batch. Ground every fact in the real source or `git show HEAD:...`
+before writing anything — don't guess APIs. Implement on sonnet with a
+tightly-scoped prompt carrying only the distilled facts above (not
+"explore and figure it out"); validate with a haiku pass that actually
+runs `cargo check` filtered to that file's errors (not just a read-through)
+before moving on. Run at most one subagent at a time.
+
+**Unrelated housekeeping done in this same session** (on the main
+`honba-kao` checkout, not the worktree above): the pre-existing `fix/*`
+milestone branches (M1 through M8) were all already merged into `main` via
+GitHub PRs — cleaned up 11 stale local branches and would have deleted 5
+still-lingering-but-merged remote branches (`fix/honba-kao-m1m2-atomic-
+design`, `fix/honba-kao-m3m4-compute-client`, `fix/honba-kao-m5-chart-fixes`,
+`fix/honba-kao-m5m6-charts-ui-issues`, `fix/honba-kao-m6-ui-fixes`) but this
+session's GitHub token lacks ref-delete permission (403) — needs a human
+with push access to run `git push origin --delete <names>`. Two branches
+were deliberately left alone: `fix/openalgo-charts-drawing-zero-floats`
+(unrelated real in-progress work, has its own worktree,
+`honba-kao-wt-drawing-zero-floats`) and `fix/honba-kao-m6-zero-floats-
+followup` (already merged, but checked out in a worktree under a different
+session's scratchpad — didn't want to force-remove another session's
+worktree).
