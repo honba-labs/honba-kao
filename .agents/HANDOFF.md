@@ -669,3 +669,48 @@ closure).
 batch a few structurally-similar ones per subagent, uncomment their domain
 `mod.rs` lines, verify `cargo check` actually exercises them (confirmed
 live again as of this handoff), `cargo fmt` touched files only, commit.
+
+## 10. 2026-10-29: NSH port, Phase 2 — `core` and `wealth` domains complete
+
+**Phase/Slice Status**: `alert_stack`, `spread_indicator`, `stats_bar`,
+`tape_row` (core) and `overlap_pill` (wealth) ported. **This closes out
+both the `core` and `wealth` domains entirely** — every file in
+`molecules/core/mod.rs` and `molecules/wealth/mod.rs` is now uncommented
+and ported (their module doc comments updated to say so, no more
+"uncomment as ported" TODO in either). `cargo check -p honba-kao-ui-core`:
+0 errors/0 warnings; `cargo fmt --check` clean on every touched file.
+
+**Decisions & Discoveries**:
+- A tuple inside a `Prop<Vec<_>>` doesn't compile (`Prop<T>` needs
+  `T: JsValue`, tuples don't have it) — `alert_stack`'s
+  `Vec<(AlertSeverity, String)>` became a named `AlertStackItem { severity,
+  message }` struct with `JsObject`/`Default`. Apply the same fix to any
+  remaining molecule whose Leptos version held a tuple in a list.
+- `each()`'s key closure only sees the row value, not its position —
+  `alert_stack` keys/maps `(index, AlertStackItem)` pairs so a dismiss
+  event can still report the right index after the list changes shape.
+  `Prop::bind(move || ..)` (not just `Prop::from`) is how a per-row prop
+  stays wired to its row's own reactive signal inside an `each()` closure
+  — see `alert_stack.rs`'s `HfAlertBanner::element(..)` call for the
+  pattern; `Prop::from(..)` is for a value that won't change after render.
+- `HfCloseButton` (an existing Phase 1 primitive) is reused for
+  `alert_stack`'s dismiss affordance rather than a new raw button.
+- `tape_row`'s/`alert_stack`'s color/press logic reads its `bool`/enum
+  props once via `.get_untracked()` at render time (same static-read
+  convention used throughout this port) — a later live-updating `tape_row`
+  (e.g. its buy/sell color flashing without a full re-render) would need
+  `Prop::bind`-style reactive reads instead, not attempted here since the
+  original Leptos version didn't do that either.
+- Not independently verified: `HonbaStyle::text_negative()`/
+  `text_positive()` are assumed to render as rose-400/emerald-400 (matching
+  the Tailwind classes they replace) — nobody has run this in a browser
+  yet, so treat as unverified until the Phase 6 showcase or app wiring
+  renders it for real.
+
+**Immediate Next Step**: `fno`'s remaining 5 (`greeks_group`,
+`max_pain_badge`, `option_chain_row`, `pcr_meter`, `strategy_leg_row`),
+then `quant`'s remaining 6, then `crypto`'s 8 — same loop as before. Once
+all 5 domains are done, molecules/mod.rs itself needs no changes (it
+already declares all 5 domain submodules unconditionally), but worth a
+final `cargo check -p honba-kao-ui-core` + a skim for any molecule that
+still imports something Leptos-specific before calling Phase 2 complete.
