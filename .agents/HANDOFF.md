@@ -910,3 +910,79 @@ into view" convenience — `ElementRef::scroll_to(offset, animated)` only
 scrolls to an absolute offset, so auto-scrolling the highlighted
 suggestion into view needs manual offset math or can be dropped with a
 documented gap, caller's judgment). Then `crypto`'s 8 (§13).
+
+## 15. 2026-10-29: NSH port, Phase 2 — `crypto` domain complete (all 8)
+
+**Phase/Slice Status**: all 8 of `crypto`'s molecules ported, in two
+commits: `funding_rate`, `itayose_card`, `collateral_tile`,
+`wallet_widget`, `liquidation_bar`, `collateral_snapshot` first, then
+`collateral_asset_pane` and `collateral_simulator`. `cargo check -p
+honba-kao-ui-core`: 0 errors/0 warnings, whole crate. `cargo fmt --check`
+clean on every touched file (the pre-existing, out-of-scope
+`tests/layout_invariants.rs` diff is untouched, still there). `quant`'s
+`go_bar` was deliberately **not** touched this round — the user asked to
+jump straight to `crypto`, so `go_bar` is still open, same state as §14
+left it.
+
+**Decisions & discoveries, for the next domain that has money props or a
+list**:
+- **Money-vs-percentage split**: an actual currency amount (balance,
+  collateral value, cash, buying power, margin consumed, borrow capacity,
+  headroom, a liquidation price) must cross as `Prop<String>`
+  (caller-pre-formatted) and get parsed with `Decimal::from_str(..)
+  .unwrap_or_default()` inside — never `f64`. A percentage/ratio that is
+  **only displayed or compared**, never multiplied/added into a money
+  result, is allowed to stay `Prop<f64>` directly (precedent:
+  `underwater_gauge`'s `drawdown_pct`, `pcr_meter`'s `pcr`). The one subtle
+  case: `collateral_snapshot`'s `margin_utilization_pct` *looks* like a
+  cosmetic percentage but feeds a money calc (`headroom`), so it was
+  promoted to `Prop<String>`/`Decimal` too, and `headroom` is computed
+  entirely in `Decimal` — check whether a percentage feeds a money result
+  before assuming it can stay float, don't just pattern-match on the name.
+- **List rendering**: `Prop<Vec<T>>` + nsh's `each(move || .., |item| key,
+  move |entry: ReadSignal<_>, _row| {...})`, item type derives
+  `#[derive(Clone, Debug, PartialEq, JsObject)]` — template is
+  `molecules/core/alert_stack.rs`'s `HfAlertBannerStack`, now also
+  `collateral_asset_pane.rs`. A `JsObject`-derived struct's fields must
+  each independently satisfy nsh's `JsValue` — `String`/`f64`/`bool` all
+  do, `Decimal` does not (same reason `Prop<Decimal>` doesn't work
+  directly), so a money field inside a list-item struct is `String` too,
+  not `Decimal`.
+- **Internal mutable state doesn't port**: a Leptos component that owns an
+  `RwSignal` and mutates it from its own button handlers (`collateral_
+  simulator`'s original `proposed_delta.set(..)` on click) has no nsh
+  equivalent — nsh components only read caller-owned `Prop<T>` and `emit`
+  events; the caller owns all state and re-renders with the new value.
+  Redesign such a component as emit-only buttons (`Deposit`/`Withdraw`,
+  no payload) and let the caller decide the step size — same shape as
+  `HfQuantityChipInput`'s percentage chips and `HfFilterPill`'s `Toggle`.
+  Watch for this pattern (component-owned counter/signal mutated by its
+  own event handler) in any not-yet-ported file.
+- **No scroll-container primitive**: confirmed again (grepped
+  `nsh-core-0.3.0`'s `style.rs`) — only `overflow_hidden()` exists, no
+  `max-height`/`overflow-y-auto` equivalent. `collateral_asset_pane`
+  dropped the original's `max-h-[300px] overflow-y-auto` with a one-line
+  comment, same documented-gap treatment as `go_bar`'s pending
+  scroll-into-view (§12/§14). Don't guess an API for this; it isn't there.
+- **`ButtonVariant` has no green/red-tinted variant** (only
+  `Primary/Secondary/Tertiary/Ghost/Danger/Outline`, per `primitive/base/
+  button.rs`) — `collateral_simulator`'s deposit/withdraw buttons used
+  `HfButtonProps::class` (an existing "extra Tailwind classes" escape
+  hatch) to layer the emerald/rose tint directly, rather than inventing a
+  variant or wrapping in an extra `view()`.
+
+**Immediate Next Step**: `quant/go_bar` — still the only thing left
+unported in `quant` or `crypto`. See §12 for what it needs (`nsh_core::
+element::keys`'s `on_key`/`.on_key_press`, confirmed to exist and already
+used by `agent_console`'s raw `input()` for `.on_submit`;
+`nsh_core::element::element_ref`'s `ElementRef::focus()`, confirmed to
+exist). Once `go_bar` lands, Phase 2 (`molecules/`) is fully done across
+every domain (`core`, `fno`, `quant`, `crypto`, `wealth`) and Phase 3
+(`organisms`/`templates`/`hooks`/`icons`, currently commented out in
+`lib.rs`) can start, per `nsh-port.md`'s phased plan.
+
+**Still unresolved, carried over from §13**: the parallel `m3-m4/
+honba-kao` port effort (`nsh-port-m3-m4` branch) still needs a human
+reconciliation decision — nothing in this session's two crypto batches
+changes that; still a decision for the user, not something to resolve
+unilaterally.
