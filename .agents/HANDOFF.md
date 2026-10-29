@@ -857,3 +857,56 @@ commented before assuming), and all 8 of `crypto`'s molecules
 as every prior entry in this file; `collateral_asset_pane`/
 `collateral_simulator` flagged in §11 as worth reading early, they may
 need `option_chain_row`'s "no table, build flex rows by hand" treatment.
+
+## 14. 2026-10-29: NSH port, Phase 2 — `artifact_card` + `agent_console`
+
+**Phase/Slice Status**: `quant/artifact_card` and `quant/agent_console`
+ported. Only `go_bar` is left in `quant`. `cargo check -p honba-kao-ui-core`:
+0 errors/0 warnings (whole crate, not just these files); `cargo fmt
+--check` clean on every touched file.
+
+**`agent_console`'s Enter-to-submit couldn't go through `HfInput` after
+all** — neither option §12 offered worked cleanly: `HfInput::element(..)`
+returns nsh's component-builder type, which only exposes `on_event`/
+`on_press` (not `on_key_press`/`on_submit`, which live on the lower-level
+raw `nsh_core::element::host` input builder only); and adding a `Submit`
+variant to `HfInputEvent` breaks the exhaustive `match`es in
+`price_snap_input`/`quantity_chip_input`/`sip_calculator` (all 3 outside
+this batch's scope). **Correctly judged this a real blocker, not something
+to force** — `agent_console`'s prompt box bypasses `HfInput` entirely and
+builds the raw `nsh_core::element::input()` directly (`.on_change` +
+`.on_submit`), documented in the file's own module doc. If `HfInput` is
+ever meant to support Enter-submit, the clean fix is a *new*, separate
+submit-capable input component in `primitive/base/input.rs` (not a new
+variant on the existing `Change`-only event), updating its callers
+together in one batch — not attempted here, flagged for whoever wants it.
+
+**`HfThinkingOrb` (`primitive/prompt.rs`, Phase 1) has no `active`/
+`is_streaming`-driving prop — only `size`.** `agent_console` shows
+streaming via a plain "streaming" text label next to the orb instead of
+animating it. If the orb is meant to visually pulse while streaming, that
+needs a `primitive/prompt.rs` change (Phase 1 tier, out of scope here).
+
+**`artifact_card`'s Markdown-to-elements renderer** (`MdBlock`/`MdSpan` →
+a real element tree, since nsh has no `inner_html`) parses inline emphasis
+**char-based**, not byte-based like the original Leptos `render_inline` —
+deliberately fixes a latent panic-on-non-ASCII bug in the original (byte
+slicing on a UTF-8 string can land mid-codepoint) while porting it, not
+scope creep since it was required to write correct Rust here regardless.
+Bold/code use `FontWeight`/`font_family("monospace")` tokens that already
+existed; italic uses `Styled::italic()` (verified via `cargo check`, not
+assumed). Each inline span renders as its own `text()` inside a
+`flex_row().flex_wrap()` — this is span-level wrapping (wraps *between*
+spans), not true inline text-flow (wrapping *within* a run of mixed
+styles) — close enough for short AI-artifact snippets, not verified
+visually yet.
+
+**Immediate Next Step**: `go_bar` alone — see §12 for what it needs
+(`nsh_core::element::keys`'s `on_key`/`.on_key_press`, confirmed to exist
+and already used successfully by `agent_console`'s raw `input()` for
+`.on_submit`; `nsh_core::element::element_ref`'s `ElementRef::focus()`,
+confirmed to exist, for focus-on-open; no confirmed "scroll this child
+into view" convenience — `ElementRef::scroll_to(offset, animated)` only
+scrolls to an absolute offset, so auto-scrolling the highlighted
+suggestion into view needs manual offset math or can be dropped with a
+documented gap, caller's judgment). Then `crypto`'s 8 (§13).

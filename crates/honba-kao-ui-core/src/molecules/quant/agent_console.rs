@@ -1,11 +1,26 @@
 //! `HfAgentConsole` — terminal console panel showing AI/quant research reasoning
 //! steps and logs. Ported from the restructure spec (Section 7.6) and
 //! OpenTerminalUI `AiVisuals`.
+//!
+//! The prompt box is a raw [`nsh_core::element::input`] rather than
+//! [`crate::primitive::base::input::HfInput`]: Enter-to-submit needs
+//! `.on_submit`, which `HfInput` does not expose (it only reports
+//! [`crate::primitive::base::input::HfInputEvent::Change`]), and adding a
+//! `Submit` variant there would break the exhaustive matches of its three
+//! existing callers.
 
-use leptos::prelude::*;
-use crate::primitive::{HfThinkingOrb, HfKbdBadge};
+use nsh_core::element::input;
+use nsh_core::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
+use crate::primitive::base::button::{
+    ButtonSize, ButtonVariant, HfButton, HfButtonEvent, HfButtonProps, HfCloseButton,
+    HfCloseButtonProps,
+};
+use crate::primitive::kbd::{HfKbdBadge, HfKbdBadgeProps};
+use crate::primitive::prompt::{HfThinkingOrb, HfThinkingOrbProps};
+use crate::theme::tokens::HonbaStyle;
+
+#[derive(Clone, Debug, Default, PartialEq, JsObject)]
 pub struct AgentThoughtStep {
     pub agent_name: String,
     pub step_type: String, // "thought", "tool_call", "artifact"
@@ -13,69 +28,210 @@ pub struct AgentThoughtStep {
     pub timestamp: String,
 }
 
+/// The events of [`HfAgentConsole`].
+#[derive(Debug, Clone, PartialEq, Event)]
+pub enum HfAgentConsoleEvent {
+    /// The close button was pressed. The caller flips its own `open` state.
+    Close,
+    /// A non-empty, trimmed prompt was submitted (Enter or Send).
+    SubmitPrompt(String),
+}
+
+/// Props for [`HfAgentConsole`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfAgentConsoleProps {
+    pub open: Prop<bool>,
+    pub thoughts: Prop<Vec<AgentThoughtStep>>,
+    pub is_streaming: Prop<bool>,
+}
+
+/// Trim the draft, clear it and emit `SubmitPrompt`; empty drafts are ignored.
+fn send_message(draft: Signal<String>, cx: &Scope<HfAgentConsoleEvent>) {
+    let text = draft.get().trim().to_string();
+    if !text.is_empty() {
+        draft.set(String::new());
+        cx.emit(HfAgentConsoleEvent::SubmitPrompt(text));
+    }
+}
+
+/// One thought step: agent name and timestamp, then the content.
+fn thought_bubble(entry: ReadSignal<(usize, AgentThoughtStep)>) -> View {
+    view()
+        .flex_col()
+        .gap(px(4.0))
+        .px(px(8.0))
+        .py(px(8.0))
+        .rounded(px(4.0))
+        .border(px(1.0))
+        .border_soft()
+        .surface_muted()
+        .child(
+            view()
+                .flex_row()
+                .justify_between()
+                .child(
+                    text(move || entry.get().1.agent_name)
+                        .text_size(px(10.0))
+                        .font_family("monospace")
+                        .font_weight(FontWeight::BOLD)
+                        .text_positive(),
+                )
+                .child(
+                    text(move || entry.get().1.timestamp)
+                        .text_size(px(10.0))
+                        .text_muted(),
+                ),
+        )
+        .child(
+            text(move || entry.get().1.content)
+                .text_size(px(12.0))
+                .text_high(),
+        )
+}
+
+/// Right-side analyst drawer: header (orb, title, Ctrl+J badge, close), a
+/// scrollable list of thought steps, and a prompt input with Send.
 #[component]
 pub fn HfAgentConsole(
-    #[prop(into)] open: RwSignal<bool>,
-    #[prop(into)] thoughts: Signal<Vec<AgentThoughtStep>>,
-    #[prop(into)] is_streaming: Signal<bool>,
-    #[prop(into)] on_submit_prompt: Callback<String>,
-) -> impl IntoView {
-    let prompt_input = RwSignal::new(String::new());
+    props: HfAgentConsoleProps,
+    cx: Scope<HfAgentConsoleEvent>,
+) -> impl IntoElement {
+    let open = props.open;
+    let thoughts = props.thoughts;
+    let is_streaming = props.is_streaming;
+    let draft = signal(String::new());
 
-    let send_message = move || {
-        let text = prompt_input.get().trim().to_string();
-        if !text.is_empty() {
-            prompt_input.set(String::new());
-            on_submit_prompt.run(text);
+    let close_cx = cx.clone();
+    let close = HfCloseButton::element(HfCloseButtonProps {
+        aria_label: Prop::from(Some("Close analyst console".to_string())),
+        ..Default::default()
+    })
+    .on_event(move |event: &HfButtonEvent| {
+        if matches!(event, HfButtonEvent::Press) {
+            close_cx.emit(HfAgentConsoleEvent::Close);
         }
-    };
+    });
 
-    view! {
-        <div class=move || format!("hf-agent-drawer fixed top-0 right-0 h-full w-[440px] z-40 bg-surface-base border-l border-border-soft flex flex-col shadow-2xl transition-transform duration-300 {}", if open.get() { "translate-x-0" } else { "translate-x-full" })>
-            <div class="hf-agent-header flex items-center justify-between p-3 border-b border-border-soft">
-                <div class="hf-agent-title flex items-center gap-2">
-                    <HfThinkingOrb active=is_streaming />
-                    <span class="text-xs font-semibold tracking-wide uppercase text-text-high">"Honba Research Analyst"</span>
-                </div>
-                <div class="hf-agent-actions flex items-center gap-2">
-                    <HfKbdBadge key="Ctrl+J" />
-                    <button class="hf-close-btn text-text-muted hover:text-text-high" on:click=move |_| open.set(false)>"✕"</button>
-                </div>
-            </div>
-
-            <div class="hf-agent-stream-body flex-grow overflow-y-auto p-3 flex flex-col gap-2.5">
-                <For
-                    each=move || thoughts.get()
-                    key=|step| format!("{}-{}", step.timestamp, step.agent_name)
-                    children=move |step| {
-                        view! {
-                            <div class="hf-thought-bubble p-2 rounded bg-surface-subtle border border-border-soft text-xs">
-                                <div class="hf-bubble-header flex justify-between text-[10px] text-text-muted mb-1">
-                                    <span class="font-mono font-bold text-accent-primary">{step.agent_name}</span>
-                                    <span>{step.timestamp}</span>
-                                </div>
-                                <div class="hf-bubble-content font-sans text-text-high whitespace-pre-wrap">{step.content}</div>
-                            </div>
+    let header = view()
+        .flex_row()
+        .items_center()
+        .justify_between()
+        .px(px(12.0))
+        .py(px(12.0))
+        .border_b_1()
+        .border_soft()
+        .child(
+            view()
+                .flex_row()
+                .items_center()
+                .gap(px(8.0))
+                .child(HfThinkingOrb::element(HfThinkingOrbProps {
+                    size: Prop::from(16.0),
+                }))
+                .child(
+                    text("HONBA RESEARCH ANALYST")
+                        .text_size(px(11.0))
+                        .font_weight(FontWeight::SEMIBOLD)
+                        .text_high(),
+                )
+                .child(
+                    text(move || {
+                        if is_streaming.get() {
+                            "streaming".to_string()
+                        } else {
+                            String::new()
                         }
-                    }
-                />
-            </div>
+                    })
+                    .text_size(px(10.0))
+                    .text_muted(),
+                ),
+        )
+        .child(
+            view()
+                .flex_row()
+                .items_center()
+                .gap(px(8.0))
+                .child(HfKbdBadge::element(HfKbdBadgeProps {
+                    key: Prop::from("Ctrl+J".to_string()),
+                }))
+                .child(close),
+        );
 
-            <div class="hf-agent-input-bar p-3 border-t border-border-soft flex items-center gap-2">
-                <input
-                    type="text"
-                    class="hf-agent-prompt-box flex-grow p-2 rounded bg-surface-subtle text-xs text-text-high outline-none border border-border-soft focus:border-accent-primary"
-                    placeholder="Ask analyst (e.g. 'Synthesize Nifty straddle Greeks vs realized vol')..."
-                    prop:value=prompt_input
-                    on:input=move |ev| prompt_input.set(event_target_value(&ev))
-                    on:keydown=move |ev: web_sys::KeyboardEvent| {
-                        if ev.key() == "Enter" {
-                            send_message();
-                        }
-                    }
-                />
-                <button class="hf-send-btn px-3 py-2 rounded bg-accent-primary text-text-inverted text-xs font-semibold hover:opacity-90" on:click=move |_| send_message()>"Send"</button>
-            </div>
-        </div>
-    }
+    let body = scroll().flex_1().child(
+        view()
+            .flex_col()
+            .gap(px(10.0))
+            .px(px(12.0))
+            .py(px(12.0))
+            .child(each(
+                move || thoughts.get().into_iter().enumerate().collect::<Vec<_>>(),
+                |(index, _): &(usize, AgentThoughtStep)| *index,
+                move |entry: ReadSignal<(usize, AgentThoughtStep)>, _row: ReadSignal<usize>| {
+                    thought_bubble(entry)
+                },
+            )),
+    );
+
+    let submit_cx = cx.clone();
+    let prompt = input()
+        .value(move || draft.get())
+        .placeholder(
+            "Ask analyst (e.g. 'Synthesize Nifty straddle Greeks vs realized vol')...".to_string(),
+        )
+        .flex_1()
+        .rounded(px(4.0))
+        .border(px(1.0))
+        .border_soft()
+        .px(px(8.0))
+        .py(px(8.0))
+        .text_size(px(12.0))
+        .on_change(move |s: &str| draft.set(s.to_string()))
+        .on_submit(move |_: &str| send_message(draft, &submit_cx));
+
+    let send_cx = cx.clone();
+    let send = HfButton::element(HfButtonProps {
+        variant: Prop::from(Some(ButtonVariant::Primary)),
+        size: Prop::from(Some(ButtonSize::Sm)),
+        aria_label: Prop::from(Some("Send".to_string())),
+        ..Default::default()
+    })
+    .child(text("Send"))
+    .on_event(move |event: &HfButtonEvent| {
+        if matches!(event, HfButtonEvent::Press) {
+            send_message(draft, &send_cx);
+        }
+    });
+
+    let input_bar = view()
+        .flex_row()
+        .items_center()
+        .gap(px(8.0))
+        .px(px(12.0))
+        .py(px(12.0))
+        .border_t(px(1.0))
+        .border_soft()
+        .child(prompt)
+        .child(send);
+
+    view()
+        .flex_col()
+        .w(px(440.0))
+        .h_full()
+        .border_l_1()
+        .border_soft()
+        .surface_base()
+        .shadow_2xl()
+        .app_class(move || {
+            Some(SharedString::from(format!(
+                "hf-agent-drawer fixed top-0 right-0 z-40 transition-transform duration-300 {}",
+                if open.get() {
+                    "translate-x-0"
+                } else {
+                    "translate-x-full"
+                }
+            )))
+        })
+        .child(header)
+        .child(body)
+        .child(input_bar)
 }

@@ -4,127 +4,261 @@
 //!
 //! The `content` prop is rendered as lightweight Markdown (headers, bold,
 //! italic, inline code, bullet lists) so AI research artifacts display with
-//! structure instead of a flat pre-wrapped string.
+//! structure instead of a flat pre-wrapped string. nsh has no raw-HTML
+//! injection, so the Markdown is parsed into [`MdBlock`]s and [`MdSpan`]s
+//! and built as a real element tree.
 
-use leptos::prelude::*;
+use nsh_core::prelude::*;
 
-/// Escape HTML special characters so literal text never breaks out of a tag.
-fn escape_html(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
+use crate::theme::tokens::HonbaStyle;
+
+/// One block-level Markdown element.
+#[derive(Debug, Clone, PartialEq)]
+enum MdBlock {
+    /// Level 1-6, raw inline text (emphasis markers still inside).
+    Heading(u8, String),
+    Paragraph(String),
+    ListItem(String),
 }
 
-/// Render inline Markdown emphasis: `**bold**`, `*italic*`, `` `code` ``.
-fn render_inline(s: &str) -> String {
-    let mut out = String::new();
+/// A run of inline text sharing one emphasis style.
+#[derive(Debug, Clone, PartialEq)]
+struct MdSpan {
+    text: String,
+    bold: bool,
+    italic: bool,
+    code: bool,
+}
+
+impl MdSpan {
+    fn plain(text: String) -> Self {
+        Self {
+            text,
+            bold: false,
+            italic: false,
+            code: false,
+        }
+    }
+}
+
+/// Index of the first occurrence of `pat` in `chars` at or after `from`.
+fn find_delim(chars: &[char], from: usize, pat: &[char]) -> Option<usize> {
+    if chars.len() < pat.len() || from > chars.len() - pat.len() {
+        return None;
+    }
+    (from..=chars.len() - pat.len()).find(|&j| chars[j..j + pat.len()] == *pat)
+}
+
+fn flush_plain(plain: &mut String, spans: &mut Vec<MdSpan>) {
+    if !plain.is_empty() {
+        spans.push(MdSpan::plain(std::mem::take(plain)));
+    }
+}
+
+/// Split inline Markdown emphasis (`**bold**`, `*italic*`, `` `code` ``) into
+/// spans. An unclosed marker is kept as literal text.
+fn parse_inline(s: &str) -> Vec<MdSpan> {
+    let chars: Vec<char> = s.chars().collect();
+    let mut spans = Vec::new();
+    let mut plain = String::new();
     let mut i = 0;
-    let bytes = s.as_bytes();
-    while i < bytes.len() {
-        if i + 1 < bytes.len() && bytes[i] == b'*' && bytes[i + 1] == b'*' {
-            let mut j = i + 2;
-            while j + 1 < bytes.len() && !(bytes[j] == b'*' && bytes[j + 1] == b'*') {
-                j += 1;
-            }
-            if j + 1 < bytes.len() {
-                out.push_str("<strong>");
-                out.push_str(&escape_html(&s[i + 2..j]));
-                out.push_str("</strong>");
+    while i < chars.len() {
+        if chars[i] == '*' && chars.get(i + 1) == Some(&'*') {
+            if let Some(j) = find_delim(&chars, i + 2, &['*', '*']) {
+                flush_plain(&mut plain, &mut spans);
+                spans.push(MdSpan {
+                    text: chars[i + 2..j].iter().collect(),
+                    bold: true,
+                    italic: false,
+                    code: false,
+                });
                 i = j + 2;
                 continue;
             }
-        } else if bytes[i] == b'*' {
-            let mut j = i + 1;
-            while j < bytes.len() && bytes[j] != b'*' {
-                j += 1;
-            }
-            if j < bytes.len() {
-                out.push_str("<em>");
-                out.push_str(&escape_html(&s[i + 1..j]));
-                out.push_str("</em>");
+        } else if chars[i] == '*' {
+            if let Some(j) = find_delim(&chars, i + 1, &['*']) {
+                flush_plain(&mut plain, &mut spans);
+                spans.push(MdSpan {
+                    text: chars[i + 1..j].iter().collect(),
+                    bold: false,
+                    italic: true,
+                    code: false,
+                });
                 i = j + 1;
                 continue;
             }
-        } else if bytes[i] == b'`' {
-            let mut j = i + 1;
-            while j < bytes.len() && bytes[j] != b'`' {
-                j += 1;
-            }
-            if j < bytes.len() {
-                out.push_str("<code>");
-                out.push_str(&escape_html(&s[i + 1..j]));
-                out.push_str("</code>");
+        } else if chars[i] == '`' {
+            if let Some(j) = find_delim(&chars, i + 1, &['`']) {
+                flush_plain(&mut plain, &mut spans);
+                spans.push(MdSpan {
+                    text: chars[i + 1..j].iter().collect(),
+                    bold: false,
+                    italic: false,
+                    code: true,
+                });
                 i = j + 1;
                 continue;
             }
         }
-        out.push_str(&escape_html(&s[i..i + 1]));
+        plain.push(chars[i]);
         i += 1;
     }
-    out
+    flush_plain(&mut plain, &mut spans);
+    spans
 }
 
-/// Render lightweight Markdown (headers, bullet lists, paragraphs, inline
-/// emphasis) into HTML.
-fn render_markdown(content: &str) -> String {
-    let mut out = String::new();
-    let mut in_list = false;
+/// Split content into block-level Markdown elements (headers, bullet items,
+/// non-blank paragraph lines).
+fn parse_markdown(content: &str) -> Vec<MdBlock> {
+    let mut blocks = Vec::new();
     for line in content.split('\n') {
         let trimmed = line.trim_start();
         let level = trimmed.chars().take_while(|c| *c == '#').count();
-        if level >= 1 && level <= 6 && trimmed.chars().nth(level) == Some(' ') {
-            if in_list {
-                out.push_str("</ul>");
-                in_list = false;
-            }
+        if (1..=6).contains(&level) && trimmed.chars().nth(level) == Some(' ') {
             let text = trimmed[level..].trim_start();
-            out.push_str(&format!("<h{}>{}</h{}>", level, render_inline(text), level));
+            blocks.push(MdBlock::Heading(level as u8, text.to_string()));
             continue;
         }
         if let Some(rest) = trimmed.strip_prefix("- ") {
-            if !in_list {
-                out.push_str("<ul>");
-                in_list = true;
-            }
-            out.push_str(&format!("<li>{}</li>", render_inline(rest)));
+            blocks.push(MdBlock::ListItem(rest.to_string()));
             continue;
         }
-        if in_list {
-            out.push_str("</ul>");
-            in_list = false;
-        }
         if !trimmed.is_empty() {
-            out.push_str(&format!("<p>{}</p>", render_inline(trimmed)));
+            blocks.push(MdBlock::Paragraph(trimmed.to_string()));
         }
     }
-    if in_list {
-        out.push_str("</ul>");
-    }
-    out
+    blocks
 }
 
-#[component]
-pub fn HfAiArtifactCard(
-    #[prop(into)] title: String,
-    #[prop(into)] content: String,
-    #[prop(into, optional)] class: Option<String>,
-) -> impl IntoView {
-    let base = "hf-ai-artifact-card rounded-lg border border-border-soft bg-surface-base shadow-sm flex flex-col";
-    let classes = match class {
-        Some(c) => format!("{} {}", base, c),
-        None => base.to_string(),
-    };
-    let rendered = render_markdown(&content);
-    view! {
-        <div class=classes>
-            <div class="hf-artifact-header px-3 py-2 border-b border-border-soft flex items-center justify-between">
-                <span class="text-xs font-semibold text-text-high">{title}</span>
-                <span class="hf-kbd-badge text-[10px] bg-surface-subtle text-text-muted">"AI"</span>
-            </div>
-            <div class="hf-artifact-body p-3 break-words text-xs text-text-high"
-                inner_html=rendered
-            />
-        </div>
+fn heading_size(level: u8) -> f32 {
+    match level {
+        1 => 16.0,
+        2 => 14.0,
+        3 => 13.0,
+        _ => 12.0,
     }
+}
+
+/// One line of inline spans, each span its own styled `text`.
+fn inline_row(spans: Vec<MdSpan>, size: f32, weight: FontWeight) -> View {
+    let mut row = view().flex_row().flex_wrap().items_center();
+    for span in spans {
+        let w = if span.bold { FontWeight::BOLD } else { weight };
+        let mut t = text(span.text)
+            .text_size(px(size))
+            .font_weight(w)
+            .text_high();
+        if span.italic {
+            t = t.italic();
+        }
+        if span.code {
+            t = t
+                .font_family("monospace")
+                .px(px(3.0))
+                .rounded(px(3.0))
+                .surface_muted();
+        }
+        row = row.child(t);
+    }
+    row
+}
+
+/// A bullet item: a "•" glyph beside its inline spans.
+fn list_item(raw: &str) -> View {
+    view()
+        .flex_row()
+        .items_start()
+        .gap(px(6.0))
+        .child(text("•").text_size(px(12.0)).text_muted())
+        .child(inline_row(parse_inline(raw), 12.0, FontWeight::NORMAL))
+}
+
+/// Build the element tree for the parsed blocks. Consecutive list items are
+/// grouped under one column (nsh has no native `<ul>`).
+fn render_blocks(blocks: Vec<MdBlock>) -> View {
+    let mut body = view().flex_col().gap(px(6.0));
+    let mut iter = blocks.into_iter().peekable();
+    while let Some(block) = iter.next() {
+        body = match block {
+            MdBlock::Heading(level, raw) => body.child(inline_row(
+                parse_inline(&raw),
+                heading_size(level),
+                FontWeight::BOLD,
+            )),
+            MdBlock::Paragraph(raw) => {
+                body.child(inline_row(parse_inline(&raw), 12.0, FontWeight::NORMAL))
+            }
+            MdBlock::ListItem(first) => {
+                let mut items = view()
+                    .flex_col()
+                    .gap(px(2.0))
+                    .px(px(4.0))
+                    .child(list_item(&first));
+                while matches!(iter.peek(), Some(MdBlock::ListItem(_))) {
+                    if let Some(MdBlock::ListItem(raw)) = iter.next() {
+                        items = items.child(list_item(&raw));
+                    }
+                }
+                body.child(items)
+            }
+        };
+    }
+    body
+}
+
+/// Props for [`HfAiArtifactCard`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfAiArtifactCardProps {
+    pub title: Prop<String>,
+    /// Parsed once, at construction (static display, like the other
+    /// molecules of this port).
+    pub content: Prop<String>,
+    #[prop(default)]
+    pub class: Prop<Option<String>>,
+}
+
+/// A bordered card with a title row, an "AI" badge, and the Markdown-rendered
+/// artifact body.
+#[component]
+pub fn HfAiArtifactCard(props: HfAiArtifactCardProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let title = props.title;
+    let extra = props.class.get_untracked().unwrap_or_default();
+    let blocks = render_blocks(parse_markdown(&props.content.get_untracked()));
+
+    let header = view()
+        .flex_row()
+        .items_center()
+        .justify_between()
+        .px(px(12.0))
+        .py(px(8.0))
+        .border_b_1()
+        .border_soft()
+        .child(
+            text(move || title.get())
+                .text_size(px(12.0))
+                .font_weight(FontWeight::SEMIBOLD)
+                .text_high(),
+        )
+        .child(
+            view()
+                .px(px(6.0))
+                .py(px(1.0))
+                .rounded(px(4.0))
+                .surface_muted()
+                .child(text("AI").text_size(px(10.0)).text_muted()),
+        );
+
+    view()
+        .flex_col()
+        .rounded(px(8.0))
+        .border(px(1.0))
+        .border_soft()
+        .surface_base()
+        .app_class(Some(SharedString::from(format!(
+            "hf-ai-artifact-card {}",
+            extra
+        ))))
+        .child(header)
+        .child(view().px(px(12.0)).py(px(12.0)).child(blocks))
 }

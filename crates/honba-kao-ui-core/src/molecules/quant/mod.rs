@@ -3,8 +3,8 @@
 //! NSH port (Phase 2, see `nsh-port.md` §4): still Leptos, not yet ported.
 //! Uncomment each line as its file is converted.
 
-// pub mod agent_console;
-// pub mod artifact_card;
+pub mod agent_console;
+pub mod artifact_card;
 pub mod filings_card;
 pub mod filter_pill;
 // pub mod go_bar;
@@ -13,8 +13,8 @@ pub mod cointegration_band;
 pub mod market_regime_badge;
 pub mod underwater_gauge;
 
-// pub use agent_console::{AgentThoughtStep, HfAgentConsole};
-// pub use artifact_card::HfAiArtifactCard;
+pub use agent_console::{AgentThoughtStep, HfAgentConsole};
+pub use artifact_card::HfAiArtifactCard;
 pub use filings_card::HfFilingsCard;
 pub use filter_pill::HfFilterPill;
 // pub use go_bar::HfGoBar;
