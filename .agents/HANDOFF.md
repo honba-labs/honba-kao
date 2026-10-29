@@ -714,3 +714,60 @@ all 5 domains are done, molecules/mod.rs itself needs no changes (it
 already declares all 5 domain submodules unconditionally), but worth a
 final `cargo check -p honba-kao-ui-core` + a skim for any molecule that
 still imports something Leptos-specific before calling Phase 2 complete.
+
+## 11. 2026-10-29: NSH port, Phase 2 — `fno` domain complete
+
+**Phase/Slice Status**: `greeks_group`, `max_pain_badge`,
+`option_chain_row`, `pcr_meter`, `strategy_leg_row` ported. **`fno` is now
+fully ported** (`molecules/fno/mod.rs` header updated to match
+`core`/`wealth`'s wording). `cargo check -p honba-kao-ui-core`: 0
+errors/0 warnings; `cargo fmt --check` clean on every touched file.
+
+**`option_chain_row` — the hardest molecule so far, and the template for
+`crypto`'s harder ones**: the original was a raw `<tr>`/`<td>` HTML table
+row. **nsh has no table element at all**, and `primitive::{HfTable,
+HfTableRow, HfTableCell}` (Phase 1) are too limited to hold it anyway —
+`HfTableCell` only takes `content: Prop<String>`, no slot for arbitrary
+children, so a cell with an OI bar or a `HfMoneynessBadge` inside can't go
+through them. Built instead as a plain `view().flex_row()` with 9 flex
+children in the original's left-to-right order — table semantics are
+simply gone, not a bug to chase. The per-cell "is this cell's background
+tinted / is this the ATM row" logic is computed once via `get_untracked()`
+at render time (same static-read convention as elsewhere in this port),
+so it won't react to a `strike`/`spot_price` prop changing after first
+render — matches how every other molecule read non-edited display props
+so far, flagged here in case a later live-reactive version is wanted.
+
+**Confirmed: an event payload is NOT bound by `Prop<T>`'s `JsValue`
+constraint, but it still can't hold a foreign type without one.**
+`HfOptionChainRowEvent::SelectLeg` was first tried with a real `strike:
+Decimal` field — `cargo check` rejected it with `Decimal: JsValue` not
+satisfied, so `Decimal`'s no-`JsValue` problem evidently isn't scoped to
+just `Prop<T>`, it's apparently inherited by `#[derive(Event)]` too (not
+fully understood why — worth checking the `Event` derive's actual bounds
+in `nsh_core` source if this matters later). Fell back to `strike: String`
+(the caller's pre-formatted string, passed back unchanged) — same
+resolution path as every `Prop<Decimal>` case in this port, just arrived
+at from the event side instead. Apply this to any future molecule event
+that would otherwise carry a `Decimal`.
+
+**Other**: a tuple/struct payload *without* a Decimal field compiled fine
+directly in an event (`SelectLeg { is_call: bool, is_buy: bool, .. }` —
+plain `bool`s needed no conversion). `HfMoneynessBadgeProps` (like every
+other base/primitive `*Props` struct in this port) is not re-exported from
+`crate::primitive`'s flat surface — reached via its full path
+`crate::primitive::badge::HfMoneynessBadgeProps`, consistent with
+`.agents/HANDOFF.md` §7's note on `*Props` structs never being
+re-exported. **Known pre-existing debt, not touched**: `primitive/badge.rs`
+has its own in-file `#[cfg(test)] mod tests`, the same AGENTS.md §3.2
+violation `risk_o_meter.rs` had before §8 relocated it — still needs the
+same treatment, just not in scope for a molecules batch (it's a
+`primitive/` file, Phase 1's domain, already committed).
+
+**Immediate Next Step**: `quant`'s remaining 6 (`agent_console`,
+`artifact_card`, `filings_card`, `filter_pill`, `go_bar`,
+`market_regime_badge`), then `crypto`'s 8. Same loop. `crypto`'s
+`collateral_asset_pane`/`collateral_simulator` are worth reading early —
+by name they sound like they could need the same "no table/no rich-cell
+primitive, build flex rows by hand" treatment `option_chain_row` needed
+here.
