@@ -1051,3 +1051,87 @@ caution as Phase 1→2's transition.
 **Still unresolved, carried over from §13**: the parallel `m3-m4/
 honba-kao` port effort still needs a human reconciliation decision before
 more Phase 3 work — nothing in this session changes that.
+
+## 17. 2026-10-29: NSH port, Phase 3 complete (organisms) — reconciled with m3-m4
+
+**The user's reconciliation decision (§13/§15/§16)**: copy the parallel
+`m3-m4/honba-kao` worktree's (branch `nsh-port-m3-m4`) already-ported
+Phase 3 work into this branch rather than re-porting it from scratch.
+Verified first that it was safe to drop in: every one of its 10 organisms
+and 4 templates imports only `nsh_core::prelude::*`/`nsh_base::*` —
+**zero** `use crate::...`/`use super::...` references to this crate's own
+primitives or molecules — so it has no dependency on this branch's
+Phase 1/2 work (or vice versa) and could be copied wholesale. Commit
+`7e3da34`.
+
+**What landed**: all of `organisms/` (`collateral_organism`, `market_tape`,
+`market_top_bar`, `mutual_fund_dossier`, `option_chain`, `order_book`,
+`order_ticket`, `strategy_builder`, `terminal_shell`, `trading_dock`) +
+all of `templates/` (`mosaic_workspace`, `page`, `three_columns`,
+`two_columns`) + a new `app.rs` (root `App` shell composing
+`HfMarketTopBar` + `HfThreeColumnTradingLayout` — m3-m4's own Phase 4
+start, not attempted fresh here). `lib.rs` now declares `organisms`,
+`templates`, `app` unconditionally (no more `#[cfg]`/comment gating —
+only `hooks`/`icons` remain Leptos and ungated-in).
+
+**One naming collision found and fixed**: m3-m4's `templates/page.rs`
+had invented its own `AlertSeverity`/`HfAlertBannerStack` (a bare
+children-wrapper, not an actual managed stack) because m3-m4's own
+primitive tier never got past wrapping `nsh_base` directly — it had no
+Phase 2 molecules at all, so it didn't know the real `HfAlertBannerStack`
+(severity-tagged entries, dismiss events) already existed in this
+branch's `primitive::base::toast` / `molecules::core::alert_stack`.
+Renamed the template's version to `HfPageAlertSlot`, deleted its unused
+duplicate `AlertSeverity` (the real one lives in `molecules::core`).
+
+**`tests/layout_invariants.rs` was fully rewritten, not just patched**:
+it predated the NSH port entirely (Milestone 6, Leptos-era) and tested
+API shapes that no longer exist at all — `Decimal`-typed struct fields
+(now `String`, pre-formatted by the caller — `Decimal` isn't
+`JsValue`-safe, same rule as every Phase 2 molecule), Tailwind
+breakpoint-class strings like `"desktop:col-span-7"` (layout is now
+`nsh_core`'s typed builder, `.flex_1()`/`.grid_cols(12)`, no class
+strings), and types that simply don't exist post-port
+(`OrderIntent`, `OrderBookFilter`, `OptionStrikePair` →
+`OptionChainRow`, `CollateralAssetRow` → `CollateralRow`). New version
+tests the real current shapes; all 7 pass.
+
+**Verification**: `cargo check -p honba-kao-ui-core` clean on both native
+and `--target wasm32-unknown-unknown`; `cargo fmt --check` clean;
+`cargo test -p honba-kao-ui-core` green (11 tests total: 3 existing +
+7 new/rewritten `layout_invariants` + 1 `risk_o_meter` + 1 `tokens_test`).
+`cargo clippy -p honba-kao-ui-core` was attempted but can't run cleanly —
+it pulls in `honba-kao-api-wasm` (a workspace dep) which has 8
+**pre-existing** clippy errors (`collapsible_if`/`unnecessary_map_or`/
+`if_same_then_else` in `payoff/payoff.rs`, `pricing/greeks.rs`) from
+before this session, in files this session never touched — left alone
+per the "don't touch pre-existing dirty files" rule; not this port's
+regression.
+
+**`honba-kao-app` does NOT compile against this** (334 errors, e.g.
+`HfButton`/`HfAgentConsole` no longer implement Leptos's `Component`
+trait once a primitive/molecule/organism is NSH-ported) — **expected,
+not a regression**: it was already broken the moment Phase 1 landed
+(`1132c8a`), since `honba-kao-app` is still 100% Leptos and nsh-port.md's
+Phase 5 ("App wiring") — porting `honba-kao-app` itself onto NSH — hasn't
+started. Don't attempt to fix `honba-kao-app` piecemeal; it's a whole
+phase, not a side effect of Phase 3.
+
+**Not reconciled from m3-m4, still open**: m3-m4's `hooks`/`icons` were
+never ported either (still Leptos there too) — no free lunch available
+for those two; whoever does them has to do it fresh, same as this
+branch's own `hooks`/`icons`.
+
+**Not cleaned up — a decision for the user, not taken here**: the
+`m3-m4/honba-kao` worktree and its `nsh-port-m3-m4` branch still exist,
+now fully superseded (everything useful in it has been copied over).
+Whoever continues should ask the user whether to delete that worktree/
+branch or keep it around.
+
+**Immediate Next Step**: nsh-port.md's Phase 4 remainder — the routing
+story is still an explicit open question (`app.rs`'s own doc comment:
+"per nsh-port.md §6 risk #5," `NavStack`/`NavPage` vs. a URL-synced
+router unconfirmed) — then Phase 5 (porting `honba-kao-app` itself onto
+NSH, which is what actually fixes the 334 errors above) or Phase 6
+(showcase), per the user's call on ordering. `hooks`/`icons` (never
+gated into `lib.rs` by either branch) are also still fully open.
