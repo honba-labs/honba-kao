@@ -1,30 +1,85 @@
 //! `HfCollateralHaircutTile` — asset-level collateral contribution with haircut
 //! ratio. Ported from `secured-finance-app` atoms `CollateralInformation` /
 //! `CollateralInformationTable`.
+//!
+//! `balance`/`collateral_value` are money (Zero Floats Policy): they cross as
+//! caller-pre-formatted `Prop<String>` and are parsed to `Decimal` here only
+//! for display formatting. `haircut_pct` is only compared and displayed,
+//! never fed into money math, so it stays a plain `f64`.
 
-use leptos::prelude::*;
-use crate::primitive::HfAssetBadge;
+use std::str::FromStr;
 
+use nsh_core::element::NoEvent;
+use nsh_core::prelude::*;
+use rust_decimal::Decimal;
+
+use crate::primitive::currency::HfAssetBadgeProps;
+use crate::primitive::{Currency, HfAssetBadge};
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfCollateralHaircutTile`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfCollateralHaircutTileProps {
+    pub asset: Prop<String>,
+    /// Pre-formatted by the caller; parsed to `Decimal` for display.
+    pub balance: Prop<String>,
+    pub haircut_pct: Prop<f64>,
+    /// Pre-formatted by the caller; parsed to `Decimal` for display.
+    pub collateral_value: Prop<String>,
+}
+
+/// Asset-level collateral contribution: balance, haircut ratio, and the
+/// resulting collateral value. The haircut row dims when the asset is no
+/// longer collateral-eligible (`haircut_pct >= 100`).
 #[component]
 pub fn HfCollateralHaircutTile(
-    #[prop(into)] asset: String,
-    #[prop(into)] balance: f64,
-    #[prop(into)] haircut_pct: f64,
-    #[prop(into)] collateral_value: f64,
-) -> impl IntoView {
+    props: HfCollateralHaircutTileProps,
+    cx: Scope<NoEvent>,
+) -> impl IntoElement {
+    let _ = cx;
+    let asset = props.asset.get_untracked();
+    let balance = Decimal::from_str(&props.balance.get_untracked()).unwrap_or_default();
+    let haircut_pct = props.haircut_pct.get_untracked();
+    let collateral_value =
+        Decimal::from_str(&props.collateral_value.get_untracked()).unwrap_or_default();
     let eligible = haircut_pct < 100.0;
-    view! {
-        <div class="hf-collateral-tile flex justify-between items-start px-3 py-2.5 rounded border border-border-soft bg-surface-base text-xs">
-            <div class="hf-asset flex items-center gap-2">
-                <HfAssetBadge symbol=asset />
-            </div>
-            <div class="hf-values text-right font-mono text-text-high">
-                <div>{format!("Balance: {:.2}", balance)}</div>
-                <div class=if eligible { "text-text-high" } else { "text-text-muted" }>
-                    {format!("Haircut: {:.0}%", haircut_pct)}
-                </div>
-                <div class="text-emerald-400">{format!("Collateral Value: {:.2}", collateral_value)}</div>
-            </div>
-        </div>
-    }
+
+    let haircut_row = if eligible {
+        text(format!("Haircut: {haircut_pct:.0}%")).text_high()
+    } else {
+        text(format!("Haircut: {haircut_pct:.0}%")).text_muted()
+    };
+
+    view()
+        .flex_row()
+        .justify_between()
+        .items_start()
+        .px(px(12.0))
+        .py(px(10.0))
+        .rounded(px(4.0))
+        .border_soft()
+        .surface_base()
+        .text_size(px(12.0))
+        .app_class(Some(SharedString::from("hf-collateral-tile")))
+        .child(
+            view()
+                .flex_row()
+                .items_center()
+                .gap(px(4.0))
+                .child(HfAssetBadge::element(HfAssetBadgeProps {
+                    currency: Prop::from(Currency::default()),
+                    symbol: Prop::from(Some(asset)),
+                })),
+        )
+        .child(
+            view()
+                .flex_col()
+                .items_end()
+                .gap(px(2.0))
+                .font_family("monospace")
+                .text_high()
+                .child(text(format!("Balance: {balance:.2}")))
+                .child(haircut_row)
+                .child(text(format!("Collateral Value: {collateral_value:.2}")).text_positive()),
+        )
 }
