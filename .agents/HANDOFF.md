@@ -618,3 +618,54 @@ pre-existing broken `tests/layout_invariants.rs`.
 `sip_calculator` — note `sip_calculator` is in `wealth/`, the other three
 in `core/`), then the remaining bespoke `View` compositions (the rest of
 `core`, `fno`, `quant`, `crypto`). Same loop as §7's Next Step.
+
+## 9. 2026-10-29: NSH port, Phase 2 — 4 input-composition molecules
+
+**Phase/Slice Status**: `estimation_fields`, `price_snap_input`,
+`quantity_chip_input` (core) and `sip_calculator` (wealth) ported.
+`cargo check -p honba-kao-ui-core`: 0 errors/0 warnings, `cargo fmt
+--check` clean on every touched file.
+
+**Decisions & Discoveries — the two-way-binding replacement, now load-
+bearing for the rest of the port**: Leptos's `RwSignal<T>` (read+write in
+place) has no nsh equivalent. The pattern used here, and to reuse for any
+remaining molecule with an editable field: the caller passes the *current*
+value in via `Prop<T>`; the component renders it and reports *proposed new
+values* upward through its own `#[derive(Event)]` enum (e.g.
+`HfPriceSnapInputEvent::Change(String)`), same flow as a controlled
+`<input>` — the caller (not yet built, `honba-kao-app` wiring is Phase 5)
+owns the state and decides whether/how to apply the change.
+
+**The Decimal-via-`Prop<String>` rule, now exercised for the first time**:
+`rust_decimal::Decimal` doesn't implement `JsValue`, so it can't go inside
+a `Prop<T>` directly — any Decimal-valued prop (`best_bid`, `best_ask`,
+`max_quantity`, `monthly`, `years`, `annual_return`) crosses as a
+caller-pre-formatted `Prop<String>` and is parsed back with
+`Decimal::from_str` wherever the component needs to actually compute
+(mid-point, percentage share, SIP projection) — the zero-floats policy
+holds throughout, no `f64` touches any of these values. `HfEstimationFields`
+is the one exception: its 3 values were already plain `f64` in the
+original Leptos code (a *displayed estimate*, not a tradeable value), so
+it stays `Prop<f64>` — don't read this as license to use `f64` for
+anything else.
+
+**Other notes**: `HfOrderInputBox` (the old Leptos primitive these 2
+molecules used for an input with a currency-prefix "adornment") no longer
+exists — Phase 1 replaced it with plain `HfInput`/`HfNumberInput`, neither
+of which has an adornment slot. `price_snap_input` composes the currency
+symbol as a separate muted text span next to the input instead (documented
+gap, not a blocker). `HfChip` has no `on_event` method of its own to call
+directly in a builder chain the way `HfButton` does — compose via
+`HfChip::element(..).child(..).on_event(|e: &HfButtonEvent| ..)`, same as
+every other base-shim event (see `quantity_chip_input.rs`'s `chip`
+closure).
+
+**Immediate Next Step**: the remaining bespoke `View` compositions —
+`core`'s `alert_stack`, `spread_indicator`, `stats_bar`, `tape_row`;
+`fno`'s `greeks_group`, `max_pain_badge`, `option_chain_row`, `pcr_meter`,
+`strategy_leg_row`; `quant`'s `agent_console`, `artifact_card`,
+`filings_card`, `filter_pill`, `go_bar`, `market_regime_badge`; `crypto`'s
+8 files; `wealth`'s `overlap_pill`. Same loop as §7/§8's Next Step —
+batch a few structurally-similar ones per subagent, uncomment their domain
+`mod.rs` lines, verify `cargo check` actually exercises them (confirmed
+live again as of this handoff), `cargo fmt` touched files only, commit.
