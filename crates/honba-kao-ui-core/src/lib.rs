@@ -1,18 +1,11 @@
-pub mod hooks;
-pub mod icons;
-pub mod molecules;
-pub mod organisms;
+// NSH port (see nsh-port.md): `hooks`, `icons`, `molecules`, `organisms` and
+// `templates` are still Leptos and gated out until their own phase lands.
+// `primitive` and `theme` are the only NSH-ported modules so far.
 pub mod primitive;
-pub mod templates;
 pub mod theme;
 
 // Top-level re-exports for convenience
-pub use hooks::*;
-pub use icons::*;
-pub use molecules::*;
-pub use organisms::*;
 pub use primitive::*;
-pub use templates::*;
 pub use theme::*;
 
 // Canonical type for all financial values (prices, sizes, margin, collateral,

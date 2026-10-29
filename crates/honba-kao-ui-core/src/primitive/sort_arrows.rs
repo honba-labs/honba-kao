@@ -1,62 +1,36 @@
-//! `HfSortArrows` — tri-state table sorting indicator (Neutral, Ascending, Descending).
-//! Ported from `secured-finance-app` atom `SortArrows`.
+//! `HfSortArrows`, `SortDirection` — sort indicator primitive.
 
-use leptos::prelude::*;
+use nsh_core::prelude::*;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// Sort direction.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PropEnum)]
 pub enum SortDirection {
     #[default]
-    Neutral,
-    Ascending,
-    Descending,
+    None,
+    Asc,
+    Desc,
 }
 
-fn sort_symbol(direction: SortDirection) -> String {
-    match direction {
-        SortDirection::Neutral => "⇅".to_string(),
-        SortDirection::Ascending => "↑".to_string(),
-        SortDirection::Descending => "↓".to_string(),
-    }
+/// Props for [`HfSortArrows`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfSortArrowsProps {
+    pub direction: Prop<SortDirection>,
 }
 
-fn sort_color(direction: SortDirection) -> &'static str {
-    match direction {
-        SortDirection::Neutral => "text-text-muted",
-        SortDirection::Ascending => "text-emerald-400",
-        SortDirection::Descending => "text-rose-400",
-    }
-}
-
+/// Sort arrows indicator (▲ / ▼).
 #[component]
-pub fn HfSortArrows(
-    #[prop(into)] direction: RwSignal<SortDirection>,
-    #[prop(into, optional)] on_cycle: Option<Callback<SortDirection>>,
-) -> impl IntoView {
-    let symbol = Signal::derive(move || sort_symbol(direction.get()));
-    let dir_class = Signal::derive(move || sort_color(direction.get()));
+pub fn HfSortArrows(props: HfSortArrowsProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let dir = props.direction.get_untracked();
 
-    view! {
-        <button
-            type="button"
-            class="hf-sort-arrows inline-flex items-center gap-1 px-1 py-0.5 rounded border border-transparent text-xs font-mono focus:outline-none hover:bg-surface-subtle hover:border-border-soft transition-colors"
-            on:click=move |_| {
-                let next = match direction.get() {
-                    SortDirection::Neutral => SortDirection::Ascending,
-                    SortDirection::Ascending => SortDirection::Descending,
-                    SortDirection::Descending => SortDirection::Neutral,
-                };
-                direction.set(next);
-                if let Some(cb) = on_cycle.as_ref() {
-                    cb.run(next);
-                }
-            }
-        >
-            <span
-                class=move || format!("hf-icon hf-icon-sort {}", dir_class.get())
-                aria_hidden="true"
-            >
-                {move || symbol.get()}
-            </span>
-        </button>
-    }
+    let (arrow, color) = match dir {
+        SortDirection::Asc => ("▲", rgb(0x10b981)),
+        SortDirection::Desc => ("▼", rgb(0xef4444)),
+        SortDirection::None => ("", rgb(0x64748b)),
+    };
+
+    view()
+        .text_size(px(10.0))
+        .text_color(color)
+        .child(text(arrow))
 }

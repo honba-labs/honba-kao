@@ -12,6 +12,8 @@ name = "honba_kao_ui_core"
 leptos.workspace = true
 leptos_router.workspace = true
 wasm-bindgen.workspace = true
+nsh-core.workspace = true
+nsh-base.workspace = true
 web-sys = { version = "0.3", features = [
     "Window", "Document", "Element", "Node", "Event", "EventTarget",
     "HtmlElement", "HtmlInputElement", "HtmlButtonElement", "Location",

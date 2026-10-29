@@ -16,6 +16,10 @@ license = "AGPL-3.0"
 repository = "https://github.com/honba-labs/honba-kao"
 
 [workspace.dependencies]
+# NSH (Native Shell) — port target per honba-kao/nsh-port.md.
+# nsh-core / nsh-base are Apache-2.0, v0.3.0, published 2026-10-26.
+nsh-core = "0.3.0"
+nsh-base = "0.3.0"
 leptos = { version = "0.8", features = ["csr"] }
 leptos_router = "0.8"
 gloo-net = { version = "0.6", features = ["http"] }

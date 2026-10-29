@@ -437,3 +437,62 @@ in §4 above. By the time this entry was written, Milestones 4-6 also
 appeared to be progressing concurrently per the commit log; whoever picks
 up next should re-check §4's status against `git log` rather than trusting
 it as current, since it was not updated by the concurrent session.
+
+## 6. 2026-10-29: NSH port, Phase 1 — `honba-kao-ui-core` primitives
+
+**Unrelated to everything above** (§1-§5 are the DoD-remediation batch on
+`main`). This entry is the start of a *different* batch, on this worktree's
+own branch (`feat/honba-kao-nsh-port`): porting `honba-kao` off Leptos onto
+`nsh.dev` (Native Shell). The research/architecture doc is `nsh-port.md` at
+the repo root — read it first, especially its 2026-10-29 update inside §4
+Phase 1, which this entry expands on.
+
+**Phase/Slice Status**: Phase 0 (tooling spike) was skipped — `nsh-core`/
+`nsh-base` 0.3.0 were added straight to `Cargo.toml` as real crates.io deps
+and Phase 1 (primitives) was started directly by a prior session, which left
+`crates/honba-kao-ui-core` **uncommitted and not compiling** (198 errors)
+when this session picked it up: 7 primitives deleted (`button`, `color_bar`,
+`dialog`, `input`, `link`, `slider`, `spinner`) in favor of a new
+`primitive/base/` shim module wrapping `nsh_base`, and the other 17
+"bespoke" primitives + `theme/tokens.rs` rewritten — but against an
+*imagined* nsh API (Leptos-style inline `#[prop]` on fn params, raw
+`Option<Box<dyn Fn>>` callback props, several hallucinated methods/fields).
+This session fixed all of it in two passes (bespoke primitives +
+`theme/tokens.rs`, then the `base/` shims), verified against the *installed*
+crate source, not docs. **Current state: `cargo check -p honba-kao-ui-core`
+is 0 errors/0 warnings, `cargo fmt --check` clean, `cargo clippy --lib
+--no-deps -- -D warnings` clean.** Not yet committed (see below). Not yet
+attempted: anything outside `honba-kao-ui-core` — `honba-kao-app` and the
+rest of the workspace still depend on `leptos`/`leptos_router` untouched;
+this phase only reaches the component library.
+
+**Decisions & Discoveries**: see `nsh-port.md`'s dated update in §4 for the
+full technical writeup (the `#[component]`/`Props`-struct convention,
+`Inner::element(..).on_event(..)` composition, the `Tabs`/`Toast`
+"free-wrap" overstatement in §3's tables, the `Prop<T>: JsValue + Default`
+constraint, prelude gaps). One addition not yet folded into `nsh-port.md`:
+`crates/honba-kao-ui-core/tests/layout_invariants.rs` has pre-existing
+compile errors (references to `molecules`/`organisms`/`templates` modules
+that don't exist yet) — confirmed dirty/broken **before** this batch
+started, not touched by it, out of scope here but will block `cargo test
+--workspace` until Phase 2 (molecules) exists.
+
+**Immediate Next Step**: 1) commit this Phase 1 fix (one commit, this
+session's own scope only — do not sweep in the unrelated pre-existing dirty
+files elsewhere in the tree, e.g. `honba-kao-api-wasm`/`honba-kao-app`/
+`honba-kao-client`, which predate this batch and this worktree's purpose).
+2) Phase 2 per `nsh-port.md` §4: molecules, `Plot`-eligible chart ones first
+(`payoff_chart`, `backtest_card`, etc.) to validate `nsh_base::Plot`'s real
+depth against honba's Decimal-valued data — same rule applies: read the
+installed `nsh-base-0.3.0`/`nsh-core-0.3.0` source before writing against
+any component, the docs/`/elements` page is not authoritative on exact
+field/method surface.
+
+**Operating Invariants**: everything in AGENTS.md §3.2 (tests in `tests/`,
+never inline `#[test]` in `src/`) and the zero-floats policy still apply
+inside `nsh_base`-wrapped code (`Prop<String>` pre-formatted by the Decimal
+owner, never `Prop<f32>`/`f64` for money). `#[component]` is Rust-only, no
+TSX/`mount()` — see `nsh-port.md` §1's "decision: Rust only". Never assume
+an `nsh_base`/`nsh_core` API from its doc-page description; grep the
+installed source at `~/.cargo/registry/src/*/nsh-{core,base}-0.3.0/src/`
+first.

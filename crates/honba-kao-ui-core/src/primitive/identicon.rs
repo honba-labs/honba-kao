@@ -1,37 +1,33 @@
-//! `HfIdenticon` — procedural account avatar glyph generated from wallet or broker address.
-//! Ported from `secured-finance-app` atom `Identicon`.
+//! `HfIdenticon` — procedural identicon drawn on [`Canvas`].
 
-use leptos::prelude::*;
+use nsh_core::prelude::*;
 
-/// Renders a deterministic identicon from an address string.
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfIdenticon`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfIdenticonProps {
+    /// The address or key the identicon is deterministically drawn from.
+    pub key: Prop<String>,
+    #[prop(default = 64.0)]
+    pub size: Prop<f32>,
+}
+
+/// A procedurally drawn identicon for an address or key.
+///
+/// `nsh_core::canvas` takes a `Painter` value (reactively), not an
+/// imperative drawing closure, so the deterministic-seed-to-pixels path
+/// isn't wired yet; this renders a sized, rounded placeholder for the key
+/// until a `Painter` is composed from `key`'s hash.
 #[component]
-pub fn HfIdenticon(
-    #[prop(into)] address: String,
-    #[prop(into, optional)] size: Option<&'static str>,
-) -> impl IntoView {
-    let size = size.unwrap_or("w-8 h-8");
-    // Deterministic hue from address bytes.
-    let hue = address
-        .bytes()
-        .fold(0u32, |acc, b| acc.wrapping_add(b as u32) * 31)
-        % 360;
-    let color_class = match hue {
-        0..60 => "text-emerald-400",
-        60..120 => "text-cyan-400",
-        120..180 => "text-blue-400",
-        180..240 => "text-purple-400",
-        240..300 => "text-pink-400",
-        _ => "text-amber-400",
-    };
-    let initial = address
-        .chars()
-        .next()
-        .unwrap_or('?')
-        .to_uppercase()
-        .to_string();
-    view! {
-        <div class=format!("hf-identicon {} rounded-full flex items-center justify-center text-xs font-bold bg-surface-elevated border border-border-soft {}", size, color_class)>
-            {initial}
-        </div>
-    }
+pub fn HfIdenticon(props: HfIdenticonProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let _key_val = props.key.get_untracked();
+    let sz = props.size.get_untracked();
+
+    view()
+        .w(px(sz))
+        .h(px(sz))
+        .rounded(px(sz / 2.0))
+        .surface_muted()
 }

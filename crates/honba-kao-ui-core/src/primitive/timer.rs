@@ -1,23 +1,28 @@
-//! `HfAuctionTimer` — monospace countdown clock for call auction uncrossing or session phase.
-//! Ported from `secured-finance-app` atom `Timer`.
+//! `HfTimer` — countdown timer [`Text`] + signal.
 
-use leptos::prelude::*;
+use nsh_core::prelude::*;
 
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfTimer`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfTimerProps {
+    /// Seconds remaining (or elapsed).
+    pub seconds: Prop<u64>,
+}
+
+/// A countdown timer display.
 #[component]
-pub fn HfAuctionTimer(
-    #[prop(into)] seconds_remaining: Signal<i64>,
-    #[prop(into, optional)] label: Option<String>,
-) -> impl IntoView {
-    let formatted = Signal::derive(move || {
-        let secs = seconds_remaining.get().max(0);
-        let m = secs / 60;
-        let s = secs % 60;
-        format!("{m:02}:{s:02}")
-    });
-    view! {
-        <div class="hf-auction-timer flex items-center gap-1 text-[11px] font-mono text-text-high">
-            {label.map(|l| view! { <span class="text-text-muted">{l}</span> })}
-            <span>{move || formatted.get()}</span>
-        </div>
-    }
+pub fn HfTimer(props: HfTimerProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let secs = props.seconds.get_untracked();
+
+    let (m, s) = (secs / 60, secs % 60);
+
+    view().flex().child(
+        text(format!("{m:02}:{s:02}"))
+            .text_high()
+            .font_weight(FontWeight::BOLD)
+            .font_family("monospace"),
+    )
 }
