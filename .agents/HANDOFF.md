@@ -771,3 +771,43 @@ same treatment, just not in scope for a molecules batch (it's a
 by name they sound like they could need the same "no table/no rich-cell
 primitive, build flex rows by hand" treatment `option_chain_row` needed
 here.
+
+## 12. 2026-10-29: NSH port, Phase 2 — `quant`'s 3 simple molecules
+
+**Phase/Slice Status**: `filings_card`, `filter_pill`, `market_regime_badge`
+ported (straightforward, same shape as prior batches). `cargo check -p
+honba-kao-ui-core`: 0 errors/0 warnings; `cargo fmt --check` clean.
+
+**`quant`'s remaining 3 are a different order of difficulty, split out on
+purpose — read before touching them**:
+- `artifact_card.rs`: its Leptos version renders lightweight Markdown to
+  an HTML string and injects it via `inner_html`. **nsh has no raw-HTML
+  injection mechanism at all** (grepped the full `nsh-core`/`nsh-base`
+  source for `inner_html`/`dangerously`/`raw_html` — nothing). The
+  `render_markdown`/`render_inline` parsing logic itself is fine to keep,
+  but it must build a tree of real nsh elements (styled `text()`/`view()`
+  nodes for headers, bold/italic/code spans, bullet rows) instead of an
+  HTML string — a small markdown-to-elements renderer, not a one-line
+  port.
+- `agent_console.rs`: a slide-in drawer with a live thought-stream list, a
+  streaming indicator (`crate::primitive::HfThinkingOrb` — already
+  ported), a text input with Enter-to-submit, and a close button. Needs
+  nsh's keyboard-binding API (`nsh_core::element::keys`,
+  `on_key`-shaped — not yet used anywhere in this port) for the
+  Enter-submits behavior.
+- `go_bar.rs`: the hardest molecule in the whole port so far — a `Ctrl+G`
+  modal command palette: focus-steals the input on open
+  (`nsh_core::element::element_ref`'s `ElementRef`/imperative `Command`,
+  not yet used anywhere else in this port), arrow-key navigation with
+  wraparound and scroll-into-view, Escape to close, click-outside-to-close
+  with stopped propagation, live substring-filtered autocomplete. Likely
+  wants `primitive::base::{HfDialog, HfModal}` (Phase 1, unused so far) as
+  its overlay shell rather than a bespoke one.
+
+**Immediate Next Step**: `artifact_card` + `agent_console` as one batch
+(moderate, share no particular API but similar size), then `go_bar` alone
+with its own careful read of `nsh_core::element::keys.rs` and
+`element_ref.rs` before writing any code — don't guess at `on_key`'s
+signature or what `Command` variants exist, grep the installed source
+first, same discipline as every API surface in this port so far. Then
+`crypto`'s 8.
