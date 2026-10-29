@@ -811,3 +811,49 @@ with its own careful read of `nsh_core::element::keys.rs` and
 signature or what `Command` variants exist, grep the installed source
 first, same discipline as every API surface in this port so far. Then
 `crypto`'s 8.
+
+## 13. 2026-10-29: a second, independent NSH-port effort exists — `m3-m4/honba-kao`
+
+**Not part of this batch's work, but blocks calling Phase 2 "done" without
+a human decision.** A separate worktree,
+`/home/pmallapp/Devel/Finance/honba-workspace/m3-m4/honba-kao`, branch
+`nsh-port-m3-m4` (HEAD `08cd4ce`, "docs(kao): handoff for NSH port Phase 1
++ branch cleanup notes"), is doing the *same* Leptos→nsh port
+independently, discovered mid-session via its own `.agents/HANDOFF.md` and
+`nsh-port.md`. As of this handoff:
+- It had reached roughly the same two Phase 1 root-cause findings this
+  branch did (`Scope::new` doesn't exist, events must be local enums,
+  prelude gaps for `px`/`rgb`/`FontWeight`), recorded there as doc-only.
+- It is **much broader in primitive scope**: a full shadcn-style primitive
+  set (`accordion`, `avatar`, `breadcrumb`, `command`, `data_table`,
+  `popover`, `tooltip`, etc.) that doesn't exist in this branch's 24-
+  primitive taxonomy, plus new organisms/templates/composed/home/trading
+  work — none of it committed, and per its own notes not yet fully
+  compiling.
+- Its `molecules/` tree has **zero** `nsh_base`/`nsh_core` references
+  anywhere (confirmed by grep) — it has not started Phase 2 at all, so
+  there is no overlapping molecule work to reconcile, only overlapping
+  *primitive-tier* scope.
+- It is on a different branch with nothing merged anywhere, so nothing
+  this session did conflicts with it at the git level.
+
+**This is a reconciliation decision for the user, not something to resolve
+unilaterally**: pick one branch as canonical and discard/archive the
+other, cherry-pick the broader primitive set (accordion/avatar/etc.) from
+`m3-m4` into this branch once this branch's Phase 2 is further along, or
+keep them deliberately separate (e.g. if `m3-m4` is scoped for a different
+app surface). Whoever picks this handoff up next should raise it with the
+user before doing more Phase 1/primitive-tier work on either branch —
+there's no point porting the same primitive twice.
+
+**Marked explicitly for next session** (not started, or started but not
+yet landed, as of this handoff): `quant/go_bar.rs` (if `artifact_card`/
+`agent_console` are the last thing this session committed, `go_bar` is
+still open — check `molecules/quant/mod.rs` for which lines are still
+commented before assuming), and all 8 of `crypto`'s molecules
+(`collateral_asset_pane`, `collateral_simulator`, `collateral_snapshot`,
+`collateral_tile`, `funding_rate`, `itayose_card`, `liquidation_bar`,
+`wallet_widget`) — none attempted yet. Same batching/review/commit loop
+as every prior entry in this file; `collateral_asset_pane`/
+`collateral_simulator` flagged in §11 as worth reading early, they may
+need `option_chain_row`'s "no table, build flex rows by hand" treatment.
