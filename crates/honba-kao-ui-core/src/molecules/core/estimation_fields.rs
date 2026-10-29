@@ -1,30 +1,60 @@
-use leptos::prelude::*;
+//! `HfEstimationFields` — order value, estimated fee and margin requirement
+//! rows for an order ticket.
 
+use nsh_core::element::NoEvent;
+use nsh_core::prelude::*;
+
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfEstimationFields`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfEstimationFieldsProps {
+    pub notional: Prop<f64>,
+    pub est_fee: Prop<f64>,
+    pub margin_req: Prop<f64>,
+    /// Currency prefix for each value; `None` means `₹`.
+    #[prop(default)]
+    pub currency_prefix: Prop<Option<String>>,
+}
+
+/// One label/value row: the label muted on the left, the value mono on the right.
+fn row(label: &'static str, value: String) -> impl IntoElement {
+    view()
+        .flex_row()
+        .justify_between()
+        .text_muted()
+        .child(text(label))
+        .child(
+            text(value)
+                .text_high()
+                .app_class(Some(SharedString::from("font-mono"))),
+        )
+}
+
+/// Three read-only rows: order value, estimated fee (1 bp), margin required.
+/// Values are read once, not reactively.
 #[component]
-pub fn HfEstimationFields(
-    #[prop(into)] notional: Signal<f64>,
-    #[prop(into)] est_fee: Signal<f64>,
-    #[prop(into)] margin_req: Signal<f64>,
-    #[prop(into, optional)] currency_prefix: Option<String>,
-) -> impl IntoView {
-    let curr = currency_prefix.unwrap_or_else(|| "₹".to_string());
-    let curr_c1 = curr.clone();
-    let curr_c2 = curr.clone();
-    let curr_c3 = curr;
-    view! {
-        <div class="hf-estimation-fields flex flex-col gap-1 p-2 rounded bg-surface-subtle text-xs border border-border-soft">
-            <div class="flex justify-between text-text-muted">
-                <span>"Order Value"</span>
-                <span class="font-mono text-text-high">{move || format!("{}{:.2}", curr_c1, notional.get())}</span>
-            </div>
-            <div class="flex justify-between text-text-muted">
-                <span>"Est. Fee (1 bp)"</span>
-                <span class="font-mono text-text-high">{move || format!("{}{:.2}", curr_c2, est_fee.get())}</span>
-            </div>
-            <div class="flex justify-between text-text-muted">
-                <span>"Margin Required"</span>
-                <span class="font-mono text-text-high">{move || format!("{}{:.2}", curr_c3, margin_req.get())}</span>
-            </div>
-        </div>
-    }
+pub fn HfEstimationFields(props: HfEstimationFieldsProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let curr = props
+        .currency_prefix
+        .get_untracked()
+        .unwrap_or_else(|| "₹".to_string());
+    let notional = props.notional.get_untracked();
+    let est_fee = props.est_fee.get_untracked();
+    let margin_req = props.margin_req.get_untracked();
+
+    view()
+        .flex_col()
+        .gap(px(4.0))
+        .p(px(8.0))
+        .rounded_md()
+        .border(px(1.0))
+        .border_soft()
+        .surface_muted()
+        .text_size(px(12.0))
+        .app_class(Some(SharedString::from("hf-estimation-fields")))
+        .child(row("Order Value", format!("{curr}{notional:.2}")))
+        .child(row("Est. Fee (1 bp)", format!("{curr}{est_fee:.2}")))
+        .child(row("Margin Required", format!("{curr}{margin_req:.2}")))
 }

@@ -1,30 +1,30 @@
-use leptos::prelude::*;
+//! Terminal shell organism — NSH port per nsh-port.md §4 Phase 3.
+//!
+//! A persistent workspace shell. Uses `View` composition for now; `nsh_base`
+//! `DockArea` integration follows once its controlled-layout API is stable.
 
+use nsh_core::element::{Children, NoEvent, Scope};
+use nsh_core::prelude::*;
+
+/// Props for [`HfTerminalShell`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfTerminalShellProps {
+    pub open: Prop<Option<bool>>,
+    #[prop(default)]
+    pub default_open: Prop<bool>,
+    #[prop(lazy)]
+    pub children: Prop<Children>,
+}
+
+/// A terminal shell: a persistent workspace shell.
 #[component]
-pub fn HfTerminalShell(
-    header: AnyView,
-    nav_rail: AnyView,
-    content: AnyView,
-    footer: AnyView,
-    #[prop(into, optional)] overlay: Option<AnyView>,
-) -> impl IntoView {
-    view! {
-        <div class="hf-terminal-shell flex flex-col h-screen w-screen overflow-hidden bg-surface-base text-text-high">
-            <header class="hf-shell-header shrink-0 border-b border-border-soft">
-                {header}
-            </header>
-            <div class="hf-shell-main flex flex-grow overflow-hidden relative">
-                <aside class="hf-shell-rail shrink-0 border-r border-border-soft">
-                    {nav_rail}
-                </aside>
-                <main class="hf-shell-viewport flex-grow overflow-y-auto min-w-0">
-                    {content}
-                </main>
-                {overlay.map(|ov| view! { <div class="hf-shell-overlay">{ov}</div> })}
-            </div>
-            <footer class="hf-shell-footer shrink-0 border-t border-border-soft">
-                {footer}
-            </footer>
-        </div>
-    }
+pub fn HfTerminalShell(props: HfTerminalShellProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    view()
+        .flex_col()
+        .gap(px(4.0))
+        .px_4()
+        .py_2()
+        .bg(rgb(0x0f172a))
+        .text_color(rgb(0xe2e8f0))
+        .child(props.children)
 }

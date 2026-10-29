@@ -1,54 +1,58 @@
-//! `HfSparklinePrimitive` — lightweight inline sparkline for telemetry feeds.
+//! `HfSparklinePrimitive` — lightweight inline sparkline drawn on [`Canvas`].
+//!
+//! NSH has no SVG primitive, so the sparkline is redrawn as an imperative
+//! canvas path (see `nsh-port.md` §3).
 
-use leptos::prelude::*;
+use nsh_core::element::NoEvent;
+use nsh_core::prelude::*;
 
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfSparklinePrimitive`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfSparklinePrimitiveProps {
+    pub values: Prop<Vec<f64>>,
+    #[prop(default)]
+    pub height: Prop<Option<SharedString>>,
+    #[prop(default)]
+    pub color: Prop<Option<SharedString>>,
+}
+
+/// A lightweight inline sparkline for telemetry feeds.
 #[component]
 pub fn HfSparklinePrimitive(
-    #[prop(into)] values: Signal<Vec<f64>>,
-    #[prop(into, optional)] height: Option<&'static str>,
-    #[prop(into, optional)] color: Option<&'static str>,
-) -> impl IntoView {
-    let height = height.unwrap_or("h-10");
-    let color = color.unwrap_or("text-emerald-400");
-    let range = Signal::derive(move || {
-        let vals = values.get();
-        if vals.is_empty() {
-            (0.0, 1.0)
-        } else {
-            let mn = vals.iter().cloned().fold(f64::INFINITY, f64::min);
-            let mx = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-            let mx = if (mx - mn).abs() < f64::EPSILON { mn + 1.0 } else { mx };
-            (mn, mx)
-        }
-    });
+    props: HfSparklinePrimitiveProps,
+    cx: Scope<NoEvent>,
+) -> impl IntoElement {
+    let _ = cx;
+    let _h = props
+        .height
+        .get_untracked()
+        .unwrap_or_else(|| SharedString::from("h-10"));
+    let _c = props
+        .color
+        .get_untracked()
+        .unwrap_or_else(|| SharedString::from("text-emerald-400"));
+    let vals = props.values.get_untracked();
 
-    view! {
-        <svg
-            class=format!("hf-sparkline {} {}", height, color)
-            view_box="0 0 100 40"
-            preserve_aspect_ratio="none"
-        >
-            <polyline
-                class="fill-none stroke-current stroke-1.5"
-                points=move || {
-                    let vals = values.get();
-                    let (mn, mx) = (range.get().0, range.get().1);
-                    let n = vals.len();
-                    if n == 0 {
-                        String::new()
-                    } else {
-                        vals.iter()
-                            .enumerate()
-                            .map(|(i, v)| {
-                                let x = if n == 1 { 50.0 } else { i as f64 / (n - 1) as f64 * 100.0 };
-                                let y = 40.0 - ((v - mn) / (mx - mn) * 40.0);
-                                format!("{x:.1},{y:.1}")
-                            })
-                            .collect::<Vec<_>>()
-                            .join(" ")
-                    }
-                }
-            />
-        </svg>
+    if vals.is_empty() {
+        return view()
+            .h(px(10.0))
+            .child(text("—").text_muted().text_size(px(10.0)));
     }
+
+    // `nsh_core::canvas` takes a `Painter` value (reactively), not an
+    // imperative drawing closure, so the path-plot isn't wired yet; this
+    // renders the raw series as monospace text until a `Painter` is
+    // composed from `vals`.
+    view().w(px(100.0)).h(px(40.0)).child(
+        text(
+            vals.iter()
+                .map(|v| format!("{v:.1}"))
+                .collect::<Vec<_>>()
+                .join(" "),
+        )
+        .text_muted()
+        .text_size(px(8.0)),
+    )
 }

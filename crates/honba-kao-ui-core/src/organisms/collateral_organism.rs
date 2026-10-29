@@ -1,122 +1,75 @@
-//! Collateral organism — multi-asset collateral manager.
-//! All balance/price/haircut values are `Decimal` (zero-floats invariant, issue #33).
+//! Collateral organism — NSH port per nsh-port.md §4 Phase 3.
+//!
+//! A view over collateral assets and haircuts. Built from `nsh_core`
+//! primitives; honba styling via `.class()`/`.style()`.
 
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
-use leptos::prelude::*;
-use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
+use nsh_core::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct CollateralAssetRow {
-    pub symbol: String,
-    pub name: String,
-    pub balance: Decimal,
-    pub price: Decimal,
-    pub haircut_pct: Decimal,
-    pub collateral_value: Decimal,
+/// One collateral row. Amounts as strings (Decimal formatted by caller).
+#[derive(Debug, Clone, PartialEq, Props, JsObject)]
+pub struct CollateralRow {
+    pub asset: String,
+    pub value: String,
+    pub haircut: String,
+    pub net_value: String,
 }
 
+/// Props for [`HfCollateralOrganism`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfCollateralOrganismProps {
+    pub rows: Prop<Vec<CollateralRow>>,
+    pub total_collateral: Prop<String>,
+    pub total_haircut: Prop<String>,
+}
+
+/// Collateral summary and asset breakdown.
 #[component]
 pub fn HfCollateralOrganism(
-    #[prop(into)] assets: Signal<Vec<CollateralAssetRow>>,
-    #[prop(into, optional)] total_collateral_value: Option<Signal<Decimal>>,
-    #[prop(into)] margin_used: Signal<Decimal>,
-    #[prop(into, optional)] on_deposit: Option<Callback<String>>,
-    #[prop(into, optional)] on_withdraw: Option<Callback<String>>,
-) -> impl IntoView {
-    // Haircut evaluation: collateral value = balance x price x (1 - haircut%).
-    let rows = Signal::derive(move || {
-        assets.get().into_iter().map(|a| {
-            let haircut = a.haircut_pct.clamp(dec!(0), dec!(100));
-            let collateral_value = a.balance * a.price * (dec!(1) - haircut / dec!(100));
-            CollateralAssetRowView { asset: a, collateral_value }
-        }).collect::<Vec<_>>()
-    });
-    let total_collateral = total_collateral_value.unwrap_or_else(|| {
-        Signal::derive(move || rows.get().iter().map(|r| r.collateral_value).sum())
-    });
+    props: HfCollateralOrganismProps,
+    _cx: Scope<NoEvent>,
+) -> impl IntoElement {
+    let rows = props.rows;
 
-    view! {
-        <div class="hf-collateral-organism flex flex-col gap-3 p-4 bg-surface-base border border-border-soft rounded">
-            <div class="flex justify-between items-center pb-3 border-b border-border-soft">
-                <div>
-                    <h2 class="text-sm font-bold text-text-high">"Collateral & Margin Management"</h2>
-                    <p class="text-xs text-text-muted">"Institutional multi-asset haircut and borrowing capacity"</p>
-                </div>
-                <div class="flex gap-4 text-xs font-mono">
-                    <div>
-                        <span class="text-text-muted">"Total Collateral: "</span>
-                        <span class="font-bold text-text-high">{move || format!("₹{}", total_collateral.get().round_dp(2))}</span>
-                    </div>
-                    <div>
-                        <span class="text-text-muted">"Margin In Use: "</span>
-                        <span class="font-bold text-amber-400">{move || format!("₹{}", margin_used.get().round_dp(2))}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left">
-                    <thead class="text-text-muted border-b border-border-soft text-[11px] uppercase">
-                        <tr>
-                            <th class="py-2 px-3">"Asset"</th>
-                            <th class="py-2 px-3 text-right">"Balance"</th>
-                            <th class="py-2 px-3 text-right">"Price"</th>
-                            <th class="py-2 px-3 text-right">"Haircut"</th>
-                            <th class="py-2 px-3 text-right">"Collateral Value"</th>
-                            <th class="py-2 px-3 text-center">"Actions"</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-border-soft/40 font-mono">
-                        <For
-                            each=move || rows.get()
-                            key=|r| r.asset.symbol.clone()
-                            children=move |r| {
-                                let sym = r.asset.symbol.clone();
-                                let sym_c1 = sym.clone();
-                                let sym_c2 = sym;
-                                view! {
-                                    <tr class="hover:bg-surface-elevated">
-                                        <td class="py-2 px-3 font-sans font-semibold text-text-high">{r.asset.name} <span class="text-text-muted text-[10px]">({r.asset.symbol})</span></td>
-                                        <td class="py-2 px-3 text-right">{format!("{}", r.asset.balance.round_dp(4))}</td>
-                                        <td class="py-2 px-3 text-right">{format!("₹{}", r.asset.price.round_dp(2))}</td>
-                                        <td class="py-2 px-3 text-right text-amber-400">{format!("{}%", r.asset.haircut_pct.round_dp(1))}</td>
-                                        <td class="py-2 px-3 text-right font-bold text-emerald-400">{format!("₹{}", r.collateral_value.round_dp(2))}</td>
-                                        <td class="py-2 px-3 text-center">
-                                            <div class="flex items-center justify-center gap-1">
-                                                {on_deposit.map(|cb| view! {
-                                                    <HfButton
-                                                        variant=ButtonVariant::Tertiary
-                                                        size=ButtonSize::Xxs
-                                                        on_click=Callback::new(move |_| cb.run(sym_c1.clone()))
-                                                    >
-                                                        "Deposit"
-                                                    </HfButton>
-                                                })}
-                                                {on_withdraw.map(|cb| view! {
-                                                    <HfButton
-                                                        variant=ButtonVariant::Ghost
-                                                        size=ButtonSize::Xxs
-                                                        on_click=Callback::new(move |_| cb.run(sym_c2.clone()))
-                                                    >
-                                                        "Withdraw"
-                                                    </HfButton>
-                                                })}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        />
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
-}
-
-#[derive(Clone, Debug)]
-struct CollateralAssetRowView {
-    asset: CollateralAssetRow,
-    collateral_value: Decimal,
+    view()
+        .flex_col()
+        .gap(px(8.0))
+        .px_4()
+        .py_2()
+        .bg(rgb(0x0f172a))
+        .text_color(rgb(0xe2e8f0))
+        .child(
+            view()
+                .flex_row()
+                .justify_between()
+                .child(text("Total Collateral"))
+                .child(text(move || props.total_collateral.get())),
+        )
+        .child(
+            view()
+                .flex_row()
+                .justify_between()
+                .child(text("Total Haircut"))
+                .child(text(move || props.total_haircut.get())),
+        )
+        .child(
+            view().flex_col().gap(px(4.0)).child(
+                each(
+                    rows,
+                    move |r: &CollateralRow| r.asset.clone(),
+                    move |row_signal, _| {
+                        let row = row_signal.get();
+                        view()
+                            .flex_row()
+                            .justify_between()
+                            .px_2()
+                            .py_1()
+                            .child(text(row.asset))
+                            .child(text(row.value))
+                            .child(text(row.haircut))
+                            .child(text(row.net_value))
+                    },
+                )
+                .into_element(),
+            ),
+        )
 }

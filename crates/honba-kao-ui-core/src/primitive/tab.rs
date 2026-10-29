@@ -1,69 +1,70 @@
-//! `HfTab`, `HfSubTab` — primary / secondary navigation tabs.
-//! Ported from `secured-finance-app` atoms `Tab`, `SubTab`.
+//! `HfTab`, `HfSubTab` — tab primitives (bespoke View/Text wraps).
 
-use leptos::prelude::*;
+use nsh_core::element::{Children, NoEvent};
+use nsh_core::prelude::*;
 
+use crate::theme::tokens::HonbaStyle;
+
+/// Props for [`HfTab`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfTabProps {
+    pub label: Prop<String>,
+    #[prop(default = false)]
+    pub selected: Prop<bool>,
+    pub children: Prop<Children>,
+}
+
+/// A single tab.
 #[component]
-pub fn HfTab(
-    #[prop(into)] value: String,
-    #[prop(into)] active: RwSignal<String>,
-    #[prop(into, optional)] label: Option<String>,
-    #[prop(into, optional)] on_change: Option<Callback<String>>,
-) -> impl IntoView {
-    let value_keep = value.clone();
-    let label_keep = label.clone().unwrap_or_else(|| value_keep.clone());
-    let value_for_active = value_keep.clone();
-    let is_active = move || active.get() == value_for_active;
-    let on_change_clone = on_change.clone();
-    let on_click = move |_| {
-        active.set(value_keep.clone());
-        if let Some(cb) = on_change_clone.as_ref() {
-            cb.run(value_keep.clone());
-        }
-    };
-    view! {
-        <button
-            type="button"
-            class=move || format!(
-                "hf-tab px-3 py-1.5 text-xs font-medium border-b-2 transition-colors {}",
-                if is_active() {
-                    "border-emerald-600 text-emerald-400 bg-emerald-600/10"
-                } else {
-                    "border-transparent text-text-muted hover:text-text-high hover:bg-surface-subtle"
-                }
-            )
-            on:click=on_click
-        >
-            {label_keep}
-        </button>
+pub fn HfTab(props: HfTabProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let lbl = props.label.get_untracked();
+    let sel = props.selected.get_untracked();
+
+    if sel {
+        view()
+            .px(px(2.0))
+            .py(px(1.0))
+            .border(px(2.0))
+            .border_color(rgb(0x10b981))
+            .child(text(lbl).text_positive().font_weight(FontWeight::SEMIBOLD))
+    } else {
+        view()
+            .px(px(2.0))
+            .py(px(1.0))
+            .child(text(lbl).text_muted().font_weight(FontWeight::MEDIUM))
     }
 }
 
-/// Secondary navigation tab for sub-views within complex panels.
+/// Props for [`HfSubTab`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfSubTabProps {
+    pub label: Prop<String>,
+    #[prop(default = false)]
+    pub selected: Prop<bool>,
+    pub children: Prop<Children>,
+}
+
+/// A sub-tab within a tab group.
 #[component]
-pub fn HfSubTab(
-    #[prop(into)] value: String,
-    #[prop(into)] active: RwSignal<String>,
-    #[prop(into, optional)] label: Option<String>,
-) -> impl IntoView {
-    let value_keep = value.clone();
-    let label_keep = label.clone().unwrap_or_else(|| value_keep.clone());
-    let value_for_active = value_keep.clone();
-    let is_active = move || active.get() == value_for_active;
-    view! {
-        <button
-            type="button"
-            class=move || format!(
-                "hf-sub-tab px-2 py-1 rounded-md text-xs transition-colors {}",
-                if is_active() {
-                    "bg-surface-elevated text-text-high font-semibold"
-                } else {
-                    "text-text-muted hover:text-text-high hover:bg-surface-subtle"
-                }
-            )
-            on:click=move |_| active.set(value_keep.clone())
-        >
-            {label_keep}
-        </button>
+pub fn HfSubTab(props: HfSubTabProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let lbl = props.label.get_untracked();
+    let sel = props.selected.get_untracked();
+
+    if sel {
+        view()
+            .px(px(1.5))
+            .py(px(0.5))
+            .text_color(rgb(0x10b981))
+            .font_weight(FontWeight::SEMIBOLD)
+            .child(text(lbl))
+    } else {
+        view()
+            .px(px(1.5))
+            .py(px(0.5))
+            .text_color(rgb(0x94a3b8))
+            .font_weight(FontWeight::MEDIUM)
+            .child(text(lbl))
     }
 }

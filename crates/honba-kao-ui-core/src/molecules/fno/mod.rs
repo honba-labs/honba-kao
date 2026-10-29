@@ -1,4 +1,6 @@
 //! Tier 2: MOLECULES — Derivatives & F&O specific.
+//!
+//! NSH port (Phase 2, see `nsh-port.md` §4): all of `fno` is ported.
 
 pub mod greeks_group;
 pub mod max_pain_badge;

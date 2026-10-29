@@ -1,30 +1,43 @@
-//! `HfFooterBar` — terminal footer status bar with latency, block height, and protocol status.
-//! Ported from `secured-finance-app` atom `Footer`.
+//! `HfFooterBar` — layout [`View`] footer.
 
-use leptos::prelude::*;
+use nsh_core::prelude::*;
 
+use crate::theme::tokens::HonbaStyle;
+
+/// One labeled value shown in a [`HfFooterBar`].
+#[derive(Clone, Debug, Default, PartialEq, JsObject)]
+pub struct HfFooterItem {
+    pub label: String,
+    pub value: String,
+}
+
+/// Props for [`HfFooterBar`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfFooterBarProps {
+    /// Shown left-to-right.
+    pub items: Prop<Vec<HfFooterItem>>,
+}
+
+/// A terminal footer bar.
 #[component]
-pub fn HfFooterBar(
-    #[prop(into)] items: Vec<(String, Signal<String>)>, // (label, value signal)
-    #[prop(into, optional)] class: Option<String>,
-) -> impl IntoView {
-    let base = "hf-footer-bar flex items-center justify-between px-3 py-1.5 border-t border-border-soft bg-surface-subtle text-[10px] font-mono text-text-muted";
-    let classes = match class {
-        Some(c) => format!("{} {}", base, c),
-        None => base.to_string(),
-    };
-    view! {
-        <div class=classes>
-            <div class="hf-footer-left flex gap-4">
-                {items.into_iter().map(|(label, value)| {
-                    view! {
-                        <div class="hf-footer-item flex flex-col gap-0.5">
-                            <span class="uppercase tracking-wider">{label}</span>
-                            <span class="text-text-high">{move || value.get()}</span>
-                        </div>
-                    }
-                }).collect::<Vec<_>>()}
-            </div>
-        </div>
-    }
+pub fn HfFooterBar(props: HfFooterBarProps, cx: Scope<NoEvent>) -> impl IntoElement {
+    let _ = cx;
+    let items = props.items.get_untracked();
+
+    view()
+        .surface_base()
+        .border_strong()
+        .px(px(2.0))
+        .py(px(1.0))
+        .flex()
+        .justify_between()
+        .items_center()
+        .children(items.into_iter().map(|item| {
+            view()
+                .flex()
+                .flex_col()
+                .gap(px(0.5))
+                .child(text(item.label).text_muted().text_size(px(10.0)))
+                .child(text(item.value).text_high().text_size(px(10.0)))
+        }))
 }

@@ -1,70 +1,55 @@
-//! Market tape (time & sales) organism.
-//! All price/size values are `Decimal` (zero-floats invariant, issue #33).
+//! Market tape organism — NSH port per nsh-port.md §4 Phase 3.
+//!
+//! A scrolling ticker of market prices.
 
-use crate::molecules::core::HfTapeRow;
-use leptos::prelude::*;
-use rust_decimal::Decimal;
+use nsh_core::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct TapeTrade {
-    pub price: Decimal,
-    pub size: Decimal,
-    pub time: String,
-    pub is_buyer_maker: bool,
+/// One tape entry: symbol + price + change direction.
+#[derive(Debug, Clone, PartialEq, Props, JsObject)]
+pub struct TapeEntry {
+    pub symbol: String,
+    pub price: String,
+    pub change: String,
+    #[prop(default)]
+    pub up: bool,
 }
 
+/// Props for [`HfMarketTape`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfMarketTapeProps {
+    pub entries: Prop<Vec<TapeEntry>>,
+}
+
+/// Scrolling market tape with live prices.
 #[component]
-pub fn HfMarketTape(
-    #[prop(into)] trades: Signal<Vec<TapeTrade>>,
-    #[prop(into, optional)] on_trade_click: Option<Callback<TapeTrade>>,
-) -> impl IntoView {
-    view! {
-        <div class="hf-market-tape flex flex-col h-full bg-surface-base border border-border-soft rounded overflow-hidden">
-            <div class="hf-tape-header flex justify-between items-center p-2 border-b border-border-soft text-xs">
-                <span class="font-semibold text-text-high">"Market Tape (Time & Sales)"</span>
-                <span class="text-[10px] text-text-muted">"Real-time"</span>
-            </div>
-            <div class="flex justify-between px-2 py-1 bg-surface-subtle border-b border-border-soft text-[10px] text-text-muted font-mono">
-                <span>"Price"</span>
-                <span>"Size"</span>
-                <span>"Time"</span>
-            </div>
-            <div class="hf-tape-stream flex-grow overflow-y-auto">
-                <For
-                    each=move || {
-                        trades
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, tr)| (i, tr))
-                            .collect::<Vec<_>>()
-                    }
-                    key=|(i, _tr)| format!("tape-{i}")
-                    children=move |(_i, tr)| {
-                        let tr_c = tr.clone();
-                        let click_cb = on_trade_click.map(|cb| Callback::new(move |_| cb.run(tr_c.clone())));
-                        match click_cb {
-                            Some(cb) => view! {
-                                <HfTapeRow
-                                    price=tr.price
-                                    size=tr.size
-                                    time=tr.time.clone()
-                                    is_buyer_maker=tr.is_buyer_maker
-                                    on_click=cb
-                                />
-                            }.into_any(),
-                            None => view! {
-                                <HfTapeRow
-                                    price=tr.price
-                                    size=tr.size
-                                    time=tr.time.clone()
-                                    is_buyer_maker=tr.is_buyer_maker
-                                />
-                            }.into_any(),
-                        }
-                    }
-                />
-            </div>
-        </div>
-    }
+pub fn HfMarketTape(props: HfMarketTapeProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    let entries = props.entries;
+
+    view()
+        .flex_row()
+        .gap(px(12.0))
+        .px_4()
+        .py_2()
+        .bg(rgb(0x0f172a))
+        .text_color(rgb(0xe2e8f0))
+        .child(
+            each(
+                entries,
+                move |e: &TapeEntry| e.symbol.clone(),
+                move |entry_signal, _| {
+                    let entry = entry_signal.get();
+                    let sign = if entry.up { "+" } else { "-" };
+                    view()
+                        .flex_row()
+                        .gap(px(6.0))
+                        .px_3()
+                        .py_1()
+                        .child(text(entry.symbol))
+                        .child(text(format!(" {}", entry.price)))
+                        .child(text(format!(" {sign}")))
+                        .child(text(entry.change))
+                },
+            )
+            .into_element(),
+        )
 }

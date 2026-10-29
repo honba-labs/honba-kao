@@ -1,70 +1,94 @@
-use leptos::prelude::*;
-use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
+//! Market top bar organism — NSH port per nsh-port.md §4 Phase 3.
+//!
+//! A top strip of market status pills with the desk/currency context.
+//! Built from `nsh_core` primitives; honba styling applied via `.class()`/`.style()`.
 
+use nsh_core::prelude::*;
+
+/// Props for [`HfMarketTopBar`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfMarketTopBarProps {
+    /// Pill labels (e.g. "NIFTY 50").
+    pub labels: Prop<Vec<String>>,
+    /// Pill values (e.g. "22,450.50").
+    pub values: Prop<Vec<String>>,
+    /// Desk name shown at the left.
+    #[prop(default)]
+    pub desk: Prop<Option<String>>,
+    /// Currency shown at the right.
+    #[prop(default)]
+    pub currency: Prop<Option<String>>,
+}
+
+/// Top bar showing market pulses and desk context.
 #[component]
-pub fn HfMarketTopBar(
-    #[prop(into)] symbol: Signal<String>,
-    #[prop(into)] ltp: Signal<Decimal>,
-    #[prop(into)] change_abs: Signal<Decimal>,
-    #[prop(into)] change_pct: Signal<Decimal>,
-    #[prop(into)] high_24h: Signal<Decimal>,
-    #[prop(into)] low_24h: Signal<Decimal>,
-    #[prop(into)] volume_24h: Signal<Decimal>,
-    #[prop(into, optional)] currency_prefix: Option<String>,
-    #[prop(into, optional)] actions: Option<AnyView>,
-) -> impl IntoView {
-    let curr = currency_prefix.unwrap_or_else(|| "₹".to_string());
-    let curr_c1 = curr.clone();
-    let curr_c2 = curr.clone();
-    let curr_c3 = curr;
+pub fn HfMarketTopBar(props: HfMarketTopBarProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    let labels = props.labels;
+    let values = props.values;
 
-    let is_pos = Signal::derive(move || change_pct.get() >= Decimal::ZERO);
-    let change_class = Signal::derive(move || {
-        if is_pos.get() {
-            "text-emerald-400 font-mono font-bold"
-        } else {
-            "text-rose-400 font-mono font-bold"
-        }
-    });
-
-    view! {
-        <div class="hf-market-top-bar flex items-center justify-between px-3 py-2 bg-surface-base border border-border-soft rounded">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="text-base font-bold text-text-high font-mono tracking-tight">{move || symbol.get()}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-surface-subtle text-text-muted">"SPOT"</span>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-lg font-bold font-mono text-text-high">{move || format!("{}{}", curr_c1, ltp.get().round_dp(2))}</span>
-                    <span class=change_class>
-                        {move || {
-                            let abs = change_abs.get();
-                            let pct = change_pct.get();
-                            if abs >= Decimal::ZERO {
-                                format!("+{} (+{}%)", abs.round_dp(2), pct.round_dp(2))
-                            } else {
-                                format!("{} ({}%)", abs.round_dp(2), pct.round_dp(2))
-                            }
-                        }}
-                    </span>
-                </div>
-                <div class="hidden tablet:flex items-center gap-4 text-xs text-text-muted">
-                    <div>
-                        <span class="text-text-muted/60">"24h H: "</span>
-                        <span class="font-mono text-text-high">{move || format!("{}{}", curr_c2, high_24h.get().round_dp(2))}</span>
-                    </div>
-                    <div>
-                        <span class="text-text-muted/60">"24h L: "</span>
-                        <span class="font-mono text-text-high">{move || format!("{}{}", curr_c3, low_24h.get().round_dp(2))}</span>
-                    </div>
-                    <div>
-                        <span class="text-text-muted/60">"24h Vol: "</span>
-                        <span class="font-mono text-text-high">{move || format!("{}M", (volume_24h.get() / dec!(1_000_000)).round_dp(2))}</span>
-                    </div>
-                </div>
-            </div>
-            {actions.map(|act| view! { <div class="flex items-center gap-2">{act}</div> })}
-        </div>
-    }
+    view()
+        .flex_row()
+        .gap(px(8.0))
+        .px_4()
+        .py_2()
+        .bg(rgb(0x0f172a))
+        .text_color(rgb(0xe2e8f0))
+        .child(
+            view()
+                .flex_1()
+                .child(text(move || {
+                    props
+                        .desk
+                        .get_untracked()
+                        .unwrap_or_else(|| "Desk".to_string())
+                }))
+                .text_size(px(12.0))
+                .font_weight(FontWeight::MEDIUM),
+        )
+        .child(
+            view().flex_1().justify_end().child(
+                each(
+                    labels,
+                    move |label: &String| label.clone(),
+                    move |label_signal, _| {
+                        let value_signal = values.clone();
+                        let label_val = label_signal.get();
+                        let idx = labels
+                            .get_untracked()
+                            .iter()
+                            .position(|x| x == &label_val)
+                            .unwrap_or(0);
+                        view()
+                            .flex_row()
+                            .gap(px(6.0))
+                            .px_3()
+                            .py_1()
+                            .rounded(px(6.0))
+                            .bg(rgb(0x334155))
+                            .text_color(rgb(0xffffff))
+                            .text_size(px(11.0))
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child(text(label_val))
+                            .child(text(format!(
+                                " {}",
+                                value_signal.get().get(idx).cloned().unwrap_or_default()
+                            )))
+                    },
+                )
+                .into_element(),
+            ),
+        )
+        .child(
+            view()
+                .flex_1()
+                .justify_end()
+                .child(text(move || {
+                    props
+                        .currency
+                        .get_untracked()
+                        .unwrap_or_else(|| "INR".to_string())
+                }))
+                .text_size(px(12.0))
+                .font_weight(FontWeight::MEDIUM),
+        )
 }

@@ -1,4 +1,6 @@
 //! Tier 2: MOLECULES — Crypto & DeFi specific.
+//!
+//! NSH port (Phase 2, see `nsh-port.md` §4): all 8 ported.
 
 pub mod collateral_asset_pane;
 pub mod collateral_simulator;
