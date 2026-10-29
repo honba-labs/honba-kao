@@ -1,93 +1,41 @@
-use crate::molecules::fno::{HfStrategyLegRow, StrategyLeg};
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
-use leptos::prelude::*;
-use rust_decimal::Decimal;
+//! Strategy builder organism — NSH port per nsh-port.md §4 Phase 3.
+//!
+//! A strategy builder: panes for legs and a canvas for the payoff chart.
+//! Built from `nsh_core` primitives.
 
+use nsh_core::prelude::*;
+
+/// Props for [`HfStrategyBuilder`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfStrategyBuilderProps {
+    #[prop(lazy)]
+    pub children: Prop<Children>,
+}
+
+/// A strategy builder: panes for legs and a canvas for the payoff chart.
 #[component]
-pub fn HfStrategyBuilder(
-    #[prop(into)] legs: RwSignal<Vec<StrategyLeg>>,
-    #[prop(into)] max_profit: Signal<Option<Decimal>>,
-    #[prop(into)] max_loss: Signal<Option<Decimal>>,
-    #[prop(into)] breakeven_points: Signal<Vec<Decimal>>,
-    #[prop(into)] on_execute_strategy: Callback<()>,
-) -> impl IntoView {
-    let remove_leg_at = move |idx: usize| {
-        legs.update(|l| {
-            if idx < l.len() {
-                l.remove(idx);
-            }
-        });
-    };
-
-    view! {
-        <div class="hf-strategy-builder flex flex-col gap-3 p-4 bg-surface-base border border-border-soft rounded">
-            <div class="flex justify-between items-center pb-2 border-b border-border-soft">
-                <div>
-                    <h3 class="text-xs font-bold text-text-high">"Multi-Leg Strategy Builder"</h3>
-                    <p class="text-[11px] text-text-muted">"Construct custom spreads, straddles, iron condors"</p>
-                </div>
-                <div class="flex gap-3 text-xs font-mono">
-                    <div>
-                        <span class="text-text-muted">"Max Profit: "</span>
-                        <span class="text-emerald-400 font-bold">
-                            {move || match max_profit.get() {
-                                Some(p) => format!("₹{}", p.round_dp(2)),
-                                None => "Unlimited".to_string(),
-                            }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-text-muted">"Max Loss: "</span>
-                        <span class="text-rose-400 font-bold">
-                            {move || match max_loss.get() {
-                                Some(l) => format!("₹{}", l.round_dp(2)),
-                                None => "Unlimited".to_string(),
-                            }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-1.5">
-                <For
-                    each=move || {
-                        legs.get().into_iter().enumerate().collect::<Vec<_>>()
-                    }
-                    key=|(idx, leg)| format!("{}-{}-{}-{}", idx, leg.side, leg.strike, leg.lots)
-                    children=move |(idx, leg)| {
-                        let leg_sig = Signal::derive(move || leg.clone());
-                        view! {
-                            <HfStrategyLegRow
-                                leg=leg_sig
-                                on_remove=Callback::new(move |_| remove_leg_at(idx))
-                            />
-                        }
-                    }
-                />
-            </div>
-
-            <div class="flex justify-between items-center pt-2 border-t border-border-soft text-xs">
-                <div class="text-text-muted font-mono">
-                    <span>"Breakeven: "</span>
-                    <span>
-                        {move || {
-                            let bes = breakeven_points.get();
-                            if bes.is_empty() {
-                                "-".to_string()
-                            } else {
-                                bes.iter().map(|b| format!("₹{}", b.round_dp(2))).collect::<Vec<_>>().join(", ")
-                            }
-                        }}
-                    </span>
-                </div>
-                <HfButton
-                    variant=ButtonVariant::Primary
-                    size=ButtonSize::Sm
-                    on_click=Callback::new(move |_| on_execute_strategy.run(()))
-                >
-                    "Execute All Legs"
-                </HfButton>
-            </div>
-        </div>
-    }
+pub fn HfStrategyBuilder(props: HfStrategyBuilderProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    view()
+        .flex_row()
+        .gap(px(8.0))
+        .px_4()
+        .py_2()
+        .bg(rgb(0x0f172a))
+        .text_color(rgb(0xe2e8f0))
+        .child(
+            view()
+                .flex_1()
+                .flex_col()
+                .gap(px(4.0))
+                .child(text("Legs"))
+                .child(props.children),
+        )
+        .child(
+            view()
+                .flex_1()
+                .flex_col()
+                .gap(px(4.0))
+                .child(text("Payoff"))
+                .child(canvas(move || Painter::default())),
+        )
 }

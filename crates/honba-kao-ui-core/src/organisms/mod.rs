@@ -1,4 +1,4 @@
-//! Tier 3: ORGANISMS — complex financial assemblies.
+//! Tier 3: ORGANISMS — complex financial assemblies (NSH port).
 
 pub mod collateral_organism;
 pub mod market_tape;
@@ -11,13 +11,13 @@ pub mod strategy_builder;
 pub mod terminal_shell;
 pub mod trading_dock;
 
-pub use collateral_organism::{CollateralAssetRow, HfCollateralOrganism};
-pub use market_tape::{HfMarketTape, TapeTrade};
-pub use market_top_bar::HfMarketTopBar;
-pub use mutual_fund_dossier::HfMutualFundDossier;
-pub use option_chain::{HfOptionChain, OptionStrikePair};
-pub use order_book::{BookLevel, HfOrderBook, OrderBookFilter};
-pub use order_ticket::{HfOrderTicket, OrderIntent};
-pub use strategy_builder::HfStrategyBuilder;
-pub use terminal_shell::HfTerminalShell;
-pub use trading_dock::HfTradingDock;
+pub use collateral_organism::{CollateralRow, HfCollateralOrganism, HfCollateralOrganismProps};
+pub use market_tape::{HfMarketTape, HfMarketTapeProps, TapeEntry};
+pub use market_top_bar::{HfMarketTopBar, HfMarketTopBarProps};
+pub use mutual_fund_dossier::{HfMutualFundDossier, HfMutualFundDossierProps};
+pub use option_chain::{HfOptionChain, HfOptionChainProps, OptionChainRow};
+pub use order_book::{BookLevel, HfOrderBook, HfOrderBookProps};
+pub use order_ticket::{HfOrderTicket, HfOrderTicketProps};
+pub use strategy_builder::{HfStrategyBuilder, HfStrategyBuilderProps};
+pub use terminal_shell::{HfTerminalShell, HfTerminalShellProps};
+pub use trading_dock::{HfTradingDock, HfTradingDockProps};

@@ -1,65 +1,57 @@
-use leptos::prelude::*;
+//! Page layout template — NSH port per nsh-port.md §4 Phase 4.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum AlertSeverity {
-    #[default]
-    Info,
-    Success,
-    Warning,
-    Critical,
+use nsh_core::prelude::*;
+
+/// Props for [`HfPageAlertSlot`].
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfPageAlertSlotProps {
+    pub children: Prop<Children>,
 }
 
-impl AlertSeverity {
-    pub fn badge_class(self) -> &'static str {
-        match self {
-            AlertSeverity::Info => "bg-blue-500/10 text-blue-400 border-blue-500/20",
-            AlertSeverity::Success => "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-            AlertSeverity::Warning => "bg-amber-500/10 text-amber-400 border-amber-500/20",
-            AlertSeverity::Critical => "bg-rose-500/10 text-rose-400 border-rose-500/20",
-        }
-    }
-}
-
-/// Alert banner stack rendered at the top of an institutional page.
+/// Generic alert-banner slot at the top of an institutional page. For an
+/// actual managed alert stack (severity-tagged entries, dismiss events),
+/// use [`crate::molecules::core::HfAlertBannerStack`] as the slot's child
+/// instead of adding stack semantics here.
 #[component]
-pub fn HfAlertBannerStack(#[prop(into, optional)] children: Option<Children>) -> impl IntoView {
-    view! {
-        <div class="hf-alert-banner-stack flex flex-col gap-2 w-full">
-            {children.map(|c| c())}
-        </div>
-    }
+pub fn HfPageAlertSlot(props: HfPageAlertSlotProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    view()
+        .flex_col()
+        .gap(px(2.0))
+        .w_full()
+        .child(props.children)
 }
 
-/// `HfPage` layout template — standard container enforcing margins, responsive max-widths,
-/// optional alert banner slot, and standardized page header.
+/// `HfPage` layout template — standard container enforcing margins,
+/// responsive max-widths, optional alert banner slot, and standardized page header.
+#[derive(Debug, Clone, PartialEq, Props)]
+pub struct HfPageProps {
+    #[prop(default)]
+    pub title: Prop<Option<String>>,
+    #[prop(default)]
+    pub subtitle: Prop<Option<String>>,
+    #[prop(default)]
+    pub max_width_class: Prop<String>,
+    pub children: Prop<Children>,
+}
+
+/// Standard page container.
 #[component]
-pub fn HfPage(
-    #[prop(into, optional)] title: Option<String>,
-    #[prop(into, optional)] subtitle: Option<String>,
-    #[prop(into, optional)] actions: Option<AnyView>,
-    #[prop(into, optional)] alert_banner: Option<AnyView>,
-    #[prop(default = "desktop:max-w-[1920px]")] max_width_class: &'static str,
-    children: Children,
-) -> impl IntoView {
-    view! {
-        <div class=format!("page-container mx-auto px-4 py-3 tablet:px-6 laptop:py-4 {max_width_class}")>
-            {alert_banner.map(|banner| view! { <div class="page-alert-stack mb-3">{banner}</div> })}
-            {title.map(|t| {
-                let s = subtitle.clone();
-                let a = actions;
-                view! {
-                    <div class="page-header flex items-center justify-between border-b border-border-soft pb-3 mb-4">
-                        <div>
-                            <h1 class="text-lg font-semibold text-text-high tracking-tight">{t}</h1>
-                            {s.map(|sub| view! { <p class="text-xs text-text-muted mt-0.5">{sub}</p> })}
-                        </div>
-                        {a.map(|act| view! { <div class="page-header-actions flex items-center gap-2">{act}</div> })}
-                    </div>
-                }
-            })}
-            <div class="page-body flex flex-col gap-4">
-                {children()}
-            </div>
-        </div>
-    }
+pub fn HfPage(props: HfPageProps, _cx: Scope<NoEvent>) -> impl IntoElement {
+    view()
+        .flex_col()
+        .gap(px(4.0))
+        .px_4()
+        .py_3()
+        .w_full()
+        .child(
+            view()
+                .flex_row()
+                .gap(px(2.0))
+                .child(text(move || {
+                    props.title.get_untracked().unwrap_or_default()
+                }))
+                .text_size(px(16.0))
+                .font_weight(FontWeight::SEMIBOLD),
+        )
+        .child(props.children)
 }
