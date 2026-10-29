@@ -31,6 +31,7 @@ pub use base::button::{ButtonSize, ButtonVariant, HfButton, HfChip, HfCloseButto
 pub use base::dialog::{HfDialog, HfDrawer, HfModal};
 pub use base::input::{HfInput, HfNumberInput};
 pub use base::link::HfLink;
+pub use base::plot::{Curve, HfGrid, HfLine, HfPlot};
 pub use base::progress::{HfProgress, HfSpinner};
 pub use base::sheet::HfSheet;
 pub use base::switch::HfSwitch;

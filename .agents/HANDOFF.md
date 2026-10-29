@@ -496,3 +496,69 @@ TSX/`mount()` — see `nsh-port.md` §1's "decision: Rust only". Never assume
 an `nsh_base`/`nsh_core` API from its doc-page description; grep the
 installed source at `~/.cargo/registry/src/*/nsh-{core,base}-0.3.0/src/`
 first.
+
+## 7. 2026-10-29: NSH port, Phase 2 start — first molecule (`payoff_chart`)
+
+**Phase/Slice Status**: first molecule of Phase 2 (`fno/payoff_chart.rs`)
+ported to `nsh_base::plot` (`Plot`/`Line`/`Grid`), plus the matching
+`primitive/base/plot.rs` shim (`HfPlot`/`HfLine`/`HfGrid`, `Area` not
+wrapped yet — no molecule needs it). `cargo check -p honba-kao-ui-core` is
+0 errors/0 warnings, `cargo fmt --check` clean on every touched file.
+
+**Decisions & Discoveries — the wiring gap that made the first pass's
+"0 errors" meaningless**: `lib.rs` did not declare `pub mod molecules;` at
+all (Phase 1 had deliberately gated the whole tree out: "still Leptos...
+until their own phase lands"). So `cargo check -p honba-kao-ui-core` was
+silently *not compiling `molecules/` at all* — confirmed by deliberately
+typo-ing an identifier inside `payoff_chart.rs` and still getting a clean
+check. **Any Phase 2 work must re-verify `molecules` is actually reachable
+from `lib.rs` before trusting a green `cargo check` — do not assume a
+green check means the new file was compiled.**
+
+Fixed by: `lib.rs` now has `pub mod molecules;`. But wiring the whole tree
+at once would have pulled in every *un-ported* sibling across all 5
+domains, which still call primitives through Leptos `view!{}` syntax
+against primitives Phase 1 already turned into nsh `#[component]`s (a real,
+large pre-existing breakage, not something to fix as a side effect of one
+molecule's port). So each domain's `mod.rs` (`core`, `crypto`, `fno`,
+`quant`, `wealth`) now has every sibling's `pub mod`/`pub use` line
+commented out except the ones actually ported (`fno`'s `payoff_chart` is
+the only one live right now) — **uncomment a sibling's two lines in its
+domain's `mod.rs` as each one is ported**, nothing else needs touching to
+bring a new molecule under `cargo check`.
+
+Also added: `primitive/mod.rs` gained `pub use base::plot::{Curve, HfGrid,
+HfLine, HfPlot};` (the other base shims were already re-exported there;
+`plot` was missed). The 3 `*Props` structs (`HfPlotProps` etc.) are **not**
+re-exported at `base`'s or `primitive`'s own level, matching how no other
+shim's `*Props` is either — a molecule constructing one imports it via the
+full path, `crate::primitive::base::plot::{HfPlotProps, ...}`.
+
+**`nsh_base::plot` capability notes** (for the next 6 chart molecules —
+`backtest_card`, `cointegration_band`, `underwater_gauge`,
+`asset_allocation_bar`, `risk_o_meter`, `rolling_returns`):
+`Grid`'s `y: Prop<Vec<f64>>` draws a horizontal reference line at that
+value (used here for the breakeven axis at PnL = 0) — there is no separate
+"reference line" component. `strokeDasharray` has no typed `Styled`
+setter; it goes in via `nsh_core::element::Style::from_decls([StyleDecl::
+Set(StyleKey::StrokeDasharray, PatchValue::Str("4 3".into()))])` applied
+with `.inline_style(...)` (note: `nsh_core::Style`, the crate-root type, is
+a *different* type with no `from_decls` — the one with `from_decls` is
+`nsh_core::element::Style`). `Area` (for filled equity-curve/drawdown
+shading) is still unwrapped — add it to `primitive/base/plot.rs` when
+`backtest_card`/`underwater_gauge` need it, following the same thin-shim
+pattern as `HfLine`. `asset_allocation_bar`/`risk_o_meter` are likely
+*not* `Plot` charts at all (a stacked bar and a radial gauge have no x/y
+series) — expect those two to end up as plain `View`-based primitives
+compositions instead, per the port plan's own fallback clause.
+
+**Immediate Next Step**: continue Phase 2's chart-molecule batch
+(`backtest_card`, `cointegration_band`, `underwater_gauge` next — quant
+domain), then `asset_allocation_bar`/`risk_o_meter`/`rolling_returns`
+(wealth domain), then the input-composition molecules, then the remaining
+bespoke `View` compositions, per `nsh-port.md` §4's Phase 2 ordering. For
+each: read the molecule's current Leptos source, read the real
+`nsh_base`/`nsh_core` source for anything new it needs, port it, uncomment
+its domain `mod.rs` lines, `cargo check -p honba-kao-ui-core` (confirm
+`molecules` is still reachable from `lib.rs` first), `cargo fmt` the
+touched files only, commit.

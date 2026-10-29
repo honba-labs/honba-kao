@@ -1,6 +1,9 @@
-// NSH port (see nsh-port.md): `hooks`, `icons`, `molecules`, `organisms` and
-// `templates` are still Leptos and gated out until their own phase lands.
-// `primitive` and `theme` are the only NSH-ported modules so far.
+// NSH port (see nsh-port.md): `hooks`, `icons`, `organisms` and `templates`
+// are still Leptos and gated out until their own phase lands. `primitive`
+// and `theme` are NSH-ported; `molecules` is landing piecemeal (Phase 2) —
+// each domain's `mod.rs` declares only the siblings already ported, so
+// `cargo check` actually exercises what's been converted so far.
+pub mod molecules;
 pub mod primitive;
 pub mod theme;
 
