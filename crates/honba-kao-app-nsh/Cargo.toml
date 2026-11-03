@@ -1,0 +1,76 @@
+[package]
+name = "honba-kao-app-nsh"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "honba_kao_app_nsh"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# Stage 3 Phase A.4 of the gallery-rs porting guide: the openalgo-charts
+# bridge (the vendored ESM bundle + its Rust⇄JS shim) is opt-in. Nothing
+# in `src/` references it — the app-compiles charts through honba's own
+# organisms — so the default build no longer downloads vendors it into
+# the build bundle.
+openalgo = ["dep:openalgo-charts"]
+
+[dependencies]
+honba-kao-client.workspace = true
+honba-kao-ui-core.workspace = true
+honba-core.workspace = true
+honba-kao-api-wasm.workspace = true
+honba-indicators.workspace = true
+openalgo-charts = { optional = true, workspace = true }
+nsh-core.workspace = true
+nsh-base.workspace = true
+futures-channel.workspace = true
+futures-util.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono = "0.4"
+uuid = { version = "1", features = ["js"] }
+getrandom = { version = "0.2", features = ["js"] }
+num-traits = "0.2"
+rust_decimal.workspace = true
+rust_decimal_macros.workspace = true
+
+# Stage 3 Phase A.5 (gallery-rs porting guide): the native desktop runner
+# (src/main.rs). The platform crates tie the same UI sets to Linux (GTK 4),
+# macOS (AppKit) and Windows (Win32); log/env_logger stay off the wasm
+# target so the web build links none of them (the web runtime drives the
+# cdylib, never this bin).
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+log = "0.4"
+env_logger = "0.11"
+# Spec §6.3: the runner stages the assets registry and reads its canonical theme.
+honba-kao-assets.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nsh-platform-linux = { version = "0.3", default-features = false }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+nsh-platform-macos = { version = "0.3", default-features = false }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+nsh-platform-windows = { version = "0.3", default-features = false }
+
+# Browser-only dependencies (Stage 3 Phase A.1): the platform layer compiles
+# for the host (native desktop) with all browser APIs behind
+# `#[cfg(target_arch = "wasm32")]` gates, so wasm-bindgen/web-sys bindings
+# must not even be linked off-wasm.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+console_error_panic_hook.workspace = true
+tracing-wasm.workspace = true
+web-sys = { version = "0.3", features = [
+    "Window", "Document", "Element", "HtmlElement", "HtmlInputElement",
+    "MouseEvent", "KeyboardEvent", "FocusEvent", "Location", "Storage",
+    "MediaQueryList", "Event", "EventTarget", "CustomEvent", "Blob",
+    "BlobPropertyBag", "CssStyleDeclaration", "Url", "BroadcastChannel", "MessageEvent", "console",
+    "HtmlAnchorElement"
+] }
