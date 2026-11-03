@@ -4,7 +4,7 @@
 
 use super::components::{
     ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar, ScreenerFilterModal,
-    ScreenerTable,
+    ScreenerHeatmap, ScreenerTable,
 };
 use crate::features::screener::filters::{filter_records, sort_records};
 use crate::features::screener::fixtures::seed_fixtures;
@@ -170,9 +170,11 @@ pub fn ScreenerPage() -> impl IntoView {
                         }
                         .into_any(),
                         ScreenerViewMode::Heatmap => view! {
-                            <div class="flex h-full items-center justify-center text-xs text-text-muted">
-                                "Market Heatmap arrives in Phase 2 (sector treemap)"
-                            </div>
+                            <ScreenerHeatmap
+                                records=records
+                                active_symbol=active_symbol
+                                drawer_open=drawer_open
+                            />
                         }
                         .into_any(),
                     }}
