@@ -1,7 +1,7 @@
 # HANDOFF — `honba-kao-app` Screener (Phase 1 COMMITTED `ec1127e`; Phase 2 in flight)
 
 ## 1. Phase / Slice Status
-- **Phase 1 (Reactive Plumbing & Modal Triggers): COMMITTED** as `ec1127e` —
+- **Phase 1 (Reactive Plumbing & Modal Triggers): COMMITTED** as `d9bb81a1` —
   `feat(kao-app): screener Phase 1 — reactive plumbing & modal triggers`
   (15 files, +2310/−42; spec `docs/screener-honba-leptos.md` Phase 1).
 - Gates green at commit: `cargo check -p honba-kao-app --all-targets` ✅,
@@ -31,7 +31,7 @@
 ## 3. Phase-2 (sector heatmap) is IN FLIGHT and uncommitted — restoration list
 A concurrent batch built Phase 2; to keep `main` compilable its wiring was
 **trimmed out of the shared files at commit time** and left in their working tree.
-The Phase-2 batch must re-apply on top of `ec1127e`:
+The Phase-2 batch must re-apply on top of `d9bb81a1`:
 1. `src/features/screener/components/mod.rs` — restore `pub mod screener_heatmap;`
    + `pub use screener_heatmap::ScreenerHeatmap;` (+ doc mention).
 2. `src/features/screener/mod.rs` — restore `pub mod heatmap;` (alphabetical slot).
