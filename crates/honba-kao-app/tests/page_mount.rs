@@ -30,6 +30,11 @@ use honba_kao_app::features::risk_ops::{OmsPage, OpsPage, PositionSizerPage, Ris
 /// Screener cluster
 #[allow(unused_imports)]
 use honba_kao_app::features::screener::ScreenerPage;
+#[allow(unused_imports)]
+use honba_kao_app::features::screener::components::{
+    ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar, ScreenerFilterModal,
+    ScreenerTable,
+};
 /// System cluster
 #[allow(unused_imports)]
 use honba_kao_app::features::system::{AccountPage, AuthPage, HomePage, LandingPage};
@@ -92,6 +97,11 @@ fn quant_cluster_pages_exist() {
 #[test]
 fn screener_cluster_page_exists() {
     let _ = ScreenerPage;
+    let _ = ScreenerFilterBar;
+    let _ = ScreenerTable;
+    let _ = ScreenerDetailDrawer;
+    let _ = ScreenerFilterModal;
+    let _ = ScreenerColumnModal;
 }
 
 #[test]
