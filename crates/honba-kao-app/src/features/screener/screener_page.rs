@@ -8,6 +8,7 @@ use super::components::{
 };
 use crate::features::screener::filters::{filter_records, filter_universe, sort_universe};
 use crate::features::screener::fixtures::{stock_universe, universe_for};
+use crate::features::screener::prompt_ast::{PromptTerm, parse_prompt, prompt_label};
 use crate::features::screener::types::{
     COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType,
     ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode,
@@ -41,6 +42,9 @@ pub fn ScreenerPage() -> impl IntoView {
     let min_rvol = RwSignal::new(dec!(0));
     let min_rsi = RwSignal::new(dec!(0));
     let max_rsi = RwSignal::new(dec!(0));
+    let selected_index = RwSignal::new(String::new());
+    let ai_prompt = RwSignal::new(String::new());
+    let ai_label = RwSignal::new(String::new());
 
     // --- Sorting ---------------------------------------------------------
     let sort_col: RwSignal<&'static str> = RwSignal::new("market_cap_cr");
@@ -81,6 +85,7 @@ pub fn ScreenerPage() -> impl IntoView {
         exchange: selected_exchange.get(),
         sector: selected_sector.get(),
         market_cap_category: selected_market_cap.get(),
+        market_index: selected_index.get(),
         min_price: min_price.get(),
         max_price: max_price.get(),
         min_pe: min_pe.get(),
@@ -137,8 +142,36 @@ pub fn ScreenerPage() -> impl IntoView {
         min_rvol.set(dec!(0));
         min_rsi.set(dec!(0));
         max_rsi.set(dec!(0));
+        selected_index.set(String::new());
+        ai_prompt.set(String::new());
+        ai_label.set(String::new());
         sort_col.set("market_cap_cr");
         sort_ascending.set(false);
+    });
+
+    // ✦ AI bar: deterministic local parse (no honba_nou linkage) applied onto the
+    // SAME signals the filter bar / modal already drive — single source of truth.
+    let on_ai_apply = Callback::new(move |prompt: String| {
+        let ast = parse_prompt(&prompt);
+        for term in &ast.terms {
+            match term {
+                PromptTerm::PriceMin(value) => min_price.set(*value),
+                PromptTerm::PriceMax(value) => max_price.set(*value),
+                PromptTerm::PeMin(value) => min_pe.set(*value),
+                PromptTerm::PeMax(value) => max_pe.set(*value),
+                PromptTerm::RvolMin(value) => min_rvol.set(*value),
+                PromptTerm::RsiMin(value) => min_rsi.set(*value),
+                PromptTerm::RsiMax(value) => max_rsi.set(*value),
+                PromptTerm::Index(key) => selected_index.set((*key).to_string()),
+                PromptTerm::FnoOnly => fno_only.set(true),
+                PromptTerm::WatchlistOnly => watchlist_only.set(true),
+            }
+        }
+        if ast.terms.is_empty() && !ast.residual.is_empty() {
+            search_query.set(ast.residual.clone());
+        }
+        ai_label.set(prompt_label(&prompt));
+        ai_prompt.set(String::new());
     });
 
     // Sector dropdown options: "All" first, then unique sectors A→Z.
@@ -159,6 +192,7 @@ pub fn ScreenerPage() -> impl IntoView {
                 active_tab=active_tab
                 search_query=search_query
                 selected_exchange=selected_exchange
+                selected_index=selected_index
                 selected_sector=selected_sector
                 sector_options=sector_options
                 selected_market_cap=selected_market_cap
@@ -167,6 +201,13 @@ pub fn ScreenerPage() -> impl IntoView {
                 view_mode=view_mode
                 filter_modal_open=filter_modal_open
                 column_modal_open=column_modal_open
+                min_price=min_price
+                max_price=max_price
+                min_pe=min_pe
+                max_pe=max_pe
+                ai_prompt=ai_prompt
+                ai_label=ai_label
+                on_ai_apply=on_ai_apply
                 active_filters=active_filters
                 on_reset=on_reset
             />

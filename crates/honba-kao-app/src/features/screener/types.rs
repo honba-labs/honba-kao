@@ -1,3 +1,4 @@
+use crate::features::screener::indices::{benchmark_for, index_contains};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -190,6 +191,10 @@ pub struct FilterCriteria {
     pub exchange: String,
     pub sector: String,
     pub market_cap_category: String,
+    /// Market index membership key ("" / "ALL" / unknown key = no restriction),
+    /// resolved against `screener::indices::INDEX_CATALOG`.
+    #[serde(default)]
+    pub market_index: String,
     pub min_price: Decimal,
     pub max_price: Decimal,
     pub min_pe: Decimal,
@@ -205,6 +210,12 @@ impl FilterCriteria {
     /// `""` (the `Default`) and `"ALL"` both mean "no restriction".
     fn is_unset(value: &str) -> bool {
         value.is_empty() || value == "ALL"
+    }
+
+    /// `market_index` counts as an active restriction only when it names a
+    /// *known* catalog benchmark; unknown keys degrade to "no restriction".
+    fn index_is_active(&self) -> bool {
+        !Self::is_unset(&self.market_index) && benchmark_for(&self.market_index).is_some()
     }
 
     pub fn matches(&self, record: &ScreenerEquityRecord) -> bool {
@@ -225,6 +236,9 @@ impl FilterCriteria {
         if !Self::is_unset(&self.market_cap_category)
             && record.market_cap_category != self.market_cap_category
         {
+            return false;
+        }
+        if self.index_is_active() && !index_contains(&self.market_index, &record.symbol) {
             return false;
         }
         if self.min_price > Decimal::ZERO && record.price < self.min_price {
@@ -269,6 +283,9 @@ impl FilterCriteria {
             count += 1;
         }
         if !Self::is_unset(&self.market_cap_category) {
+            count += 1;
+        }
+        if self.index_is_active() {
             count += 1;
         }
         if self.min_price > Decimal::ZERO {
