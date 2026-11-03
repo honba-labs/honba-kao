@@ -39,3 +39,9 @@ Gates (verified from `honba-kao/` crate root on the committed content):
 - Commit hygiene on the shared tree: `git add` exactly this batch's paths; other lanes' files stay worktree-local; code commit first, HANDOFF amendment as its own `docs(kao)` commit referencing the code hash.
 - Verify from `honba-kao/` crate root; wasm gate is its own invocation (`--target wasm32-unknown-unknown`).
 - Do not regress: `Hf*`/`SortDirection` contracts, formatter golden strings (`format_price/change_pct/volume_compact/mcap_rs_cr`, `record_cell`), `seed_fixtures()` order, §5 pinned plumbing, and the heat-anchor RGB math.
+
+## 6. Other-lane batch log — honba-kao-assets (committed separately)
+- **`6da42ef feat(kao-assets): centralized assets crate** — fonts (Exo2/Inter/JetBrains Mono/IBM Plex/RobotoMono + OFLs + manifest), branding emblems, OMS audio WAVs, canonical/bloomberg/monokai themes, orderbook & replay fixtures; compile-time `include_bytes`/`asset!` NSH registry; optional rodio behind the non-default `audio` feature (default build stays wasm-clean). 214 files.
+- Closure: root `Cargo.toml` (member + `honba-kao-assets` dep + `nsh-core`/`nsh-base` workspace entries) **and `crates/honba-kao-app/theme.json`** — required because `assets/tests/theme_canonical_test.rs` `include_str!`s it (byte-equal web-flow copy; drift pin). Without it the committed crate would not self-build.
+- Gates: fmt ✅, clippy `-D warnings` ✅, `cargo test -p honba-kao-assets` 19/19 (2 doctests ignored), wasm32 check ✅.
+- Still in-flight for the same lane (preserved uncommitted): app old fonts/CSS deletion set + new `honba-kao-app/assets` dir. No committed consumer exists for the crate yet (`honba-kao-app-nsh` is outside the workspace members).
