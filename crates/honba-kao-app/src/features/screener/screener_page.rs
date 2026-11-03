@@ -10,8 +10,9 @@ use crate::features::screener::filters::{filter_records, filter_universe, sort_u
 use crate::features::screener::fixtures::{stock_universe, universe_for};
 use crate::features::screener::prompt_ast::{PromptTerm, parse_prompt, prompt_label};
 use crate::features::screener::types::{
-    COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType,
-    ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode,
+    COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType, ScreenerColumn,
+    ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode, all_master_column_keys, catalog_for,
+    columns_for_tab,
 };
 use leptos::prelude::*;
 use rust_decimal_macros::dec;
@@ -59,25 +60,55 @@ pub fn ScreenerPage() -> impl IntoView {
             .collect::<HashSet<String>>(),
     );
 
-    // --- Column visibility (one signal per catalog column) ----------------
-    let column_flags: Vec<(&'static str, RwSignal<bool>)> = COLUMN_CATALOG
+    // --- Column flags + master order over every catalog key (doc §6.1) ----
+    let master_keys: Vec<&'static str> = all_master_column_keys();
+    let column_flags: Vec<(&'static str, RwSignal<bool>)> = master_keys
         .iter()
-        .map(|c| {
-            (
-                c.key,
-                RwSignal::new(DEFAULT_VISIBLE_COLUMNS.contains(&c.key)),
-            )
+        .map(|key| {
+            // Overview (stock catalog) keys keep today's default seeding;
+            // every other tab metric column starts visible.
+            let overview = COLUMN_CATALOG.iter().any(|c| c.key == *key);
+            let visible = if overview {
+                DEFAULT_VISIBLE_COLUMNS.contains(key)
+            } else {
+                true
+            };
+            (*key, RwSignal::new(visible))
         })
         .collect();
-    let flags_for_visibility = column_flags.clone();
-    let visible_keys: Memo<Vec<&'static str>> = Memo::new(move |_| {
-        flags_for_visibility
-            .iter()
-            .filter(|(_, f)| f.get())
-            .map(|(k, _)| *k)
-            .collect()
-    });
-    let visible_columns: Signal<Vec<&'static str>> = visible_keys.into();
+    let column_order: RwSignal<Vec<&'static str>> = RwSignal::new(master_keys);
+    // Ownership copies for the two `move` closures that mount the table
+    // (Move-closures capture the Vec by value; RwSignals inside are Copy).
+    let flags_for_table_a = column_flags.clone();
+    let flags_for_table_b = column_flags.clone();
+    let flags_for_modal = column_flags.clone();
+
+    // Ordered visible columns for the active (asset class, tab) pair:
+    // master order ∩ class/tab catalog ∩ flags. Overview yields today's
+    // default stock columns byte-for-byte.
+    let flags_for_view = column_flags.clone();
+    let visible_columns: Signal<Vec<ScreenerColumn>> = Memo::new(move |_| {
+        let asset = ScreenerAssetType::from_bar(&asset_type.get());
+        let slice: &'static [ScreenerColumn] = if asset == ScreenerAssetType::Stocks {
+            columns_for_tab(&active_tab.get())
+        } else {
+            catalog_for(asset)
+        };
+        let mut out: Vec<ScreenerColumn> = Vec::new();
+        for key in column_order.get() {
+            let Some(col) = slice.iter().find(|c| c.key == key) else {
+                continue;
+            };
+            let Some((_, flag)) = flags_for_view.iter().find(|(k, _)| *k == key) else {
+                continue;
+            };
+            if flag.get() {
+                out.push(*col);
+            }
+        }
+        out
+    })
+    .into();
 
     // Shared criteria builder (Copy closure reused by the memo + count).
     let build_criteria = move || FilterCriteria {
@@ -217,13 +248,21 @@ pub fn ScreenerPage() -> impl IntoView {
                         ScreenerViewMode::Table => view! {
                             <ScreenerTable
                                 records=records
-                                asset_type=typed_asset
+                                columns=visible_columns
+                                column_flags=flags_for_table_a.clone()
+                                column_order=column_order
                                 active_symbol=active_symbol
                                 watchlist=watchlist
-                                visible_columns=visible_columns
                                 sort_col=sort_col
                                 sort_ascending=sort_ascending
                                 drawer_open=drawer_open
+                                min_price=min_price
+                                max_price=max_price
+                                min_pe=min_pe
+                                max_pe=max_pe
+                                min_rvol=min_rvol
+                                min_rsi=min_rsi
+                                max_rsi=max_rsi
                             />
                         }
                         .into_any(),
@@ -247,13 +286,21 @@ pub fn ScreenerPage() -> impl IntoView {
                                             {view! {
                                                 <ScreenerTable
                                                     records=records
-                                                    asset_type=typed_asset
+                                                    columns=visible_columns
+                                                    column_flags=flags_for_table_b.clone()
+                                                    column_order=column_order
                                                     active_symbol=active_symbol
                                                     watchlist=watchlist
-                                                    visible_columns=visible_columns
                                                     sort_col=sort_col
                                                     sort_ascending=sort_ascending
                                                     drawer_open=drawer_open
+                                                    min_price=min_price
+                                                    max_price=max_price
+                                                    min_pe=min_pe
+                                                    max_pe=max_pe
+                                                    min_rvol=min_rvol
+                                                    min_rsi=min_rsi
+                                                    max_rsi=max_rsi
                                                 />
                                             }
                                             .into_any()}
@@ -307,7 +354,7 @@ pub fn ScreenerPage() -> impl IntoView {
                         view! {
                             <ScreenerColumnModal
                                 open=column_modal_open
-                                column_flags=column_flags.clone()
+                                column_flags=flags_for_modal.clone()
                             />
                         }
                     })

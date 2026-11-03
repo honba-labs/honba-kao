@@ -146,6 +146,26 @@ pub fn format_mcap_rs_cr(mcap_cr: Decimal) -> String {
     }
 }
 
+/// "₹725,000 Cr" — whole-crore figure with thousands separators; negatives
+/// keep their leading minus sign.
+pub fn format_cr_amount(amount_cr: Decimal) -> String {
+    let whole = amount_cr.round_dp(0).to_string();
+    let (sign, digits) = match whole.strip_prefix('-') {
+        Some(rest) => ("-", rest),
+        None => ("", whole.as_str()),
+    };
+    format!("₹{sign}{} Cr", group_thousands(digits))
+}
+
+/// Supertrend direction glyph: "▲ Buy" for +1, "▼ Sell" for -1, "—" otherwise.
+pub fn format_supertrend(direction: i8) -> String {
+    match direction {
+        1 => "▲ Buy".to_string(),
+        -1 => "▼ Sell".to_string(),
+        _ => "—".to_string(),
+    }
+}
+
 /// Keeps Stock records filtered by the full `FilterCriteria` predicate and
 /// non-stock records by search only (symbol + name, lowercase contains).
 pub fn filter_universe(
@@ -219,7 +239,7 @@ pub fn format_percent2(value: Decimal) -> String {
 }
 
 /// Renders one table cell for a union record; identity/star/range keys yield
-/// `""` and fall through to the default arm.
+/// `""` and fall through to the default arm; tab metrics render via formatters.
 pub fn record_cell(record: &ScreenerRecord, key: &str) -> String {
     match (record, key) {
         (ScreenerRecord::Stock(r), "price") => format_price(r.price),
@@ -233,6 +253,49 @@ pub fn record_cell(record: &ScreenerRecord, key: &str) -> String {
             } else {
                 r.pe_ratio.round_dp(1).to_string()
             }
+        }
+        (ScreenerRecord::Stock(r), "rsi_14") => format_percent2(r.rsi_14),
+        (ScreenerRecord::Stock(r), "atr_pct") => format_percent2(r.atr_pct),
+        (ScreenerRecord::Stock(r), "bb_bandwidth") => format_percent2(r.bb_bandwidth),
+        (ScreenerRecord::Stock(r), "dividend_yield") => format_percent2(r.dividend_yield),
+        (ScreenerRecord::Stock(r), "payout_ratio") => format_percent2(r.payout_ratio),
+        (ScreenerRecord::Stock(r), "roe") => format_percent2(r.roe),
+        (ScreenerRecord::Stock(r), "roce") => format_percent2(r.roce),
+        (ScreenerRecord::Stock(r), "operating_margin") => format_percent2(r.operating_margin),
+        (ScreenerRecord::Stock(r), "net_margin") => format_percent2(r.net_margin),
+        (ScreenerRecord::Stock(r), "return_1d") => format_change_pct(r.return_1d),
+        (ScreenerRecord::Stock(r), "return_1w") => format_change_pct(r.return_1w),
+        (ScreenerRecord::Stock(r), "return_1m") => format_change_pct(r.return_1m),
+        (ScreenerRecord::Stock(r), "return_3m") => format_change_pct(r.return_3m),
+        (ScreenerRecord::Stock(r), "return_6m") => format_change_pct(r.return_6m),
+        (ScreenerRecord::Stock(r), "return_ytd") => format_change_pct(r.return_ytd),
+        (ScreenerRecord::Stock(r), "return_1y") => format_change_pct(r.return_1y),
+        (ScreenerRecord::Stock(r), "return_3y") => format_change_pct(r.return_3y),
+        (ScreenerRecord::Stock(r), "revenue_growth_yoy") => format_change_pct(r.revenue_growth_yoy),
+        (ScreenerRecord::Stock(r), "macd_hist") => format_number2(r.macd_hist),
+        (ScreenerRecord::Stock(r), "sma_20") => format_number2(r.sma_20),
+        (ScreenerRecord::Stock(r), "sma_50") => format_number2(r.sma_50),
+        (ScreenerRecord::Stock(r), "sma_200") => format_number2(r.sma_200),
+        (ScreenerRecord::Stock(r), "ema_9") => format_number2(r.ema_9),
+        (ScreenerRecord::Stock(r), "ema_21") => format_number2(r.ema_21),
+        (ScreenerRecord::Stock(r), "forward_pe") => format_number2(r.forward_pe),
+        (ScreenerRecord::Stock(r), "pb_ratio") => format_number2(r.pb_ratio),
+        (ScreenerRecord::Stock(r), "ps_ratio") => format_number2(r.ps_ratio),
+        (ScreenerRecord::Stock(r), "ev_ebitda") => format_number2(r.ev_ebitda),
+        (ScreenerRecord::Stock(r), "peg_ratio") => format_number2(r.peg_ratio),
+        (ScreenerRecord::Stock(r), "dividend_per_share") => format_number2(r.dividend_per_share),
+        (ScreenerRecord::Stock(r), "debt_to_equity") => format_number2(r.debt_to_equity),
+        (ScreenerRecord::Stock(r), "current_ratio") => format_number2(r.current_ratio),
+        (ScreenerRecord::Stock(r), "interest_coverage") => format_number2(r.interest_coverage),
+        (ScreenerRecord::Stock(r), "book_value_per_share") => {
+            format_number2(r.book_value_per_share)
+        }
+        (ScreenerRecord::Stock(r), "eps") => format_number2(r.eps),
+        (ScreenerRecord::Stock(r), "revenue_cr") => format_cr_amount(r.revenue_cr),
+        (ScreenerRecord::Stock(r), "net_profit_cr") => format_cr_amount(r.net_profit_cr),
+        (ScreenerRecord::Stock(r), "fcf_cr") => format_cr_amount(r.fcf_cr),
+        (ScreenerRecord::Stock(r), "supertrend_direction") => {
+            format_supertrend(r.supertrend_direction)
         }
         (ScreenerRecord::Etf(r), "ltp") => format_price(r.ltp),
         (ScreenerRecord::Etf(r), "nav") => format_price(r.nav),

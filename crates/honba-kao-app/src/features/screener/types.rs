@@ -183,6 +183,457 @@ pub const DEFAULT_VISIBLE_COLUMNS: &[&str] = &[
     "range_52w",
 ];
 
+/// View-tab keys in filter-bar strip order (doc `docs/screener-honba-leptos.md`
+/// §6.1); "overview" (or any unknown key) falls back to the stock catalog.
+pub const TAB_KEYS: &[&str] = &[
+    "overview",
+    "performance",
+    "technicals",
+    "valuation",
+    "dividends",
+    "profitability",
+    "financials",
+    "income_statement",
+    "balance_sheet",
+    "cash_flow",
+    "per_share",
+    "forecasts",
+];
+
+pub const PERFORMANCE_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_1d",
+        label: "1D %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_1w",
+        label: "1W %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_1m",
+        label: "1M %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_3m",
+        label: "3M %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_6m",
+        label: "6M %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_ytd",
+        label: "YTD %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_1y",
+        label: "1Y %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "return_3y",
+        label: "3Y %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "atr_pct",
+        label: "ATR %",
+        sortable: true,
+    },
+];
+
+pub const TECHNICAL_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "rsi_14",
+        label: "RSI(14)",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "macd_hist",
+        label: "MACD",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "supertrend_direction",
+        label: "Supertrend",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "sma_20",
+        label: "SMA 20",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "sma_50",
+        label: "SMA 50",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "sma_200",
+        label: "SMA 200",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "ema_9",
+        label: "EMA 9",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "ema_21",
+        label: "EMA 21",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "bb_bandwidth",
+        label: "BBW %",
+        sortable: true,
+    },
+];
+
+pub const VALUATION_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "pe_ratio",
+        label: "P/E",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "forward_pe",
+        label: "Fwd P/E",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "pb_ratio",
+        label: "P/B",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "ps_ratio",
+        label: "P/S",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "ev_ebitda",
+        label: "EV/EBITDA",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "peg_ratio",
+        label: "PEG",
+        sortable: true,
+    },
+];
+
+pub const DIVIDEND_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "dividend_yield",
+        label: "Div Yield %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "payout_ratio",
+        label: "Payout %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "dividend_per_share",
+        label: "DPS ₹",
+        sortable: true,
+    },
+];
+
+pub const PROFITABILITY_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "roe",
+        label: "ROE %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "roce",
+        label: "ROCE %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "operating_margin",
+        label: "Op Margin %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "net_margin",
+        label: "Net Margin %",
+        sortable: true,
+    },
+];
+
+pub const FINANCIAL_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "revenue_cr",
+        label: "Revenue ₹Cr",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "revenue_growth_yoy",
+        label: "Rev Growth %",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "net_profit_cr",
+        label: "PAT ₹Cr",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "eps",
+        label: "EPS ₹",
+        sortable: true,
+    },
+];
+
+pub const INCOME_STATEMENT_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "revenue_cr",
+        label: "Revenue ₹Cr",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "net_profit_cr",
+        label: "PAT ₹Cr",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "eps",
+        label: "EPS ₹",
+        sortable: true,
+    },
+];
+
+pub const BALANCE_SHEET_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "debt_to_equity",
+        label: "Debt/Equity",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "current_ratio",
+        label: "Current Ratio",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "interest_coverage",
+        label: "Int Coverage",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "book_value_per_share",
+        label: "Book Value ₹",
+        sortable: true,
+    },
+];
+
+pub const CASH_FLOW_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "fcf_cr",
+        label: "Free CF ₹Cr",
+        sortable: true,
+    },
+];
+
+pub const PER_SHARE_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "eps",
+        label: "EPS ₹",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "book_value_per_share",
+        label: "Book Value ₹",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "dividend_per_share",
+        label: "DPS ₹",
+        sortable: true,
+    },
+];
+
+pub const FORECAST_COLUMN_CATALOG: &[ScreenerColumn] = &[
+    ScreenerColumn {
+        key: "star",
+        label: "★",
+        sortable: false,
+    },
+    ScreenerColumn {
+        key: "symbol",
+        label: "Ticker",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "forward_pe",
+        label: "Fwd P/E",
+        sortable: true,
+    },
+    ScreenerColumn {
+        key: "peg_ratio",
+        label: "PEG",
+        sortable: true,
+    },
+];
+
+/// Column slice for one view tab. "overview", "" and unknown keys return the
+/// stock `COLUMN_CATALOG` itself (byte-for-byte legacy behavior).
+pub fn columns_for_tab(tab: &str) -> &'static [ScreenerColumn] {
+    match tab {
+        "performance" => PERFORMANCE_COLUMN_CATALOG,
+        "technicals" => TECHNICAL_COLUMN_CATALOG,
+        "valuation" => VALUATION_COLUMN_CATALOG,
+        "dividends" => DIVIDEND_COLUMN_CATALOG,
+        "profitability" => PROFITABILITY_COLUMN_CATALOG,
+        "financials" => FINANCIAL_COLUMN_CATALOG,
+        "income_statement" => INCOME_STATEMENT_COLUMN_CATALOG,
+        "balance_sheet" => BALANCE_SHEET_COLUMN_CATALOG,
+        "cash_flow" => CASH_FLOW_COLUMN_CATALOG,
+        "per_share" => PER_SHARE_COLUMN_CATALOG,
+        "forecasts" => FORECAST_COLUMN_CATALOG,
+        _ => COLUMN_CATALOG,
+    }
+}
+
+/// Dedup-union of every catalog key in deterministic seed order: stock
+/// `COLUMN_CATALOG` first, then each tab catalog, then the ETF/Bond/MF
+/// catalogs via `catalog_for`. This seeds the page's column flags and
+/// master display order.
+pub fn all_master_column_keys() -> Vec<&'static str> {
+    let mut keys: Vec<&'static str> = Vec::new();
+    for catalog in [
+        COLUMN_CATALOG,
+        PERFORMANCE_COLUMN_CATALOG,
+        TECHNICAL_COLUMN_CATALOG,
+        VALUATION_COLUMN_CATALOG,
+        DIVIDEND_COLUMN_CATALOG,
+        PROFITABILITY_COLUMN_CATALOG,
+        FINANCIAL_COLUMN_CATALOG,
+        INCOME_STATEMENT_COLUMN_CATALOG,
+        BALANCE_SHEET_COLUMN_CATALOG,
+        CASH_FLOW_COLUMN_CATALOG,
+        PER_SHARE_COLUMN_CATALOG,
+        FORECAST_COLUMN_CATALOG,
+        ETF_COLUMN_CATALOG,
+        BOND_COLUMN_CATALOG,
+        MF_COLUMN_CATALOG,
+    ] {
+        for col in catalog {
+            if !keys.contains(&col.key) {
+                keys.push(col.key);
+            }
+        }
+    }
+    keys
+}
+
 /// Screener filter state. A `Decimal` bound of `ZERO` means "unset".
 /// Empty string or `"ALL"` means "no restriction" for the categorical fields.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -603,6 +1054,47 @@ impl ScreenerRecord {
             (ScreenerRecord::Stock(r), "volume") => Decimal::from(r.volume),
             (ScreenerRecord::Stock(r), "market_cap_cr") => r.market_cap_cr,
             (ScreenerRecord::Stock(r), "pe_ratio") => r.pe_ratio,
+            (ScreenerRecord::Stock(r), "return_1d") => r.return_1d,
+            (ScreenerRecord::Stock(r), "return_1w") => r.return_1w,
+            (ScreenerRecord::Stock(r), "return_1m") => r.return_1m,
+            (ScreenerRecord::Stock(r), "return_3m") => r.return_3m,
+            (ScreenerRecord::Stock(r), "return_6m") => r.return_6m,
+            (ScreenerRecord::Stock(r), "return_ytd") => r.return_ytd,
+            (ScreenerRecord::Stock(r), "return_1y") => r.return_1y,
+            (ScreenerRecord::Stock(r), "return_3y") => r.return_3y,
+            (ScreenerRecord::Stock(r), "atr_pct") => r.atr_pct,
+            (ScreenerRecord::Stock(r), "rsi_14") => r.rsi_14,
+            (ScreenerRecord::Stock(r), "macd_hist") => r.macd_hist,
+            (ScreenerRecord::Stock(r), "supertrend_direction") => {
+                Decimal::from(r.supertrend_direction)
+            }
+            (ScreenerRecord::Stock(r), "sma_20") => r.sma_20,
+            (ScreenerRecord::Stock(r), "sma_50") => r.sma_50,
+            (ScreenerRecord::Stock(r), "sma_200") => r.sma_200,
+            (ScreenerRecord::Stock(r), "ema_9") => r.ema_9,
+            (ScreenerRecord::Stock(r), "ema_21") => r.ema_21,
+            (ScreenerRecord::Stock(r), "bb_bandwidth") => r.bb_bandwidth,
+            (ScreenerRecord::Stock(r), "forward_pe") => r.forward_pe,
+            (ScreenerRecord::Stock(r), "pb_ratio") => r.pb_ratio,
+            (ScreenerRecord::Stock(r), "ps_ratio") => r.ps_ratio,
+            (ScreenerRecord::Stock(r), "ev_ebitda") => r.ev_ebitda,
+            (ScreenerRecord::Stock(r), "peg_ratio") => r.peg_ratio,
+            (ScreenerRecord::Stock(r), "dividend_yield") => r.dividend_yield,
+            (ScreenerRecord::Stock(r), "payout_ratio") => r.payout_ratio,
+            (ScreenerRecord::Stock(r), "dividend_per_share") => r.dividend_per_share,
+            (ScreenerRecord::Stock(r), "roe") => r.roe,
+            (ScreenerRecord::Stock(r), "roce") => r.roce,
+            (ScreenerRecord::Stock(r), "operating_margin") => r.operating_margin,
+            (ScreenerRecord::Stock(r), "net_margin") => r.net_margin,
+            (ScreenerRecord::Stock(r), "revenue_cr") => r.revenue_cr,
+            (ScreenerRecord::Stock(r), "revenue_growth_yoy") => r.revenue_growth_yoy,
+            (ScreenerRecord::Stock(r), "net_profit_cr") => r.net_profit_cr,
+            (ScreenerRecord::Stock(r), "eps") => r.eps,
+            (ScreenerRecord::Stock(r), "debt_to_equity") => r.debt_to_equity,
+            (ScreenerRecord::Stock(r), "current_ratio") => r.current_ratio,
+            (ScreenerRecord::Stock(r), "interest_coverage") => r.interest_coverage,
+            (ScreenerRecord::Stock(r), "book_value_per_share") => r.book_value_per_share,
+            (ScreenerRecord::Stock(r), "fcf_cr") => r.fcf_cr,
             (ScreenerRecord::Etf(r), "ltp") => r.ltp,
             (ScreenerRecord::Etf(r), "nav") => r.nav,
             (ScreenerRecord::Etf(r), "premium_discount_pct") => r.premium_discount_pct,
