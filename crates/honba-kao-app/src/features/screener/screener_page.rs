@@ -6,10 +6,11 @@ use super::components::{
     ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar, ScreenerFilterModal,
     ScreenerHeatmap, ScreenerTable,
 };
-use crate::features::screener::filters::{filter_records, sort_records};
-use crate::features::screener::fixtures::seed_fixtures;
+use crate::features::screener::filters::{filter_records, filter_universe, sort_universe};
+use crate::features::screener::fixtures::{stock_universe, universe_for};
 use crate::features::screener::types::{
-    COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerEquityRecord, ScreenerViewMode,
+    COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType,
+    ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode,
 };
 use leptos::prelude::*;
 use rust_decimal_macros::dec;
@@ -47,7 +48,7 @@ pub fn ScreenerPage() -> impl IntoView {
 
     // --- Watchlist seeded from fixture flags ------------------------------
     let watchlist = RwSignal::new(
-        seed_fixtures()
+        stock_universe()
             .iter()
             .filter(|r| r.is_watchlist)
             .map(|r| r.symbol.clone())
@@ -91,21 +92,36 @@ pub fn ScreenerPage() -> impl IntoView {
         watchlist_only: watchlist_only.get(),
     };
 
-    let filtered_records: Memo<Vec<ScreenerEquityRecord>> = Memo::new(move |_| {
+    // String bar value → typed asset class (filter bar stays stringly-typed).
+    let typed_asset: Signal<ScreenerAssetType> =
+        Memo::new(move |_| ScreenerAssetType::from_bar(&asset_type.get())).into();
+
+    let filtered_records: Memo<Vec<ScreenerRecord>> = Memo::new(move |_| {
         let criteria = build_criteria();
-        let base = seed_fixtures();
-        let filtered = filter_records(&base, &criteria);
-        sort_records(&filtered, sort_col.get(), sort_ascending.get())
+        let base = universe_for(typed_asset.get());
+        let filtered = filter_universe(&base, &criteria);
+        sort_universe(&filtered, sort_col.get(), sort_ascending.get())
     });
-    let records: Signal<Vec<ScreenerEquityRecord>> = filtered_records.into();
+    let records: Signal<Vec<ScreenerRecord>> = filtered_records.into();
+
+    // Heatmap math is stocks-only; other asset classes render no cells.
+    let stock_records: Memo<Vec<ScreenerEquityRecord>> = Memo::new(move |_| {
+        if typed_asset.get() != ScreenerAssetType::Stocks {
+            return Vec::new();
+        }
+        let criteria = build_criteria();
+        filter_records(&stock_universe(), &criteria)
+    });
 
     let active_filters: Signal<usize> = Signal::derive(move || build_criteria().active_count());
 
-    let active_record: Memo<Option<ScreenerEquityRecord>> = Memo::new(move |_| {
+    let active_record: Memo<Option<ScreenerRecord>> = Memo::new(move |_| {
         let sym = active_symbol.get();
-        seed_fixtures().into_iter().find(|r| r.symbol == sym)
+        universe_for(typed_asset.get())
+            .into_iter()
+            .find(|r| r.symbol() == sym)
     });
-    let record: Signal<Option<ScreenerEquityRecord>> = active_record.into();
+    let record: Signal<Option<ScreenerRecord>> = active_record.into();
 
     let on_reset = Callback::new(move |_| {
         search_query.set(String::new());
@@ -126,7 +142,7 @@ pub fn ScreenerPage() -> impl IntoView {
     });
 
     // Sector dropdown options: "All" first, then unique sectors A→Z.
-    let mut sector_options: Vec<(String, String)> = seed_fixtures()
+    let mut sector_options: Vec<(String, String)> = stock_universe()
         .iter()
         .map(|r| r.sector.clone())
         .collect::<HashSet<String>>()
@@ -160,6 +176,7 @@ pub fn ScreenerPage() -> impl IntoView {
                         ScreenerViewMode::Table => view! {
                             <ScreenerTable
                                 records=records
+                                asset_type=typed_asset
                                 active_symbol=active_symbol
                                 watchlist=watchlist
                                 visible_columns=visible_columns
@@ -169,14 +186,42 @@ pub fn ScreenerPage() -> impl IntoView {
                             />
                         }
                         .into_any(),
-                        ScreenerViewMode::Heatmap => view! {
-                            <ScreenerHeatmap
-                                records=records
-                                active_symbol=active_symbol
-                                drawer_open=drawer_open
-                            />
+                        ScreenerViewMode::Heatmap => {
+                            if typed_asset.get() == ScreenerAssetType::Stocks {
+                                view! {
+                                    <ScreenerHeatmap
+                                        records=stock_records.into()
+                                        active_symbol=active_symbol
+                                        drawer_open=drawer_open
+                                    />
+                                }
+                                .into_any()
+                            } else {
+                                view! {
+                                    <div class="flex h-full flex-col">
+                                        <div class="flex items-center border-b border-border-soft px-3 py-1.5 text-[11px] text-text-muted">
+                                            "Heatmap view is available for Stocks. Showing the table for this asset class."
+                                        </div>
+                                        <div class="min-h-0 flex-1 overflow-x-auto">
+                                            {view! {
+                                                <ScreenerTable
+                                                    records=records
+                                                    asset_type=typed_asset
+                                                    active_symbol=active_symbol
+                                                    watchlist=watchlist
+                                                    visible_columns=visible_columns
+                                                    sort_col=sort_col
+                                                    sort_ascending=sort_ascending
+                                                    drawer_open=drawer_open
+                                                />
+                                            }
+                                            .into_any()}
+                                        </div>
+                                    </div>
+                                }
+                                .into_any()
+                            }
                         }
-                        .into_any(),
                     }}
                 </div>
                 {move || {

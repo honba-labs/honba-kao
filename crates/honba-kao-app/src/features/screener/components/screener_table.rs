@@ -1,11 +1,9 @@
-//! `ScreenerTable` — reactive results grid over `COLUMN_CATALOG` with
-//! per-column visibility, tri-state sort arrows, watchlist star toggles,
-//! and row-click drawer activation.
+//! `ScreenerTable` — reactive results grid over the per-asset column
+//! catalog with per-column visibility, tri-state sort arrows, watchlist
+//! star toggles, and row-click drawer activation.
 
-use crate::features::screener::filters::{
-    format_change_pct, format_mcap_rs_cr, format_price, format_volume_compact,
-};
-use crate::features::screener::types::{COLUMN_CATALOG, ScreenerEquityRecord};
+use crate::features::screener::filters::record_cell;
+use crate::features::screener::types::{ScreenerAssetType, ScreenerRecord, catalog_for};
 use honba_kao_ui_core::SortDirection;
 use honba_kao_ui_core::primitive::HfSortArrows;
 use leptos::prelude::*;
@@ -39,7 +37,8 @@ fn range_marker_pct(price: Decimal, low: Decimal, high: Decimal) -> u64 {
 
 #[component]
 pub fn ScreenerTable(
-    records: Signal<Vec<ScreenerEquityRecord>>,
+    records: Signal<Vec<ScreenerRecord>>,
+    asset_type: Signal<ScreenerAssetType>,
     active_symbol: RwSignal<String>,
     watchlist: RwSignal<HashSet<String>>,
     visible_columns: Signal<Vec<&'static str>>,
@@ -47,149 +46,78 @@ pub fn ScreenerTable(
     sort_ascending: RwSignal<bool>,
     drawer_open: RwSignal<bool>,
 ) -> impl IntoView {
-    // Per-column arrow signals, created once (component body runs once).
-    let dir_symbol = RwSignal::new(SortDirection::Neutral);
-    let dir_price = RwSignal::new(SortDirection::Neutral);
-    let dir_chg = RwSignal::new(SortDirection::Neutral);
-    let dir_vol = RwSignal::new(SortDirection::Neutral);
-    let dir_cap = RwSignal::new(SortDirection::Descending);
-    let dir_pe = RwSignal::new(SortDirection::Neutral);
+    // One tri-state arrow signal per unique key across all four catalogs
+    // (component body runs once; "symbol" etc. is shared by every class).
+    let mut dirs: Vec<(&'static str, RwSignal<SortDirection>)> = Vec::new();
+    for asset in [
+        ScreenerAssetType::Stocks,
+        ScreenerAssetType::Etf,
+        ScreenerAssetType::Bonds,
+        ScreenerAssetType::MutualFunds,
+    ] {
+        for col in catalog_for(asset) {
+            if !dirs.iter().any(|(k, _)| *k == col.key) {
+                dirs.push((col.key, RwSignal::new(SortDirection::Neutral)));
+            }
+        }
+    }
 
     let header_cells = move || {
+        let asset = asset_type.get();
+        let is_stocks = asset == ScreenerAssetType::Stocks;
+        let catalog = catalog_for(asset);
+        let visible = visible_columns.get();
         let mut out: Vec<AnyView> = Vec::new();
-        for col in COLUMN_CATALOG {
-            if !visible_columns.get().contains(&col.key) {
+        for col in catalog {
+            // Non-stock classes render every catalog column (column modal
+            // for them is Phase-5 work).
+            if is_stocks && !visible.contains(&col.key) {
                 continue;
             }
             let key = col.key;
             let label = col.label;
-            let cell = match key {
-                "symbol" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
+            let cell = if col.sortable {
+                let this_dir = dirs
+                    .iter()
+                    .find(|entry| entry.0 == key)
+                    .map(|entry| entry.1);
+                match this_dir {
+                    Some(this_dir) => {
+                        let dirs_for_reset = dirs.clone();
+                        view! {
+                            <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1">
+                                    {label}
+                                    <HfSortArrows
+                                        direction=this_dir
+                                        on_cycle=Callback::new(move |next| {
+                                            sort_col.set(key);
+                                            sort_ascending.set(next == SortDirection::Ascending);
+                                            for (_, other) in dirs_for_reset.iter() {
+                                                other.set(SortDirection::Neutral);
+                                            }
+                                            this_dir.set(next);
+                                        })
+                                    />
+                                </span>
+                            </th>
+                        }
+                        .into_any()
+                    }
+                    None => view! {
+                        <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
                             {label}
-                            <HfSortArrows
-                                direction=dir_symbol
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("symbol");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_price.set(SortDirection::Neutral);
-                                    dir_chg.set(SortDirection::Neutral);
-                                    dir_vol.set(SortDirection::Neutral);
-                                    dir_cap.set(SortDirection::Neutral);
-                                    dir_pe.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
+                        </th>
+                    }
+                    .into_any(),
                 }
-                .into_any(),
-                "price" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
-                            {label}
-                            <HfSortArrows
-                                direction=dir_price
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("price");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_symbol.set(SortDirection::Neutral);
-                                    dir_chg.set(SortDirection::Neutral);
-                                    dir_vol.set(SortDirection::Neutral);
-                                    dir_cap.set(SortDirection::Neutral);
-                                    dir_pe.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
-                }
-                .into_any(),
-                "change_pct" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
-                            {label}
-                            <HfSortArrows
-                                direction=dir_chg
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("change_pct");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_symbol.set(SortDirection::Neutral);
-                                    dir_price.set(SortDirection::Neutral);
-                                    dir_vol.set(SortDirection::Neutral);
-                                    dir_cap.set(SortDirection::Neutral);
-                                    dir_pe.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
-                }
-                .into_any(),
-                "volume" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
-                            {label}
-                            <HfSortArrows
-                                direction=dir_vol
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("volume");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_symbol.set(SortDirection::Neutral);
-                                    dir_price.set(SortDirection::Neutral);
-                                    dir_chg.set(SortDirection::Neutral);
-                                    dir_cap.set(SortDirection::Neutral);
-                                    dir_pe.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
-                }
-                .into_any(),
-                "market_cap_cr" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
-                            {label}
-                            <HfSortArrows
-                                direction=dir_cap
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("market_cap_cr");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_symbol.set(SortDirection::Neutral);
-                                    dir_price.set(SortDirection::Neutral);
-                                    dir_chg.set(SortDirection::Neutral);
-                                    dir_vol.set(SortDirection::Neutral);
-                                    dir_pe.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
-                }
-                .into_any(),
-                "pe_ratio" => view! {
-                    <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1">
-                            {label}
-                            <HfSortArrows
-                                direction=dir_pe
-                                on_cycle=Callback::new(move |next| {
-                                    sort_col.set("pe_ratio");
-                                    sort_ascending.set(next == SortDirection::Ascending);
-                                    dir_symbol.set(SortDirection::Neutral);
-                                    dir_price.set(SortDirection::Neutral);
-                                    dir_chg.set(SortDirection::Neutral);
-                                    dir_vol.set(SortDirection::Neutral);
-                                    dir_cap.set(SortDirection::Neutral);
-                                })
-                            />
-                        </span>
-                    </th>
-                }
-                .into_any(),
-                _ => view! {
+            } else {
+                view! {
                     <th class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap">
                         {label}
                     </th>
                 }
-                .into_any(),
+                .into_any()
             };
             out.push(cell);
         }
@@ -197,6 +125,10 @@ pub fn ScreenerTable(
     };
 
     let row_cells = move || {
+        let asset = asset_type.get();
+        let is_stocks = asset == ScreenerAssetType::Stocks;
+        let catalog_keys: Vec<&'static str> = catalog_for(asset).iter().map(|c| c.key).collect();
+        let visible = visible_columns.get();
         records
             .get()
             .into_iter()
@@ -205,151 +137,99 @@ pub fn ScreenerTable(
                 let rec_for_class = record.clone();
                 let mut cells: Vec<AnyView> = Vec::new();
 
-                if visible_columns.get().contains(&"star") {
-                    let rec_star = record.clone();
-                    let rec_glyph = record.clone();
-                    cells.push(
-                        view! {
-                            <td
-                                class="px-3 py-2 text-xs cursor-pointer"
-                                on:click=move |ev: web_sys::MouseEvent| {
-                                    ev.stop_propagation();
-                                    let sym = rec_star.symbol.clone();
-                                    watchlist.update(move |w| {
-                                        if w.contains(&sym) {
-                                            w.remove(&sym);
-                                        } else {
-                                            w.insert(sym);
+                for &key in &catalog_keys {
+                    if is_stocks && !visible.contains(&key) {
+                        continue;
+                    }
+                    match key {
+                        "star" => {
+                            let rec_star = record.clone();
+                            let rec_glyph = record.clone();
+                            cells.push(
+                                view! {
+                                    <td
+                                        class="px-3 py-2 text-xs cursor-pointer"
+                                        on:click=move |ev: web_sys::MouseEvent| {
+                                            ev.stop_propagation();
+                                            let sym = rec_star.symbol().to_string();
+                                            watchlist.update(move |w| {
+                                                if w.contains(&sym) {
+                                                    w.remove(&sym);
+                                                } else {
+                                                    w.insert(sym);
+                                                }
+                                            });
                                         }
-                                    });
+                                    >
+                                        <span class="text-[13px] leading-none">
+                                            {move || {
+                                                if watchlist.get().contains(rec_glyph.symbol()) {
+                                                    "★"
+                                                } else {
+                                                    "☆"
+                                                }
+                                            }}
+                                        </span>
+                                    </td>
                                 }
-                            >
-                                <span class="text-[13px] leading-none">
-                                    {move || {
-                                        if watchlist.get().contains(&rec_glyph.symbol) {
-                                            "★"
-                                        } else {
-                                            "☆"
-                                        }
-                                    }}
-                                </span>
-                            </td>
+                                .into_any(),
+                            );
                         }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"symbol") {
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums">
-                                <span class="block font-semibold text-text-high">
-                                    {record.symbol.clone()}
-                                </span>
-                                <span class="block text-[10px] text-text-muted">
-                                    {record.name.clone()}
-                                </span>
-                            </td>
+                        "symbol" => {
+                            let sym = record.symbol().to_string();
+                            let nm = record.name().to_string();
+                            cells.push(
+                                view! {
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums">
+                                        <span class="block font-semibold text-text-high">
+                                            {sym}
+                                        </span>
+                                        <span class="block text-[10px] text-text-muted">
+                                            {nm}
+                                        </span>
+                                    </td>
+                                }
+                                .into_any(),
+                            );
                         }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"price") {
-                    let txt = format_price(record.price);
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
-                                {txt}
-                            </td>
+                        "range_52w" => {
+                            let cell = if let ScreenerRecord::Stock(r) = &record {
+                                let pct = range_marker_pct(r.price, r.low_52w, r.high_52w);
+                                view! {
+                                    <td class="px-3 py-2">
+                                        <span class="hf-range-bar relative inline-block h-1.5 w-24 rounded-full bg-emerald-500/15 align-middle">
+                                            <span
+                                                class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-text-muted"
+                                                style=format!("left: {}%", pct)
+                                            ></span>
+                                        </span>
+                                    </td>
+                                }
+                                .into_any()
+                            } else {
+                                view! { <td class="px-3 py-2"></td> }.into_any()
+                            };
+                            cells.push(cell);
                         }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"change_pct") {
-                    let txt = format_change_pct(record.change_pct);
-                    let tone = if record.change_pct >= Decimal::ZERO {
-                        "text-emerald-400"
-                    } else {
-                        "text-rose-400"
-                    };
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums">
-                                <span class=tone>{txt}</span>
-                            </td>
+                        _ => {
+                            let txt = record_cell(&record, key);
+                            cells.push(
+                                view! {
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
+                                        {txt}
+                                    </td>
+                                }
+                                .into_any(),
+                            );
                         }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"volume") {
-                    let txt = format_volume_compact(record.volume);
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
-                                {txt}
-                            </td>
-                        }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"rvol") {
-                    let txt = format!("{}x", record.rvol.round_dp(2));
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
-                                {txt}
-                            </td>
-                        }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"market_cap_cr") {
-                    let txt = format_mcap_rs_cr(record.market_cap_cr);
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
-                                {txt}
-                            </td>
-                        }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"pe_ratio") {
-                    let txt = if record.pe_ratio == Decimal::ZERO {
-                        "—".to_string()
-                    } else {
-                        record.pe_ratio.round_dp(1).to_string()
-                    };
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
-                                {txt}
-                            </td>
-                        }
-                        .into_any(),
-                    );
-                }
-                if visible_columns.get().contains(&"range_52w") {
-                    let pct = range_marker_pct(record.price, record.low_52w, record.high_52w);
-                    cells.push(
-                        view! {
-                            <td class="px-3 py-2">
-                                <span class="hf-range-bar relative inline-block h-1.5 w-24 rounded-full bg-emerald-500/15 align-middle">
-                                    <span
-                                        class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-text-muted"
-                                        style=format!("left: {}%", pct)
-                                    ></span>
-                                </span>
-                            </td>
-                        }
-                        .into_any(),
-                    );
+                    }
                 }
 
                 view! {
                     <tr
-                        class=move || row_class(active_symbol.get() == rec_for_class.symbol)
+                        class=move || row_class(active_symbol.get() == rec_for_class.symbol())
                         on:click=move |_| {
-                            active_symbol.set(rec_for_click.symbol.clone());
+                            active_symbol.set(rec_for_click.symbol().to_string());
                             drawer_open.set(true);
                         }
                     >
