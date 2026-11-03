@@ -1,6 +1,4 @@
 //! Tier 2: MOLECULES — Universal trading building blocks.
-//!
-//! NSH port (Phase 2, see `nsh-port.md` §4): all of `core` is ported.
 
 pub mod alert_stack;
 pub mod estimation_fields;
@@ -10,7 +8,7 @@ pub mod spread_indicator;
 pub mod stats_bar;
 pub mod tape_row;
 
-pub use alert_stack::{AlertSeverity, HfAlertBanner, HfAlertBannerStack};
+pub use alert_stack::{HfAlertBanner, HfAlertBannerStack, AlertSeverity};
 pub use estimation_fields::HfEstimationFields;
 pub use price_snap_input::HfPriceSnapInput;
 pub use quantity_chip_input::HfQuantityChipInput;
