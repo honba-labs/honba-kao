@@ -1,36 +1,41 @@
-# HANDOFF — `honba-kao-app` Screener Phase 2 (Sector-Grouped Heatmap) — COMMITTED
+# HANDOFF — `honba-kao-app` Screener Phase 3 (Multi-Asset Universes) — COMMITTED
 
-## 1. Phase / Slice Status — Phase 2 COMPLETE & COMMITTED (gates green)
-Spec: `docs/screener-honba-leptos.md` (Phase 1: drawer row-click open + modal signal wiring; Phase 2: sector treemap + dynamic RGB heat interpolation).
-- **Phase 1** committed: `d9bb81a feat(kao-app): screener Phase 1 — reactive plumbing & modal triggers`.
-- **Phase 2** committed: `de2fdc4 feat(kao-app): screener Phase 2 — sector-grouped market heatmap` (+406/−5, exactly 6 paths; fulfils the Phase-2 restoration list recorded at `34ba352`).
-Gates (verified on the committed content):
+## 1. Phase / Slice Status — Phase 3 COMPLETE & COMMITTED (gates green)
+Spec: `docs/screener-honba-leptos.md` (§8 Phase 3 "Multi-Asset Zero-Floats Expansion"; §4.3 record shapes).
+Doc-challenge history: Phase 1 `d9bb81a` → Phase 2 `de2fdc4` → **Phase 3 `2ce864c`** (+2316/−299, exactly 7 paths).
+
+Gates (verified from `honba-kao/` crate root on the committed content):
 - `cargo check -p honba-kao-app --all-targets` ✅
-- `cargo check -p honba-kao-app --target wasm32-unknown-unknown` ✅
-- `cargo test -p honba-kao-app` ✅ (screener_heatmap **7/7**, screener_plumbing 9/9, page_mount/market_feed/routing green)
 - `cargo fmt -p honba-kao-app -- --check` ✅
-- clippy: **0 new warnings from this batch**. The `-p` gate is blocked by pre-existing committed debt only: `honba-kao-client` (20 errors, 0 uncommitted changes) aborts before the app crate; app lib has 12 pre-existing lints (`shared/contexts/mod.rs` ×9, `router/chrome/app_chrome.rs` ×2, `features/risk_ops/ops_page.rs` ×1). Zero screener hits (`--no-deps` confirmed).
+- `cargo test -p honba-kao-app` ✅ — market_feed 6/6, page_mount 9/9, routing_invariants 10/10, screener_heatmap 7/7, **screener_multi_asset 11/11 (new)**, screener_plumbing 9/9 (seed contract intact)
+- `cargo clippy -p honba-kao-app --no-deps --all-targets -- -D warnings` ✅ **0 screener hits**; 12 pre-existing committed lints remain (`shared/contexts/mod.rs` ×9, `router/chrome/app_chrome.rs` ×2, `features/risk_ops/ops_page.rs` ×1)
+- `cargo check -p honba-kao-app --target wasm32-unknown-unknown` ✅
 
 ## 2. Commit scope hygiene
-- `de2fdc4` contains ONLY the 6 Phase-2 paths (3 new: `heatmap.rs`, `components/screener_heatmap.rs`, `tests/screener_heatmap.rs`; 3 modified: `screener/mod.rs`, `components/mod.rs`, `screener_page.rs`).
-- Sibling live work preserved uncommitted: `Cargo.toml`, trading pages, `sip_planner_page`, `app_chrome`, `shared/mod.rs`, ui-core molecules, `honba-kao-assets/`, `atoms/`, `theme.json`, `honba-kao-app/assets`.
+- `2ce864c` contains ONLY: `types.rs`, `fixtures.rs`, `filters.rs`, `components/screener_table.rs`, `components/detail_drawer.rs`, `screener_page.rs`, `tests/screener_multi_asset.rs` (new).
+- Other lanes' worktree state untouched/uncommitted as before: `Cargo.toml`, trading/wealth pages, `app_chrome`, `shared/mod.rs`, ui-core molecules/organisms, `atoms/`, `honba-kao-assets/`, `theme.json`, `honba-kao-app/assets`, `docs/screener-honba-leptos.md` (spec doc still untracked — commit it in whichever docs lane convenient).
 
-## 3. Decisions & Discoveries (probe-verified)
-- **rust_decimal 1.43 `.round()` is banker's rounding** (MidpointNearestEven): 49.5→50, 25.5→26, but 34.5→**34**. For pinned half-away-from-zero midpoints use `round_dp_with_strategy(0, RoundingStrategy::MidpointAwayFromZero)` (`rust_decimal::prelude`). Heat lerp contract: `t = ((p−lo)/(hi−lo)).round_dp(4)`, channel = `(from + (to−from)·t)` with that strategy, `to_u8()` via `num_traits::ToPrimitive`.
-- Heat anchors (positions/pinned RGB): ≤−3 (225,29,72) `#e11d48`, −2 (244,63,94) `#f43f5e`, −0.5 (69,10,10) `#450a0a`, 0 (30,41,59) `#1e293b`, +0.5 (6,78,59) `#064e3b`, +2 (16,185,129) `#10b981`, ≥+4 (5,150,105) `#059669`; exact midpoints pinned in tests: 1.00→(9,114,82), −0.25→(50,26,35).
-- Decimal `PartialEq/Eq` compares numerically across scales (`dec!(1)` == `dec!(1.00)`).
-- `ScreenerHeatmap(records: Signal<Vec<_>>, active_symbol: RwSignal<String>, drawer_open: RwSignal<bool>)` re-derives groups in a `Memo`; only sector cards are wrapped in `flex-1 min-w-[280px] max-w-[460px]`, tiles `style="background-color:{heat_hex}; flex-grow:{share}; flex-basis:0"` + `min-w-[72px]`.
-- ⚠️ **Pre-existing `main` link breakage (ui-core lane blocker, NOT this batch)**: `filter_bar.rs` (committed in d9bb81a) imports `honba_kao_ui_core::atoms::segmented::Segment`, but `HEAD:crates/honba-kao-ui-core/src` exposes only `primitive`; the `primitive → atoms` rename lives uncommitted in the ui-core lane's worktree (`git status` shows `?? atoms/` + `M lib.rs` + molecules `M`). Until that lane commits the rename, `git show HEAD:`-style builds of `honba-kao-app` fail at that one import. My Phase-2 files add **no new** ui-core paths (only `crate::*` + `leptos`).
-- Subagent sessions have **no shell tool** — write code in subagents; the orchestrator runs every cargo gate itself.
+## 3. Decisions & Discoveries (probe-verified by gates)
+- **Seed-contract strategy**: `seed_fixtures()` (12 rows) and the Phase-1 pinned plumbing tests were left byte-untouched; the 30-stock requirement ships as `stock_universe()` = seed + 18 appended rows, so ZERO existing golden tests needed edits. Abstract-stock pins hold by construction (all 18 appended rows: F&O `false`, watchlist `false`, price < 500, PE ∈ (15,25), rvol = 1.00 < 2, RSI < 55, `market_cap_cr` ∈ [113k, 512k] Cr, volumes < 1.8M descending, sector ≠ "Financial Services", cap category "Large Cap", no "bank" substring — none of them perturb any pinned filter/sort assertion).
+- `ScreenerRecord` union is a **plain inline enum** (`#[allow(clippy::large_enum_variant)]`): no `Box`, because the pipeline clones per filter/sort pass and boxing the equity arm would allocate per row. Justified in a comment at the enum.
+- `filter_universe` is a **predicate shim**: Stock arm delegates to `FilterCriteria::matches` (full stock semantics preserved byte-for-byte); non-stocks = search-only (lowercase contains over `symbol()` + `name()`). `FilterCriteria` struct itself is UNCHANGED — non-stock criteria fields simply don't apply yet (candidate slice for later phases).
+- `sort_universe`: numeric keys through `ScreenerRecord::sort_decimal(key) -> Option<Decimal>`; a union sorts numerically only if EVERY record yields `Some` else unsorted clone; `maturity_date` is the one string key (Bond-only, lexical, non-bonds compare equal); unknown keys → unsorted clone. Header sort arrows are key-deduped per-`'static str` dir signals shared across all four catalogs.
+- **Asset switcher**: filter-bar segment strings stay `RwSignal<String>`; the page derives `typed_asset: Signal<ScreenerAssetType>` via `from_bar` (unknown → Stocks). Heatmap is gated to Stocks (its sector math is equity-shaped); non-stock + Heatmap renders the class table plus a one-line hint row. Row-click/drawer works for all four classes (ETF symbol = ETF ticker, Bond = ISIN, MF = scheme code; drawer change-tone from `change_pct()`, `0.00%` for bonds/MFs).
+- **Column modal remains stock-only** (Phase-5 scope): visibility gating applies only when `_asset == Stocks`; non-stock classes render their full catalog.
+- Fixture derivations: ETF `ltp = nav + nav·premium_discount_pct/100` (exact; assert golden `dec!(262.87232)`-style values), bond maturity as plain ISO strings (deterministic, lexical-sortable), MF scheme_code as `String` (e.g. `"120465"`).
+- Pre-carried from Phase 2 (still true): rust_decimal 1.43 `.round()` is banker's; heat anchors/midpoints pinned in `screener_heatmap.rs` tests; `when(Signal<bool>)` not `when(bool)`; subagents have no shell — orchestrator runs every gate.
 
-## 4. Immediate Next Step — Phase 3 (Multi-Asset Zero-Floats Expansion)
-Per spec §8: `ScreenerEtfRecord`/`ScreenerBondRecord`/`ScreenerMfRecord` + deterministic fixtures (15 ETFs, 10 bonds, 10 MFs, optionally expand stocks 12→30) and the asset-class switcher wiring (`asset_type: RwSignal<String>` exists — consider migrating to the `ScreenerAssetType` enum in `types.rs`). TDD: write `tests/screener_records_test.rs` (or per-class suites) FIRST. Do not break `seed_fixtures()` order contract or the Phase-1 `screener_plumbing` pinned assertions when touching fixtures.
-Also queued by other lanes: ui-core `primitive → atoms` commit (fixes the pre-existing link breakage above); repo-wide clippy debt (20 client + 12 app pre-existing).
+## 4. Immediate Next Step — Phase 4 (Contextual Flyouts & AI Bar) per doc §8
+1. `components/filter_bar.rs`: build popover flyouts for Market region / Index (11 benchmarks Broad+Sectoral hint) / Price-range / P/E-range pills; doc §5 wording serves price/PE min-max through the existing Filters-modal criteria — decide single-source (recommend: extend `FilterCriteria` with `#[serde(default)]` fields, wire `filter_universe` stock arm, TDD-first in `tests/screener_multi_asset.rs`).
+2. `✦ AI` bar stub: currently logs via `tracing`; keep `honba-kao-app` free of `honba-nou` linkage.
+3. UI probe (Playwright, port 8790 per doc §7) if a browser harness becomes available.
+4. Queued by other lane: ui-core `primitive → atoms` rename commit (HANS-off note: committed `filter_bar.rs` imports `atoms::segmented::Segment`, which resolves only against the lane's uncommötted worktree).
 
 ## 5. Operating Invariants
-- Rust 2024; Leptos 0.8 CSR; `rust_decimal` only for financial values (f32/f64 forbidden in financial paths).
+- Rust 2024; Leptos 0.8 CSR; `rust_decimal` only in financial paths (f32 allowed only at px() layout boundaries).
 - Tests live in `tests/` parallel to `src/`; NO `#[test]` inline in `src/`.
-- Subagent discipline: ≤2 concurrent, zero-recon prompts, resumes via sessionID; orchestrator runs all gates and all commits.
-- Commit hygiene on the shared tree: index must contain ONLY your batch's paths before `git commit` (other lanes' work stays worktree-local); code commit first, HANDOFF amendment as its own `docs(kao)` commit referencing the hash.
+- `seed_fixtures()` 12-row order contract & Phase-1 pinned assertions: DO NOT touch (add universes to the side, like `stock_universe`).
+- Subagent discipline: ≤2 waves of concurrent agents, zero-recon self-contained prompts, resumes via `sessionID`; orchestrator runs ALL cargo gates and is the only committer.
+- Commit hygiene on the shared tree: `git add` exactly this batch's paths; other lanes' files stay worktree-local; code commit first, HANDOFF amendment as its own `docs(kao)` commit referencing the code hash.
 - Verify from `honba-kao/` crate root; wasm gate is its own invocation (`--target wasm32-unknown-unknown`).
-- Do not regress: `Hf*, SortDirection`, formatter contracts (`format_price/change_pct/volume_compact/mcap_rs_cr`), `seed_fixtures()` order, §2 pinned Phase-1 plumbing.
+- Do not regress: `Hf*`/`SortDirection` contracts, formatter golden strings (`format_price/change_pct/volume_compact/mcap_rs_cr`, `record_cell`), `seed_fixtures()` order, §5 pinned plumbing, and the heat-anchor RGB math.
