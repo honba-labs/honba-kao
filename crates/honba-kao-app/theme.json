@@ -1,0 +1,48 @@
+{
+  "name": "Honba Kao",
+  "cssVars": {
+    "theme": {
+      "radius": "12px"
+    },
+    "light": {
+      "background": "#f4f4f2",
+      "foreground": "#16171a",
+      "card": "#ffffff",
+      "card-foreground": "var(--foreground)",
+      "popover": "#ffffff",
+      "popover-foreground": "var(--foreground)",
+      "primary": "#10b981",
+      "primary-foreground": "#ffffff",
+      "secondary": "#ecedef",
+      "secondary-foreground": "#16171a",
+      "muted": "#ecedef",
+      "muted-foreground": "#5c5e66",
+      "accent": "#fbbf24",
+      "accent-foreground": "#16171a",
+      "destructive": "#ef4444",
+      "border": "#e2e2dd",
+      "input": "#e2e2dd",
+      "ring": "#fbbf24"
+    },
+    "dark": {
+      "background": "#0b0d12",
+      "foreground": "#eceef1",
+      "card": "#10131a",
+      "card-foreground": "var(--foreground)",
+      "popover": "#10131a",
+      "popover-foreground": "var(--foreground)",
+      "primary": "#10b981",
+      "primary-foreground": "#0b0d12",
+      "secondary": "#14161c",
+      "secondary-foreground": "#eceef1",
+      "muted": "#14161c",
+      "muted-foreground": "#9a9da8",
+      "accent": "#fbbf24",
+      "accent-foreground": "#0b0d12",
+      "destructive": "#ff6b74",
+      "border": "#262933",
+      "input": "#262933",
+      "ring": "#fbbf24"
+    }
+  }
+}

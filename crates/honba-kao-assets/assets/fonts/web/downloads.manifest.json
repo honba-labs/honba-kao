@@ -1,0 +1,1907 @@
+{
+  "generated_at": "2026-10-31T14:48:44Z",
+  "fonts": [
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "inter/cyrillic-ext-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2",
+      "sha256": "ca157063339ac4ad418f214f3abfed119b0798ab4d377386ce5c9e5a7a435ebd",
+      "bytes": 25960,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "inter/cyrillic-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-ext-400-normal.woff",
+      "sha256": "5cb2f1cc0936f89a42ceae34f5a5720248dc5b8114c12b1c33a7d2ef01a9b6b9",
+      "bytes": 13336,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "inter/cyrillic-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-ext-500-normal.woff",
+      "sha256": "e250c05aebcf49971e0b25f476992dd463c28c0292ebb204d9db542fb5066ca7",
+      "bytes": 13452,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "inter/cyrillic-ext-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-ext-600-normal.woff",
+      "sha256": "a5073285409443f4653c858de58c5dc0bfc2fd33e60d8747388345e7c5ab1ab3",
+      "bytes": 13464,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "inter/cyrillic-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-ext-700-normal.woff",
+      "sha256": "0f3d4be2bd7018f78fa3484a5f6e9d8ce567689426643b84a47e8cabb91e5f16",
+      "bytes": 13408,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "inter/cyrillic-ext-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-ext-800-normal.woff",
+      "sha256": "e87b63bf58fb0490d6a456d44cfdf58d496364f1fe8213a06787ef3cdad25fe8",
+      "bytes": 13476,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "inter/cyrillic-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2",
+      "sha256": "71d5ee93cc1e9f1d520a3a8b66456de18c7879d8df09d57fcd2eaff75fef0075",
+      "bytes": 18748,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "inter/cyrillic-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-400-normal.woff",
+      "sha256": "6e441a6c94788318fa02b6d0a633aa29eebe27b69c6567eb1e59b4edc68ed70e",
+      "bytes": 9780,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "inter/cyrillic-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-500-normal.woff",
+      "sha256": "5be18e0345781cb882a267798518553c0e915174fc70731ab5f085ca64ba1ebc",
+      "bytes": 9940,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "inter/cyrillic-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-600-normal.woff",
+      "sha256": "cc190ed1b64eb650a4ad7e97c7a668cb8b34acd9c4c7f7bf4372c0cbacd35795",
+      "bytes": 9936,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "inter/cyrillic-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-700-normal.woff",
+      "sha256": "72b6daa49173e531027d8a260ef128e142a165811cab6a2875eefe0c3c58fa0e",
+      "bytes": 9912,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "inter/cyrillic-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-cyrillic-800-normal.woff",
+      "sha256": "5d3dc126873486c5a8449a14823c613de707c7ee8b1df23a9e34e76116167627",
+      "bytes": 9944,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff2",
+      "file": "inter/greek-ext-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2",
+      "sha256": "6e9e020a25f9b56d418f2c085b1d3c09725a4da23fe693a5b463064606732190",
+      "bytes": 11232,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff",
+      "file": "inter/greek-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-ext-400-normal.woff",
+      "sha256": "4f2b6f92ddfece8812e79774d446218aa6e0773ff8c2d31130fe2bdc23bd22d0",
+      "bytes": 7064,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff",
+      "file": "inter/greek-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-ext-500-normal.woff",
+      "sha256": "c85d11bde719108cc9a4f6f5b008087f6c36493b47395580d4f5336182b0f0c7",
+      "bytes": 7192,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff",
+      "file": "inter/greek-ext-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-ext-600-normal.woff",
+      "sha256": "efc7aa9cce5c505dd8cc4c4daf00247fa805f37bcda96079239ba3358ab27dfb",
+      "bytes": 7212,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff",
+      "file": "inter/greek-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-ext-700-normal.woff",
+      "sha256": "b26ed64c9135a750ad580b92152bedeef90771e74e18f6f7759a6d7adb0f1b5d",
+      "bytes": 7216,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek-ext",
+      "format": "woff",
+      "file": "inter/greek-ext-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-ext-800-normal.woff",
+      "sha256": "75c98d8d562061bb76f3936cf1b48246d217209497264113742e8dbbc9198af1",
+      "bytes": 7204,
+      "unicode_range": "U+1F00-1FFF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff2",
+      "file": "inter/greek-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2",
+      "sha256": "1be3448e292fbf05ffe176fe1e43f135013d50b1e7d324ad1a558f623d3bb6f6",
+      "bytes": 18996,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff",
+      "file": "inter/greek-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-400-normal.woff",
+      "sha256": "bdae9d28729e8c68587d5d54e216d771a40d7a6800e824586a6e2f570c2f10df",
+      "bytes": 9924,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff",
+      "file": "inter/greek-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-500-normal.woff",
+      "sha256": "86d55a4b1b9cbced7e61e76d5d44cf49d0bd1c814d3df2de67b7136ab4fdcece",
+      "bytes": 9980,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff",
+      "file": "inter/greek-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-600-normal.woff",
+      "sha256": "090b24e22fc4ddf41450d13bdec81c8a74808b9fc7edaf8df06c909b177a8992",
+      "bytes": 10032,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff",
+      "file": "inter/greek-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-700-normal.woff",
+      "sha256": "53368f53d5fc43381dcc45c8533ba2476f80337136313525f96dcbdc736616a5",
+      "bytes": 9980,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "greek",
+      "format": "woff",
+      "file": "inter/greek-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-greek-800-normal.woff",
+      "sha256": "67c23188c195ef3f04f4d0552a898f268a63d377924db280693f267679fc9dab",
+      "bytes": 9964,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "inter/vietnamese-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2",
+      "sha256": "5c66f9e07e90c6d4ac4922cc68d60de26c17b1858e677fb5e603fce3952b3ff2",
+      "bytes": 10252,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "inter/vietnamese-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-vietnamese-400-normal.woff",
+      "sha256": "54aa42d325bcdfd623ecb9eac4a5e3c6420c63d7b86e9d8545fb479f653beb57",
+      "bytes": 6500,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "inter/vietnamese-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-vietnamese-500-normal.woff",
+      "sha256": "18a4a09f751671cd8929d7c66e8fe7d820b511c36e51cf6047ffceab88eec4a4",
+      "bytes": 6596,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "inter/vietnamese-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-vietnamese-600-normal.woff",
+      "sha256": "24a01e7bd947aeef91ae8f7b8edeb23fadaf5ceda34a610ce62d2bbdaea57e83",
+      "bytes": 6640,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "inter/vietnamese-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-vietnamese-700-normal.woff",
+      "sha256": "412023ab2f41333b373e2c6eb2a3ebab806fddd610015d2ae8cd4f4314c7ba92",
+      "bytes": 6632,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "inter/vietnamese-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-vietnamese-800-normal.woff",
+      "sha256": "46ce148ad9022e973f68e3e69442d950a30c58285c57d81caa813424a4e9a38d",
+      "bytes": 6644,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "inter/latin-ext-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2",
+      "sha256": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956",
+      "bytes": 85068,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "inter/latin-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-ext-400-normal.woff",
+      "sha256": "22ae8360fbad24d2af7c6c9898a346c881774dc87f7cf94bd262c48ad58d7116",
+      "bytes": 47560,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "inter/latin-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-ext-500-normal.woff",
+      "sha256": "30d2903ce97f8a89ea0e9c083b42cb8bf97e7bbb5607e7f00352815f19cb0d5b",
+      "bytes": 48492,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "inter/latin-ext-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-ext-600-normal.woff",
+      "sha256": "22ff20a6170674fb9637c2a072227be86303bb6ec52b829b9d7077405f7196a6",
+      "bytes": 48668,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "inter/latin-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-ext-700-normal.woff",
+      "sha256": "1761edba32014180deab3dbbe3f7156c64ef6f34bc76313ba31ce227fc9ff391",
+      "bytes": 48632,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "inter/latin-ext-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-ext-800-normal.woff",
+      "sha256": "40c8e1bb3d3723f1c2fdb3be722cc42c03afaa4317935cdab9cf520cdf5a6ce8",
+      "bytes": 48592,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "inter/latin-400w5.woff2",
+      "weights": [
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+      "bytes": 48256,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff",
+      "file": "inter/latin-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-400-normal.woff",
+      "sha256": "e20fa0b4fd2dd26e4d14b3ac3cc922509c3a63fa5e910e90c614544aa042dd45",
+      "bytes": 30696,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff",
+      "file": "inter/latin-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-500-normal.woff",
+      "sha256": "9b42c108da48b5ed55a3072e815ffee2d271562e6c0dd6998910e8f9c09e0a3d",
+      "bytes": 31284,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff",
+      "file": "inter/latin-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-600-normal.woff",
+      "sha256": "6a9cb3a509b4eeaf12b7dda6c4aacac3e85d07f4201bf4dd716e332e692b87bd",
+      "bytes": 31260,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff",
+      "file": "inter/latin-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-700-normal.woff",
+      "sha256": "7c5ed5655730de337704d3fc94628515cd7e3d8d32368871709bf56ac0397e7a",
+      "bytes": 31320,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "subset": "latin",
+      "format": "woff",
+      "file": "inter/latin-800.woff",
+      "weights": [
+        800
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/files/inter-latin-800-normal.woff",
+      "sha256": "a2fdc5be8acd75fe8f3fd9de8179828d04fd884c155cd6b63fec23b33651ec88",
+      "bytes": 31296,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-ext-400.woff2",
+      "weights": [
+        400
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1iIq129k.woff2",
+      "sha256": "f8c22ec1804bd6966b70f43ac7c327025645b4c09597117fca2a5a6c750106fe",
+      "bytes": 6912,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-ext-500.woff2",
+      "weights": [
+        500
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwl1FgtIU.woff2",
+      "sha256": "3febe5c7f22e4b07b4552738673c3dbe8bced2dc5f48b866edf7ccd9552d109a",
+      "bytes": 6972,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-ext-600.woff2",
+      "weights": [
+        600
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwl1FgtIU.woff2",
+      "sha256": "83109cdd4f8665b475dfc11d61bd44da328bf7e6eab3d3953d39c49b1b9f6015",
+      "bytes": 7692,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-ext-700.woff2",
+      "weights": [
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwl1FgtIU.woff2",
+      "sha256": "31fbbf2279dd1bdfb9176a5d61dd85d77206ccba92a43ea5665210ee4ef9b6fa",
+      "bytes": 7184,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-ext-400-normal.woff",
+      "sha256": "0e4a2393e8ed3185ae300e4a202b6d9149d47d8a0e5bb8f1d1db33e76b86ecd1",
+      "bytes": 5820,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-ext-500-normal.woff",
+      "sha256": "eadb2c427859b185761380143d1f42187fd7cbd94704b543e4c76c6368fbab52",
+      "bytes": 5772,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-ext-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-ext-600-normal.woff",
+      "sha256": "d17413b646f918a8b52316b1bc909068b90687a638fbf7fecc5653b870c7714a",
+      "bytes": 5792,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-ext-700-normal.woff",
+      "sha256": "fb3fbee572f4de841aea63d7650c6623661da72ce0f93d2498309c6f3672509d",
+      "bytes": 5752,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-400.woff2",
+      "weights": [
+        400
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1isq129k.woff2",
+      "sha256": "7635422bd10ddbbcb0e0caa1154b928298f5c8319b8c00b30978d4395f4783ce",
+      "bytes": 8356,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-500.woff2",
+      "weights": [
+        500
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlRFgtIU.woff2",
+      "sha256": "1d89462e86cb8e87e7e9d6f6635605bd7c3081baca6caaecee84916bf7b60edc",
+      "bytes": 8460,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-600.woff2",
+      "weights": [
+        600
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwlRFgtIU.woff2",
+      "sha256": "2b05a8695c7f9f4abd7178b279646a3b005a8ce57546bef6fd145f25d131e0aa",
+      "bytes": 9352,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "ibm-plex-mono/cyrillic-700.woff2",
+      "weights": [
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwlRFgtIU.woff2",
+      "sha256": "104701bedfa06b56abba3e273f3ed74d7235d02c00ddc6ca942d65e2940fe6fe",
+      "bytes": 8676,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-400-normal.woff",
+      "sha256": "42da81a28bbcddda6768a25a4b3105ee291e69d5fa6c74747bc51bbc6718c538",
+      "bytes": 7204,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-500-normal.woff",
+      "sha256": "55a3af5e5ba0f565b4e66149cfe077ba88ac42cc3f68650a901d58eadbf9cd9b",
+      "bytes": 7208,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-600-normal.woff",
+      "sha256": "877b7b3177c22f6911f36888fb09f003d63c665e2185d3dbadea83130ecbb316",
+      "bytes": 7268,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "ibm-plex-mono/cyrillic-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-cyrillic-700-normal.woff",
+      "sha256": "bc9c1f9ecb459345d634ed904d3d7f0b2419fa147f0908cadcff5290421aab70",
+      "bytes": 7276,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "ibm-plex-mono/vietnamese-400.woff2",
+      "weights": [
+        400
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1iAq129k.woff2",
+      "sha256": "62632b6375305e70ddcafdd895218e6ae41a184fcd280a69c739460604ca00a9",
+      "bytes": 5868,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "ibm-plex-mono/vietnamese-500.woff2",
+      "weights": [
+        500
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwl9FgtIU.woff2",
+      "sha256": "781633d95de88040fb77141d1e65d928c87c0144691fbc74da5a64d137a7e910",
+      "bytes": 6040,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "ibm-plex-mono/vietnamese-600.woff2",
+      "weights": [
+        600
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwl9FgtIU.woff2",
+      "sha256": "51b74d53e106ba8a26dd33464b231a562069be2a234b923c115beb622e6f6bc6",
+      "bytes": 6932,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "ibm-plex-mono/vietnamese-700.woff2",
+      "weights": [
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwl9FgtIU.woff2",
+      "sha256": "6de519604eba816d624fbe830bff8123d8e8fd4921d60182b442adc8e9d66c19",
+      "bytes": 6068,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "ibm-plex-mono/vietnamese-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-vietnamese-400-normal.woff",
+      "sha256": "bced561d991e3f81c150c08e71f7fa849fcbff523560f6059245f2edce19b600",
+      "bytes": 5620,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "ibm-plex-mono/vietnamese-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-vietnamese-500-normal.woff",
+      "sha256": "755f62b418df17518aa0ea16b4232e546ce949a4ab7acc577071fa9be9e3dc88",
+      "bytes": 5616,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "ibm-plex-mono/vietnamese-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-vietnamese-600-normal.woff",
+      "sha256": "e4c71658a1eebc5d2b50d801aa4450c94956da1342c2df261442d674ecb96f0e",
+      "bytes": 5712,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "ibm-plex-mono/vietnamese-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-vietnamese-700-normal.woff",
+      "sha256": "68c4d2062c1cd4a0f79f947be70ef4264cce8a35ebddecf63e2df0844ad4d923",
+      "bytes": 5640,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-ext-400.woff2",
+      "weights": [
+        400
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1iEq129k.woff2",
+      "sha256": "6bc0f226a5b7884a8170e3f62c63d7675609d4631bdc5931b5cdab81821f00eb",
+      "bytes": 13348,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-ext-500.woff2",
+      "weights": [
+        500
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwl5FgtIU.woff2",
+      "sha256": "6bb06407c97584b0867a959e05e8874693bfeb8c317de190811c51598f2d99ea",
+      "bytes": 13432,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-ext-600.woff2",
+      "weights": [
+        600
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwl5FgtIU.woff2",
+      "sha256": "32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b",
+      "bytes": 14328,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-ext-700.woff2",
+      "weights": [
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwl5FgtIU.woff2",
+      "sha256": "5b9b81f54dd69635c7adcaacd4c4545a73fe4809c528e22734b238a83a74135f",
+      "bytes": 13380,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-ext-400-normal.woff",
+      "sha256": "f8ddaa0ab9d3c052c9fe035751c8214b7e0d59e6e7b69b045f8659c2fe4dced2",
+      "bytes": 11768,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-ext-500-normal.woff",
+      "sha256": "ff5da89c3ee20d38359943b61a7aae9200d2a0f61cf95ca10a7cccef81da2ff5",
+      "bytes": 11768,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-ext-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-ext-600-normal.woff",
+      "sha256": "46249f4bc59bb78b3893d3a4ad39226d2f3fb66dfa21ccc21bda044a4a3c78c9",
+      "bytes": 11832,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-ext-700-normal.woff",
+      "sha256": "c1a2a5086538d13339b45e3b9a3ac2d0aabd9d6dc94f36e4bf47074ab4f6ac34",
+      "bytes": 11648,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-400.woff2",
+      "weights": [
+        400
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2",
+      "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
+      "bytes": 14708,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-500.woff2",
+      "weights": [
+        500
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgg.woff2",
+      "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
+      "bytes": 14888,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-600.woff2",
+      "weights": [
+        600
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwlBFgg.woff2",
+      "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",
+      "bytes": 15620,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "ibm-plex-mono/latin-700.woff2",
+      "weights": [
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwlBFgg.woff2",
+      "sha256": "4f84d86cfd060f4ded334358ff8a4c81d4db2ed5addd568359d693f44a87765a",
+      "bytes": 14908,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-400-normal.woff",
+      "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381",
+      "bytes": 13144,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-500-normal.woff",
+      "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d",
+      "bytes": 13156,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-600.woff",
+      "weights": [
+        600
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-600-normal.woff",
+      "sha256": "cb96282f22c6f19112856fd6e0b34e2baefaf4ca6551e851d58c5ab0aabcd2be",
+      "bytes": 13208,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "ibm-plex-mono/latin-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/files/ibm-plex-mono-latin-700-normal.woff",
+      "sha256": "595e0cbaa671f5276f5fdcac6113c30b2386f247f61cb42fc81f5096631a51e4",
+      "bytes": 13212,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "jetbrains-mono/cyrillic-ext-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwhsk.woff2",
+      "sha256": "62213be8a78b42f1e29d1452d91e2f8b3e745572a9dd98d3941e39fa00b37d76",
+      "bytes": 1640,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-ext-400-normal.woff",
+      "sha256": "9e3cd33bee514ed877dcbd13d4c0e2e676ff39241883e4ca41cdeeaaab3fc074",
+      "bytes": 1748,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-ext-500-normal.woff",
+      "sha256": "df0c4d0a31a56e66619213393846310de8df59952e02f8d594ca81ecb782f89d",
+      "bytes": 1744,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-ext-700-normal.woff",
+      "sha256": "0fd576cf32a62dcd0071e000805fe6dc1f715e5ccb2c2f1420a0b83bdee5d82f",
+      "bytes": 1728,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "jetbrains-mono/cyrillic-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwhsk.woff2",
+      "sha256": "e17cfd15fb96909d64095015f958207063a0c07191da3512df7d560a781aebdf",
+      "bytes": 8872,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-400-normal.woff",
+      "sha256": "67c9cc7864b4940dbfb246c7b452c1de8e96f140f334d363fcdd87dbfeadab72",
+      "bytes": 6976,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-500-normal.woff",
+      "sha256": "d408a664dc721f614e6346e09f3f32b2837005db28f5e4797ce8dd19da07e4ea",
+      "bytes": 7024,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "jetbrains-mono/cyrillic-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-cyrillic-700-normal.woff",
+      "sha256": "3fa4c7db9db401d30363d17e47c191320be64411a0814c9d72ee9dac059cb1eb",
+      "bytes": 7016,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "greek",
+      "format": "woff2",
+      "file": "jetbrains-mono/greek-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwhsk.woff2",
+      "sha256": "0a557721b1f8b36d3f3f84442689a71ca4a744300abcb46a1953f51bfc663b66",
+      "bytes": 6836,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "jetbrains-mono/greek-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-greek-400-normal.woff",
+      "sha256": "09f89e8369d7745ac5fe92e62a9ea13f66f40fd95b5495fac014c54b3a1ca6cc",
+      "bytes": 5664,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "jetbrains-mono/greek-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-greek-500-normal.woff",
+      "sha256": "89656e472646bf4d52c23d499fa2e467ad3ee73447fda24eefb96e176b1312d6",
+      "bytes": 5720,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "jetbrains-mono/greek-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-greek-700-normal.woff",
+      "sha256": "ef135812a390dea5041bc99bc3b5cd5d4c0f4f9a01c720a91d85549a56b5904d",
+      "bytes": 5696,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "jetbrains-mono/vietnamese-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwhsk.woff2",
+      "sha256": "c89b9cc0bc6262bd4f8d8494b6961601f3aefa829d08c2e3635f4d501d3a47c2",
+      "bytes": 5888,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "jetbrains-mono/vietnamese-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-vietnamese-400-normal.woff",
+      "sha256": "1dfe0f740fa86409034058e49474b01126ae9ea8c1ecda905917b90d57f03b00",
+      "bytes": 5372,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "jetbrains-mono/vietnamese-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-vietnamese-500-normal.woff",
+      "sha256": "6b14186bc983291a126aa8d6d9c3044415c968262279eecbb9bb194f1daf7800",
+      "bytes": 5476,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "jetbrains-mono/vietnamese-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-vietnamese-700-normal.woff",
+      "sha256": "5b505fd67cee30417279006a323f95f306ddf05cf9ccd6e3bba466aa99c40669",
+      "bytes": 5452,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "jetbrains-mono/latin-ext-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2",
+      "sha256": "db5ff4db83e580426280e9337a58dc57d3a83784a1b03ad80914651594441d52",
+      "bytes": 11624,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-ext-400-normal.woff",
+      "sha256": "e7131bbf591e1ed9b74e44e162f6a39affa00ac21654cb683585d085733f6355",
+      "bytes": 10128,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-ext-500-normal.woff",
+      "sha256": "8006c29f8ec53d12d281774d669a02a70b599590d110ff1a4b4a40a6fd975676",
+      "bytes": 10336,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-ext-700-normal.woff",
+      "sha256": "bf9ae9dfc82904a59d601042056be8783288ef3d47a4fb5b0e628db57e6d271c",
+      "bytes": 10304,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "jetbrains-mono/latin-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2",
+      "sha256": "83c005d49d8a6a50474c73a5a36ac0468076e9c4a29da7bdb14995d80560a5be",
+      "bytes": 31432,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-400-normal.woff",
+      "sha256": "658b9ee07b0249cf910a8d6f3d812d46c962bae81d7379a0355b1db35c61586f",
+      "bytes": 27496,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-500-normal.woff",
+      "sha256": "a270dd0bf13d91053b8999b7c120ffadb59680cfd63fe1a6b388a13bf2809fe1",
+      "bytes": 28208,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "jetbrains-mono/latin-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-700-normal.woff",
+      "sha256": "5e7319f25a5ef89d2c01c323029ef0bedefad204108e601455ff6f8ae12ca3ff",
+      "bytes": 28208,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff2",
+      "file": "roboto-mono/cyrillic-ext-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhGq3-OXg.woff2",
+      "sha256": "6d72c2150c28b5305e7bfd0290edcf6038e556a9dd11a6ef15a1652548a35693",
+      "bytes": 35912,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-ext-400-normal.woff",
+      "sha256": "18d56368db16b0103b9b24f08c689be8d6f76f84dc4f1348b56b39824c8e025a",
+      "bytes": 17112,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-ext-500-normal.woff",
+      "sha256": "8a7bea9499359de9211aec2be6eab36f5b2794d4e9a76026fe2a7cd17707ca06",
+      "bytes": 17496,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic-ext",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-ext-700-normal.woff",
+      "sha256": "ecfcb85ffadb985248bb7f54a0e954a8c86b0236d30aed005556575bcf7f4b26",
+      "bytes": 17412,
+      "unicode_range": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic",
+      "format": "woff2",
+      "file": "roboto-mono/cyrillic-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhPq3-OXg.woff2",
+      "sha256": "4052cc0b0f8b1b39da6cfaf90460f8b3c84dfc4b7562e9308ffa0998c3b9a005",
+      "bytes": 18592,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-400-normal.woff",
+      "sha256": "d9b6eb65b2968edba79d1db5e265ed1811a0999ca24fe781d36d0b97ef92efbb",
+      "bytes": 9100,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-500-normal.woff",
+      "sha256": "16112bbbddd08def8d5faaac9d47598d2d029c9e47b1380512c02fd71c84d837",
+      "bytes": 9208,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "cyrillic",
+      "format": "woff",
+      "file": "roboto-mono/cyrillic-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-cyrillic-700-normal.woff",
+      "sha256": "d1faacec5d6bc1c93ec02b17ba7bb1e6e7b837abec6cc105cdc05f4a5ae89d84",
+      "bytes": 9156,
+      "unicode_range": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "greek",
+      "format": "woff2",
+      "file": "roboto-mono/greek-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhIq3-OXg.woff2",
+      "sha256": "308f763acd5f648b0556c1f79b848102f494d0450072cfd2fd8064ddf287f4f8",
+      "bytes": 14044,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "roboto-mono/greek-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-greek-400-normal.woff",
+      "sha256": "3d00156f4e70ea94a36b92d1ad304bca50240f731587eb8d10dbfc79b23a1f91",
+      "bytes": 7176,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "roboto-mono/greek-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-greek-500-normal.woff",
+      "sha256": "a77048eca70867449618b2a7760146ea1c8c3a781ce08de9c7bfc78e5ffb60f1",
+      "bytes": 7188,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "greek",
+      "format": "woff",
+      "file": "roboto-mono/greek-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-greek-700-normal.woff",
+      "sha256": "e6ae73c7801dbee0aadef9d65336844ce5b235b48f3173c007c7495de706ced3",
+      "bytes": 7168,
+      "unicode_range": "U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "vietnamese",
+      "format": "woff2",
+      "file": "roboto-mono/vietnamese-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhEq3-OXg.woff2",
+      "sha256": "a4f562a288609dcb8f13e2b52296f1f3360957f09060735d4f00b5886e5bc7e0",
+      "bytes": 10308,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "roboto-mono/vietnamese-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-vietnamese-400-normal.woff",
+      "sha256": "1f434ce15af12a01dc434398f8bc9a8271f274ad524ee0d25300abb10c1939f5",
+      "bytes": 5800,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "roboto-mono/vietnamese-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-vietnamese-500-normal.woff",
+      "sha256": "c14fdbae9af2a3d3fa0c1ac7fc0cfbc7dd9cf392cdac3ef8edc039c38a7ca098",
+      "bytes": 5920,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "vietnamese",
+      "format": "woff",
+      "file": "roboto-mono/vietnamese-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-vietnamese-700-normal.woff",
+      "sha256": "f5e824de963b835a78b09f34ac15b460243639ce8785c2880c973120585d8067",
+      "bytes": 5828,
+      "unicode_range": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin-ext",
+      "format": "woff2",
+      "file": "roboto-mono/latin-ext-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhFq3-OXg.woff2",
+      "sha256": "4cc0d52e0fa37c28084e0cbce3589a8ab32dd21e6ea619489c5f7c6e8c43b922",
+      "bytes": 22916,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "roboto-mono/latin-ext-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-ext-400-normal.woff",
+      "sha256": "3bfe94215e285ee3da34cbdd64862c3f89ee273b80b4dbde439ffa1a912b9f71",
+      "bytes": 12164,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "roboto-mono/latin-ext-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-ext-500-normal.woff",
+      "sha256": "5c0dd9be18fb34e3dd73c9528ba3beaf0f13c53500f0645df748f3ec3219c997",
+      "bytes": 12308,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin-ext",
+      "format": "woff",
+      "file": "roboto-mono/latin-ext-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-ext-700-normal.woff",
+      "sha256": "7bd9fb68363ffa71e6f3b32a29e4579a6f5d5711b8170708f39fef8a28c0f82d",
+      "bytes": 12136,
+      "unicode_range": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin",
+      "format": "woff2",
+      "file": "roboto-mono/latin-400w3.woff2",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "source": "https://fonts.gstatic.com/s/robotomono/v31/L0x5DF4xlVMF-BfR8bXMIjhLq38.woff2",
+      "sha256": "b81cd55177300649be8f95b3b747d721ce607e8ed2856e25bd0c630cfd631faf",
+      "bytes": 32796,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "roboto-mono/latin-400.woff",
+      "weights": [
+        400
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-400-normal.woff",
+      "sha256": "9690f3c6eb06d0a4e7b3de424daa616612e31718cf5440b3fc5977db72673d24",
+      "bytes": 15720,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "roboto-mono/latin-500.woff",
+      "weights": [
+        500
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-500-normal.woff",
+      "sha256": "ae8da93ddfad37b344aa6f615bd26771c58e3b3be3a371a623e90a7cd28f432d",
+      "bytes": 15932,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "subset": "latin",
+      "format": "woff",
+      "file": "roboto-mono/latin-700.woff",
+      "weights": [
+        700
+      ],
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/roboto-mono@5/files/roboto-mono-latin-700-normal.woff",
+      "sha256": "7ac13ad17113e63e24d7c0be1bb447faa26c23f75c12a0a87e8c68ae4e8ed0cc",
+      "bytes": 15848,
+      "unicode_range": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+    }
+  ],
+  "licenses": [
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "license": "OFL-1.1",
+      "file": "LICENSES/inter-OFL.txt",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5/LICENSE"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "license": "OFL-1.1",
+      "file": "LICENSES/ibm-plex-mono-OFL.txt",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/LICENSE"
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "license": "OFL-1.1",
+      "file": "LICENSES/jetbrains-mono-OFL.txt",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/LICENSE"
+    },
+    {
+      "family": "Roboto Mono",
+      "slug": "roboto-mono",
+      "license": "OFL-1.1",
+      "file": "LICENSES/roboto-mono-OFL.txt",
+      "source": "https://raw.githubusercontent.com/googlefonts/robotomono/main/OFL.txt"
+    }
+  ]
+}
