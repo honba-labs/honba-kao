@@ -6,29 +6,29 @@ build: build-prod
 
 prod: build-prod
 build-prod:
-	trunk build --config crates/honba-kao-app/Trunk.toml --release
+	trunk build --config Trunk.toml --release
 
 release: build-release
 build-release:
-	trunk build --config crates/honba-kao-app/Trunk.toml --release
+	trunk build --config Trunk.toml --release
 
 dev: build-dev
 build-dev:
-	trunk build --config crates/honba-kao-app/Trunk.toml
+	trunk build --config Trunk.toml
 
 # Debug build is explicit and not run unless asked
 debug: build-debug
 build-debug:
-	trunk build --config crates/honba-kao-app/Trunk.toml
+	trunk build --config Trunk.toml
 
 # Dev server (http://127.0.0.1:8080). Defaults to release mode.
 serve: serve-prod
 
 serve-prod:
-	trunk serve --config crates/honba-kao-app/Trunk.toml --release
+	trunk serve --config Trunk.toml --release
 
 serve-dev:
-	trunk serve --config crates/honba-kao-app/Trunk.toml
+	trunk serve --config Trunk.toml
 
 check: check-prod lint-design-system lint-a11y
 
@@ -52,4 +52,4 @@ lint-a11y:
 
 clean:
 	rm -rf dist target crates/honba-kao-app/dist
-	trunk clean --config crates/honba-kao-app/Trunk.toml 2>/dev/null || true
+	trunk clean --config Trunk.toml 2>/dev/null || true

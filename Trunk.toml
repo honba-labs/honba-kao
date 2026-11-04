@@ -1,3 +1,17 @@
+# Single Trunk configuration for honba-kao: the CI `web-build` job, the
+# Playwright webServer and every Makefile target resolve to THIS file; it
+# drives the carrier page at the repo root (`index.html`), which bootstraps
+# the `honba-kao-app` bundle. `make dev` / `make serve-dev` dev ergonomics
+# (port + `/api/` proxy) live in the sections below.
 [build]
 dist = "dist"
 public_url = "/"
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8080
+open = false
+
+[[proxy]]
+backend = "http://127.0.0.1:8000/"
+rewrite = "/api/"
