@@ -1,4 +1,4 @@
-.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod serve serve-all serve-prod serve-dev lint-design-system lint-a11y clean
+.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod serve serve-all serve-prod serve-dev gen-css lint-design-system lint-a11y clean
 
 # Default profile is 'prod' (no debug build unless asked for specifically)
 default: prod
@@ -27,6 +27,13 @@ serve: serve-all
 
 serve-all:
 	./scripts/serve-all.sh
+
+# Regenerate crates/honba-kao-app/assets/style/utilities.css from the class
+# tokens used in the Rust sources (extract -> generate). Run after adding
+# new component markup so its utility classes exist in the stylesheet.
+gen-css:
+	node scripts/extract-classes.js
+	node scripts/gen-utilities.js
 
 # Trunk-only (backend not started): http://127.0.0.1:8080. Release mode.
 serve-prod:
