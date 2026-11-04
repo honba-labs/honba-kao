@@ -82,6 +82,7 @@ pub fn ScreenerPage() -> impl IntoView {
     let catalog_modal_open = RwSignal::new(false);
     let save_sheet_open = RwSignal::new(false);
     let custom_screens = RwSignal::new(load_custom_screens());
+    let active_screen_id = RwSignal::new("builtin.all".to_string());
 
     // --- Filter state ----------------------------------------------------
     let search_query = RwSignal::new(String::new());
@@ -297,6 +298,7 @@ pub fn ScreenerPage() -> impl IntoView {
     let record: Signal<Option<ScreenerRecord>> = active_record.into();
 
     let on_reset = Callback::new(move |_| {
+        active_screen_id.set("builtin.all".to_string());
         search_query.set(String::new());
         selected_exchange.set("ALL".to_string());
         selected_sector.set("ALL".to_string());
@@ -350,6 +352,7 @@ pub fn ScreenerPage() -> impl IntoView {
     });
 
     let on_apply_screen = Callback::new(move |screen: CustomScreen| {
+        active_screen_id.set(screen.id.clone());
         let c = screen.criteria.clone();
         search_query.set(c.search_query);
         selected_exchange.set(c.exchange);
@@ -434,8 +437,10 @@ pub fn ScreenerPage() -> impl IntoView {
                 active_filters=active_filters
                 on_reset=on_reset
                 on_export_csv=on_export_csv
+                on_apply_screen=on_apply_screen
+                active_screen_id=active_screen_id
             />
-            <div class="screener-body flex flex-1 min-h-0 overflow-hidden">
+            <div class="screener-body flex flex-1 min-h-0 overflow-hidden hf-card rounded-xl border border-border-soft bg-surface-base shadow-sm">
                 <div class="screener-main flex-1 min-w-0 overflow-x-auto">
                     {move || match view_mode.get() {
                         ScreenerViewMode::Table => view! {

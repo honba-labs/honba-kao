@@ -25,6 +25,9 @@ pub fn AppRouter() -> impl IntoView {
                     <Route path=path!("landing") view=LandingPage />
                     <Route path=path!("auth") view=AuthPage />
                     <Route path=path!("account") view=AccountPage />
+                    <Route path=path!("components") view=ComponentsPage />
+                    <Route path=path!("design-system") view=ComponentsPage />
+                    <Route path=path!("showcase") view=ComponentsPage />
 
                     // Cluster 1: Trading Cockpit
                     <Route path=path!("trading") view=CockpitPage />

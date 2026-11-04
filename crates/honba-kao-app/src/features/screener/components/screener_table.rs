@@ -6,24 +6,23 @@
 use crate::features::screener::components::column_header_menu::{
     ColumnHeaderMenu, MoveDirection, swap_in_order,
 };
-use crate::features::screener::filters::record_cell;
+use crate::features::screener::filters::{format_price, record_cell};
 use crate::features::screener::types::{
     ScreenerAssetType, ScreenerColumn, ScreenerRecord, catalog_for,
 };
-use honba_kao_ui_core::SortDirection;
 use honba_kao_ui_core::primitive::HfSortArrows;
+use honba_kao_ui_core::{BadgeVariant, HfBadge, SortDirection};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::HashSet;
 
-const TH_CLASS: &str = "px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted border-b border-border-soft whitespace-nowrap";
+const TH_CLASS: &str = "px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted border-b border-border-soft bg-surface-subtle whitespace-nowrap select-none";
 
 fn row_class(selected: bool) -> String {
-    let base =
-        "border-b border-border-soft cursor-pointer hover:bg-surface-subtle transition-colors";
+    let base = "hf-table-row border-b border-border-soft cursor-pointer hover:bg-surface-subtle transition-colors";
     if selected {
-        format!("{} bg-emerald-600/10", base)
+        format!("{} bg-emerald-600/15 border-l-2 border-emerald-500", base)
     } else {
         base.to_string()
     }
@@ -191,7 +190,7 @@ pub fn ScreenerTable(
                             cells.push(
                                 view! {
                                     <td
-                                        class="px-3 py-2 text-xs cursor-pointer"
+                                        class="px-3 py-2 text-xs cursor-pointer select-none text-center"
                                         on:click=move |ev: web_sys::MouseEvent| {
                                             ev.stop_propagation();
                                             let sym = rec_star.symbol().to_string();
@@ -204,12 +203,12 @@ pub fn ScreenerTable(
                                             });
                                         }
                                     >
-                                        <span class="text-[13px] leading-none">
+                                        <span class="text-[14px] leading-none inline-block hover:scale-125 transition-transform">
                                             {move || {
                                                 if watchlist.get().contains(rec_glyph.symbol()) {
-                                                    "★"
+                                                    view! { <span class="text-amber-400">"★"</span> }.into_any()
                                                 } else {
-                                                    "☆"
+                                                    view! { <span class="text-text-muted hover:text-text-high">"☆"</span> }.into_any()
                                                 }
                                             }}
                                         </span>
@@ -223,13 +222,24 @@ pub fn ScreenerTable(
                             let nm = record.name().to_string();
                             cells.push(
                                 view! {
-                                    <td class="px-3 py-2 font-mono text-xs tabular-nums">
-                                        <span class="block font-semibold text-text-high">
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums whitespace-nowrap">
+                                        <span class="block font-semibold text-text-high hover:text-emerald-400 transition-colors">
                                             {sym}
                                         </span>
-                                        <span class="block text-[10px] text-text-muted">
+                                        <span class="block text-[10px] text-text-muted truncate max-w-[150px]">
                                             {nm}
                                         </span>
+                                    </td>
+                                }
+                                .into_any(),
+                            );
+                        }
+                        "price" => {
+                            let txt = record_cell(&record, key);
+                            cells.push(
+                                view! {
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high font-semibold whitespace-nowrap">
+                                        {txt}
                                     </td>
                                 }
                                 .into_any(),
@@ -239,13 +249,17 @@ pub fn ScreenerTable(
                             let cell = if let ScreenerRecord::Stock(r) = &record {
                                 let pct = range_marker_pct(r.price, r.low_52w, r.high_52w);
                                 view! {
-                                    <td class="px-3 py-2">
-                                        <span class="hf-range-bar relative inline-block h-1.5 w-24 rounded-full bg-emerald-500/15 align-middle">
-                                            <span
-                                                class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-text-muted"
-                                                style=format!("left: {}%", pct)
-                                            ></span>
-                                        </span>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[9px] font-mono text-text-muted">{format_price(r.low_52w)}</span>
+                                            <span class="hf-range-bar relative inline-block h-1.5 w-20 rounded-full bg-surface-elevated border border-border-soft align-middle overflow-visible">
+                                                <span
+                                                    class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-surface-base shadow-sm"
+                                                    style=format!("left: {}%", pct)
+                                                ></span>
+                                            </span>
+                                            <span class="text-[9px] font-mono text-text-muted">{format_price(r.high_52w)}</span>
+                                        </div>
                                     </td>
                                 }
                                 .into_any()
@@ -254,11 +268,47 @@ pub fn ScreenerTable(
                             };
                             cells.push(cell);
                         }
+                        "analyst_rating" | "technical_rating" => {
+                            let txt = record_cell(&record, key);
+                            let variant = if txt.contains("Buy") {
+                                BadgeVariant::Success
+                            } else if txt.contains("Sell") {
+                                BadgeVariant::Danger
+                            } else {
+                                BadgeVariant::Warning
+                            };
+                            cells.push(
+                                view! {
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <HfBadge variant=variant>{txt}</HfBadge>
+                                    </td>
+                                }
+                                .into_any(),
+                            );
+                        }
+                        _ if key == "change_pct" || key.starts_with("return_") || key == "revenue_growth_yoy" => {
+                            let txt = record_cell(&record, key);
+                            let color = if txt.starts_with('+') {
+                                "text-emerald-400 font-semibold"
+                            } else if txt.starts_with('-') {
+                                "text-rose-400 font-semibold"
+                            } else {
+                                "text-text-high"
+                            };
+                            cells.push(
+                                view! {
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums whitespace-nowrap">
+                                        <span class=color>{txt}</span>
+                                    </td>
+                                }
+                                .into_any(),
+                            );
+                        }
                         _ => {
                             let txt = record_cell(&record, key);
                             cells.push(
                                 view! {
-                                    <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high">
+                                    <td class="px-3 py-2 font-mono text-xs tabular-nums text-text-high whitespace-nowrap">
                                         {txt}
                                     </td>
                                 }
@@ -285,11 +335,13 @@ pub fn ScreenerTable(
     };
 
     view! {
-        <table class="hf-screener-table w-full min-w-[720px] border-collapse">
-            <thead>
-                <tr>{header_cells}</tr>
-            </thead>
-            <tbody>{row_cells}</tbody>
-        </table>
+        <div class="tv-table-wrapper w-full overflow-x-auto">
+            <table class="hf-screener-table hf-table w-full min-w-[720px] border-collapse">
+                <thead>
+                    <tr>{header_cells}</tr>
+                </thead>
+                <tbody>{row_cells}</tbody>
+            </table>
+        </div>
     }
 }

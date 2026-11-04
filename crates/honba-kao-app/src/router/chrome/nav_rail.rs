@@ -1,5 +1,4 @@
 use leptos::prelude::*;
-use leptos_router::components::A;
 use leptos_router::hooks::use_location;
 
 #[derive(Clone, Debug)]
@@ -53,6 +52,11 @@ pub fn NavRail() -> impl IntoView {
             path: "/risk",
             icon: "🛡️",
         },
+        NavItem {
+            label: "UI Core",
+            path: "/components",
+            icon: "🎨",
+        },
     ];
 
     view! {
@@ -60,7 +64,12 @@ pub fn NavRail() -> impl IntoView {
             {items.into_iter().map(|item| {
                 let active = Signal::derive(move || {
                     let p = location.pathname.get();
-                    p.as_str() == item.path || p.as_str().starts_with(&format!("{}/", item.path))
+                    let p_str = p.as_str();
+                    if item.path == "/screener" && (p_str == "/" || p_str.is_empty()) {
+                        true
+                    } else {
+                        p_str == item.path || p_str.starts_with(&format!("{}/", item.path))
+                    }
                 });
                 let class = Signal::derive(move || {
                     format!(
@@ -73,14 +82,14 @@ pub fn NavRail() -> impl IntoView {
                     )
                 });
                 view! {
-                    <A
+                    <a
                         href=item.path
-                        attr:class=class
-                        attr:title=item.label
+                        class=class
+                        title=item.label
                     >
                         <span class="text-base">{item.icon}</span>
                         <span class="text-[9px] font-sans tracking-tight">{item.label}</span>
-                    </A>
+                    </a>
                 }
             }).collect::<Vec<_>>()}
         </nav>

@@ -48,7 +48,7 @@ pub fn SiteFooter() -> impl IntoView {
                 <span class="text-text-muted">{feed_ticks}</span>
             </div>
             <div class="flex items-center gap-3">
-                <a href="/components.html" target="_blank" rel="noopener" class="hover:text-text-high">
+                <a href="/components" class="hover:text-text-high text-emerald-400">
                     "Components"
                 </a>
                 <span>"|"</span>

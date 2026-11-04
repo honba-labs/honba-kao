@@ -57,7 +57,7 @@ pub fn ScreenerDetailDrawer(
     watchlist: RwSignal<HashSet<String>>,
 ) -> impl IntoView {
     view! {
-        <HfDrawer open=open title="Screener Details">
+        <HfDrawer open=open title="Screener Details" right=true>
             <div class="screener-detail-drawer flex flex-col gap-3">
                 {move || {
                     let snap = record.get();

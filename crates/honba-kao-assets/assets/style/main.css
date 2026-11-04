@@ -5,6 +5,7 @@
 
 @import "./palette_256.css";
 @import "./fonts.css";
+@import "./components.css";
 @import "./home.css";
 
 /* Typography — mirrors noFX `web/src/index.css` exactly. */

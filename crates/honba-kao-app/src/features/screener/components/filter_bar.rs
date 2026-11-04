@@ -4,6 +4,7 @@
 //! with modal triggers and hotkey badges.
 
 use crate::features::screener::indices::{INDEX_CATALOG, IndexClass, benchmark_for, member_count};
+use crate::features::screener::screen_catalog::{CustomScreen, builtin_screens};
 use crate::features::screener::types::ScreenerViewMode;
 use honba_kao_ui_core::atoms::segmented::Segment;
 use honba_kao_ui_core::primitive::{ButtonSize, ButtonVariant, HfButton};
@@ -50,18 +51,31 @@ fn FlyoutPill(
     label: Signal<String>,
     open: RwSignal<Option<FlyoutKey>>,
     key: FlyoutKey,
+    #[prop(into, optional)] is_active: Option<Signal<bool>>,
 ) -> impl IntoView {
+    let active = move || is_active.map(|a| a.get()).unwrap_or(false) || open.get() == Some(key);
+    let class = move || {
+        format!(
+            "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border {}",
+            if active() {
+                "hf-filter-pill--active bg-emerald-600/20 border-emerald-500 text-emerald-300"
+            } else {
+                "border-border-soft bg-surface-subtle text-text-muted hover:text-text-high hover:border-border-strong"
+            }
+        )
+    };
     view! {
-        <HfButton
-            variant=ButtonVariant::Tertiary
-            size=ButtonSize::Xs
-            on_click=Callback::new(move |_| {
+        <button
+            type="button"
+            class=class
+            on:click=move |_| {
                 let next = if open.get_untracked() == Some(key) { None } else { Some(key) };
                 open.set(next);
-            })
+            }
         >
-            {move || format!("{} ▾", label.get())}
-        </HfButton>
+            <span>{move || label.get()}</span>
+            <span class="text-[9px] text-text-muted">"▾"</span>
+        </button>
     }
 }
 
@@ -90,6 +104,8 @@ pub fn ScreenerFilterBar(
     active_filters: Signal<usize>,
     on_reset: Callback<()>,
     on_export_csv: Callback<()>,
+    #[prop(into, optional)] on_apply_screen: Option<Callback<CustomScreen>>,
+    #[prop(into, optional)] active_screen_id: Option<RwSignal<String>>,
 ) -> impl IntoView {
     // (label, value) tuples — HfSelect renders `<option value=value>{label}</option>`.
     let cap_options: Vec<(String, String)> = vec![
@@ -101,6 +117,10 @@ pub fn ScreenerFilterBar(
 
     // Row C flyout state — the pills flip their own key (single-open toggle).
     let flyout_open = RwSignal::new(Option::<FlyoutKey>::None);
+    let show_ai_prompt = RwSignal::new(false);
+    let active_screen =
+        active_screen_id.unwrap_or_else(|| RwSignal::new("builtin.all".to_string()));
+    let presets = builtin_screens();
 
     // Pill labels derived from the SAME criteria signals the modal drives.
     let market_label: Signal<String> = Signal::derive(move || {
@@ -127,73 +147,78 @@ pub fn ScreenerFilterBar(
     let pe_label: Signal<String> =
         Signal::derive(move || format!("P/E: {}", decimal_band(min_pe.get(), max_pe.get())));
 
+    let market_active = Signal::derive(move || selected_exchange.get() != "ALL");
+    let index_active = Signal::derive(move || {
+        let key = selected_index.get();
+        !key.is_empty() && key != "ALL"
+    });
+    let price_active =
+        Signal::derive(move || min_price.get() > Decimal::ZERO || max_price.get() > Decimal::ZERO);
+    let pe_active =
+        Signal::derive(move || min_pe.get() > Decimal::ZERO || max_pe.get() > Decimal::ZERO);
+
     view! {
-        <div class="hf-filter-bar screener-filter-bar flex flex-col gap-2 px-3 py-2 border-b border-border-soft bg-surface-base">
-            // Row A — asset segment, preset showcase chips, and the ✦ AI prompt bar.
-            <div class="flex items-center gap-2 flex-wrap">
-                <HfSegmentedControl
-                    value=asset_type
-                    size="px-2 py-0.5"
-                    options=vec![
-                        Segment {
-                            value: "stocks".to_string(),
-                            label: "Stocks".to_string(),
-                        },
-                        Segment {
-                            value: "etf".to_string(),
-                            label: "ETF".to_string(),
-                        },
-                        Segment {
-                            value: "bonds".to_string(),
-                            label: "Bonds".to_string(),
-                        },
-                        Segment {
-                            value: "mf".to_string(),
-                            label: "MF".to_string(),
-                        },
-                    ]
-                />
-                <span class="flex items-center gap-1 flex-wrap">
-                    <HfChip active=false on_click=Callback::new(|_| {})>"Breakouts"</HfChip>
-                    <HfChip active=false on_click=Callback::new(|_| {})>"52W High"</HfChip>
-                    <HfChip active=false on_click=Callback::new(|_| {})>"NR7 Squeeze"</HfChip>
-                    <HfChip active=false on_click=Callback::new(|_| {})>"Value"</HfChip>
-                    <HfChip active=false on_click=Callback::new(|_| {})>"High Div"</HfChip>
-                </span>
-                <span class="flex items-center gap-1">
-                    <span class="w-72">
-                        <HfInput
-                            value=ai_prompt
-                            placeholder="✦ Try: pe < 25, rvol > 2, nifty 50"
-                            on_input=Callback::new(move |v| ai_prompt.set(v))
-                        />
-                    </span>
-                    <HfButton
-                        variant=ButtonVariant::Tertiary
-                        size=ButtonSize::Xs
-                        on_click=Callback::new(move |_| on_ai_apply.run(ai_prompt.get_untracked()))
-                    >
-                        "✦ Parse"
-                    </HfButton>
-                    {move || {
-                        let label = ai_label.get();
-                        (!label.is_empty()).then(|| {
-                            view! {
-                                <button
-                                    type="button"
-                                    title="AI filter applied — click to dismiss the indicator"
-                                    class="px-2 py-0.5 rounded-full border border-emerald-600 bg-emerald-600/10 text-[11px] text-emerald-500"
-                                    on:click=move |_| {
-                                        ai_label.set(String::new());
-                                        ai_prompt.set(String::new());
-                                    }
-                                >
-                                    {label}
-                                </button>
-                            }
-                        })
-                    }}
-                </span>
+        <div class="hf-filter-bar screener-filter-bar hf-card flex flex-col gap-2.5 p-3.5 border border-border-soft bg-surface-base rounded-xl shadow-sm mb-3">
+            // Row A — Asset Segment + Popular Screens bubbles (honba-fe inspired).
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+                    <HfSegmentedControl
+                        value=asset_type
+                        size="px-2.5 py-1"
+                        options=vec![
+                            Segment {
+                                value: "stocks".to_string(),
+                                label: "Stocks".to_string(),
+                            },
+                            Segment {
+                                value: "etf".to_string(),
+                                label: "ETF".to_string(),
+                            },
+                            Segment {
+                                value: "bonds".to_string(),
+                                label: "Bonds".to_string(),
+                            },
+                            Segment {
+                                value: "mf".to_string(),
+                                label: "MF".to_string(),
+                            },
+                        ]
+                    />
+                    <div class="h-4 w-px bg-border-soft mx-1 hidden sm:block" />
+                    <div class="tv-popular-screens-container flex items-center gap-2 overflow-x-auto py-0.5">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted whitespace-nowrap">
+                            "Popular Screens:"
+                        </span>
+                        <div class="tv-popular-bubbles-list flex items-center gap-1.5 flex-nowrap">
+                            {move || {
+                                let current = active_screen.get();
+                                presets
+                                    .iter()
+                                    .map(|sc| {
+                                        let is_active = current == sc.id;
+                                        let sc_clone = sc.clone();
+                                        let sc_id = sc.id.clone();
+                                        let on_click = Callback::new(move |_| {
+                                            active_screen.set(sc_id.clone());
+                                            if let Some(cb) = on_apply_screen.as_ref() {
+                                                cb.run(sc_clone.clone());
+                                            }
+                                        });
+                                        let sc_title = sc.name.clone();
+                                        view! {
+                                            <HfChip
+                                                active=is_active
+                                                on_click=on_click
+                                            >
+                                                <span>{sc_title}</span>
+                                            </HfChip>
+                                        }
+                                    })
+                                    .collect::<Vec<_>>()
+                            }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             // Row B — screener view tab strip (HfTabPanel updates `active` itself).
@@ -216,30 +241,46 @@ pub fn ScreenerFilterBar(
                 <HfTabPanel value="forecasts" label="Forecasts" active=active_tab />
             </div>
 
-            // Row C — search + Market/Index/Price/P-E flyouts + select filters.
+            // Row C — search + AI trigger + Market/Index/Price/P-E flyouts + select filters.
             <div class="flex items-center gap-2 flex-wrap">
-                <div class="w-56">
+                <div class="w-52">
                     <HfInput
                         value=search_query
                         placeholder="🔍 Ticker / name"
                         on_input=Callback::new(move |v| search_query.set(v))
                     />
                 </div>
+                <button
+                    type="button"
+                    class=move || format!(
+                        "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border {}",
+                        if show_ai_prompt.get() || !ai_label.get().is_empty() {
+                            "bg-purple-600/20 border-purple-500 text-purple-300 shadow-sm"
+                        } else {
+                            "border-border-soft bg-surface-subtle text-purple-400 hover:text-purple-300 hover:border-purple-500/50"
+                        }
+                    )
+                    on:click=move |_| show_ai_prompt.update(|v| *v = !*v)
+                    title="Filter stocks using AI natural language prompt"
+                >
+                    <span class="text-xs">"✦"</span>
+                    <span>"AI"</span>
+                </button>
                 <span class="relative">
-                    <FlyoutPill label=market_label open=flyout_open key=FlyoutKey::Market />
+                    <FlyoutPill label=market_label open=flyout_open key=FlyoutKey::Market is_active=market_active />
                     {move || {
                         (flyout_open.get() == Some(FlyoutKey::Market)).then(|| {
                             view! {
-                                <div class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-border-soft bg-surface-base p-3 shadow-lg shadow-black/20 flex flex-col gap-1 text-[11px] text-text-high">
+                                <div class="hf-menu-popover absolute left-0 top-full z-40 mt-1.5 w-64 rounded-xl border border-border-strong bg-surface-base p-2.5 shadow-2xl flex flex-col gap-1 text-xs text-text-high">
                                     {EXCHANGE_ROWS
                                         .iter()
                                         .map(|(label, value)| {
                                             let active =
                                                 selected_exchange.get().as_str() == *value;
                                             let row_class = if active {
-                                                "text-emerald-500 font-semibold"
+                                                "hf-menu-item text-emerald-400 font-semibold bg-emerald-500/15 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             } else {
-                                                "hover:bg-surface-subtle text-left"
+                                                "hf-menu-item text-text-high hover:bg-surface-subtle hover:text-emerald-400 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             };
                                             view! {
                                                 <button
@@ -247,7 +288,7 @@ pub fn ScreenerFilterBar(
                                                     class=row_class
                                                     on:click=move |_| {
                                                         selected_exchange
-                                                            .set((*value).to_string());
+                                                             .set((*value).to_string());
                                                         flyout_open.set(None);
                                                     }
                                                 >
@@ -262,18 +303,18 @@ pub fn ScreenerFilterBar(
                     }}
                 </span>
                 <span class="relative">
-                    <FlyoutPill label=index_label open=flyout_open key=FlyoutKey::Index />
+                    <FlyoutPill label=index_label open=flyout_open key=FlyoutKey::Index is_active=index_active />
                     {move || {
                         (flyout_open.get() == Some(FlyoutKey::Index)).then(|| {
                             let key = selected_index.get();
                             let all_active = key.is_empty() || key == "ALL";
                             let all_class = if all_active {
-                                "text-emerald-500 font-semibold"
+                                "hf-menu-item text-emerald-400 font-semibold bg-emerald-500/15 rounded-md px-2.5 py-1.5 text-left transition-colors"
                             } else {
-                                "hover:bg-surface-subtle text-left"
+                                "hf-menu-item text-text-high hover:bg-surface-subtle hover:text-emerald-400 rounded-md px-2.5 py-1.5 text-left transition-colors"
                             };
                             view! {
-                                <div class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-border-soft bg-surface-base p-3 shadow-lg shadow-black/20 flex flex-col gap-1 text-[11px] text-text-high">
+                                <div class="hf-menu-popover absolute left-0 top-full z-40 mt-1.5 w-64 rounded-xl border border-border-strong bg-surface-base p-2.5 shadow-2xl flex flex-col gap-1 text-xs text-text-high">
                                     <button
                                         type="button"
                                         class=all_class
@@ -284,7 +325,7 @@ pub fn ScreenerFilterBar(
                                     >
                                         "All Indices"
                                     </button>
-                                    <span class="text-[10px] uppercase tracking-wide text-text-muted pt-1">
+                                    <span class="text-[10px] uppercase tracking-wide text-text-muted pt-1 px-1">
                                         "Broad"
                                     </span>
                                     {INDEX_CATALOG
@@ -296,9 +337,9 @@ pub fn ScreenerFilterBar(
                                             let text =
                                                 format!("{} ({})", b.label, member_count(b_key));
                                             let row_class = if active {
-                                                "text-emerald-500 font-semibold"
+                                                "hf-menu-item text-emerald-400 font-semibold bg-emerald-500/15 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             } else {
-                                                "hover:bg-surface-subtle text-left"
+                                                "hf-menu-item text-text-high hover:bg-surface-subtle hover:text-emerald-400 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             };
                                             view! {
                                                 <button
@@ -314,7 +355,7 @@ pub fn ScreenerFilterBar(
                                             }
                                         })
                                         .collect::<Vec<_>>()}
-                                    <span class="text-[10px] uppercase tracking-wide text-text-muted pt-1">
+                                    <span class="text-[10px] uppercase tracking-wide text-text-muted pt-1 px-1">
                                         "Sectoral"
                                     </span>
                                     {INDEX_CATALOG
@@ -326,9 +367,9 @@ pub fn ScreenerFilterBar(
                                             let text =
                                                 format!("{} ({})", b.label, member_count(b_key));
                                             let row_class = if active {
-                                                "text-emerald-500 font-semibold"
+                                                "hf-menu-item text-emerald-400 font-semibold bg-emerald-500/15 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             } else {
-                                                "hover:bg-surface-subtle text-left"
+                                                "hf-menu-item text-text-high hover:bg-surface-subtle hover:text-emerald-400 rounded-md px-2.5 py-1.5 text-left transition-colors"
                                             };
                                             view! {
                                                 <button
@@ -350,11 +391,11 @@ pub fn ScreenerFilterBar(
                     }}
                 </span>
                 <span class="relative">
-                    <FlyoutPill label=price_label open=flyout_open key=FlyoutKey::Price />
+                    <FlyoutPill label=price_label open=flyout_open key=FlyoutKey::Price is_active=price_active />
                     {move || {
                         (flyout_open.get() == Some(FlyoutKey::Price)).then(|| {
                             view! {
-                                <div class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-border-soft bg-surface-base p-3 shadow-lg shadow-black/20 flex flex-col gap-1 text-[11px] text-text-high">
+                                <div class="hf-menu-popover absolute left-0 top-full z-40 mt-1.5 w-64 rounded-xl border border-border-strong bg-surface-base p-3 shadow-2xl flex flex-col gap-1.5 text-xs text-text-high">
                                     <span class="text-[10px] uppercase tracking-wide text-text-muted">
                                         "Price Band ₹ (dec! 0 clears)"
                                     </span>
@@ -368,7 +409,7 @@ pub fn ScreenerFilterBar(
                                             <HfNumberInput value=max_price placeholder="0" />
                                         </div>
                                     </div>
-                                    <span class="text-text-muted">
+                                    <span class="text-[10px] text-text-muted">
                                         "0 clears the bound. Shared with the Filters modal."
                                     </span>
                                 </div>
@@ -377,11 +418,11 @@ pub fn ScreenerFilterBar(
                     }}
                 </span>
                 <span class="relative">
-                    <FlyoutPill label=pe_label open=flyout_open key=FlyoutKey::Pe />
+                    <FlyoutPill label=pe_label open=flyout_open key=FlyoutKey::Pe is_active=pe_active />
                     {move || {
                         (flyout_open.get() == Some(FlyoutKey::Pe)).then(|| {
                             view! {
-                                <div class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-border-soft bg-surface-base p-3 shadow-lg shadow-black/20 flex flex-col gap-1 text-[11px] text-text-high">
+                                <div class="hf-menu-popover absolute left-0 top-full z-40 mt-1.5 w-64 rounded-xl border border-border-strong bg-surface-base p-3 shadow-2xl flex flex-col gap-1.5 text-xs text-text-high">
                                     <span class="text-[10px] uppercase tracking-wide text-text-muted">
                                         "P/E Band"
                                     </span>
@@ -395,7 +436,7 @@ pub fn ScreenerFilterBar(
                                             <HfNumberInput value=max_pe placeholder="0" />
                                         </div>
                                     </div>
-                                    <span class="text-text-muted">
+                                    <span class="text-[10px] text-text-muted">
                                         "0 clears the bound. Shared with the Filters modal."
                                     </span>
                                 </div>
@@ -411,19 +452,66 @@ pub fn ScreenerFilterBar(
                 </div>
                 <HfCheckbox checked=watchlist_only label="★ Only" />
                 <HfCheckbox checked=fno_only label="F&O" />
+                {move || {
+                    let label = ai_label.get();
+                    (!label.is_empty()).then(|| {
+                        view! {
+                            <button
+                                type="button"
+                                title="AI filter applied — click to dismiss the indicator"
+                                class="px-2.5 py-0.5 rounded-full border border-purple-500/50 bg-purple-500/15 text-[11px] text-purple-300 font-medium flex items-center gap-1 hover:bg-purple-500/25 transition-colors"
+                                on:click=move |_| {
+                                    ai_label.set(String::new());
+                                    ai_prompt.set(String::new());
+                                }
+                            >
+                                <span>{label}</span>
+                                <span class="text-[9px]">"✕"</span>
+                            </button>
+                        }
+                    })
+                }}
             </div>
 
+            // Expandable AI prompt row (when toggled via ✦ AI button)
+            {move || {
+                show_ai_prompt.get().then(|| {
+                    view! {
+                        <div class="flex items-center gap-2 p-2 rounded-xl border border-purple-500/40 bg-surface-subtle shadow-inner">
+                            <span class="text-purple-400 pl-2 font-mono text-sm">"✦"</span>
+                            <div class="flex-1">
+                                <HfInput
+                                    value=ai_prompt
+                                    placeholder="✦ Ask AI: e.g. 'pe < 25, rvol > 2, nifty 50' or 'large cap tech stocks'"
+                                    on_input=Callback::new(move |v| ai_prompt.set(v))
+                                />
+                            </div>
+                            <HfButton
+                                variant=ButtonVariant::Primary
+                                size=ButtonSize::Xs
+                                on_click=Callback::new(move |_| {
+                                    on_ai_apply.run(ai_prompt.get_untracked());
+                                    show_ai_prompt.set(false);
+                                })
+                            >
+                                "Apply AI"
+                            </HfButton>
+                        </div>
+                    }
+                })
+            }}
+
             // Row D — view mode toggles, modal triggers, hotkey badges.
-            <div class="flex items-center gap-2 flex-wrap border-t border-border-soft pt-2">
+            <div class="flex items-center gap-2 flex-wrap border-t border-border-soft pt-2.5">
                 <button
                     type="button"
                     class=move || {
                         format!(
-                            "hf-view-toggle px-2 py-0.5 rounded border text-[11px] font-medium transition-colors {}",
+                            "hf-view-toggle px-3 py-1 rounded-md border text-xs font-medium transition-colors {}",
                             if matches!(view_mode.get(), ScreenerViewMode::Table) {
-                                "bg-emerald-600 text-white border-emerald-600"
+                                "bg-emerald-600 text-white border-emerald-600 shadow-sm"
                             } else {
-                                "border-border-soft text-text-muted hover:bg-surface-subtle"
+                                "border-border-soft text-text-muted hover:bg-surface-subtle hover:text-text-high"
                             }
                         )
                     }
@@ -435,11 +523,11 @@ pub fn ScreenerFilterBar(
                     type="button"
                     class=move || {
                         format!(
-                            "hf-view-toggle px-2 py-0.5 rounded border text-[11px] font-medium transition-colors {}",
+                            "hf-view-toggle px-3 py-1 rounded-md border text-xs font-medium transition-colors {}",
                             if matches!(view_mode.get(), ScreenerViewMode::Heatmap) {
-                                "bg-emerald-600 text-white border-emerald-600"
+                                "bg-emerald-600 text-white border-emerald-600 shadow-sm"
                             } else {
-                                "border-border-soft text-text-muted hover:bg-surface-subtle"
+                                "border-border-soft text-text-muted hover:bg-surface-subtle hover:text-text-high"
                             }
                         )
                     }
