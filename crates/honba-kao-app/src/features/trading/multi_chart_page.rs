@@ -1,4 +1,6 @@
-use honba_kao_ui_core::organisms::{BookLevel, HfMarketTopBar, HfOrderBook, HfOrderTicket, HfTradingDock, OrderIntent};
+use honba_kao_ui_core::organisms::{
+    BookLevel, HfMarketTopBar, HfOrderBook, HfOrderTicket, HfTradingDock, OrderIntent,
+};
 use honba_kao_ui_core::templates::HfThreeColumnTradingLayout;
 use leptos::prelude::*;
 use openalgo_charts::OpenalgoChart;

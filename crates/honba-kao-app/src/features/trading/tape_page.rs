@@ -1,4 +1,6 @@
-use honba_kao_ui_core::organisms::{HfMarketTape, HfMarketTopBar, HfOrderTicket, HfTradingDock, OrderIntent, TapeTrade};
+use honba_kao_ui_core::organisms::{
+    HfMarketTape, HfMarketTopBar, HfOrderTicket, HfTradingDock, OrderIntent, TapeTrade,
+};
 use honba_kao_ui_core::templates::HfThreeColumnTradingLayout;
 use leptos::prelude::*;
 use rust_decimal_macros::dec;
