@@ -1,4 +1,4 @@
-.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod lint-design-system lint-a11y clean
+.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod serve serve-all serve-prod serve-dev lint-design-system lint-a11y clean
 
 # Default profile is 'prod' (no debug build unless asked for specifically)
 default: prod
@@ -21,9 +21,14 @@ debug: build-debug
 build-debug:
 	trunk build --config Trunk.toml
 
-# Dev server (http://127.0.0.1:8080). Defaults to release mode.
-serve: serve-prod
+# Full stack: honba backend (http://127.0.0.1:8000) + Trunk server
+# (http://127.0.0.1:8080). Ctrl+C tears down BOTH (see scripts/serve-all.sh).
+serve: serve-all
 
+serve-all:
+	./scripts/serve-all.sh
+
+# Trunk-only (backend not started): http://127.0.0.1:8080. Release mode.
 serve-prod:
 	trunk serve --config Trunk.toml --release
 
