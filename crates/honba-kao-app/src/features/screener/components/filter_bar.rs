@@ -89,6 +89,7 @@ pub fn ScreenerFilterBar(
     on_ai_apply: Callback<String>,
     active_filters: Signal<usize>,
     on_reset: Callback<()>,
+    on_export_csv: Callback<()>,
 ) -> impl IntoView {
     // (label, value) tuples — HfSelect renders `<option value=value>{label}</option>`.
     let cap_options: Vec<(String, String)> = vec![
@@ -463,12 +464,20 @@ pub fn ScreenerFilterBar(
                 <HfButton
                     variant=ButtonVariant::Tertiary
                     size=ButtonSize::Xs
+                    on_click=on_export_csv
+                >
+                    "Export CSV"
+                </HfButton>
+                <HfButton
+                    variant=ButtonVariant::Tertiary
+                    size=ButtonSize::Xs
                     on_click=on_reset
                 >
                     "Reset"
                 </HfButton>
                 <span class="ml-auto flex items-center gap-1">
                     <HfKbdBadge key="." />
+                    <HfKbdBadge key="Shift N" />
                     <HfKbdBadge key="Ctrl K" />
                 </span>
             </div>

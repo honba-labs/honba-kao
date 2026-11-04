@@ -3,20 +3,71 @@
 //! bar, results table, detail drawer, and filter/column modals.
 
 use super::components::{
-    ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar, ScreenerFilterModal,
-    ScreenerHeatmap, ScreenerTable,
+    ScreenCatalogModal, ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar,
+    ScreenerFilterModal, ScreenerHeatmap, ScreenerTable,
 };
+use crate::features::screener::csv_export::{csv_document, csv_headers, csv_rows};
 use crate::features::screener::filters::{filter_records, filter_universe, sort_universe};
 use crate::features::screener::fixtures::{stock_universe, universe_for};
+use crate::features::screener::keyboard::{ScreenerKeyAction, use_screener_shortcuts};
 use crate::features::screener::prompt_ast::{PromptTerm, parse_prompt, prompt_label};
+use crate::features::screener::screen_catalog::{CustomScreen, snapshot_screen, upsert_screen};
+#[cfg(target_arch = "wasm32")]
+use crate::features::screener::screen_catalog::{
+    SCREENS_KEY, deserialize_screens, serialize_screens,
+};
 use crate::features::screener::types::{
     COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType, ScreenerColumn,
     ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode, all_master_column_keys, catalog_for,
     columns_for_tab,
 };
 use leptos::prelude::*;
+use leptos_router::hooks::use_navigate;
 use rust_decimal_macros::dec;
 use std::collections::HashSet;
+
+#[cfg(target_arch = "wasm32")]
+fn load_custom_screens() -> Vec<CustomScreen> {
+    web_sys::window()
+        .and_then(|w| w.local_storage().ok().flatten())
+        .and_then(|s| s.get_item(SCREENS_KEY).ok().flatten())
+        .map(|raw| deserialize_screens(&raw))
+        .unwrap_or_default()
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn load_custom_screens() -> Vec<CustomScreen> {
+    Vec::new()
+}
+
+fn persist_custom_screens(screens: &[CustomScreen]) {
+    #[cfg(target_arch = "wasm32")]
+    if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten()) {
+        if storage
+            .set_item(SCREENS_KEY, &serialize_screens(screens))
+            .is_err()
+        {
+            tracing::warn!("screener screens: storage full");
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = &screens;
+        tracing::info!("screener screens: batch updated (native, no storage)");
+    }
+}
+
+fn sort_key_for(name: &str, current: &'static str) -> &'static str {
+    match name {
+        "symbol" => "symbol",
+        "price" => "price",
+        "change_pct" => "change_pct",
+        "volume" => "volume",
+        "market_cap_cr" => "market_cap_cr",
+        "pe_ratio" => "pe_ratio",
+        "rsi_14" => "rsi_14",
+        _ => current,
+    }
+}
 
 #[component]
 pub fn ScreenerPage() -> impl IntoView {
@@ -28,6 +79,9 @@ pub fn ScreenerPage() -> impl IntoView {
     let drawer_open = RwSignal::new(false);
     let filter_modal_open = RwSignal::new(false);
     let column_modal_open = RwSignal::new(false);
+    let catalog_modal_open = RwSignal::new(false);
+    let save_sheet_open = RwSignal::new(false);
+    let custom_screens = RwSignal::new(load_custom_screens());
 
     // --- Filter state ----------------------------------------------------
     let search_query = RwSignal::new(String::new());
@@ -82,6 +136,7 @@ pub fn ScreenerPage() -> impl IntoView {
     let flags_for_table_a = column_flags.clone();
     let flags_for_table_b = column_flags.clone();
     let flags_for_modal = column_flags.clone();
+    let flags_for_apply = column_flags.clone();
 
     // Ordered visible columns for the active (asset class, tab) pair:
     // master order ∩ class/tab catalog ∩ flags. Overview yields today's
@@ -139,6 +194,81 @@ pub fn ScreenerPage() -> impl IntoView {
         sort_universe(&filtered, sort_col.get(), sort_ascending.get())
     });
     let records: Signal<Vec<ScreenerRecord>> = filtered_records.into();
+
+    // Export CSV: snapshot the live filtered+sorted view and its visible
+    // columns into a browser-triggered download (doc §6.4).
+    let on_export_csv = Callback::new(move |_| {
+        let columns = visible_columns.get();
+        let records_now = records.get();
+        let headers = csv_headers(&columns);
+        let rows = csv_rows(&records_now, &columns);
+        let document = csv_document(&headers, &rows);
+        #[cfg(target_arch = "wasm32")]
+        crate::features::screener::csv_export::export_screener_csv(
+            "screener-export.csv",
+            &document,
+        );
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = &document;
+        }
+    });
+
+    // §7 terminal shortcuts: one window listener drives row navigation, the
+    // star toggle, cockpit routing, and the catalog/filter/column modals.
+    let navigate = use_navigate();
+    use_screener_shortcuts(Callback::new(
+        move |action: ScreenerKeyAction| match action {
+            ScreenerKeyAction::NextRow | ScreenerKeyAction::PrevRow => {
+                let delta: usize = if matches!(action, ScreenerKeyAction::NextRow) {
+                    1
+                } else {
+                    0
+                };
+                let rows = records.get_untracked();
+                if rows.is_empty() {
+                    return;
+                }
+                let current = rows
+                    .iter()
+                    .position(|r| r.symbol() == active_symbol.get_untracked())
+                    .unwrap_or(0);
+                let next = if delta == 1 {
+                    (current + 1) % rows.len()
+                } else {
+                    (current + rows.len() - 1) % rows.len()
+                };
+                active_symbol.set(rows[next].symbol().to_string());
+                drawer_open.set(true);
+            }
+            ScreenerKeyAction::ToggleStar => {
+                let sym = active_symbol.get_untracked();
+                watchlist.update(|w| {
+                    if w.contains(&sym) {
+                        w.remove(&sym);
+                    } else {
+                        w.insert(sym.clone());
+                    }
+                });
+            }
+            ScreenerKeyAction::EnterRoute => {
+                navigate("/trading/cockpit", Default::default());
+            }
+            ScreenerKeyAction::OpenCatalog => catalog_modal_open.set(true),
+            ScreenerKeyAction::SaveScreen => {
+                catalog_modal_open.set(true);
+                save_sheet_open.set(true);
+            }
+            ScreenerKeyAction::OpenFilters => filter_modal_open.set(true),
+            ScreenerKeyAction::OpenColumns => column_modal_open.set(true),
+            ScreenerKeyAction::ToggleView => {
+                view_mode.set(match view_mode.get_untracked() {
+                    ScreenerViewMode::Table => ScreenerViewMode::Heatmap,
+                    ScreenerViewMode::Heatmap => ScreenerViewMode::Table,
+                });
+            }
+        },
+    ));
 
     // Heatmap math is stocks-only; other asset classes render no cells.
     let stock_records: Memo<Vec<ScreenerEquityRecord>> = Memo::new(move |_| {
@@ -205,6 +335,61 @@ pub fn ScreenerPage() -> impl IntoView {
         ai_prompt.set(String::new());
     });
 
+    // Custom screens: auto-persist every mutation (doc §7), plus the
+    // catalog's apply/save handlers.
+    Effect::new(move |_| {
+        let snap = custom_screens.get();
+        persist_custom_screens(&snap);
+    });
+
+    let on_apply_screen = Callback::new(move |screen: CustomScreen| {
+        let c = screen.criteria.clone();
+        search_query.set(c.search_query);
+        selected_exchange.set(c.exchange);
+        selected_sector.set(c.sector);
+        selected_market_cap.set(c.market_cap_category);
+        selected_index.set(c.market_index);
+        min_price.set(c.min_price);
+        max_price.set(c.max_price);
+        min_pe.set(c.min_pe);
+        max_pe.set(c.max_pe);
+        min_rvol.set(c.min_rvol);
+        min_rsi.set(c.min_rsi);
+        max_rsi.set(c.max_rsi);
+        fno_only.set(c.fno_only);
+        watchlist_only.set(c.watchlist_only);
+        active_tab.set(screen.tab.clone());
+        sort_col.set(sort_key_for(&screen.sort_col, sort_col.get_untracked()));
+        sort_ascending.set(screen.sort_ascending);
+        if !screen.visible_columns.is_empty() {
+            for (key, flag) in flags_for_apply.iter() {
+                flag.set(screen.visible_columns.iter().any(|v| v == key));
+            }
+        }
+    });
+
+    let on_save_screen = Callback::new(move |name: String| {
+        let plain = name.trim().to_string();
+        if plain.is_empty() {
+            return;
+        }
+        let visible: Vec<String> = visible_columns
+            .get_untracked()
+            .iter()
+            .map(|c| c.key.to_string())
+            .collect();
+        let snap = snapshot_screen(
+            &plain,
+            "Saved screener view.",
+            &active_tab.get_untracked(),
+            sort_col.get_untracked(),
+            sort_ascending.get_untracked(),
+            build_criteria(),
+            &visible,
+        );
+        custom_screens.update(|v| upsert_screen(v, snap));
+    });
+
     // Sector dropdown options: "All" first, then unique sectors A→Z.
     let mut sector_options: Vec<(String, String)> = stock_universe()
         .iter()
@@ -241,6 +426,7 @@ pub fn ScreenerPage() -> impl IntoView {
                 on_ai_apply=on_ai_apply
                 active_filters=active_filters
                 on_reset=on_reset
+                on_export_csv=on_export_csv
             />
             <div class="screener-body flex flex-1 min-h-0 overflow-hidden">
                 <div class="screener-main flex-1 min-w-0 overflow-x-auto">
@@ -355,6 +541,21 @@ pub fn ScreenerPage() -> impl IntoView {
                             <ScreenerColumnModal
                                 open=column_modal_open
                                 column_flags=flags_for_modal.clone()
+                            />
+                        }
+                    })
+            }}
+            {move || {
+                catalog_modal_open
+                    .get()
+                    .then(|| {
+                        view! {
+                            <ScreenCatalogModal
+                                open=catalog_modal_open
+                                custom_screens=custom_screens
+                                save_sheet_open=save_sheet_open
+                                on_apply=on_apply_screen
+                                on_save=on_save_screen
                             />
                         }
                     })

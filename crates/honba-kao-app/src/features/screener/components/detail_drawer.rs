@@ -4,6 +4,7 @@
 use crate::features::screener::filters::{
     format_change_pct, format_mcap_rs_cr, format_price, format_volume_compact,
 };
+use crate::features::screener::scanner::{SETUP_UNQUALIFIED, scan_row};
 use crate::features::screener::types::ScreenerRecord;
 use honba_kao_ui_core::primitive::{ButtonSize, ButtonVariant, HfButton};
 use honba_kao_ui_core::{BadgeVariant, HfCloseButton, HfDrawer, HfStatusChip};
@@ -24,6 +25,19 @@ fn range_marker_pct(price: Decimal, low: Decimal, high: Decimal) -> u64 {
         .parse::<u64>()
         .unwrap_or(50)
         .min(100)
+}
+
+fn pct_vs(price: Decimal, level: Decimal) -> String {
+    if price == Decimal::ZERO {
+        return "—".to_string(); // zero price — no meaningful distance
+    }
+    let cost = (level - price) / price * dec!(100);
+    let body = cost.round_dp(2).to_string();
+    if cost >= Decimal::ZERO {
+        format!("+{}", body)
+    } else {
+        body
+    }
 }
 
 fn metric_tile(label: &'static str, value: String) -> AnyView {
@@ -81,6 +95,50 @@ pub fn ScreenerDetailDrawer(
                             let symbol = r.symbol.clone();
                             let name = r.name.clone();
                             let exchange = r.exchange.clone();
+                            let scan = scan_row(&r);
+                            let qualified = scan.setup_type != SETUP_UNQUALIFIED;
+                            let score = format!("{}", scan.score.round_dp(1));
+                            let setup = scan.setup_type.clone();
+                            let trigger_info = format!(
+                                "{} ({})",
+                                format_price(scan.trigger_level),
+                                pct_vs(r.price, scan.trigger_level)
+                            );
+                            let invalidation_info = format!(
+                                "{} ({})",
+                                format_price(scan.invalidation_level),
+                                pct_vs(r.price, scan.invalidation_level)
+                            );
+                            let status_text = if qualified { "QUALIFIED" } else { "UNQUALIFIED" };
+                            let status_tone = if qualified {
+                                "text-emerald-400"
+                            } else {
+                                "text-rose-400"
+                            };
+                            let steps = scan
+                                .explain_steps
+                                .iter()
+                                .map(|step| {
+                                    let mark = if step.passed { "✓" } else { "✗" };
+                                    let tone = if step.passed {
+                                        "text-emerald-400"
+                                    } else {
+                                        "text-rose-400"
+                                    };
+                                    let condition = step.condition.clone();
+                                    view! {
+                                        <div class="flex items-start gap-1">
+                                            <span class=format!("font-mono text-[10px] {}", tone)>
+                                                {mark}
+                                            </span>
+                                            <span class="text-[10px] text-text-high truncate">
+                                                {condition}
+                                            </span>
+                                        </div>
+                                    }
+                                    .into_any()
+                                })
+                                .collect::<Vec<AnyView>>();
                             view! {
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
@@ -168,6 +226,41 @@ pub fn ScreenerDetailDrawer(
                                             style=format!("left: calc({}% - 4px)", yoy_pct)
                                         ></span>
                                     </span>
+                                </div>
+                                <div class="rounded border border-border-soft bg-surface-subtle p-2 flex flex-col gap-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
+                                            "Scanner"
+                                        </span>
+                                        <span class="flex items-center gap-2">
+                                            <span class=format!("text-[10px] {}", status_tone)>
+                                                {status_text}
+                                            </span>
+                                            <span class="font-mono text-xs font-semibold text-text-high">
+                                                {score}
+                                            </span>
+                                            <span class="font-mono text-[10px] text-text-muted">
+                                                {setup}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-0.5">{steps}</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
+                                            "Trigger"
+                                        </span>
+                                        <span class="font-mono text-[10px] text-text-muted">
+                                            {trigger_info}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
+                                            "Invalidation"
+                                        </span>
+                                        <span class="font-mono text-[10px] text-text-muted">
+                                            {invalidation_info}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="flex flex-wrap gap-1 border-t border-border-soft pt-2">
                                     <HfButton
