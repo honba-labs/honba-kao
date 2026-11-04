@@ -81,7 +81,7 @@ pub fn export_screener_csv(filename: &str, document: &str) {
     let array = js_sys::Array::new();
     array.push(&JsValue::from_str(document));
 
-    let mut bag = BlobPropertyBag::new();
+    let bag = BlobPropertyBag::new();
     bag.set_type("text/csv;charset=utf-8;");
     if let Ok(blob) = Blob::new_with_str_sequence_and_options(&array, &bag) {
         if let Ok(url) = Url::create_object_url_with_blob(&blob) {
