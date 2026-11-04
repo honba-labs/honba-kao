@@ -91,11 +91,12 @@ impl PaperWallet {
         fill_price: Decimal,
         fill_quantity: Decimal,
     ) -> Result<OrderResponse, BrokerError> {
-        let order = self.orders.get_mut(order_id).ok_or_else(|| {
-            BrokerError::Rejected {
+        let order = self
+            .orders
+            .get_mut(order_id)
+            .ok_or_else(|| BrokerError::Rejected {
                 message: format!("order {order_id} not found"),
-            }
-        })?;
+            })?;
         if order.status != OrderStatus::Open {
             return Err(BrokerError::Rejected {
                 message: format!("order {order_id} is not open (status {:?})", order.status),
@@ -113,15 +114,18 @@ impl PaperWallet {
         let entry_price = order.price.unwrap_or(fill_price);
 
         // Update the position book.
-        let pos = self.positions.entry(order.symbol.clone()).or_insert(Position {
-            symbol: order.symbol.clone(),
-            side: order.side.clone(),
-            quantity: dec!(0),
-            entry_price: dec!(0),
-            current_price: entry_price,
-            unrealized_pnl: dec!(0),
-            leverage: dec!(0),
-        });
+        let pos = self
+            .positions
+            .entry(order.symbol.clone())
+            .or_insert(Position {
+                symbol: order.symbol.clone(),
+                side: order.side.clone(),
+                quantity: dec!(0),
+                entry_price: dec!(0),
+                current_price: entry_price,
+                unrealized_pnl: dec!(0),
+                leverage: dec!(0),
+            });
         if is_buy {
             let total_cost = pos.quantity * pos.entry_price + entry_price * fill_quantity;
             pos.quantity += fill_quantity;
@@ -164,8 +168,10 @@ impl BrokerClient for PaperWallet {
         if intent.side == "BUY" {
             if let Some(price) = intent.price {
                 let notional = price * intent.quantity;
-                self.portfolio.available_margin = (self.portfolio.available_margin - notional).max(dec!(0));
-                self.portfolio.used_margin = (self.portfolio.used_margin + notional).min(self.portfolio.total_equity);
+                self.portfolio.available_margin =
+                    (self.portfolio.available_margin - notional).max(dec!(0));
+                self.portfolio.used_margin =
+                    (self.portfolio.used_margin + notional).min(self.portfolio.total_equity);
             }
         }
         let response = OrderResponse {
@@ -187,11 +193,12 @@ impl BrokerClient for PaperWallet {
         order_id: &str,
         intent: OrderIntent,
     ) -> Result<OrderResponse, BrokerError> {
-        let order = self.orders.get_mut(order_id).ok_or_else(|| {
-            BrokerError::Rejected {
+        let order = self
+            .orders
+            .get_mut(order_id)
+            .ok_or_else(|| BrokerError::Rejected {
                 message: format!("order {order_id} not found"),
-            }
-        })?;
+            })?;
         if order.status != OrderStatus::Open {
             return Err(BrokerError::Rejected {
                 message: format!("order {order_id} is not open (status {:?})", order.status),
@@ -203,11 +210,12 @@ impl BrokerClient for PaperWallet {
     }
 
     fn cancel_order(&mut self, order_id: &str) -> Result<(), BrokerError> {
-        let order = self.orders.get_mut(order_id).ok_or_else(|| {
-            BrokerError::Rejected {
+        let order = self
+            .orders
+            .get_mut(order_id)
+            .ok_or_else(|| BrokerError::Rejected {
                 message: format!("order {order_id} not found"),
-            }
-        })?;
+            })?;
         if order.status != OrderStatus::Open {
             return Err(BrokerError::Rejected {
                 message: format!("order {order_id} is not open (status {:?})", order.status),
@@ -309,7 +317,9 @@ mod tests {
         };
         let resp = wallet.submit_order(intent).unwrap();
 
-        let filled = wallet.execute_fill(&resp.order_id, dec!(110.0), dec!(10.0)).unwrap();
+        let filled = wallet
+            .execute_fill(&resp.order_id, dec!(110.0), dec!(10.0))
+            .unwrap();
         assert_eq!(filled.status, OrderStatus::Filled);
         assert_eq!(filled.filled_quantity, dec!(10.0));
 

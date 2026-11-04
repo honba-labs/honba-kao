@@ -82,11 +82,9 @@ impl AngelOne {
             password: password.into(),
             totp: totp.into(),
         };
-        let response = Request::post(
-            &format!(
-                "{SMART_API_BASE}/rest/auth/angelbroking/user/v1/loginByPassword"
-            ),
-        )
+        let response = Request::post(&format!(
+            "{SMART_API_BASE}/rest/auth/angelbroking/user/v1/loginByPassword"
+        ))
         .header("Content-Type", "application/json")
         .json(&body)
         .map_err(|e| BrokerError::Network {
@@ -153,22 +151,27 @@ impl AngelOne {
         intent: OrderIntent,
     ) -> Result<OrderResponse, BrokerError> {
         let _ = intent;
-        let token = self.access_token.as_deref().ok_or(BrokerError::Unauthorized {
-            message: "no access token".into(),
-        })?;
-        let body = serde_json::json!({});
-        let response = Request::post(&format!("{SMART_API_BASE}/rest/secure/angelbroking/order/v1/placeOrder"))
-            .header("Authorization", &format!("Bearer {}", token))
-            .header("Content-Type", "application/json")
-            .json(&body)
-            .map_err(|e| BrokerError::Network {
-                message: format!("build order request: {e:?}"),
-            })?
-            .send()
-            .await
-            .map_err(|e| BrokerError::Network {
-                message: e.to_string(),
+        let token = self
+            .access_token
+            .as_deref()
+            .ok_or(BrokerError::Unauthorized {
+                message: "no access token".into(),
             })?;
+        let body = serde_json::json!({});
+        let response = Request::post(&format!(
+            "{SMART_API_BASE}/rest/secure/angelbroking/order/v1/placeOrder"
+        ))
+        .header("Authorization", &format!("Bearer {}", token))
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .map_err(|e| BrokerError::Network {
+            message: format!("build order request: {e:?}"),
+        })?
+        .send()
+        .await
+        .map_err(|e| BrokerError::Network {
+            message: e.to_string(),
+        })?;
         if !response.ok() {
             return Err(BrokerError::Network {
                 message: format!("submit order failed: HTTP {}", response.status()),
@@ -185,24 +188,30 @@ impl AngelOne {
     /// Fetch the portfolio via the SmartAPI REST API (live, async).
     pub async fn fetch_portfolio_async(&self) -> Result<AccountSummary, BrokerError> {
         let _ = ();
-        let token = self.access_token.as_deref().ok_or(BrokerError::Unauthorized {
-            message: "no access token".into(),
-        })?;
-        let response = Request::get(&format!("{SMART_API_BASE}/rest/secure/angelbroking/portfolio/v1/getHolding"))
-            .header("Authorization", &format!("Bearer {}", token))
-            .send()
-            .await
-            .map_err(|e| BrokerError::Network {
-                message: e.to_string(),
+        let token = self
+            .access_token
+            .as_deref()
+            .ok_or(BrokerError::Unauthorized {
+                message: "no access token".into(),
             })?;
+        let response = Request::get(&format!(
+            "{SMART_API_BASE}/rest/secure/angelbroking/portfolio/v1/getHolding"
+        ))
+        .header("Authorization", &format!("Bearer {}", token))
+        .send()
+        .await
+        .map_err(|e| BrokerError::Network {
+            message: e.to_string(),
+        })?;
         if !response.ok() {
             return Err(BrokerError::Network {
                 message: format!("fetch portfolio failed: HTTP {}", response.status()),
             });
         }
-        let _holdings: serde_json::Value = response.json().await.map_err(|e| BrokerError::Network {
-            message: e.to_string(),
-        })?;
+        let _holdings: serde_json::Value =
+            response.json().await.map_err(|e| BrokerError::Network {
+                message: e.to_string(),
+            })?;
         Ok(AccountSummary {
             account_id: "ANGEL".into(),
             currency: "INR".into(),

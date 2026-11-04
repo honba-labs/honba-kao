@@ -155,8 +155,10 @@ impl ZerodhaKite {
             .access_token
             .as_ref()
             .ok_or("not authenticated; call exchange_session first")?;
-        let url =
-            format!("{KITE_MARKET_FEED}/?api_key={}&access_token={}", self.api_key, token);
+        let url = format!(
+            "{KITE_MARKET_FEED}/?api_key={}&access_token={}",
+            self.api_key, token
+        );
         WsConnection::connect(
             &url,
             |_| {},
@@ -174,13 +176,19 @@ impl ZerodhaKite {
         intent: OrderIntent,
     ) -> Result<OrderResponse, BrokerError> {
         let _ = intent;
-        let token = self.access_token.as_deref().ok_or(BrokerError::Unauthorized {
-            message: "no access token".into(),
-        })?;
+        let token = self
+            .access_token
+            .as_deref()
+            .ok_or(BrokerError::Unauthorized {
+                message: "no access token".into(),
+            })?;
         let body = serde_json::json!({});
         let response = Request::post(&format!("{KITE_BASE}/orders/regular"))
             .header("X-Kite-Version", "3")
-            .header("Authorization", &format!("token {}:{}", self.api_key, token))
+            .header(
+                "Authorization",
+                &format!("token {}:{}", self.api_key, token),
+            )
             .header("Content-Type", "application/json")
             .json(&body)
             .map_err(|e| BrokerError::Network {
@@ -207,12 +215,18 @@ impl ZerodhaKite {
     /// Fetch the portfolio via the Kite REST API (live, async).
     pub async fn fetch_portfolio_async(&self) -> Result<AccountSummary, BrokerError> {
         let _ = ();
-        let token = self.access_token.as_deref().ok_or(BrokerError::Unauthorized {
-            message: "no access token".into(),
-        })?;
+        let token = self
+            .access_token
+            .as_deref()
+            .ok_or(BrokerError::Unauthorized {
+                message: "no access token".into(),
+            })?;
         let response = Request::get(&format!("{KITE_BASE}/portfolio/positions"))
             .header("X-Kite-Version", "3")
-            .header("Authorization", &format!("token {}:{}", self.api_key, token))
+            .header(
+                "Authorization",
+                &format!("token {}:{}", self.api_key, token),
+            )
             .send()
             .await
             .map_err(|e| BrokerError::Network {
@@ -223,9 +237,10 @@ impl ZerodhaKite {
                 message: format!("fetch portfolio failed: HTTP {}", response.status()),
             });
         }
-        let _positions: serde_json::Value = response.json().await.map_err(|e| BrokerError::Network {
-            message: e.to_string(),
-        })?;
+        let _positions: serde_json::Value =
+            response.json().await.map_err(|e| BrokerError::Network {
+                message: e.to_string(),
+            })?;
         Ok(AccountSummary {
             account_id: "KITE".into(),
             currency: "INR".into(),

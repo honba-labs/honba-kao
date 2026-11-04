@@ -12,12 +12,12 @@
 //! #63: `from_json` now returns a `Result` instead of panicking on malformed
 //! input, so an invalid JSON payload can never abort WASM linear memory.
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use rust_decimal::Decimal;
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
-use wasm_bindgen::prelude::*;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
+use wasm_bindgen::prelude::*;
 
 use crate::analytics::{
     calculate_cointegration, calculate_drawdown, calculate_performance_ratios,
@@ -28,18 +28,18 @@ use crate::indicators::{
     calculate_vwap,
 };
 use crate::margin::{
-    calculate_collateral_value, calculate_fno_margin, calculate_kelly_criterion,
+    AssetClass, calculate_collateral_value, calculate_fno_margin, calculate_kelly_criterion,
     calculate_liquidation_buffer, calculate_margin_utilization, calculate_position_sizing,
-    calculate_volatility_target_size, get_standard_haircut, AssetClass,
+    calculate_volatility_target_size, get_standard_haircut,
 };
-use crate::pairing::{pair_fills_fifo, pair_fills_lifo, Fill};
+use crate::pairing::{Fill, pair_fills_fifo, pair_fills_lifo};
 use crate::payoff::{Leg, PayoffConfig, PayoffEngine};
 use crate::pricing::{
     black_scholes_call, black_scholes_put, calculate_greeks, calculate_implied_volatility,
     discount_factor, future_value, interpolate_yield, present_value,
 };
-use crate::replay::{simulate_fill_price, FillModel, ReplayClock};
-use crate::screener::{evaluate_predicate, sort_indices, Predicate};
+use crate::replay::{FillModel, ReplayClock, simulate_fill_price};
+use crate::screener::{Predicate, evaluate_predicate, sort_indices};
 
 fn to_json<T: Serialize + ?Sized>(value: &T) -> String {
     serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())
@@ -89,14 +89,7 @@ pub fn greeks(s: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) -> Stri
 }
 
 #[wasm_bindgen]
-pub fn implied_volatility(
-    price: f64,
-    s: f64,
-    k: f64,
-    t: f64,
-    r: f64,
-    is_call: bool,
-) -> String {
+pub fn implied_volatility(price: f64, s: f64, k: f64, t: f64, r: f64, is_call: bool) -> String {
     let iv = calculate_implied_volatility(price, s, k, t, r, is_call);
     to_json(&serde_json::json!({ "iv": iv }))
 }
@@ -346,11 +339,7 @@ pub fn indicator_atr(
 }
 
 #[wasm_bindgen]
-pub fn indicator_bollinger(
-    prices_json: &str,
-    period: usize,
-    num_std: f64,
-) -> String {
+pub fn indicator_bollinger(prices_json: &str, period: usize, num_std: f64) -> String {
     json_or_error(|| {
         let prices = from_json::<Vec<f64>>(prices_json)?;
         Ok(calculate_bollinger_bands(&prices, period, num_std))
@@ -371,12 +360,7 @@ pub fn replay_clock_new(start_timestamp: i64, speed_multiplier: f64) -> String {
 }
 
 #[wasm_bindgen]
-pub fn replay_fill(
-    order_price: Option<f64>,
-    market_price: f64,
-    is_buy: bool,
-    model: &str,
-) -> f64 {
+pub fn replay_fill(order_price: Option<f64>, market_price: f64, is_buy: bool, model: &str) -> f64 {
     let fill_model = match model {
         "Immediate" => FillModel::Immediate,
         "NextOpen" => FillModel::NextOpen,

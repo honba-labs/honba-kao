@@ -35,7 +35,11 @@ pub fn get_standard_haircut(asset: AssetClass) -> Decimal {
 /// `haircut_pct` is a fraction (e.g. `0.15` for 15%), consistent with
 /// `get_standard_haircut`. The result is clamped to non-negative so an
 /// over-collateralized haircut never inverts into negative value.
-pub fn calculate_collateral_value(balance: Decimal, price: Decimal, haircut_pct: Decimal) -> Decimal {
+pub fn calculate_collateral_value(
+    balance: Decimal,
+    price: Decimal,
+    haircut_pct: Decimal,
+) -> Decimal {
     let raw_val = balance * price;
     let multiplier = (Decimal::ONE - haircut_pct).max(Decimal::ZERO);
     raw_val * multiplier

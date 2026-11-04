@@ -12,7 +12,14 @@ pub struct Fill {
 }
 
 impl Fill {
-    pub fn new(id: &str, symbol: &str, side: &str, price: Decimal, quantity: Decimal, timestamp: i64) -> Self {
+    pub fn new(
+        id: &str,
+        symbol: &str,
+        side: &str,
+        price: Decimal,
+        quantity: Decimal,
+        timestamp: i64,
+    ) -> Self {
         Self {
             id: id.into(),
             symbol: symbol.into(),

@@ -16,7 +16,9 @@ use honba_kao_client::dto::risk::{LiquidationWarning, MarginSummary};
 use honba_kao_client::events::{DomainEvent, EventEnvelope};
 use rust_decimal_macros::dec;
 
-fn round_trip<T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug>(
+fn round_trip<
+    T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug,
+>(
     value: &T,
     label: &str,
 ) {
@@ -57,12 +59,28 @@ fn order_book_update_frame_round_trip() {
         payload: DomainEvent::OrderBookUpdate(Level2Book {
             symbol: "NIFTY24NOV22500CE".into(),
             bids: vec![
-                BookLevelDto { price: dec!(2499.0), size: dec!(1200.0), order_count: 15 },
-                BookLevelDto { price: dec!(2498.5), size: dec!(800.0), order_count: 9 },
+                BookLevelDto {
+                    price: dec!(2499.0),
+                    size: dec!(1200.0),
+                    order_count: 15,
+                },
+                BookLevelDto {
+                    price: dec!(2498.5),
+                    size: dec!(800.0),
+                    order_count: 9,
+                },
             ],
             asks: vec![
-                BookLevelDto { price: dec!(2500.5), size: dec!(1100.0), order_count: 14 },
-                BookLevelDto { price: dec!(2501.0), size: dec!(950.0), order_count: 11 },
+                BookLevelDto {
+                    price: dec!(2500.5),
+                    size: dec!(1100.0),
+                    order_count: 14,
+                },
+                BookLevelDto {
+                    price: dec!(2501.0),
+                    size: dec!(950.0),
+                    order_count: 11,
+                },
             ],
             timestamp: 1_730_000_001,
         }),

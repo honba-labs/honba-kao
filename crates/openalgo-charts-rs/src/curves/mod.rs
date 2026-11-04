@@ -38,7 +38,10 @@ impl YieldCurve {
     }
 
     pub fn with_point(mut self, tenor_days: u32, yield_pct: Decimal) -> Self {
-        self.points.push(YieldPoint { tenor_days, yield_pct });
+        self.points.push(YieldPoint {
+            tenor_days,
+            yield_pct,
+        });
         self
     }
 
@@ -60,7 +63,8 @@ impl YieldCurve {
                 if b.tenor_days == a.tenor_days {
                     return Some(a.yield_pct);
                 }
-                let t = Decimal::from(tenor_days - a.tenor_days) / Decimal::from(b.tenor_days - a.tenor_days);
+                let t = Decimal::from(tenor_days - a.tenor_days)
+                    / Decimal::from(b.tenor_days - a.tenor_days);
                 return Some(a.yield_pct + t * (b.yield_pct - a.yield_pct));
             }
         }
@@ -110,8 +114,14 @@ impl SpreadBand {
         TimeSeries {
             name: self.name.clone(),
             points: vec![
-                TimeSeriesPoint { time: self.short_tenor_days as i64, value },
-                TimeSeriesPoint { time: self.long_tenor_days as i64, value },
+                TimeSeriesPoint {
+                    time: self.short_tenor_days as i64,
+                    value,
+                },
+                TimeSeriesPoint {
+                    time: self.long_tenor_days as i64,
+                    value,
+                },
             ],
             color: self.color.clone(),
         }
@@ -204,7 +214,10 @@ impl TermStructure {
     /// replacing the chart's series wholesale, so pushing one call per curve,
     /// overlay, and spread band renders all of them simultaneously instead of
     /// only the last one.
-    pub fn render(&self, engine: &CanvasEngine) -> Result<Vec<(SpreadBand, Option<Decimal>)>, JsValue> {
+    pub fn render(
+        &self,
+        engine: &CanvasEngine,
+    ) -> Result<Vec<(SpreadBand, Option<Decimal>)>, JsValue> {
         for series in self.render_series() {
             self.push_series(engine, &series)?;
         }

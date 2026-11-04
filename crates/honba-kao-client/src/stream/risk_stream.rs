@@ -9,8 +9,7 @@ use wasm_bindgen::prelude::*;
 use web_sys::{EventSource, MessageEvent};
 
 pub fn connect_risk_stream(url: &str) -> Result<SseStream<LiquidationWarning>, String> {
-    let es =
-        EventSource::new(url).map_err(|e| format!("Failed to create EventSource: {e:?}"))?;
+    let es = EventSource::new(url).map_err(|e| format!("Failed to create EventSource: {e:?}"))?;
     let (tx, rx) = futures_channel::mpsc::unbounded::<LiquidationWarning>();
 
     let onmessage = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {

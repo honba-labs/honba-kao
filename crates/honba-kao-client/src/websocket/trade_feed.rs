@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::connection::{WsConnection, WsConfig, WsEvent};
+use super::connection::{WsConfig, WsConnection, WsEvent};
 use crate::dto::market::TradeTick;
 
 pub struct TradeFeed {

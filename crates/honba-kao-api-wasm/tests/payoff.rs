@@ -3,7 +3,7 @@
 //! Covers leg modeling, multi-leg P&L curve, breakeven points, max profit,
 //! max loss, and custom spot windows. All monetary math uses `Decimal` (#54).
 
-use honba_api_wasm::payoff::{leg::*, PayoffConfig, PayoffEngine};
+use honba_api_wasm::payoff::{PayoffConfig, PayoffEngine, leg::*};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 
@@ -91,7 +91,11 @@ fn futures_only_fallback_window() {
 #[test]
 fn config_window_respected() {
     let leg = long_call(100.0, 5.0, 1.0);
-    let config = PayoffConfig { spot_min: d(90.0), spot_max: d(110.0), steps: 5 };
+    let config = PayoffConfig {
+        spot_min: d(90.0),
+        spot_max: d(110.0),
+        steps: 5,
+    };
     let engine = PayoffEngine::with_config(vec![leg], config);
     let result = engine.evaluate();
     assert_eq!(result.points.len(), 5);

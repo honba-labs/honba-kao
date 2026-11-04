@@ -113,11 +113,22 @@ impl DepthLadder {
         if side.is_empty() {
             return None;
         }
-        let chosen = side.iter().min_by(|a, b| {
-            let da = if a.price > price { a.price - price } else { price - a.price };
-            let db = if b.price > price { b.price - price } else { price - b.price };
-            da.cmp(&db).then_with(|| a.price.cmp(&b.price))
-        }).unwrap();
+        let chosen = side
+            .iter()
+            .min_by(|a, b| {
+                let da = if a.price > price {
+                    a.price - price
+                } else {
+                    price - a.price
+                };
+                let db = if b.price > price {
+                    b.price - price
+                } else {
+                    price - b.price
+                };
+                da.cmp(&db).then_with(|| a.price.cmp(&b.price))
+            })
+            .unwrap();
         Some(OrderDispatch {
             price: chosen.price,
             size: chosen.size,

@@ -126,8 +126,14 @@ fn pv_fv_inverse() {
 #[test]
 fn interpolate_yield_bounds_and_midpoint() {
     let curve = vec![
-        YieldPoint { tenor_months: 1.0, rate: 0.05 },
-        YieldPoint { tenor_months: 13.0, rate: 0.07 },
+        YieldPoint {
+            tenor_months: 1.0,
+            rate: 0.05,
+        },
+        YieldPoint {
+            tenor_months: 13.0,
+            rate: 0.07,
+        },
     ];
     assert!((interpolate_yield(&curve, 0.5) - 0.05).abs() < 1e-9);
     assert!((interpolate_yield(&curve, 24.0) - 0.07).abs() < 1e-9);

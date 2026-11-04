@@ -93,11 +93,7 @@ impl CanvasEngine {
     /// Prepare an engine bound to `element`, using `kind`/`style` as the
     /// initial series configuration. The chart is not mounted until
     /// [`Self::mount`] is called.
-    pub fn new(
-        element: web_sys::HtmlCanvasElement,
-        kind: SeriesKind,
-        style: SeriesStyle,
-    ) -> Self {
+    pub fn new(element: web_sys::HtmlCanvasElement, kind: SeriesKind, style: SeriesStyle) -> Self {
         Self {
             element,
             id: None,
@@ -157,7 +153,9 @@ impl CanvasEngine {
     /// Replace the whole series (candles/bars/line/area). Serialises `data` to
     /// JSON and pushes it through `window.honbaCharts.setSeries`.
     pub fn set_series(&self, data: &[CandleData]) -> Result<bool, JsValue> {
-        let id = self.id.ok_or_else(|| JsValue::from_str("chart not mounted"))?;
+        let id = self
+            .id
+            .ok_or_else(|| JsValue::from_str("chart not mounted"))?;
         let style_json = serde_json::to_string(&self.style)
             .map_err(|e| JsValue::from_str(&format!("style serialise: {e}")))?;
         let bars_json = serde_json::to_string(data)
@@ -168,7 +166,9 @@ impl CanvasEngine {
     /// Update or append the last bar via `window.honbaCharts.updateLast` — the
     /// efficient path for live streaming ticks.
     pub fn update_last(&self, candle: &CandleData) -> Result<bool, JsValue> {
-        let id = self.id.ok_or_else(|| JsValue::from_str("chart not mounted"))?;
+        let id = self
+            .id
+            .ok_or_else(|| JsValue::from_str("chart not mounted"))?;
         let bar_json = serde_json::to_string(candle)
             .map_err(|e| JsValue::from_str(&format!("bar serialise: {e}")))?;
         bridge::update_last(id.0 as f64, &bar_json)
@@ -176,7 +176,9 @@ impl CanvasEngine {
 
     /// Attach a volume histogram overlay to the primary pane.
     pub fn add_volume_overlay(&self) -> Result<bool, JsValue> {
-        let id = self.id.ok_or_else(|| JsValue::from_str("chart not mounted"))?;
+        let id = self
+            .id
+            .ok_or_else(|| JsValue::from_str("chart not mounted"))?;
         bridge::add_volume_overlay(id.0 as f64)
     }
 

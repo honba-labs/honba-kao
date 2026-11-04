@@ -7,7 +7,10 @@ pub fn pair_fills_fifo(fills: &[Fill]) -> Vec<TradeTrip> {
     // against an INFY sell (cross-symbol matching corruption).
     let mut by_symbol: HashMap<String, Vec<Fill>> = HashMap::new();
     for fill in fills {
-        by_symbol.entry(fill.symbol.clone()).or_default().push(fill.clone());
+        by_symbol
+            .entry(fill.symbol.clone())
+            .or_default()
+            .push(fill.clone());
     }
 
     let mut trips = Vec::new();
