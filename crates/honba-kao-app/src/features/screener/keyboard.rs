@@ -3,6 +3,8 @@ use leptos::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 
+/// Screener workstation actions (doc §7 table).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScreenerKeyAction {
     NextRow,
     PrevRow,
@@ -13,6 +15,44 @@ pub enum ScreenerKeyAction {
     OpenFilters,
     OpenColumns,
     ToggleView,
+    Dismiss,
+}
+
+/// Pure key → action mapping behind the window keydown listener: guard-free
+/// of DOM details (only flags + focused-element tag), so the §7 table is
+/// native-testable. Editable focus targets swallow every key except Escape
+/// (modals and the drawer dismiss from anywhere).
+pub fn map_key_event(
+    key: &str,
+    shift: bool,
+    ctrl: bool,
+    meta: bool,
+    alt: bool,
+    target_tag: &str,
+) -> Option<ScreenerKeyAction> {
+    if ctrl || meta || alt {
+        return None;
+    }
+    if matches!(
+        target_tag.to_uppercase().as_str(),
+        "INPUT" | "TEXTAREA" | "SELECT"
+    ) && key != "Escape"
+    {
+        return None;
+    }
+    match key {
+        "j" | "ArrowDown" => Some(ScreenerKeyAction::NextRow),
+        "k" | "ArrowUp" => Some(ScreenerKeyAction::PrevRow),
+        " " => Some(ScreenerKeyAction::ToggleStar),
+        "Enter" => Some(ScreenerKeyAction::EnterRoute),
+        "." => Some(ScreenerKeyAction::OpenCatalog),
+        "N" | "n" if shift => Some(ScreenerKeyAction::SaveScreen),
+        "f" => Some(ScreenerKeyAction::OpenFilters),
+        "c" => Some(ScreenerKeyAction::OpenColumns),
+        "h" => Some(ScreenerKeyAction::ToggleView),
+        "Escape" => Some(ScreenerKeyAction::Dismiss),
+        _ => None,
+    }
 }
 
 pub fn use_screener_shortcuts(handler: Callback<ScreenerKeyAction>) {
@@ -23,38 +63,26 @@ pub fn use_screener_shortcuts(handler: Callback<ScreenerKeyAction>) {
         };
         let closure =
             Closure::<dyn FnMut(web_sys::KeyboardEvent)>::new(move |ev: web_sys::KeyboardEvent| {
-                if ev.ctrl_key() || ev.meta_key() || ev.alt_key() {
-                    return;
-                }
                 if ev.is_composing() {
                     return;
                 }
-                let Some(target) = ev
+                let tag = ev
                     .target()
                     .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
-                else {
+                    .map(|el| el.tag_name())
+                    .unwrap_or_default();
+                let Some(action) = map_key_event(
+                    &ev.key(),
+                    ev.shift_key(),
+                    ev.ctrl_key(),
+                    ev.meta_key(),
+                    ev.alt_key(),
+                    &tag,
+                ) else {
                     return;
                 };
-                match target.tag_name().to_uppercase().as_str() {
-                    "INPUT" | "TEXTAREA" | "SELECT" => return,
-                    _ => {}
-                }
-                let action = match ev.key().as_str() {
-                    "j" | "ArrowDown" => Some(ScreenerKeyAction::NextRow),
-                    "k" | "ArrowUp" => Some(ScreenerKeyAction::PrevRow),
-                    " " => Some(ScreenerKeyAction::ToggleStar),
-                    "Enter" => Some(ScreenerKeyAction::EnterRoute),
-                    "." => Some(ScreenerKeyAction::OpenCatalog),
-                    "N" | "n" if ev.shift_key() => Some(ScreenerKeyAction::SaveScreen),
-                    "f" => Some(ScreenerKeyAction::OpenFilters),
-                    "c" => Some(ScreenerKeyAction::OpenColumns),
-                    "h" => Some(ScreenerKeyAction::ToggleView),
-                    _ => None,
-                };
-                if let Some(action) = action {
-                    ev.prevent_default();
-                    handler.run(action);
-                }
+                ev.prevent_default();
+                handler.run(action);
             });
         let _ =
             window.add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref());

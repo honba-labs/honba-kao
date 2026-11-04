@@ -267,6 +267,13 @@ pub fn ScreenerPage() -> impl IntoView {
                     ScreenerViewMode::Heatmap => ScreenerViewMode::Table,
                 });
             }
+            ScreenerKeyAction::Dismiss => {
+                filter_modal_open.set(false);
+                column_modal_open.set(false);
+                catalog_modal_open.set(false);
+                save_sheet_open.set(false);
+                drawer_open.set(false);
+            }
         },
     ));
 
