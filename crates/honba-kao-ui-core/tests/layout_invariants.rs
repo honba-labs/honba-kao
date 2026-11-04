@@ -23,7 +23,10 @@ fn alert_severity_badge_classes_are_non_empty_and_distinct() {
         AlertSeverity::Critical.badge_class(),
     ];
     for class in &classes {
-        assert!(!class.is_empty(), "alert severity badge class must not be empty");
+        assert!(
+            !class.is_empty(),
+            "alert severity badge class must not be empty"
+        );
         assert!(class.contains("border-"), "badge must carry a border token");
         assert!(class.contains("text-"), "badge must carry a text token");
     }
@@ -135,12 +138,30 @@ fn three_column_layout_grid_spans_match_spec() {
     // uses 6/3/3 and the dock spans 9. These invariants are asserted against the
     // template source so a future refactor cannot silently collapse the cockpit.
     let template_src = include_str!("../src/templates/three_columns.rs");
-    assert!(template_src.contains("desktop:col-span-7"), "visualizer: 7 cols desktop");
-    assert!(template_src.contains("desktop:col-span-2"), "depth: 2 cols desktop");
-    assert!(template_src.contains("desktop:col-span-3"), "ticket: 3 cols desktop");
-    assert!(template_src.contains("desktop:col-span-9"), "dock: 9 cols desktop");
-    assert!(template_src.contains("laptop:col-span-6"), "visualizer: 6 cols laptop");
-    assert!(template_src.contains("laptop:col-span-9"), "dock spans 9 cols laptop");
+    assert!(
+        template_src.contains("desktop:col-span-7"),
+        "visualizer: 7 cols desktop"
+    );
+    assert!(
+        template_src.contains("desktop:col-span-2"),
+        "depth: 2 cols desktop"
+    );
+    assert!(
+        template_src.contains("desktop:col-span-3"),
+        "ticket: 3 cols desktop"
+    );
+    assert!(
+        template_src.contains("desktop:col-span-9"),
+        "dock: 9 cols desktop"
+    );
+    assert!(
+        template_src.contains("laptop:col-span-6"),
+        "visualizer: 6 cols laptop"
+    );
+    assert!(
+        template_src.contains("laptop:col-span-9"),
+        "dock spans 9 cols laptop"
+    );
     assert!(template_src.contains("grid grid-cols-12"), "12-column grid");
 }
 
@@ -149,11 +170,26 @@ fn two_column_layout_70_30_split() {
     let template_src = include_str!("../src/templates/two_columns.rs");
     // Mobile-first: columns stack by default (`flex flex-col`), then split
     // 8/4 (~70/30) from laptop up via `laptop:grid` + `laptop:col-span-8/4`.
-    assert!(template_src.contains("flex flex-col"), "mobile stacks columns");
-    assert!(template_src.contains("laptop:grid"), "splits to grid from laptop up");
-    assert!(template_src.contains("laptop:col-span-8"), "primary: 8 cols (~70%)");
-    assert!(template_src.contains("laptop:col-span-4"), "rail: 4 cols (~30%)");
-    assert!(template_src.contains("col-span-12"), "mobile: full-width columns");
+    assert!(
+        template_src.contains("flex flex-col"),
+        "mobile stacks columns"
+    );
+    assert!(
+        template_src.contains("laptop:grid"),
+        "splits to grid from laptop up"
+    );
+    assert!(
+        template_src.contains("laptop:col-span-8"),
+        "primary: 8 cols (~70%)"
+    );
+    assert!(
+        template_src.contains("laptop:col-span-4"),
+        "rail: 4 cols (~30%)"
+    );
+    assert!(
+        template_src.contains("col-span-12"),
+        "mobile: full-width columns"
+    );
     assert!(template_src.contains("gap-4"), "gutter preserved");
 }
 
@@ -161,10 +197,19 @@ fn two_column_layout_70_30_split() {
 fn page_and_mosaic_templates_exist() {
     let page_src = include_str!("../src/templates/page.rs");
     assert!(page_src.contains("HfPage"), "HfPage template defined");
-    assert!(page_src.contains("HfAlertBannerStack"), "alert banner stack defined");
+    assert!(
+        page_src.contains("HfAlertBannerStack"),
+        "alert banner stack defined"
+    );
     let mosaic_src = include_str!("../src/templates/mosaic_workspace.rs");
-    assert!(mosaic_src.contains("HfMosaicWorkspace"), "HfMosaicWorkspace defined");
-    assert!(mosaic_src.contains("grid-cols-12"), "mosaic uses 12-column grid");
+    assert!(
+        mosaic_src.contains("HfMosaicWorkspace"),
+        "HfMosaicWorkspace defined"
+    );
+    assert!(
+        mosaic_src.contains("grid-cols-12"),
+        "mosaic uses 12-column grid"
+    );
 }
 
 #[test]

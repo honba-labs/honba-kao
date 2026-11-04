@@ -2,9 +2,9 @@
 //! auto-complete. Ported from the restructure spec (Section 7.6) and
 //! OpenTerminalUI `CommandBar`.
 
-use leptos::prelude::*;
+use crate::atoms::HfPromptSymbol;
 use leptos::html::{Input, Ul};
-use crate::primitive::HfPromptSymbol;
+use leptos::prelude::*;
 
 #[component]
 pub fn HfGoBar(
@@ -73,7 +73,11 @@ pub fn HfGoBar(
             }
             "ArrowDown" => {
                 ev.prevent_default();
-                highlighted.set((highlighted.get() + 1).max(1).min(n.saturating_sub(1).max(1)));
+                highlighted.set(
+                    (highlighted.get() + 1)
+                        .max(1)
+                        .min(n.saturating_sub(1).max(1)),
+                );
                 if let Some(list) = list_ref.get() {
                     let _ = list.scroll_into_view();
                 }

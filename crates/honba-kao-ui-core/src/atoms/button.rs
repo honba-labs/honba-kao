@@ -83,7 +83,8 @@ pub fn HfButton(
     #[prop(optional)] on_click: Option<Callback<()>>,
     #[prop(into, optional)] aria_label: Option<String>,
     /// Extra classes, reactive: accepts a static string or a `Signal<String>`.
-    #[prop(into, optional)] class: Option<Signal<String>>,
+    #[prop(into, optional)]
+    class: Option<Signal<String>>,
     children: Children,
 ) -> impl IntoView {
     let size = size.unwrap_or_default();

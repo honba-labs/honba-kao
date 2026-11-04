@@ -8,7 +8,8 @@ pub fn HfRollingReturnsVisualizer(
     #[prop(into)] benchmark: Signal<f64>,
     #[prop(into, optional)] class: Option<String>,
 ) -> impl IntoView {
-    let base = "hf-rolling-returns rounded-lg border border-border-soft bg-surface-base p-3 text-xs";
+    let base =
+        "hf-rolling-returns rounded-lg border border-border-soft bg-surface-base p-3 text-xs";
     let classes = match class {
         Some(c) => format!("{} {}", base, c),
         None => base.to_string(),

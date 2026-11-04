@@ -1,7 +1,7 @@
 //! Collateral organism — multi-asset collateral manager.
 //! All balance/price/haircut values are `Decimal` (zero-floats invariant, issue #33).
 
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
+use crate::atoms::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -26,11 +26,18 @@ pub fn HfCollateralOrganism(
 ) -> impl IntoView {
     // Haircut evaluation: collateral value = balance x price x (1 - haircut%).
     let rows = Signal::derive(move || {
-        assets.get().into_iter().map(|a| {
-            let haircut = a.haircut_pct.clamp(dec!(0), dec!(100));
-            let collateral_value = a.balance * a.price * (dec!(1) - haircut / dec!(100));
-            CollateralAssetRowView { asset: a, collateral_value }
-        }).collect::<Vec<_>>()
+        assets
+            .get()
+            .into_iter()
+            .map(|a| {
+                let haircut = a.haircut_pct.clamp(dec!(0), dec!(100));
+                let collateral_value = a.balance * a.price * (dec!(1) - haircut / dec!(100));
+                CollateralAssetRowView {
+                    asset: a,
+                    collateral_value,
+                }
+            })
+            .collect::<Vec<_>>()
     });
     let total_collateral = total_collateral_value.unwrap_or_else(|| {
         Signal::derive(move || rows.get().iter().map(|r| r.collateral_value).sum())

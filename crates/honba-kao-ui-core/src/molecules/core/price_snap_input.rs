@@ -1,4 +1,4 @@
-use crate::primitive::{HfButton, HfOrderInputBox};
+use crate::atoms::{HfButton, HfOrderInputBox};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -31,8 +31,8 @@ pub fn HfPriceSnapInput(
             />
             <HfButton
                 class="hf-snap-btn px-2 text-xs"
-                variant=crate::primitive::ButtonVariant::Outline
-                size=crate::primitive::ButtonSize::Sm
+                variant=crate::atoms::ButtonVariant::Outline
+                size=crate::atoms::ButtonSize::Sm
                 disabled=is_btn_disabled
                 on_click=on_mid_click
             >

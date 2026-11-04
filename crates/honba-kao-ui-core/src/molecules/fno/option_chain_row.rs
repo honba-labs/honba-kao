@@ -2,7 +2,7 @@
 //! Ported from the restructure spec (Section 7.4) and `secured-finance-app`.
 //! All quote/Greeks values are `Decimal` (zero-floats invariant, issue #33).
 
-use crate::primitive::{HfMoneynessBadge, Moneyness};
+use crate::atoms::{HfMoneynessBadge, Moneyness};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -20,8 +20,16 @@ pub struct OptionLegQuote {
 }
 
 fn oi_bar(oi: u64, oi_change: i64, max_oi: u64) -> impl IntoView {
-    let pct = if max_oi > 0 { oi as f64 / max_oi as f64 * 100.0 } else { 0.0 };
-    let change_class = if oi_change >= 0 { "text-emerald-400" } else { "text-rose-400" };
+    let pct = if max_oi > 0 {
+        oi as f64 / max_oi as f64 * 100.0
+    } else {
+        0.0
+    };
+    let change_class = if oi_change >= 0 {
+        "text-emerald-400"
+    } else {
+        "text-rose-400"
+    };
     view! {
         <div class="hf-oi-bar flex items-center gap-1 text-[10px]">
             <div class="hf-oi-fill bg-surface-elevated h-1.5 w-full rounded overflow-hidden">

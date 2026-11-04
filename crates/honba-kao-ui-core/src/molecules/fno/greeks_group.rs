@@ -12,11 +12,13 @@ pub struct Greeks {
 }
 
 #[component]
-pub fn HfGreeksGroup(
-    greeks: Signal<Greeks>,
-) -> impl IntoView {
+pub fn HfGreeksGroup(greeks: Signal<Greeks>) -> impl IntoView {
     let theta_class = Signal::derive(move || {
-        if greeks.get().theta >= 0.0 { "text-emerald-400" } else { "text-rose-400" }
+        if greeks.get().theta >= 0.0 {
+            "text-emerald-400"
+        } else {
+            "text-rose-400"
+        }
     });
     view! {
         <div class="hf-greeks-grid grid grid-cols-2 gap-2 text-[10px] font-mono">

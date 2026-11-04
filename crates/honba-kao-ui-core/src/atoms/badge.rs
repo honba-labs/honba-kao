@@ -103,9 +103,7 @@ pub(crate) fn moneyness_style(moneyness: Moneyness) -> (String, String) {
 }
 
 #[component]
-pub fn HfMoneynessBadge(
-    #[prop(into)] moneyness: Signal<Moneyness>,
-) -> impl IntoView {
+pub fn HfMoneynessBadge(#[prop(into)] moneyness: Signal<Moneyness>) -> impl IntoView {
     let style = Signal::derive(move || moneyness_style(moneyness.get()));
     view! {
         <span class=move || {

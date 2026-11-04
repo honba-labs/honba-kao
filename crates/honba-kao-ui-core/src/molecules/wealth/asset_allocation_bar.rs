@@ -11,9 +11,7 @@ pub struct Allocation {
 }
 
 #[component]
-pub fn HfAssetAllocationBar(
-    alloc: Signal<Allocation>,
-) -> impl IntoView {
+pub fn HfAssetAllocationBar(alloc: Signal<Allocation>) -> impl IntoView {
     let total = Signal::derive(move || {
         let a = alloc.get();
         a.equity + a.debt + a.cash + a.gold

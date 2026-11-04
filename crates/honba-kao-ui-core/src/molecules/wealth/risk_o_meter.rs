@@ -17,19 +17,37 @@ pub enum RiskLevel {
 /// can be unit-tested without a DOM.
 pub(crate) fn risk_style(level: RiskLevel) -> (f64, String, String) {
     match level {
-        RiskLevel::Low => (-75.0, "Low Risk".to_string(), "text-emerald-400".to_string()),
-        RiskLevel::LowToModerate => (-45.0, "Low to Moderate Risk".to_string(), "text-teal-400".to_string()),
-        RiskLevel::Moderate => (-15.0, "Moderate Risk".to_string(), "text-cyan-400".to_string()),
-        RiskLevel::ModeratelyHigh => (15.0, "Moderately High Risk".to_string(), "text-amber-400".to_string()),
+        RiskLevel::Low => (
+            -75.0,
+            "Low Risk".to_string(),
+            "text-emerald-400".to_string(),
+        ),
+        RiskLevel::LowToModerate => (
+            -45.0,
+            "Low to Moderate Risk".to_string(),
+            "text-teal-400".to_string(),
+        ),
+        RiskLevel::Moderate => (
+            -15.0,
+            "Moderate Risk".to_string(),
+            "text-cyan-400".to_string(),
+        ),
+        RiskLevel::ModeratelyHigh => (
+            15.0,
+            "Moderately High Risk".to_string(),
+            "text-amber-400".to_string(),
+        ),
         RiskLevel::High => (45.0, "High Risk".to_string(), "text-orange-400".to_string()),
-        RiskLevel::VeryHigh => (75.0, "Very High Risk".to_string(), "text-rose-500".to_string()),
+        RiskLevel::VeryHigh => (
+            75.0,
+            "Very High Risk".to_string(),
+            "text-rose-500".to_string(),
+        ),
     }
 }
 
 #[component]
-pub fn HfRiskOMeter(
-    #[prop(into)] level: Signal<RiskLevel>,
-) -> impl IntoView {
+pub fn HfRiskOMeter(#[prop(into)] level: Signal<RiskLevel>) -> impl IntoView {
     let style = Signal::derive(move || risk_style(level.get()));
 
     view! {
@@ -79,17 +97,9 @@ mod tests {
     fn risk_style_maps_each_level_to_angle_label_and_class() {
         let cases = [
             (RiskLevel::Low, -75.0, "Low Risk"),
-            (
-                RiskLevel::LowToModerate,
-                -45.0,
-                "Low to Moderate Risk",
-            ),
+            (RiskLevel::LowToModerate, -45.0, "Low to Moderate Risk"),
             (RiskLevel::Moderate, -15.0, "Moderate Risk"),
-            (
-                RiskLevel::ModeratelyHigh,
-                15.0,
-                "Moderately High Risk",
-            ),
+            (RiskLevel::ModeratelyHigh, 15.0, "Moderately High Risk"),
             (RiskLevel::High, 45.0, "High Risk"),
             (RiskLevel::VeryHigh, 75.0, "Very High Risk"),
         ];

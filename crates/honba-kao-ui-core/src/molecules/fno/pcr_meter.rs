@@ -9,7 +9,13 @@ pub fn HfPcrMeter(
 ) -> impl IntoView {
     let level = Signal::derive(move || {
         let p = pcr.get();
-        if p > 1.2 { ("Bearish", "text-rose-400") } else if p < 0.8 { ("Bullish", "text-emerald-400") } else { ("Neutral", "text-text-muted") }
+        if p > 1.2 {
+            ("Bearish", "text-rose-400")
+        } else if p < 0.8 {
+            ("Bullish", "text-emerald-400")
+        } else {
+            ("Neutral", "text-text-muted")
+        }
     });
     let base = "hf-pcr-meter flex flex-col items-center gap-1 p-2 rounded border border-border-soft bg-surface-base text-xs";
     let classes = match class {

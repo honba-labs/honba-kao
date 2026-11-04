@@ -2,8 +2,8 @@
 //! ratio. Ported from `secured-finance-app` atoms `CollateralInformation` /
 //! `CollateralInformationTable`.
 
+use crate::atoms::HfAssetBadge;
 use leptos::prelude::*;
-use crate::primitive::HfAssetBadge;
 
 #[component]
 pub fn HfCollateralHaircutTile(

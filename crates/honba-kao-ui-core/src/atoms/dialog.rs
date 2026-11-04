@@ -2,8 +2,8 @@
 //! Ported from `secured-finance-app` atom `Dialog` and organism-level `PlaceOrder` /
 //! `RemoveOrderDialog` confirmation patterns.
 
-use leptos::prelude::*;
 use crate::hooks::use_escape_key;
+use leptos::prelude::*;
 
 /// Accessible modal dialog with focus trap and escape-key handling.
 #[component]
@@ -153,7 +153,15 @@ pub fn HfDrawer(
     let title_clone = title.clone();
     let children_view = children();
     let translate = move || {
-        if open.get() { "translate-x-0" } else { if right { "translate-x-full" } else { "-translate-x-full" } }
+        if open.get() {
+            "translate-x-0"
+        } else {
+            if right {
+                "translate-x-full"
+            } else {
+                "-translate-x-full"
+            }
+        }
     };
     view! {
         <div

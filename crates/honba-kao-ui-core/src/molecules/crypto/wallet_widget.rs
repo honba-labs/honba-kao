@@ -2,8 +2,8 @@
 //! buying power, collateral ratio). Ported from `secured-finance-app`
 //! `MyWalletWidget` / `MyWalletCard`.
 
+use crate::atoms::HfStatusLed;
 use leptos::prelude::*;
-use crate::primitive::HfStatusLed;
 
 #[component]
 pub fn HfWalletSummaryWidget(

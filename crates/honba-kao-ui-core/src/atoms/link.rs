@@ -1,8 +1,8 @@
 //! `HfLink` — accessible link element with external indicator icon and hover states.
 //! Ported from `secured-finance-app` atom `TextLink`.
 
-use leptos::prelude::*;
 use crate::icons::SvgExternalLink;
+use leptos::prelude::*;
 
 #[component]
 pub fn HfLink(

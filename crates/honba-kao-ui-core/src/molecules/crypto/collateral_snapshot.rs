@@ -11,7 +11,8 @@ pub fn HfCollateralSnapshot(
     #[prop(into)] borrow_capacity: f64,
     #[prop(into)] margin_utilization_pct: f64,
 ) -> impl IntoView {
-    let headroom = (borrow_capacity - total_collateral_value * margin_utilization_pct / 100.0).max(0.0);
+    let headroom =
+        (borrow_capacity - total_collateral_value * margin_utilization_pct / 100.0).max(0.0);
     let zone_class = if margin_utilization_pct < 60.0 {
         "text-emerald-400"
     } else if margin_utilization_pct < 80.0 {

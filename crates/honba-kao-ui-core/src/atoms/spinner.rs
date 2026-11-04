@@ -1,8 +1,8 @@
 //! `HfSpinner` — monospace / SVG loading indicator for asynchronous data streams.
 //! Ported from `secured-finance-app` atom `Spinner`.
 
-use leptos::prelude::*;
 use crate::icons::SvgSpinner;
+use leptos::prelude::*;
 
 #[component]
 pub fn HfSpinner(

@@ -9,7 +9,13 @@ pub fn HfCointegrationBand(
 ) -> impl IntoView {
     let state = Signal::derive(move || {
         let z = z_score.get();
-        if z > 2.0 { ("Short Spread", "text-rose-400") } else if z < -2.0 { ("Long Spread", "text-emerald-400") } else { ("Neutral", "text-text-muted") }
+        if z > 2.0 {
+            ("Short Spread", "text-rose-400")
+        } else if z < -2.0 {
+            ("Long Spread", "text-emerald-400")
+        } else {
+            ("Neutral", "text-text-muted")
+        }
     });
     let base = "hf-cointegration-band flex flex-col items-center gap-1 p-2 rounded border border-border-soft bg-surface-base text-xs";
     let classes = match class {

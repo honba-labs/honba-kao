@@ -26,10 +26,14 @@ impl Currency {
     fn svg_path(self) -> &'static str {
         match self {
             Currency::Inr => "M21 6H3v12h15v-6h-6l3-6z",
-            Currency::Usd => "M12 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9Zm0 6h-4m4 4h4m-4-8V6m0 12V12m-4 6h4",
+            Currency::Usd => {
+                "M12 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9Zm0 6h-4m4 4h4m-4-8V6m0 12V12m-4 6h4"
+            }
             Currency::Btc => "M14 8L12 10l2 2M20 12h-8l-2 2-2-2H4l2-2 2 2 2-2h8l2 2z",
             Currency::Eth => "M10 14l2-2 2 2M2 12h20M12 2v20",
-            Currency::Usdc => "M12 2a9 9 0 0 0-9 9v2a9 9 0 0 0 9 9 9 9 0 0 0 9-9v-2a9 9 0 0 0-9-9Zm0 6h-4m4 4h4m-4-8v-6m0 12v-6",
+            Currency::Usdc => {
+                "M12 2a9 9 0 0 0-9 9v2a9 9 0 0 0 9 9 9 9 0 0 0 9-9v-2a9 9 0 0 0-9-9Zm0 6h-4m4 4h4m-4-8v-6m0 12v-6"
+            }
         }
     }
 }
@@ -105,10 +109,18 @@ mod tests {
             Currency::Usdc,
         ] {
             let path = currency.svg_path();
-            assert!(!path.is_empty(), "{:?} svg path must not be empty", currency);
+            assert!(
+                !path.is_empty(),
+                "{:?} svg path must not be empty",
+                currency
+            );
             // Every path must begin with a moveto and contain only valid command letters.
             let first = path.chars().next().unwrap_or(' ');
-            assert_eq!(first, 'M', "{:?} svg path must start with absolute moveto", currency);
+            assert_eq!(
+                first, 'M',
+                "{:?} svg path must start with absolute moveto",
+                currency
+            );
             for ch in path.chars() {
                 assert!(
                     "MMLHCSVQTAZmmlhcsvqatz0123456789.-+ ".contains(ch),

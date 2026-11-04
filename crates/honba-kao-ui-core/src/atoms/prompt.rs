@@ -2,8 +2,8 @@
 //! Ported from `secured-finance-app` atom `Identicon`-style procedural glyphs and
 //! OpenTerminalUI `AiVisuals` thinking states.
 
-use leptos::prelude::*;
 use crate::icons::{SvgPrompt, SvgThinkingOrb};
+use leptos::prelude::*;
 
 /// Terminal prompt symbol (`>_`) rendered inside input rows (e.g. Go-bar).
 #[component]
@@ -18,9 +18,7 @@ pub fn HfPromptSymbol() -> impl IntoView {
 
 /// Thinking / processing orb with optional active spin animation.
 #[component]
-pub fn HfThinkingOrb(
-    #[prop(into, optional)] active: Option<Signal<bool>>,
-) -> impl IntoView {
+pub fn HfThinkingOrb(#[prop(into, optional)] active: Option<Signal<bool>>) -> impl IntoView {
     let active = Signal::derive(move || active.as_ref().map(|a| a.get()).unwrap_or(false));
     view! {
         <span class=move || format!("hf-thinking-orb inline-block {}", if active.get() { "animate-spin" } else { "" } )>

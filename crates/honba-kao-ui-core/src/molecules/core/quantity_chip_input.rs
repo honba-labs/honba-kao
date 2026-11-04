@@ -3,7 +3,7 @@
 //! Ported from `secured-finance-app` molecule patterns and the restructure spec
 //! (Section 7.2).
 
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton, HfChip, HfOrderInputBox};
+use crate::atoms::{ButtonSize, ButtonVariant, HfButton, HfChip, HfOrderInputBox};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 

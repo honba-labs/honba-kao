@@ -1,8 +1,8 @@
 //! `HfCollateralAssetPane` — left panel listing deposited collateral asset
 //! positions. Ported from `secured-finance-app` molecule `CollateralTabLeftPane`.
 
+use crate::atoms::HfAssetBadge;
 use leptos::prelude::*;
-use crate::primitive::HfAssetBadge;
 
 /// A single deposited collateral asset row.
 #[derive(Clone, Debug, PartialEq)]
@@ -16,12 +16,9 @@ pub struct CollateralAsset {
 
 /// Left panel of the collateral manager listing deposited asset positions.
 #[component]
-pub fn HfCollateralAssetPane(
-    #[prop(into)] assets: Signal<Vec<CollateralAsset>>,
-) -> impl IntoView {
-    let total = Signal::derive(move || {
-        assets.get().iter().map(|a| a.collateral_value).sum::<f64>()
-    });
+pub fn HfCollateralAssetPane(#[prop(into)] assets: Signal<Vec<CollateralAsset>>) -> impl IntoView {
+    let total =
+        Signal::derive(move || assets.get().iter().map(|a| a.collateral_value).sum::<f64>());
 
     view! {
         <div class="hf-collateral-asset-pane flex flex-col gap-2 p-3 rounded border border-border-soft bg-surface-base text-xs">

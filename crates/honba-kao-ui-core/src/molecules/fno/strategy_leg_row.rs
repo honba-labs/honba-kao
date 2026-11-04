@@ -18,7 +18,11 @@ pub fn HfStrategyLegRow(
     #[prop(into)] on_remove: Callback<()>,
 ) -> impl IntoView {
     let side_color = Signal::derive(move || {
-        if leg.get().side == "BUY" { "text-emerald-400" } else { "text-rose-400" }
+        if leg.get().side == "BUY" {
+            "text-emerald-400"
+        } else {
+            "text-rose-400"
+        }
     });
     view! {
         <div class="hf-strategy-leg-row flex justify-between items-center px-3 py-1.5 rounded border border-border-soft bg-surface-base text-xs">

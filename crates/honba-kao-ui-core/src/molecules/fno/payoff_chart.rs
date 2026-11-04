@@ -27,7 +27,11 @@ pub fn HfOptionPayoffChart(
         } else {
             let mn = pts.iter().map(|p| p.pnl).fold(f64::INFINITY, f64::min);
             let mx = pts.iter().map(|p| p.pnl).fold(f64::NEG_INFINITY, f64::max);
-            let mx = if (mx - mn).abs() < f64::EPSILON { mn + 1.0 } else { mx };
+            let mx = if (mx - mn).abs() < f64::EPSILON {
+                mn + 1.0
+            } else {
+                mx
+            };
             (mn, mx)
         }
     });

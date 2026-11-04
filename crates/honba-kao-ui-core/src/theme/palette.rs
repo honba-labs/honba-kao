@@ -82,8 +82,15 @@ mod tests {
     #[test]
     fn palette_hex_values_are_valid() {
         for hex in [
-            TERMINAL_DARK, SURFACE_BASE, SURFACE_SUBTLE, EMERALD, CRIMSON, AMBER,
-            TEXT_HIGH, TEXT_MUTED, BORDER_SOFT,
+            TERMINAL_DARK,
+            SURFACE_BASE,
+            SURFACE_SUBTLE,
+            EMERALD,
+            CRIMSON,
+            AMBER,
+            TEXT_HIGH,
+            TEXT_MUTED,
+            BORDER_SOFT,
         ] {
             assert!(hex.starts_with('#'));
             assert_eq!(hex.len(), 7);

@@ -2,8 +2,8 @@
 //!
 //! All price/qty/money values are `Decimal` (zero-floats invariant, issue #33).
 
+use crate::atoms::{ButtonSize, ButtonVariant, HfButton};
 use crate::molecules::core::{HfPriceSnapInput, HfQuantityChipInput};
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -34,10 +34,7 @@ pub fn HfOrderTicket(
     let confirmed = RwSignal::new(false); // two-step place: confirm, then submit
 
     let est_notional = Signal::derive(move || {
-        let p: Decimal = price_str
-            .get()
-            .parse()
-            .unwrap_or_else(|_| mark_price.get());
+        let p: Decimal = price_str.get().parse().unwrap_or_else(|_| mark_price.get());
         let q: Decimal = qty_str.get().parse().unwrap_or(Decimal::ZERO);
         p * q
     });

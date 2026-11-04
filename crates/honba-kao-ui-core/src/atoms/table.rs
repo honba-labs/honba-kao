@@ -4,10 +4,7 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn HfTable(
-    #[prop(into, optional)] class: Option<String>,
-    children: Children,
-) -> impl IntoView {
+pub fn HfTable(#[prop(into, optional)] class: Option<String>, children: Children) -> impl IntoView {
     let base = "hf-table w-full border-collapse text-left text-xs";
     let classes = match class {
         Some(c) => format!("{} {}", base, c),
@@ -71,7 +68,11 @@ pub fn HfTableCell(
         TableCellAlign::Right => "text-right",
         TableCellAlign::Inherit => "",
     };
-    let numeric_class = if numeric { "font-mono tabular-nums" } else { "" };
+    let numeric_class = if numeric {
+        "font-mono tabular-nums"
+    } else {
+        ""
+    };
     let base = "hf-table-cell px-3 py-1.5 border-b border-border-soft text-text-high";
     let classes = match class {
         Some(c) => format!("{} {} {} {}", base, align_class, numeric_class, c),

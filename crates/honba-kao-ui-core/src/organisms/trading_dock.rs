@@ -1,4 +1,4 @@
-use crate::primitive::{ButtonSize, ButtonVariant, HfButton};
+use crate::atoms::{ButtonSize, ButtonVariant, HfButton};
 use leptos::prelude::*;
 
 #[component]
@@ -11,7 +11,8 @@ pub fn HfTradingDock(
     fills_view: ChildrenFn,
     #[prop(into, optional)] on_cancel_all_orders: Option<Callback<()>>,
     /// Aggregate unrealised PnL across open positions (issue #73).
-    #[prop(into, optional)] positions_pnl: Option<Signal<f64>>,
+    #[prop(into, optional)]
+    positions_pnl: Option<Signal<f64>>,
 ) -> impl IntoView {
     let active_tab = RwSignal::new("positions".to_string());
 

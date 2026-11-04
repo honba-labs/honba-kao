@@ -61,9 +61,7 @@ pub fn HfAlertBanner(
 
 /// Structural notification header stack positioned above workspace content.
 #[component]
-pub fn HfAlertBannerStack(
-    banners: Signal<Vec<(AlertSeverity, String)>>,
-) -> impl IntoView {
+pub fn HfAlertBannerStack(banners: Signal<Vec<(AlertSeverity, String)>>) -> impl IntoView {
     view! {
         <div class="hf-alert-banner-stack flex flex-col gap-1 mb-3">
             {move || banners.get().into_iter().enumerate().map(|(_i, (sev, msg))| {

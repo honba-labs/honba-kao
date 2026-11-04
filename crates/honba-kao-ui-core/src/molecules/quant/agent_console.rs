@@ -2,8 +2,8 @@
 //! steps and logs. Ported from the restructure spec (Section 7.6) and
 //! OpenTerminalUI `AiVisuals`.
 
+use crate::atoms::{HfKbdBadge, HfThinkingOrb};
 use leptos::prelude::*;
-use crate::primitive::{HfThinkingOrb, HfKbdBadge};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AgentThoughtStep {

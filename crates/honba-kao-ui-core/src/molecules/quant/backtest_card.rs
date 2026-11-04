@@ -9,7 +9,11 @@ pub fn HfBacktestMetricCard(
     #[prop(into, optional)] positive: Option<bool>,
 ) -> impl IntoView {
     let positive = positive.unwrap_or(true);
-    let color = if positive { "text-emerald-400" } else { "text-rose-400" };
+    let color = if positive {
+        "text-emerald-400"
+    } else {
+        "text-rose-400"
+    };
     view! {
         <div class="hf-backtest-card rounded border border-border-soft bg-surface-base p-3">
             <span class="text-[10px] text-text-muted uppercase tracking-wider block">{label}</span>
