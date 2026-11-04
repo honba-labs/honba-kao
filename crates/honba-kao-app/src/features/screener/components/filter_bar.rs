@@ -1,10 +1,12 @@
-//! `ScreenerFilterBar` — four-row command bar above the screener results:
-//! asset segment + ✦ AI prompt bar, screener-view tab strip, search + flyout
-//! filter row (Market / Index / Price / P-E pills), and view-mode toggles
-//! with modal triggers and hotkey badges.
+//! `ScreenerFilterBar` — Futuristic Neural AST Command & Funnel HUD above the
+//! screener results: live Universe Reduction Funnel (`Total -> Index -> Matched -> Qualified`),
+//! 4-way spatial view switcher (`Signal Matrix`, `Constellation`, `Quantum Tape`, `Heatmap`),
+//! asset segment + preset screens, prominent `✦ AST` DSL/prompt bar, flyout
+//! filter pills (`Market / Index / Price / P-E`), and view-tab lenses.
 
 use crate::features::screener::indices::{INDEX_CATALOG, IndexClass, benchmark_for, member_count};
 use crate::features::screener::screen_catalog::{CustomScreen, builtin_screens};
+use crate::features::screener::telemetry::FunnelTelemetry;
 use crate::features::screener::types::ScreenerViewMode;
 use honba_kao_ui_core::atoms::segmented::Segment;
 use honba_kao_ui_core::primitive::{ButtonSize, ButtonVariant, HfButton};
@@ -56,7 +58,7 @@ fn FlyoutPill(
     let active = move || is_active.map(|a| a.get()).unwrap_or(false) || open.get() == Some(key);
     let class = move || {
         format!(
-            "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border {}",
+            "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border {}",
             if active() {
                 "hf-filter-pill--active bg-emerald-600/20 border-emerald-500 text-emerald-300"
             } else {
@@ -106,8 +108,8 @@ pub fn ScreenerFilterBar(
     on_export_csv: Callback<()>,
     #[prop(into, optional)] on_apply_screen: Option<Callback<CustomScreen>>,
     #[prop(into, optional)] active_screen_id: Option<RwSignal<String>>,
+    #[prop(into, optional)] funnel: Option<Signal<FunnelTelemetry>>,
 ) -> impl IntoView {
-    // (label, value) tuples — HfSelect renders `<option value=value>{label}</option>`.
     let cap_options: Vec<(String, String)> = vec![
         ("All".to_string(), "ALL".to_string()),
         ("Large Cap".to_string(), "Large Cap".to_string()),
@@ -115,9 +117,8 @@ pub fn ScreenerFilterBar(
         ("Small Cap".to_string(), "Small Cap".to_string()),
     ];
 
-    // Row C flyout state — the pills flip their own key (single-open toggle).
     let flyout_open = RwSignal::new(Option::<FlyoutKey>::None);
-    let show_ai_prompt = RwSignal::new(false);
+    let show_ai_prompt = RwSignal::new(true);
     let active_screen =
         active_screen_id.unwrap_or_else(|| RwSignal::new("builtin.all".to_string()));
     let presets = builtin_screens();
@@ -134,11 +135,11 @@ pub fn ScreenerFilterBar(
     let index_label: Signal<String> = Signal::derive(move || {
         let key = selected_index.get();
         if key.is_empty() || key == "ALL" {
-            "Any".to_string()
+            "Index: Any".to_string()
         } else if let Some(benchmark) = benchmark_for(&key) {
-            benchmark.label.to_string()
+            format!("Index: {}", benchmark.label)
         } else {
-            "Any".to_string()
+            "Index: Any".to_string()
         }
     });
     let price_label: Signal<String> = Signal::derive(move || {
@@ -158,8 +159,115 @@ pub fn ScreenerFilterBar(
         Signal::derive(move || min_pe.get() > Decimal::ZERO || max_pe.get() > Decimal::ZERO);
 
     view! {
-        <div class="hf-filter-bar screener-filter-bar hf-card flex flex-col gap-2.5 p-3.5 border border-border-soft bg-surface-base rounded-xl shadow-sm mb-3">
-            // Row A — Asset Segment + Popular Screens bubbles (honba-fe inspired).
+        <div class="hf-filter-bar screener-filter-bar hf-card flex flex-col gap-2.5 p-3.5 border border-border-soft bg-surface-base rounded-2xl shadow-sm mb-3">
+            // Top Futuristic Telemetry Header: Scanner Status + Live Reduction Funnel + 4-Mode View Switcher
+            <div class="flex items-center justify-between gap-3 flex-wrap pb-2.5 border-b border-border-soft">
+                <div class="flex items-center gap-2.5">
+                    <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-semibold">
+                        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        "HONBA-ME // NEURAL AST SCANNER"
+                    </span>
+                    <span class="text-[10px] font-mono text-text-muted hidden sm:inline">
+                        "DEC-128 EXACT · 0 FLOATS"
+                    </span>
+                </div>
+
+                {move || {
+                    funnel.map(|f_sig| {
+                        let f = f_sig.get();
+                        view! {
+                            <div class="flex items-center gap-1.5 text-[11px] font-mono">
+                                <span class="text-text-muted hidden md:inline">"FUNNEL:"</span>
+                                <span class="px-2 py-0.5 rounded bg-surface-subtle border border-border-soft text-text-high">
+                                    {format!("UNIVERSE {}", f.total_universe)}
+                                </span>
+                                <span class="text-text-muted">"→"</span>
+                                <span class="px-2 py-0.5 rounded bg-surface-subtle border border-border-soft text-text-high">
+                                    {format!("INDEX {}", f.index_universe)}
+                                </span>
+                                <span class="text-text-muted">"→"</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-semibold">
+                                    {format!("{} MATCHED", f.matched_count)}
+                                </span>
+                                <span class="text-text-muted">"→"</span>
+                                <span class="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 font-semibold">
+                                    {format!("{} QUALIFIED", f.qualified_count)}
+                                </span>
+                            </div>
+                        }
+                    })
+                }}
+
+                // 4-Mode Futuristic View Switcher
+                <div class="flex items-center gap-1 bg-surface-subtle p-1 rounded-xl border border-border-soft">
+                    <button
+                        type="button"
+                        class=move || {
+                            format!(
+                                "hf-view-toggle px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all {}",
+                                if matches!(view_mode.get(), ScreenerViewMode::Matrix) {
+                                    "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
+                                } else {
+                                    "text-text-muted hover:text-text-high border border-transparent"
+                                }
+                            )
+                        }
+                        on:click=move |_| view_mode.set(ScreenerViewMode::Matrix)
+                    >
+                        "⚡ Matrix"
+                    </button>
+                    <button
+                        type="button"
+                        class=move || {
+                            format!(
+                                "hf-view-toggle px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all {}",
+                                if matches!(view_mode.get(), ScreenerViewMode::Constellation) {
+                                    "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm"
+                                } else {
+                                    "text-text-muted hover:text-text-high border border-transparent"
+                                }
+                            )
+                        }
+                        on:click=move |_| view_mode.set(ScreenerViewMode::Constellation)
+                    >
+                        "🌌 Constellation"
+                    </button>
+                    <button
+                        type="button"
+                        class=move || {
+                            format!(
+                                "hf-view-toggle px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all {}",
+                                if matches!(view_mode.get(), ScreenerViewMode::Table) {
+                                    "bg-emerald-600 text-white border border-emerald-600 shadow-sm"
+                                } else {
+                                    "text-text-muted hover:text-text-high border border-transparent"
+                                }
+                            )
+                        }
+                        on:click=move |_| view_mode.set(ScreenerViewMode::Table)
+                    >
+                        "🧬 Tape"
+                    </button>
+                    <button
+                        type="button"
+                        class=move || {
+                            format!(
+                                "hf-view-toggle px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all {}",
+                                if matches!(view_mode.get(), ScreenerViewMode::Heatmap) {
+                                    "bg-emerald-600 text-white border border-emerald-600 shadow-sm"
+                                } else {
+                                    "text-text-muted hover:text-text-high border border-transparent"
+                                }
+                            )
+                        }
+                        on:click=move |_| view_mode.set(ScreenerViewMode::Heatmap)
+                    >
+                        "☷ Heatmap"
+                    </button>
+                </div>
+            </div>
+
+            // Row A — Asset Segment + Preset Screen Bubbles
             <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
                     <HfSegmentedControl
@@ -186,8 +294,8 @@ pub fn ScreenerFilterBar(
                     />
                     <div class="h-4 w-px bg-border-soft mx-1 hidden sm:block" />
                     <div class="tv-popular-screens-container flex items-center gap-2 overflow-x-auto py-0.5">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted whitespace-nowrap">
-                            "Popular Screens:"
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted whitespace-nowrap">
+                            "AST Presets:"
                         </span>
                         <div class="tv-popular-bubbles-list flex items-center gap-1.5 flex-nowrap">
                             {move || {
@@ -221,29 +329,9 @@ pub fn ScreenerFilterBar(
                 </div>
             </div>
 
-            // Row B — screener view tab strip (HfTabPanel updates `active` itself).
-            <div class="hf-tab-strip flex items-center gap-1 flex-wrap">
-                <HfTabPanel value="overview" label="Overview" active=active_tab />
-                <HfTabPanel value="performance" label="Performance" active=active_tab />
-                <HfTabPanel value="technicals" label="Technicals" active=active_tab />
-                <HfTabPanel value="valuation" label="Valuation" active=active_tab />
-                <HfTabPanel value="dividends" label="Dividends" active=active_tab />
-                <HfTabPanel value="profitability" label="Profitability" active=active_tab />
-                <HfTabPanel value="financials" label="Financials" active=active_tab />
-                <HfTabPanel
-                    value="income_statement"
-                    label="Income Statement"
-                    active=active_tab
-                />
-                <HfTabPanel value="balance_sheet" label="Balance Sheet" active=active_tab />
-                <HfTabPanel value="cash_flow" label="Cash Flow" active=active_tab />
-                <HfTabPanel value="per_share" label="Per Share" active=active_tab />
-                <HfTabPanel value="forecasts" label="Forecasts" active=active_tab />
-            </div>
-
-            // Row C — search + AI trigger + Market/Index/Price/P-E flyouts + select filters.
+            // Row C — Unified AST Prompt / Search + Market/Index/Price/P-E Flyouts + Quick Flags
             <div class="flex items-center gap-2 flex-wrap">
-                <div class="w-52">
+                <div class="w-48">
                     <HfInput
                         value=search_query
                         placeholder="🔍 Ticker / name"
@@ -253,7 +341,7 @@ pub fn ScreenerFilterBar(
                 <button
                     type="button"
                     class=move || format!(
-                        "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border {}",
+                        "hf-filter-pill cursor-pointer select-none transition-all duration-150 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border {}",
                         if show_ai_prompt.get() || !ai_label.get().is_empty() {
                             "bg-purple-600/20 border-purple-500 text-purple-300 shadow-sm"
                         } else {
@@ -261,10 +349,10 @@ pub fn ScreenerFilterBar(
                         }
                     )
                     on:click=move |_| show_ai_prompt.update(|v| *v = !*v)
-                    title="Filter stocks using AI natural language prompt"
+                    title="Toggle AST natural-language filter bar"
                 >
                     <span class="text-xs">"✦"</span>
-                    <span>"AI"</span>
+                    <span>"AST"</span>
                 </button>
                 <span class="relative">
                     <FlyoutPill label=market_label open=flyout_open key=FlyoutKey::Market is_active=market_active />
@@ -297,7 +385,7 @@ pub fn ScreenerFilterBar(
                                             }
                                         })
                                         .collect::<Vec<_>>()}
-                            </div>
+                                </div>
                             }
                         })
                     }}
@@ -444,10 +532,10 @@ pub fn ScreenerFilterBar(
                         })
                     }}
                 </span>
-                <div class="w-44">
+                <div class="w-40">
                     <HfSelect value=selected_sector options=sector_options />
                 </div>
-                <div class="w-40">
+                <div class="w-36">
                     <HfSelect value=selected_market_cap options=cap_options />
                 </div>
                 <HfCheckbox checked=watchlist_only label="★ Only" />
@@ -458,8 +546,8 @@ pub fn ScreenerFilterBar(
                         view! {
                             <button
                                 type="button"
-                                title="AI filter applied — click to dismiss the indicator"
-                                class="px-2.5 py-0.5 rounded-full border border-purple-500/50 bg-purple-500/15 text-[11px] text-purple-300 font-medium flex items-center gap-1 hover:bg-purple-500/25 transition-colors"
+                                title="Active AST clause — click to clear"
+                                class="px-2.5 py-0.5 rounded-full border border-purple-500/50 bg-purple-500/15 text-[11px] font-mono text-purple-300 font-medium flex items-center gap-1 hover:bg-purple-500/25 transition-colors"
                                 on:click=move |_| {
                                     ai_label.set(String::new());
                                     ai_prompt.set(String::new());
@@ -473,16 +561,16 @@ pub fn ScreenerFilterBar(
                 }}
             </div>
 
-            // Expandable AI prompt row (when toggled via ✦ AI button)
+            // Prominent AST Command Bar
             {move || {
                 show_ai_prompt.get().then(|| {
                     view! {
                         <div class="flex items-center gap-2 p-2 rounded-xl border border-purple-500/40 bg-surface-subtle shadow-inner">
-                            <span class="text-purple-400 pl-2 font-mono text-sm">"✦"</span>
+                            <span class="text-purple-400 pl-2 font-mono text-xs font-bold">"✦ AST //"</span>
                             <div class="flex-1">
                                 <HfInput
                                     value=ai_prompt
-                                    placeholder="✦ Ask AI: e.g. 'pe < 25, rvol > 2, nifty 50' or 'large cap tech stocks'"
+                                    placeholder="Type deterministic AST query: e.g. 'pe < 25, rvol > 2, rsi 55 to 70, nifty 50, fno'"
                                     on_input=Callback::new(move |v| ai_prompt.set(v))
                                 />
                             </div>
@@ -491,83 +579,71 @@ pub fn ScreenerFilterBar(
                                 size=ButtonSize::Xs
                                 on_click=Callback::new(move |_| {
                                     on_ai_apply.run(ai_prompt.get_untracked());
-                                    show_ai_prompt.set(false);
                                 })
                             >
-                                "Apply AI"
+                                "Execute AST ↵"
                             </HfButton>
                         </div>
                     }
                 })
             }}
 
-            // Row D — view mode toggles, modal triggers, hotkey badges.
-            <div class="flex items-center gap-2 flex-wrap border-t border-border-soft pt-2.5">
-                <button
-                    type="button"
-                    class=move || {
-                        format!(
-                            "hf-view-toggle px-3 py-1 rounded-md border text-xs font-medium transition-colors {}",
-                            if matches!(view_mode.get(), ScreenerViewMode::Table) {
-                                "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                            } else {
-                                "border-border-soft text-text-muted hover:bg-surface-subtle hover:text-text-high"
-                            }
-                        )
-                    }
-                    on:click=move |_| view_mode.set(ScreenerViewMode::Table)
-                >
-                    "▦ Grid"
-                </button>
-                <button
-                    type="button"
-                    class=move || {
-                        format!(
-                            "hf-view-toggle px-3 py-1 rounded-md border text-xs font-medium transition-colors {}",
-                            if matches!(view_mode.get(), ScreenerViewMode::Heatmap) {
-                                "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                            } else {
-                                "border-border-soft text-text-muted hover:bg-surface-subtle hover:text-text-high"
-                            }
-                        )
-                    }
-                    on:click=move |_| view_mode.set(ScreenerViewMode::Heatmap)
-                >
-                    "☷ Heatmap"
-                </button>
-                <HfButton
-                    variant=ButtonVariant::Tertiary
-                    size=ButtonSize::Xs
-                    on_click=Callback::new(move |_| filter_modal_open.set(true))
-                >
-                    {move || format!("Filters ({})", active_filters.get())}
-                </HfButton>
-                <HfButton
-                    variant=ButtonVariant::Tertiary
-                    size=ButtonSize::Xs
-                    on_click=Callback::new(move |_| column_modal_open.set(true))
-                >
-                    "Columns"
-                </HfButton>
-                <HfButton
-                    variant=ButtonVariant::Tertiary
-                    size=ButtonSize::Xs
-                    on_click=on_export_csv
-                >
-                    "Export CSV"
-                </HfButton>
-                <HfButton
-                    variant=ButtonVariant::Tertiary
-                    size=ButtonSize::Xs
-                    on_click=on_reset
-                >
-                    "Reset"
-                </HfButton>
-                <span class="ml-auto flex items-center gap-1">
-                    <HfKbdBadge key="." />
-                    <HfKbdBadge key="Shift N" />
-                    <HfKbdBadge key="Ctrl K" />
-                </span>
+            // Row B + Action Utilities — Quantitative Lenses & Modal Triggers
+            <div class="flex items-center justify-between gap-2 flex-wrap border-t border-border-soft pt-2">
+                <div class="hf-tab-strip flex items-center gap-1 flex-wrap">
+                    <HfTabPanel value="overview" label="Overview" active=active_tab />
+                    <HfTabPanel value="performance" label="Performance" active=active_tab />
+                    <HfTabPanel value="technicals" label="Technicals" active=active_tab />
+                    <HfTabPanel value="valuation" label="Valuation" active=active_tab />
+                    <HfTabPanel value="dividends" label="Dividends" active=active_tab />
+                    <HfTabPanel value="profitability" label="Profitability" active=active_tab />
+                    <HfTabPanel value="financials" label="Financials" active=active_tab />
+                    <HfTabPanel
+                        value="income_statement"
+                        label="Income Statement"
+                        active=active_tab
+                    />
+                    <HfTabPanel value="balance_sheet" label="Balance Sheet" active=active_tab />
+                    <HfTabPanel value="cash_flow" label="Cash Flow" active=active_tab />
+                    <HfTabPanel value="per_share" label="Per Share" active=active_tab />
+                    <HfTabPanel value="forecasts" label="Forecasts" active=active_tab />
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap ml-auto">
+                    <HfButton
+                        variant=ButtonVariant::Tertiary
+                        size=ButtonSize::Xs
+                        on_click=Callback::new(move |_| filter_modal_open.set(true))
+                    >
+                        {move || format!("Filters ({})", active_filters.get())}
+                    </HfButton>
+                    <HfButton
+                        variant=ButtonVariant::Tertiary
+                        size=ButtonSize::Xs
+                        on_click=Callback::new(move |_| column_modal_open.set(true))
+                    >
+                        "Columns"
+                    </HfButton>
+                    <HfButton
+                        variant=ButtonVariant::Tertiary
+                        size=ButtonSize::Xs
+                        on_click=on_export_csv
+                    >
+                        "Export CSV"
+                    </HfButton>
+                    <HfButton
+                        variant=ButtonVariant::Tertiary
+                        size=ButtonSize::Xs
+                        on_click=on_reset
+                    >
+                        "Reset"
+                    </HfButton>
+                    <span class="flex items-center gap-1 pl-1">
+                        <HfKbdBadge key="." />
+                        <HfKbdBadge key="H" />
+                        <HfKbdBadge key="J/K" />
+                    </span>
+                </div>
             </div>
         </div>
     }

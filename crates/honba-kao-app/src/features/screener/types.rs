@@ -15,6 +15,8 @@ pub enum ScreenerAssetType {
 pub enum ScreenerViewMode {
     #[default]
     Table,
+    Matrix,
+    Constellation,
     Heatmap,
 }
 

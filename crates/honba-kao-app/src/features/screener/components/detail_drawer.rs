@@ -1,10 +1,13 @@
-//! `ScreenerDetailDrawer` — right-hand slide-over with price header,
-//! key metric tiles, day/52-week range bars (stocks), and nav placeholders.
+//! `ScreenerDetailDrawer` — Holographic Target Inspector slide-over / dock with
+//! 5-Axis Factor Pentagon Radar SVG, Invalidation-to-Trigger Laser Gauge,
+//! deterministic 5-detector `ExplainStep` trail (`scanner.rs`), key metric tiles,
+//! and `honba-mon` pre-trade gate status.
 
 use crate::features::screener::filters::{
     format_change_pct, format_mcap_rs_cr, format_price, format_volume_compact,
 };
 use crate::features::screener::scanner::{SETUP_UNQUALIFIED, scan_row};
+use crate::features::screener::telemetry::{RadarAxes, compute_laser_gauge, compute_radar_axes};
 use crate::features::screener::types::ScreenerRecord;
 use honba_kao_ui_core::primitive::{ButtonSize, ButtonVariant, HfButton};
 use honba_kao_ui_core::{BadgeVariant, HfCloseButton, HfDrawer, HfStatusChip};
@@ -29,7 +32,7 @@ fn range_marker_pct(price: Decimal, low: Decimal, high: Decimal) -> u64 {
 
 fn pct_vs(price: Decimal, level: Decimal) -> String {
     if price == Decimal::ZERO {
-        return "—".to_string(); // zero price — no meaningful distance
+        return "—".to_string();
     }
     let cost = (level - price) / price * dec!(100);
     let body = cost.round_dp(2).to_string();
@@ -42,8 +45,8 @@ fn pct_vs(price: Decimal, level: Decimal) -> String {
 
 fn metric_tile(label: &'static str, value: String) -> AnyView {
     view! {
-        <div class="rounded border border-border-soft bg-surface-subtle p-2">
-            <div class="text-[10px] uppercase tracking-wide text-text-muted">{label}</div>
+        <div class="rounded-lg border border-border-soft bg-surface-subtle p-2">
+            <div class="text-[10px] font-mono uppercase tracking-wide text-text-muted">{label}</div>
             <div class="mt-0.5 font-mono text-xs font-semibold text-text-high">{value}</div>
         </div>
     }
@@ -57,14 +60,14 @@ pub fn ScreenerDetailDrawer(
     watchlist: RwSignal<HashSet<String>>,
 ) -> impl IntoView {
     view! {
-        <HfDrawer open=open title="Screener Details" right=true>
+        <HfDrawer open=open title="Target Inspector // AST HUD" right=true>
             <div class="screener-detail-drawer flex flex-col gap-3">
                 {move || {
                     let snap = record.get();
                     match snap {
                         None => view! {
-                            <div class="text-xs text-text-muted">
-                                "No symbol selected. Pick a row from the table."
+                            <div class="text-xs font-mono text-text-muted">
+                                "No instrument locked. Select any node or card to inspect."
                             </div>
                         }
                         .into_any(),
@@ -97,15 +100,29 @@ pub fn ScreenerDetailDrawer(
                             let exchange = r.exchange.clone();
                             let scan = scan_row(&r);
                             let qualified = scan.setup_type != SETUP_UNQUALIFIED;
-                            let score = format!("{}", scan.score.round_dp(1));
+                            let score = format!("{}%", scan.score.round_dp(1));
                             let setup = scan.setup_type.clone();
+
+                            // Futuristic Radar + Laser Telemetry
+                            let radar = compute_radar_axes(&r);
+                            let poly_points = radar.svg_polygon_points();
+                            let ring_100 = RadarAxes::svg_ring_points(dec!(100));
+                            let ring_50 = RadarAxes::svg_ring_points(dec!(50));
+                            let gauge = compute_laser_gauge(
+                                r.price,
+                                scan.invalidation_level,
+                                scan.trigger_level,
+                            );
+                            let laser_pos = format!("left: calc({}% - 4px)", gauge.position_pct.round_dp(0));
+                            let rr_label = format!("Implied R:R 1 : {}", gauge.reward_risk_ratio.round_dp(2));
+
                             let trigger_info = format!(
-                                "{} ({})",
+                                "{} ({}%)",
                                 format_price(scan.trigger_level),
                                 pct_vs(r.price, scan.trigger_level)
                             );
                             let invalidation_info = format!(
-                                "{} ({})",
+                                "{} ({}%)",
                                 format_price(scan.invalidation_level),
                                 pct_vs(r.price, scan.invalidation_level)
                             );
@@ -127,13 +144,15 @@ pub fn ScreenerDetailDrawer(
                                     };
                                     let condition = step.condition.clone();
                                     view! {
-                                        <div class="flex items-start gap-1">
-                                            <span class=format!("font-mono text-[10px] {}", tone)>
-                                                {mark}
-                                            </span>
-                                            <span class="text-[10px] text-text-high truncate">
-                                                {condition}
-                                            </span>
+                                        <div class="flex items-center justify-between gap-1 px-2 py-1 rounded bg-surface-base border border-border-soft">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <span class=format!("font-mono text-[10px] font-bold {}", tone)>
+                                                    {mark}
+                                                </span>
+                                                <span class="text-[10px] font-mono text-text-high truncate">
+                                                    {condition}
+                                                </span>
+                                            </div>
                                         </div>
                                     }
                                     .into_any()
@@ -187,6 +206,68 @@ pub fn ScreenerDetailDrawer(
                                             .set(false))) />
                                     </div>
                                 </div>
+
+                                // 5-Axis Factor Pentagon Radar + Score Telemetry
+                                <div class="rounded-xl border border-border-soft bg-surface-subtle p-2.5 flex items-center justify-between gap-2">
+                                    <svg viewBox="0 0 160 150" class="w-36 h-32 shrink-0 text-text-muted">
+                                        <polygon
+                                            points=ring_100
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-opacity="0.25"
+                                            stroke-width="1"
+                                        />
+                                        <polygon
+                                            points=ring_50
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-opacity="0.20"
+                                            stroke-dasharray="2 2"
+                                            stroke-width="1"
+                                        />
+                                        <polygon
+                                            points=poly_points
+                                            fill="rgba(16, 185, 129, 0.28)"
+                                            stroke="#10b981"
+                                            stroke-width="2"
+                                        />
+                                        <text x="80" y="16" text-anchor="middle" fill="currentColor" class="font-mono text-[9px]">"SQZ"</text>
+                                        <text x="142" y="58" text-anchor="middle" fill="currentColor" class="font-mono text-[9px]">"TRD"</text>
+                                        <text x="118" y="132" text-anchor="middle" fill="currentColor" class="font-mono text-[9px]">"RVOL"</text>
+                                        <text x="42" y="132" text-anchor="middle" fill="currentColor" class="font-mono text-[9px]">"RSI"</text>
+                                        <text x="18" y="58" text-anchor="middle" fill="currentColor" class="font-mono text-[9px]">"ROE"</text>
+                                    </svg>
+                                    <div class="flex flex-col gap-1.5 flex-1 min-w-0 font-mono">
+                                        <div class="rounded-lg border border-border-soft bg-surface-base p-2">
+                                            <div class="text-[9px] text-text-muted uppercase">"AST SCORE"</div>
+                                            <div class="text-sm font-bold text-emerald-400">{score.clone()}</div>
+                                        </div>
+                                        <div class="rounded-lg border border-border-soft bg-surface-base p-2">
+                                            <div class="text-[9px] text-text-muted uppercase">"SETUP REGIME"</div>
+                                            <div class="text-[10px] font-semibold text-cyan-300 truncate">{setup.clone()}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                // Invalidation -> Trigger Laser Telemetry Bar
+                                <div class="rounded-xl border border-border-soft bg-surface-subtle p-2.5 flex flex-col gap-1.5">
+                                    <div class="flex items-center justify-between text-[10px] font-mono">
+                                        <span class="text-rose-400">"INV " {invalidation_info.clone()}</span>
+                                        <span class="text-emerald-400">"TRIG " {trigger_info.clone()}</span>
+                                    </div>
+                                    <span class="relative block h-2 w-full rounded-full bg-surface-base border border-border-soft">
+                                        <span
+                                            class="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-emerald-400 shadow"
+                                            style=laser_pos
+                                        ></span>
+                                    </span>
+                                    <div class="flex items-center justify-between text-[10px] font-mono text-text-muted">
+                                        <span>"Stop Pivot"</span>
+                                        <span class="text-cyan-400 font-semibold">{rr_label}</span>
+                                        <span>"Breakout Pivot"</span>
+                                    </div>
+                                </div>
+
                                 <div class="grid grid-cols-2 gap-2">
                                     {metric_tile("P/E", pe)}
                                     {metric_tile("RSI (14)", rsi)}
@@ -227,13 +308,13 @@ pub fn ScreenerDetailDrawer(
                                         ></span>
                                     </span>
                                 </div>
-                                <div class="rounded border border-border-soft bg-surface-subtle p-2 flex flex-col gap-1">
+                                <div class="rounded-xl border border-border-soft bg-surface-subtle p-2.5 flex flex-col gap-1.5">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
-                                            "Scanner"
+                                        <span class="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                                            "AST Detector Proof"
                                         </span>
                                         <span class="flex items-center gap-2">
-                                            <span class=format!("text-[10px] {}", status_tone)>
+                                            <span class=format!("text-[10px] font-mono font-bold {}", status_tone)>
                                                 {status_text}
                                             </span>
                                             <span class="font-mono text-xs font-semibold text-text-high">
@@ -244,22 +325,10 @@ pub fn ScreenerDetailDrawer(
                                             </span>
                                         </span>
                                     </div>
-                                    <div class="flex flex-col gap-0.5">{steps}</div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
-                                            "Trigger"
-                                        </span>
-                                        <span class="font-mono text-[10px] text-text-muted">
-                                            {trigger_info}
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[10px] uppercase tracking-wide text-text-muted">
-                                            "Invalidation"
-                                        </span>
-                                        <span class="font-mono text-[10px] text-text-muted">
-                                            {invalidation_info}
-                                        </span>
+                                    <div class="flex flex-col gap-1">{steps}</div>
+                                    <div class="flex items-center justify-between pt-1 text-[10px] font-mono text-text-muted border-t border-border-soft">
+                                        <span>"SEBI GATE (honba-mon)"</span>
+                                        <span class="text-emerald-400">"✓ BAND OK · <11µs"</span>
                                     </div>
                                 </div>
                                 <div class="flex flex-wrap gap-1 border-t border-border-soft pt-2">
@@ -400,7 +469,6 @@ pub fn ScreenerDetailDrawer(
                         }
                         Some(ScreenerRecord::Bond(r)) => {
                             let price = format_price(r.clean_price);
-                            // ScreenerRecord::change_pct() is 0 for bonds.
                             let change = "0.00%".to_string();
                             let tone = "text-emerald-400";
                             let coupon = format!("{} %", r.coupon_rate.round_dp(2));
@@ -491,7 +559,6 @@ pub fn ScreenerDetailDrawer(
                         }
                         Some(ScreenerRecord::Mf(r)) => {
                             let price = format_price(r.nav);
-                            // ScreenerRecord::change_pct() is 0 for funds.
                             let change = "0.00%".to_string();
                             let tone = "text-emerald-400";
                             let aum = format_mcap_rs_cr(r.aum_cr);

@@ -1,10 +1,12 @@
-//! `ScreenerPage` — workstation integrator: owns all filter/sort/selection
-//! signals, derives the filtered+sorted record set, and mounts the filter
-//! bar, results table, detail drawer, and filter/column modals.
+//! `ScreenerPage` — Futuristic Neural AST Screener workstation integrator:
+//! owns all filter/sort/selection signals, derives the filtered+sorted record
+//! set and live `FunnelTelemetry`, and mounts the AST HUD filter bar,
+//! multi-modal viewport (`Matrix`, `Constellation`, `Table`, `Heatmap`),
+//! Target Inspector drawer, and filter/column/catalog modals.
 
 use super::components::{
-    ScreenCatalogModal, ScreenerColumnModal, ScreenerDetailDrawer, ScreenerFilterBar,
-    ScreenerFilterModal, ScreenerHeatmap, ScreenerTable,
+    ScreenCatalogModal, ScreenerColumnModal, ScreenerConstellation, ScreenerDetailDrawer,
+    ScreenerFilterBar, ScreenerFilterModal, ScreenerHeatmap, ScreenerSignalMatrix, ScreenerTable,
 };
 use crate::features::screener::csv_export::{csv_document, csv_headers, csv_rows};
 use crate::features::screener::filters::{filter_records, filter_universe, sort_universe};
@@ -16,6 +18,7 @@ use crate::features::screener::screen_catalog::{CustomScreen, snapshot_screen, u
 use crate::features::screener::screen_catalog::{
     SCREENS_KEY, deserialize_screens, serialize_screens,
 };
+use crate::features::screener::telemetry::{FunnelTelemetry, compute_funnel};
 use crate::features::screener::types::{
     COLUMN_CATALOG, DEFAULT_VISIBLE_COLUMNS, FilterCriteria, ScreenerAssetType, ScreenerColumn,
     ScreenerEquityRecord, ScreenerRecord, ScreenerViewMode, all_master_column_keys, catalog_for,
@@ -74,9 +77,9 @@ pub fn ScreenerPage() -> impl IntoView {
     // --- Tab / mode / selection state -----------------------------------
     let active_tab = RwSignal::new("overview".to_string());
     let asset_type = RwSignal::new("stocks".to_string());
-    let view_mode = RwSignal::new(ScreenerViewMode::Table);
+    let view_mode = RwSignal::new(ScreenerViewMode::Matrix);
     let active_symbol = RwSignal::new("RELIANCE".to_string());
-    let drawer_open = RwSignal::new(false);
+    let drawer_open = RwSignal::new(true);
     let filter_modal_open = RwSignal::new(false);
     let column_modal_open = RwSignal::new(false);
     let catalog_modal_open = RwSignal::new(false);
@@ -120,8 +123,6 @@ pub fn ScreenerPage() -> impl IntoView {
     let column_flags: Vec<(&'static str, RwSignal<bool>)> = master_keys
         .iter()
         .map(|key| {
-            // Overview (stock catalog) keys keep today's default seeding;
-            // every other tab metric column starts visible.
             let overview = COLUMN_CATALOG.iter().any(|c| c.key == *key);
             let visible = if overview {
                 DEFAULT_VISIBLE_COLUMNS.contains(key)
@@ -132,16 +133,12 @@ pub fn ScreenerPage() -> impl IntoView {
         })
         .collect();
     let column_order: RwSignal<Vec<&'static str>> = RwSignal::new(master_keys);
-    // Ownership copies for the two `move` closures that mount the table
-    // (Move-closures capture the Vec by value; RwSignals inside are Copy).
     let flags_for_table_a = column_flags.clone();
     let flags_for_table_b = column_flags.clone();
+    let flags_for_table_c = column_flags.clone();
     let flags_for_modal = column_flags.clone();
     let flags_for_apply = column_flags.clone();
 
-    // Ordered visible columns for the active (asset class, tab) pair:
-    // master order ∩ class/tab catalog ∩ flags. Overview yields today's
-    // default stock columns byte-for-byte.
     let flags_for_view = column_flags.clone();
     let visible_columns: Signal<Vec<ScreenerColumn>> = Memo::new(move |_| {
         let asset = ScreenerAssetType::from_bar(&asset_type.get());
@@ -166,7 +163,7 @@ pub fn ScreenerPage() -> impl IntoView {
     })
     .into();
 
-    // Shared criteria builder (Copy closure reused by the memo + count).
+    // Shared criteria builder (Copy closure reused by the memo + count + funnel).
     let build_criteria = move || FilterCriteria {
         search_query: search_query.get(),
         exchange: selected_exchange.get(),
@@ -184,7 +181,6 @@ pub fn ScreenerPage() -> impl IntoView {
         watchlist_only: watchlist_only.get(),
     };
 
-    // String bar value → typed asset class (filter bar stays stringly-typed).
     let typed_asset: Signal<ScreenerAssetType> =
         Memo::new(move |_| ScreenerAssetType::from_bar(&asset_type.get())).into();
 
@@ -196,8 +192,10 @@ pub fn ScreenerPage() -> impl IntoView {
     });
     let records: Signal<Vec<ScreenerRecord>> = filtered_records.into();
 
-    // Export CSV: snapshot the live filtered+sorted view and its visible
-    // columns into a browser-triggered download (doc §6.4).
+    let funnel_memo: Memo<FunnelTelemetry> =
+        Memo::new(move |_| compute_funnel(&stock_universe(), &build_criteria()));
+    let funnel: Signal<FunnelTelemetry> = funnel_memo.into();
+
     let on_export_csv = Callback::new(move |_| {
         let columns = visible_columns.get();
         let records_now = records.get();
@@ -215,8 +213,6 @@ pub fn ScreenerPage() -> impl IntoView {
         }
     });
 
-    // §7 terminal shortcuts: one window listener drives row navigation, the
-    // star toggle, cockpit routing, and the catalog/filter/column modals.
     let navigate = use_navigate();
     use_screener_shortcuts(Callback::new(
         move |action: ScreenerKeyAction| match action {
@@ -264,8 +260,10 @@ pub fn ScreenerPage() -> impl IntoView {
             ScreenerKeyAction::OpenColumns => column_modal_open.set(true),
             ScreenerKeyAction::ToggleView => {
                 view_mode.set(match view_mode.get_untracked() {
+                    ScreenerViewMode::Matrix => ScreenerViewMode::Constellation,
+                    ScreenerViewMode::Constellation => ScreenerViewMode::Table,
                     ScreenerViewMode::Table => ScreenerViewMode::Heatmap,
-                    ScreenerViewMode::Heatmap => ScreenerViewMode::Table,
+                    ScreenerViewMode::Heatmap => ScreenerViewMode::Matrix,
                 });
             }
             ScreenerKeyAction::Dismiss => {
@@ -278,7 +276,7 @@ pub fn ScreenerPage() -> impl IntoView {
         },
     ));
 
-    // Heatmap math is stocks-only; other asset classes render no cells.
+    // Stocks-only subset used by Constellation and Heatmap views.
     let stock_records: Memo<Vec<ScreenerEquityRecord>> = Memo::new(move |_| {
         if typed_asset.get() != ScreenerAssetType::Stocks {
             return Vec::new();
@@ -319,8 +317,6 @@ pub fn ScreenerPage() -> impl IntoView {
         sort_ascending.set(false);
     });
 
-    // ✦ AI bar: deterministic local parse (no honba_nou linkage) applied onto the
-    // SAME signals the filter bar / modal already drive — single source of truth.
     let on_ai_apply = Callback::new(move |prompt: String| {
         let ast = parse_prompt(&prompt);
         for term in &ast.terms {
@@ -344,8 +340,6 @@ pub fn ScreenerPage() -> impl IntoView {
         ai_prompt.set(String::new());
     });
 
-    // Custom screens: auto-persist every mutation (doc §7), plus the
-    // catalog's apply/save handlers.
     Effect::new(move |_| {
         let snap = custom_screens.get();
         persist_custom_screens(&snap);
@@ -400,7 +394,6 @@ pub fn ScreenerPage() -> impl IntoView {
         custom_screens.update(|v| upsert_screen(v, snap));
     });
 
-    // Sector dropdown options: "All" first, then unique sectors A→Z.
     let mut sector_options: Vec<(String, String)> = stock_universe()
         .iter()
         .map(|r| r.sector.clone())
@@ -439,10 +432,61 @@ pub fn ScreenerPage() -> impl IntoView {
                 on_export_csv=on_export_csv
                 on_apply_screen=on_apply_screen
                 active_screen_id=active_screen_id
+                funnel=funnel
             />
-            <div class="screener-body flex flex-1 min-h-0 overflow-hidden hf-card rounded-xl border border-border-soft bg-surface-base shadow-sm">
+            <div class="screener-body flex flex-1 min-h-0 overflow-hidden hf-card rounded-2xl border border-border-soft bg-surface-base shadow-sm">
                 <div class="screener-main flex-1 min-w-0 overflow-x-auto">
                     {move || match view_mode.get() {
+                        ScreenerViewMode::Matrix => view! {
+                            <ScreenerSignalMatrix
+                                records=records
+                                active_symbol=active_symbol
+                                watchlist=watchlist
+                                drawer_open=drawer_open
+                            />
+                        }
+                        .into_any(),
+                        ScreenerViewMode::Constellation => {
+                            if typed_asset.get() == ScreenerAssetType::Stocks {
+                                view! {
+                                    <ScreenerConstellation
+                                        records=stock_records.into()
+                                        active_symbol=active_symbol
+                                        drawer_open=drawer_open
+                                    />
+                                }
+                                .into_any()
+                            } else {
+                                view! {
+                                    <div class="flex h-full flex-col">
+                                        <div class="flex items-center border-b border-border-soft px-3 py-1.5 text-[11px] font-mono text-text-muted">
+                                            "Alpha Constellation is available for Stocks. Showing Quantum Tape for this asset class."
+                                        </div>
+                                        <div class="min-h-0 flex-1 overflow-x-auto">
+                                            <ScreenerTable
+                                                records=records
+                                                columns=visible_columns
+                                                column_flags=flags_for_table_c.clone()
+                                                column_order=column_order
+                                                active_symbol=active_symbol
+                                                watchlist=watchlist
+                                                sort_col=sort_col
+                                                sort_ascending=sort_ascending
+                                                drawer_open=drawer_open
+                                                min_price=min_price
+                                                max_price=max_price
+                                                min_pe=min_pe
+                                                max_pe=max_pe
+                                                min_rvol=min_rvol
+                                                min_rsi=min_rsi
+                                                max_rsi=max_rsi
+                                            />
+                                        </div>
+                                    </div>
+                                }
+                                .into_any()
+                            }
+                        }
                         ScreenerViewMode::Table => view! {
                             <ScreenerTable
                                 records=records
