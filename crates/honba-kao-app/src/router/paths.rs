@@ -4,6 +4,7 @@ pub const ROUTE_HOME: &str = "/";
 pub const ROUTE_LANDING: &str = "/landing";
 pub const ROUTE_AUTH: &str = "/auth";
 pub const ROUTE_ACCOUNT: &str = "/account";
+pub const ROUTE_COMPONENTS: &str = "/components";
 
 // Trading Cockpit
 pub const ROUTE_TRADING_COCKPIT: &str = "/trading";

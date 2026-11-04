@@ -1,7 +1,4 @@
 //! Tier 2: MOLECULES — Quantitative & Terminal specific.
-//!
-//! NSH port (Phase 2, see `nsh-port.md` §4): still Leptos, not yet ported.
-//! Uncomment each line as its file is converted.
 
 pub mod agent_console;
 pub mod artifact_card;

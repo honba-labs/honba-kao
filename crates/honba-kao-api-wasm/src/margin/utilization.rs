@@ -12,7 +12,10 @@ pub struct MarginUtilization {
     pub is_critical: bool,
 }
 
-pub fn calculate_margin_utilization(total_collateral: Decimal, margin_used: Decimal) -> MarginUtilization {
+pub fn calculate_margin_utilization(
+    total_collateral: Decimal,
+    margin_used: Decimal,
+) -> MarginUtilization {
     let margin_available = (total_collateral - margin_used).max(Decimal::ZERO);
     let ratio = if total_collateral > Decimal::ZERO {
         (margin_used / total_collateral) * dec!(100.0)

@@ -1,6 +1,4 @@
 //! Tier 2: MOLECULES — Mutual Funds & Wealth specific.
-//!
-//! NSH port (Phase 2, see `nsh-port.md` §4): all of `wealth` is ported.
 
 pub mod asset_allocation_bar;
 pub mod overlap_pill;

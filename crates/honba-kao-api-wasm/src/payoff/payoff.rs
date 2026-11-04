@@ -106,7 +106,10 @@ impl PayoffEngine {
         }
         let min_strike = strikes.iter().cloned().fold(Decimal::MAX, Decimal::min);
         let max_strike = strikes.iter().cloned().fold(Decimal::ZERO, Decimal::max);
-        ((min_strike * dec!(0.5)).max(Decimal::ZERO), max_strike * dec!(1.5))
+        (
+            (min_strike * dec!(0.5)).max(Decimal::ZERO),
+            max_strike * dec!(1.5),
+        )
     }
 
     /// Run the payoff evaluation over the configured spot window.
@@ -131,11 +134,7 @@ impl PayoffEngine {
         }
 
         let breakeven = Self::find_breakevens(&points);
-        let symbols: Vec<String> = self
-            .legs
-            .iter()
-            .map(|l| l.symbol.clone())
-            .collect();
+        let symbols: Vec<String> = self.legs.iter().map(|l| l.symbol.clone()).collect();
 
         PayoffResult {
             symbols,
@@ -171,7 +170,10 @@ impl PayoffEngine {
                     be.push(spot);
                 }
             } else if p0.pnl.is_zero() {
-                if be.last().map_or(true, |last| (p0.spot - *last).abs() >= eps) {
+                if be
+                    .last()
+                    .map_or(true, |last| (p0.spot - *last).abs() >= eps)
+                {
                     be.push(p0.spot);
                 }
             }
@@ -180,7 +182,10 @@ impl PayoffEngine {
         // #60: boundary zero-crossing - inspect the final point too.
         if let Some(last) = points.last() {
             if last.pnl.is_zero() {
-                if be.last().map_or(true, |last_b| (last.spot - *last_b).abs() >= eps) {
+                if be
+                    .last()
+                    .map_or(true, |last_b| (last.spot - *last_b).abs() >= eps)
+                {
                     be.push(last.spot);
                 }
             }

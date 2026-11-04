@@ -3,8 +3,8 @@ use honba_kao_ui_core::molecules::quant::{AgentThoughtStep, HfAgentConsole, HfGo
 use leptos::prelude::*;
 use leptos_router::components::Outlet;
 use leptos_router::hooks::use_navigate;
-use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::closure::Closure;
 use web_sys::KeyboardEvent;
 
 #[component]
@@ -62,10 +62,7 @@ pub fn AppChrome() -> impl IntoView {
     let _keydown_closure = Closure::wrap(Box::new(on_keydown) as Box<dyn FnMut(KeyboardEvent)>);
     if let Some(window) = web_sys::window() {
         let _ = window
-            .add_event_listener_with_callback(
-                "keydown",
-                _keydown_closure.as_ref().unchecked_ref(),
-            )
+            .add_event_listener_with_callback("keydown", _keydown_closure.as_ref().unchecked_ref())
             .map(|_| {
                 // Forget the closure so it lives for the window's lifetime.
                 std::mem::forget(_keydown_closure);

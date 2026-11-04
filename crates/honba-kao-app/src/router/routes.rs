@@ -20,10 +20,14 @@ pub fn AppRouter() -> impl IntoView {
             <Routes fallback=|| view! { <div class="p-6 text-sm text-text-muted">"404 - Page Not Found"</div> }>
                 <ParentRoute path=path!("") view=AppChrome>
                     // System Pages
-                    <Route path=path!("") view=HomePage />
+                    // Default route: the screener workstation is the app home.
+                    <Route path=path!("") view=ScreenerPage />
                     <Route path=path!("landing") view=LandingPage />
                     <Route path=path!("auth") view=AuthPage />
                     <Route path=path!("account") view=AccountPage />
+                    <Route path=path!("components") view=ComponentsPage />
+                    <Route path=path!("design-system") view=ComponentsPage />
+                    <Route path=path!("showcase") view=ComponentsPage />
 
                     // Cluster 1: Trading Cockpit
                     <Route path=path!("trading") view=CockpitPage />

@@ -3,7 +3,9 @@
 //! Covers the replay clock, fill simulation models, and the replay journal.
 //! All monetary math uses `rust_decimal::Decimal` (#54).
 
-use honba_api_wasm::replay::{FillModel, ReplayClock, ReplayEvent, ReplayJournal, simulate_fill_price};
+use honba_api_wasm::replay::{
+    FillModel, ReplayClock, ReplayEvent, ReplayJournal, simulate_fill_price,
+};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 
@@ -48,19 +50,31 @@ fn clock_slow_motion_advances_via_remainder() {
     clock.tick();
     let after_first = clock.current_timestamp;
     clock.tick();
-    assert!(clock.current_timestamp > after_first, "clock must advance at 0.5x speed");
+    assert!(
+        clock.current_timestamp > after_first,
+        "clock must advance at 0.5x speed"
+    );
 }
 
 #[test]
 fn fill_immediate_uses_order_price() {
-    assert_eq!(simulate_fill_price(Some(d(100.0)), d(110.0), true, FillModel::Immediate), d(100.0));
+    assert_eq!(
+        simulate_fill_price(Some(d(100.0)), d(110.0), true, FillModel::Immediate),
+        d(100.0)
+    );
     // no order price -> market
-    assert_eq!(simulate_fill_price(None, d(110.0), true, FillModel::Immediate), d(110.0));
+    assert_eq!(
+        simulate_fill_price(None, d(110.0), true, FillModel::Immediate),
+        d(110.0)
+    );
 }
 
 #[test]
 fn fill_next_open_uses_market() {
-    assert_eq!(simulate_fill_price(Some(d(100.0)), d(110.0), true, FillModel::NextOpen), d(110.0));
+    assert_eq!(
+        simulate_fill_price(Some(d(100.0)), d(110.0), true, FillModel::NextOpen),
+        d(110.0)
+    );
 }
 
 // #61: a limit buy cannot fill above its limit price; a limit sell cannot fill
@@ -79,9 +93,21 @@ fn fill_slippage_capped_at_limit() {
 #[test]
 fn journal_next_event_until_advances_cursor() {
     let events = vec![
-        ReplayEvent { timestamp: 100, event_type: "a".into(), payload_json: "{}".into() },
-        ReplayEvent { timestamp: 200, event_type: "b".into(), payload_json: "{}".into() },
-        ReplayEvent { timestamp: 300, event_type: "c".into(), payload_json: "{}".into() },
+        ReplayEvent {
+            timestamp: 100,
+            event_type: "a".into(),
+            payload_json: "{}".into(),
+        },
+        ReplayEvent {
+            timestamp: 200,
+            event_type: "b".into(),
+            payload_json: "{}".into(),
+        },
+        ReplayEvent {
+            timestamp: 300,
+            event_type: "c".into(),
+            payload_json: "{}".into(),
+        },
     ];
     let mut journal = ReplayJournal::new(events);
     let e1 = journal.next_event_until(150).unwrap();
@@ -99,9 +125,21 @@ fn journal_next_event_until_advances_cursor() {
 #[test]
 fn journal_sorts_out_of_order_events() {
     let events = vec![
-        ReplayEvent { timestamp: 300, event_type: "c".into(), payload_json: "{}".into() },
-        ReplayEvent { timestamp: 100, event_type: "a".into(), payload_json: "{}".into() },
-        ReplayEvent { timestamp: 200, event_type: "b".into(), payload_json: "{}".into() },
+        ReplayEvent {
+            timestamp: 300,
+            event_type: "c".into(),
+            payload_json: "{}".into(),
+        },
+        ReplayEvent {
+            timestamp: 100,
+            event_type: "a".into(),
+            payload_json: "{}".into(),
+        },
+        ReplayEvent {
+            timestamp: 200,
+            event_type: "b".into(),
+            payload_json: "{}".into(),
+        },
     ];
     let mut journal = ReplayJournal::new(events);
     assert_eq!(journal.next_event_until(150).unwrap().event_type, "a");
@@ -111,7 +149,11 @@ fn journal_sorts_out_of_order_events() {
 
 #[test]
 fn journal_reset() {
-    let events = vec![ReplayEvent { timestamp: 100, event_type: "a".into(), payload_json: "{}".into() }];
+    let events = vec![ReplayEvent {
+        timestamp: 100,
+        event_type: "a".into(),
+        payload_json: "{}".into(),
+    }];
     let mut journal = ReplayJournal::new(events);
     journal.next_event_until(200);
     journal.reset();

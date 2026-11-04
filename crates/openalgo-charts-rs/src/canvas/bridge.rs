@@ -97,12 +97,7 @@ pub fn mount_static(_element: &web_sys::HtmlElement) -> Result<f64, JsValue> {
 
 /// `setSeries(id, kind, style_json, bars_json)` — replace a series' data.
 #[cfg(target_arch = "wasm32")]
-pub fn set_series(
-    id: f64,
-    kind: &str,
-    style_json: &str,
-    bars_json: &str,
-) -> Result<bool, JsValue> {
+pub fn set_series(id: f64, kind: &str, style_json: &str, bars_json: &str) -> Result<bool, JsValue> {
     let args = [
         JsValue::from_f64(id),
         JsValue::from_str(kind),

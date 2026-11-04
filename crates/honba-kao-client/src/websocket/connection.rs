@@ -12,13 +12,13 @@
 //! compiles to `wasm32-unknown-unknown` using only `web_sys`/`js_sys` browser
 //! APIs.
 
+use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
-use std::cell::RefCell;
 
 use js_sys::Date;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::*;
 use web_sys::{CloseEvent, MessageEvent, WebSocket};
 
 /// A lifecycle event delivered to the `on_event` handler.
@@ -125,8 +125,7 @@ impl WsConnection {
     /// Create the underlying `WebSocket` and register its event handlers.
     fn open_socket(state: &Rc<RefCell<Inner>>) -> Result<(), String> {
         let url = { state.borrow().url.clone() };
-        let ws =
-            WebSocket::new(&url).map_err(|e| format!("WebSocket creation failed: {e:?}"))?;
+        let ws = WebSocket::new(&url).map_err(|e| format!("WebSocket creation failed: {e:?}"))?;
         Self::register_handlers(state, &ws);
         state.borrow_mut().ws = Some(ws);
         Ok(())
@@ -159,12 +158,7 @@ impl WsConnection {
 
         let onclose_state = state.clone();
         let onclose = Closure::<dyn FnMut(CloseEvent)>::new(move |e: CloseEvent| {
-            let _ = on_close(
-                &onclose_state,
-                e.was_clean(),
-                e.code(),
-                e.reason(),
-            );
+            let _ = on_close(&onclose_state, e.was_clean(), e.code(), e.reason());
         });
         ws.set_onclose(Some(onclose.as_ref().unchecked_ref()));
         onclose.forget();
@@ -257,15 +251,17 @@ impl WsConnection {
             let mut s = state.borrow_mut();
             s.reconnect_attempts += 1;
             let delay = s.next_delay_ms;
-            s.next_delay_ms =
-                ((s.next_delay_ms as f64) * s.config.backoff_multiplier)
-                    .min(s.config.max_backoff_ms as f64) as u32;
+            s.next_delay_ms = ((s.next_delay_ms as f64) * s.config.backoff_multiplier)
+                .min(s.config.max_backoff_ms as f64) as u32;
             (s.reconnect_attempts, delay)
         };
 
         {
             let mut s = state.borrow_mut();
-            (s.on_event)(WsEvent::Reconnecting { attempt, delay_ms: delay });
+            (s.on_event)(WsEvent::Reconnecting {
+                attempt,
+                delay_ms: delay,
+            });
         }
 
         let closure_state = state.clone();
@@ -273,12 +269,10 @@ impl WsConnection {
             let _ = Self::do_reconnect(&closure_state);
         });
         if let Some(window) = web_sys::window() {
-            if let Ok(handle) = window
-                .set_timeout_with_callback_and_timeout_and_arguments_0(
-                    timer.as_ref().unchecked_ref(),
-                    delay as i32,
-                )
-            {
+            if let Ok(handle) = window.set_timeout_with_callback_and_timeout_and_arguments_0(
+                timer.as_ref().unchecked_ref(),
+                delay as i32,
+            ) {
                 timer.forget();
                 state.borrow_mut().reconnect_timer = Some(handle);
             }
@@ -305,12 +299,10 @@ impl WsConnection {
             }
         });
         if let Some(window) = web_sys::window() {
-            if let Ok(handle) = window
-                .set_interval_with_callback_and_timeout_and_arguments_0(
-                    timer.as_ref().unchecked_ref(),
-                    interval as i32,
-                )
-            {
+            if let Ok(handle) = window.set_interval_with_callback_and_timeout_and_arguments_0(
+                timer.as_ref().unchecked_ref(),
+                interval as i32,
+            ) {
                 timer.forget();
                 state.borrow_mut().heartbeat_timer = Some(handle);
             }
@@ -451,7 +443,11 @@ fn on_close(
         s.ws = None;
         (s.on_event)(WsEvent::Close {
             code: Some(code),
-            reason: if reason.is_empty() { None } else { Some(reason) },
+            reason: if reason.is_empty() {
+                None
+            } else {
+                Some(reason)
+            },
             was_clean,
         });
         if s.closed {
@@ -481,8 +477,7 @@ mod tests {
         };
         let mut delay = cfg.initial_backoff_ms;
         for _ in 0..6 {
-            delay =
-                ((delay as f64) * cfg.backoff_multiplier).min(cfg.max_backoff_ms as f64) as u32;
+            delay = ((delay as f64) * cfg.backoff_multiplier).min(cfg.max_backoff_ms as f64) as u32;
         }
         assert_eq!(delay, cfg.max_backoff_ms);
     }

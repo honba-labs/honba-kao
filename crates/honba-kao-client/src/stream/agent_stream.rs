@@ -17,8 +17,7 @@ pub struct AgentStep {
 }
 
 pub fn connect_agent_stream(url: &str) -> Result<SseStream<AgentStep>, String> {
-    let es =
-        EventSource::new(url).map_err(|e| format!("Failed to create EventSource: {e:?}"))?;
+    let es = EventSource::new(url).map_err(|e| format!("Failed to create EventSource: {e:?}"))?;
     let (tx, rx) = futures_channel::mpsc::unbounded::<AgentStep>();
 
     let onmessage = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {

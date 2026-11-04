@@ -1,33 +1,24 @@
-use honba_kao_ui_core::primitive::{ButtonSize, ButtonVariant, HfButton};
-use leptos::prelude::*;
+//! Screener feature components: filter bar, results table, detail drawer,
+//! granular filter modal, column configuration modal, and market heatmap.
 
-#[component]
-pub fn ScreenerHeroDeck() -> impl IntoView {
-    view! {
-        <div class="screener-hero-deck grid grid-cols-1 laptop:grid-cols-4 gap-3 mb-4">
-            <div class="p-3 rounded border border-border-soft bg-surface-base">
-                <span class="text-[10px] text-text-muted uppercase">"Total Filtered"</span>
-                <div class="text-base font-bold font-mono text-text-high">"142 / 2,150"</div>
-            </div>
-            <div class="p-3 rounded border border-border-soft bg-surface-base">
-                <span class="text-[10px] text-text-muted uppercase">"Top Sector"</span>
-                <div class="text-base font-bold font-mono text-emerald-400">"IT & Software (+2.4%)"</div>
-            </div>
-            <div class="p-3 rounded border border-border-soft bg-surface-base">
-                <span class="text-[10px] text-text-muted uppercase">"Median P/E"</span>
-                <div class="text-base font-bold font-mono text-text-high">"22.8"</div>
-            </div>
-            <div class="p-3 rounded border border-border-soft bg-surface-base">
-                <span class="text-[10px] text-text-muted uppercase">"Active Presets"</span>
-                <div class="flex items-center gap-1 mt-1">
-                    <HfButton
-                        variant=ButtonVariant::Tertiary
-                        size=ButtonSize::Xxs
-                    >
-                        "High Growth"
-                    </HfButton>
-                </div>
-            </div>
-        </div>
-    }
-}
+pub mod column_header_menu;
+pub mod column_modal;
+pub mod constellation;
+pub mod detail_drawer;
+pub mod filter_bar;
+pub mod filter_modal;
+pub mod screen_catalog_modal;
+pub mod screener_heatmap;
+pub mod screener_table;
+pub mod signal_matrix;
+
+pub use column_header_menu::{ColumnHeaderMenu, MoveDirection};
+pub use column_modal::ScreenerColumnModal;
+pub use constellation::ScreenerConstellation;
+pub use detail_drawer::ScreenerDetailDrawer;
+pub use filter_bar::ScreenerFilterBar;
+pub use filter_modal::ScreenerFilterModal;
+pub use screen_catalog_modal::ScreenCatalogModal;
+pub use screener_heatmap::ScreenerHeatmap;
+pub use screener_table::ScreenerTable;
+pub use signal_matrix::ScreenerSignalMatrix;

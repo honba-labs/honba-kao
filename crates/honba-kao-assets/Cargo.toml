@@ -1,0 +1,25 @@
+[package]
+name = "honba-kao-assets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Centralized static assets, fonts, audio cues, and themes for Honba Kao"
+
+[dependencies]
+nsh-core.workspace = true
+nsh-base.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+sha2.workspace = true
+
+# Optional sound playback for native desktop
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rodio = { version = "0.19", optional = true }
+
+[features]
+default = []
+audio = ["dep:rodio"]

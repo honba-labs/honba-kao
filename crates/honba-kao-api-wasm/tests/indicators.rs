@@ -60,7 +60,9 @@ fn rsi_length_matches_input() {
 
 #[test]
 fn rsi_in_bounds() {
-    let prices: Vec<f64> = (0..60).map(|i| 100.0 + (i as f64 % 7.0 - 3.0) * 2.0).collect();
+    let prices: Vec<f64> = (0..60)
+        .map(|i| 100.0 + (i as f64 % 7.0 - 3.0) * 2.0)
+        .collect();
     let rsi = calculate_rsi(&prices, 14);
     for v in rsi.iter().flatten() {
         assert!(*v >= 0.0 && *v <= 100.0);

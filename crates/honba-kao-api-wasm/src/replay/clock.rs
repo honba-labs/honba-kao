@@ -25,8 +25,7 @@ impl ReplayClock {
 
     pub fn tick(&mut self) -> i64 {
         if self.is_running {
-            let advance_f =
-                self.step_ms as f64 * self.speed_multiplier + self.remainder_ms;
+            let advance_f = self.step_ms as f64 * self.speed_multiplier + self.remainder_ms;
             let advance = advance_f as i64;
             self.remainder_ms = advance_f - advance as f64;
             self.current_timestamp += advance;

@@ -16,7 +16,9 @@ pub mod types;
 #[cfg(feature = "leptos")]
 pub mod leptos;
 
-pub use canvas::{CanvasEngine, ChartId, SeriesKind, SeriesStyle, StreamingBarChart, StreamingCandleChart};
+pub use canvas::{
+    CanvasEngine, ChartId, SeriesKind, SeriesStyle, StreamingBarChart, StreamingCandleChart,
+};
 pub use chart::ChartController;
 pub use curves::{SpreadBand, TermStructure, YieldCurve, YieldPoint};
 pub use depth::{DepthLadder, DepthLevel, OrderDispatch};

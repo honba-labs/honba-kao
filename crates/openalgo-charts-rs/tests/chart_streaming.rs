@@ -72,7 +72,10 @@ fn candle_push_meets_100_tps_budget() {
 
     let start = Instant::now();
     for i in 0..N {
-        chart.push(candle(i as i64, dec!(100.0) + Decimal::from(i as i64) * dec!(0.01)));
+        chart.push(candle(
+            i as i64,
+            dec!(100.0) + Decimal::from(i as i64) * dec!(0.01),
+        ));
     }
     let elapsed = start.elapsed();
     let per_tick = elapsed / N as u32;
@@ -98,7 +101,10 @@ fn full_commit_serialisation_meets_60_fps_budget() {
     const N: usize = 2_000;
     let mut chart = StreamingCandleChart::new(fake_canvas(), N);
     for i in 0..N {
-        chart.push(candle(i as i64, dec!(100.0) + Decimal::from(i as i64) * dec!(0.01)));
+        chart.push(candle(
+            i as i64,
+            dec!(100.0) + Decimal::from(i as i64) * dec!(0.01),
+        ));
     }
 
     let candles: Vec<CandleData> = chart.candles().iter().cloned().collect();
@@ -128,7 +134,10 @@ fn update_last_is_cheaper_than_full_commit() {
 
     let mut chart = StreamingCandleChart::new(fake_canvas(), N);
     for i in 0..N {
-        chart.push(candle(i as i64, dec!(100.0) + Decimal::from(i as i64) * dec!(0.01)));
+        chart.push(candle(
+            i as i64,
+            dec!(100.0) + Decimal::from(i as i64) * dec!(0.01),
+        ));
     }
 
     // "Full commit" cost: re-serialise the entire buffer, as `commit` does.

@@ -9,10 +9,20 @@ use rust_decimal_macros::dec;
 
 #[test]
 fn haircut_ranking() {
-    assert!(get_standard_haircut(AssetClass::Cash) < get_standard_haircut(AssetClass::GovernmentBonds));
-    assert!(get_standard_haircut(AssetClass::GovernmentBonds) < get_standard_haircut(AssetClass::LargeCapEquity));
-    assert!(get_standard_haircut(AssetClass::LargeCapEquity) < get_standard_haircut(AssetClass::SmallCapEquity));
-    assert!(get_standard_haircut(AssetClass::Crypto) > get_standard_haircut(AssetClass::SmallCapEquity));
+    assert!(
+        get_standard_haircut(AssetClass::Cash) < get_standard_haircut(AssetClass::GovernmentBonds)
+    );
+    assert!(
+        get_standard_haircut(AssetClass::GovernmentBonds)
+            < get_standard_haircut(AssetClass::LargeCapEquity)
+    );
+    assert!(
+        get_standard_haircut(AssetClass::LargeCapEquity)
+            < get_standard_haircut(AssetClass::SmallCapEquity)
+    );
+    assert!(
+        get_standard_haircut(AssetClass::Crypto) > get_standard_haircut(AssetClass::SmallCapEquity)
+    );
 }
 
 #[test]
@@ -29,7 +39,10 @@ fn collateral_value_applies_haircut() {
         dec!(8000)
     );
     // 100% haircut => 0
-    assert_eq!(calculate_collateral_value(dec!(100), dec!(100), dec!(1.0)), dec!(0));
+    assert_eq!(
+        calculate_collateral_value(dec!(100), dec!(100), dec!(1.0)),
+        dec!(0)
+    );
     // clamped: never negative
     assert!(calculate_collateral_value(dec!(100), dec!(100), dec!(1.5)) >= dec!(0));
 }
@@ -40,7 +53,10 @@ fn fno_margin_spread_discount() {
     let spread = calculate_fno_margin(dec!(1_000_000), true);
     assert_eq!(spread.span_margin, normal.span_margin * dec!(0.30));
     assert_eq!(spread.initial_margin, normal.initial_margin * dec!(0.30));
-    assert_eq!(spread.maintenance_margin, normal.maintenance_margin * dec!(0.30));
+    assert_eq!(
+        spread.maintenance_margin,
+        normal.maintenance_margin * dec!(0.30)
+    );
 }
 
 #[test]
@@ -67,7 +83,13 @@ fn vol_target_size() {
 
 #[test]
 fn position_sizing_recommends_min() {
-    let ps = calculate_position_sizing(dec!(1_000_000), dec!(0.6), dec!(2.0), dec!(0.10), dec!(0.20));
+    let ps = calculate_position_sizing(
+        dec!(1_000_000),
+        dec!(0.6),
+        dec!(2.0),
+        dec!(0.10),
+        dec!(0.20),
+    );
     // kelly=0.4, half=0.2 => 200k; vol target=500k; recommended=min=200k
     assert_eq!(ps.kelly_fraction, dec!(0.4));
     assert_eq!(ps.recommended_notional, dec!(200_000));

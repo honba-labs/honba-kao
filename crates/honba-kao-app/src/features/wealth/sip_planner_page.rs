@@ -1,5 +1,5 @@
-use honba_kao_ui_core::{Decimal, molecules::wealth::HfSipCalculatorCard};
 use honba_kao_ui_core::templates::{HfPage, HfTwoColumnSplitLayout};
+use honba_kao_ui_core::{Decimal, molecules::wealth::HfSipCalculatorCard};
 use leptos::prelude::*;
 
 #[component]

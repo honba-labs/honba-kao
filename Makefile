@@ -1,4 +1,4 @@
-.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod lint-design-system lint-a11y clean
+.PHONY: default build build-dev build-prod build-release build-debug dev dev-prod release debug check check-dev check-prod serve serve-all serve-prod serve-dev gen-css lint-design-system lint-a11y clean
 
 # Default profile is 'prod' (no debug build unless asked for specifically)
 default: prod
@@ -6,29 +6,41 @@ build: build-prod
 
 prod: build-prod
 build-prod:
-	trunk build --config crates/honba-kao-app/Trunk.toml --release
+	trunk build --config Trunk.toml --release
 
 release: build-release
 build-release:
-	trunk build --config crates/honba-kao-app/Trunk.toml --release
+	trunk build --config Trunk.toml --release
 
 dev: build-dev
 build-dev:
-	trunk build --config crates/honba-kao-app/Trunk.toml
+	trunk build --config Trunk.toml
 
 # Debug build is explicit and not run unless asked
 debug: build-debug
 build-debug:
-	trunk build --config crates/honba-kao-app/Trunk.toml
+	trunk build --config Trunk.toml
 
-# Dev server (http://127.0.0.1:8080). Defaults to release mode.
-serve: serve-prod
+# Full stack: honba backend (http://127.0.0.1:8000) + Trunk server
+# (http://127.0.0.1:8080). Ctrl+C tears down BOTH (see scripts/serve-all.sh).
+serve: serve-all
 
+serve-all:
+	./scripts/serve-all.sh
+
+# Regenerate crates/honba-kao-app/assets/style/utilities.css from the class
+# tokens used in the Rust sources (extract -> generate). Run after adding
+# new component markup so its utility classes exist in the stylesheet.
+gen-css:
+	node scripts/extract-classes.js
+	node scripts/gen-utilities.js
+
+# Trunk-only (backend not started): http://127.0.0.1:8080. Release mode.
 serve-prod:
-	trunk serve --config crates/honba-kao-app/Trunk.toml --release
+	trunk serve --config Trunk.toml --release
 
 serve-dev:
-	trunk serve --config crates/honba-kao-app/Trunk.toml
+	trunk serve --config Trunk.toml
 
 check: check-prod lint-design-system lint-a11y
 
@@ -52,4 +64,4 @@ lint-a11y:
 
 clean:
 	rm -rf dist target crates/honba-kao-app/dist
-	trunk clean --config crates/honba-kao-app/Trunk.toml 2>/dev/null || true
+	trunk clean --config Trunk.toml 2>/dev/null || true

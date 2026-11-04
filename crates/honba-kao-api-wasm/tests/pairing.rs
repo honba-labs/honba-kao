@@ -3,7 +3,7 @@
 //! Covers FIFO and LIFO fill-to-trip pairing and `TradeTrip` P&L extraction.
 //! All monetary math uses `rust_decimal::Decimal` (#54).
 
-use honba_api_wasm::pairing::{pair_fills_fifo, pair_fills_lifo, Fill, TradeTrip};
+use honba_api_wasm::pairing::{Fill, TradeTrip, pair_fills_fifo, pair_fills_lifo};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 

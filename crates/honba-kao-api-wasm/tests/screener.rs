@@ -4,7 +4,7 @@
 //! and comparison values use `rust_decimal::Decimal` (#54).
 
 use honba_api_wasm::screener::ast::{Operator, Predicate};
-use honba_api_wasm::screener::{evaluate_predicate, sort_indices, SortCriterion, SortOrder};
+use honba_api_wasm::screener::{SortCriterion, SortOrder, evaluate_predicate, sort_indices};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 use std::collections::HashMap;
@@ -129,15 +129,22 @@ fn evaluator_and_or_not() {
 #[test]
 fn sort_indices_ascending_descending() {
     let values = vec![10.0, 30.0, 20.0];
-    let asc = sort_indices(values.len(), |a, b| values[a].partial_cmp(&values[b]).unwrap());
+    let asc = sort_indices(values.len(), |a, b| {
+        values[a].partial_cmp(&values[b]).unwrap()
+    });
     assert_eq!(asc, vec![0, 2, 1]);
-    let desc = sort_indices(values.len(), |a, b| values[b].partial_cmp(&values[a]).unwrap());
+    let desc = sort_indices(values.len(), |a, b| {
+        values[b].partial_cmp(&values[a]).unwrap()
+    });
     assert_eq!(desc, vec![1, 2, 0]);
 }
 
 #[test]
 fn sort_criterion_fields() {
-    let c = SortCriterion { field: "price".into(), order: SortOrder::Ascending };
+    let c = SortCriterion {
+        field: "price".into(),
+        order: SortOrder::Ascending,
+    };
     assert_eq!(c.field, "price");
     assert_eq!(c.order, SortOrder::Ascending);
 }
