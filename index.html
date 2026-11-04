@@ -28,12 +28,18 @@
     <link data-trunk rel="css" href="crates/honba-kao-app/assets/style/strategy_studio.css" />
     <link data-trunk rel="css" href="crates/honba-kao-app/assets/style/brand.css" />
     <link data-trunk rel="css" href="crates/honba-kao-app/assets/style/command_bar.css" />
+
+    <!-- Bootstrap the honba-kao-app Cdylib. Trunk resolves the manifest at
+         crates/honba-kao-app/Cargo.toml; the virtual workspace root manifest
+         has no root package, so the crate dir must be given explicitly
+         (href) -- a bare rel="rust" link would fall back to it and abort the
+         build pipeline with "could not find the root package". -->
+    <link
+      data-trunk
+      rel="rust"
+      href="crates/honba-kao-app"
+      data-wasm-opt="z"
+    />
   </head>
-  <body id="app">
-    <script
-      type="module"
-      data-trunk-crate="honba-kao-app"
-      data-trunk-target="cdylib"
-    ></script>
-  </body>
+  <body id="app"></body>
 </html>
