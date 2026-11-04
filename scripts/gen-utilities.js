@@ -45,7 +45,8 @@ const P = {
   'emerald-300': ['#6ee7b7', '#6ee7b7'], 'emerald-400': ['#34d399', '#34d399'], 'emerald-500': ['#10b981', '#10b981'],
   'emerald-600': ['#059669', '#059669'], 'emerald-700': ['#047857', '#047857'], 'emerald-800': ['#065f46', '#065f46'],
   'emerald-950': ['#022c22', '#022c22'],
-  'orange-400': ['#fb923c', '#fb923c'], 'pink-400': ['#f472b6', '#f472b6'], 'purple-400': ['#c084fc', '#c084fc'],
+  'orange-400': ['#fb923c', '#fb923c'], 'pink-400': ['#f472b6', '#f472b6'],
+  'purple-300': ['#d8b4fe', '#d8b4fe'], 'purple-400': ['#c084fc', '#c084fc'], 'purple-500': ['#a855f7', '#a855f7'],
   'red-500': ['#ef4444', '#ef4444'],
   'rose-400': ['#fb7185', '#fb7185'], 'rose-500': ['#f43f5e', '#f43f5e'], 'rose-600': ['#e11d48', '#e11d48'],
   'rose-950': ['#4c0519', '#4c0519'],
@@ -124,8 +125,9 @@ function classify(t) {
   if (t === 'flex-col-reverse') return rule(t, 'flex-direction: column-reverse');
   if (t === 'flex-row') return rule(t, 'flex-direction: row');
   if (t === 'flex-wrap') return rule(t, 'flex-wrap: wrap');
+  if (t === 'flex-nowrap') return rule(t, 'flex-wrap: nowrap');
   if (t === 'flex-grow') return rule(t, 'flex-grow: 1');
-  if (t === 'shrink-0') return rule(t, 'flex-shrink: 0');
+  if (t === 'shrink-0' || t === 'flex-shrink-0') return rule(t, 'flex-shrink: 0');
   if ((m = t.match(/^items-(start|end|center|baseline|stretch)$/))) return rule(t, `align-items: ${AI[m[1]]}`);
   if ((m = t.match(/^justify-(start|end|center|between|around|evenly)$/))) return rule(t, `justify-content: ${JC[m[1]]}`);
   if ((m = t.match(/^grid-cols-(\d+)$/))) return rule(t, `grid-template-columns: repeat(${m[1]}, minmax(0, 1fr))`);
@@ -179,6 +181,8 @@ function classify(t) {
   if (t === 'rounded') return rule(t, 'border-radius: 0.25rem');
   if ((m = t.match(/^rounded-(sm|md|lg|xl|2xl|3xl|full)$/))) return rule(t, `border-radius: ${m[1] === 'xl' ? 'var(--hf-surface-radius)' : RD[m[1]]}`);
   if (t === 'rounded-t') return rule(t, 'border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem');
+  if (t === 'shadow-inner') return rule(t, 'box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.25)');
+  if (t === 'shadow' || t === 'shadow-sm') return rule(t, SH.sm);
   if ((m = t.match(/^shadow-(sm|md|lg|xl|2xl)$/))) return rule(t, `box-shadow: ${m[1] === 'xl' ? 'var(--hf-surface-shadow)' : SH[m[1]]}`);
   if ((m = t.match(/^shadow-([a-z]+)\/(\d+)$/))) { const c = paintVal(`${m[1]}/${m[2]}`); return c == null ? null : rule(t, `box-shadow: 0 8px 24px ${c}`); }
   if ((m = t.match(/^backdrop-blur(-(sm|md|lg|none))?$/))) return rule(t, `backdrop-filter: blur(${m[2] === 'sm' ? 4 : m[2] === 'md' ? 8 : m[2] === 'lg' ? 16 : 0}px)`);
